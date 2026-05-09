@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: #0A0A0F;
+    color: #F1F5F9;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: background-color 220ms ease, color 220ms ease;
+  }
+
+  .tabular-nums,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2A2D3A; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3A3D4A; }
+
+  *:focus-visible {
+    outline: 2px solid #F97316;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .skeleton { @apply bg-border rounded animate-skeleton-pulse; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   LIGHT MODE OVERRIDES
+   Written outside @layer so they beat @layer utilities without !important.
+   Only overrides themed tokens; brand colors (orange, status) stay the same.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Body */
+html.light body {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+html.light ::-webkit-scrollbar-thumb { background: #CBD5E1; }
+html.light ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ── Backgrounds ── */
+html.light .bg-background   { background-color: #F8FAFC; }
+html.light .bg-surface      { background-color: #FFFFFF; }
+html.light .bg-border       { background-color: #E2E8F0; }
+
+/* Opacity variants */
+html.light .bg-background\/95  { background-color: rgba(248,250,252,0.95); }
+html.light .bg-background\/50  { background-color: rgba(248,250,252,0.50); }
+html.light .bg-background\/40  { background-color: rgba(248,250,252,0.40); }
+html.light .bg-border\/40      { background-color: rgba(226,232,240,0.40); }
+html.light .bg-border\/30      { background-color: rgba(226,232,240,0.30); }
+html.light .bg-border\/60      { background-color: rgba(226,232,240,0.60); }
+
+/* Hover variants */
+html.light .hover\:bg-background:hover  { background-color: #F8FAFC; }
+html.light .hover\:bg-surface:hover     { background-color: #FFFFFF; }
+html.light .hover\:bg-border:hover      { background-color: #E2E8F0; }
+html.light .hover\:bg-border\/30:hover  { background-color: rgba(226,232,240,0.30); }
+html.light .hover\:bg-border\/40:hover  { background-color: rgba(226,232,240,0.40); }
+html.light .hover\:bg-border\/60:hover  { background-color: rgba(226,232,240,0.60); }
+
+/* ── Text ── */
+html.light .text-text-primary    { color: #0F172A; }
+html.light .text-text-secondary  { color: #475569; }
+html.light .text-text-muted      { color: #94A3B8; }
+html.light .text-text-disabled   { color: #CBD5E1; }
+
+html.light .hover\:text-text-primary:hover   { color: #0F172A; }
+html.light .hover\:text-text-secondary:hover { color: #475569; }
+
+html.light .placeholder\:text-text-muted::placeholder { color: #94A3B8; }
+
+/* ── Borders ── */
+html.light .border-border       { border-color: #E2E8F0; }
+html.light .border-border-hover { border-color: #CBD5E1; }
+
+html.light .border-border\/60   { border-color: rgba(226,232,240,0.60); }
+html.light .border-border\/40   { border-color: rgba(226,232,240,0.40); }
+
+html.light .hover\:border-border-hover:hover { border-color: #CBD5E1; }
+
+/* ── Dividers (divide-y / divide-x) ── */
+html.light .divide-border    > :not([hidden]) ~ :not([hidden]) { border-color: #E2E8F0; }
+html.light .divide-border\/60 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(226,232,240,0.60); }
+
+/* ── Focus rings ── */
+html.light .focus\:border-orange:focus     { border-color: #F97316; }
+html.light .focus\:ring-orange\/30:focus   { --tw-ring-color: rgba(249,115,22,0.30); }
+
+/* ── Native <select> dropdown options ── */
+html.light .\[\&\>option\]\:bg-surface > option { background-color: #FFFFFF; color: #0F172A; }
