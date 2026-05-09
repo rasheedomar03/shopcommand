@@ -183,27 +183,38 @@ export default function Landing() {
           </a>
         </div>
 
-        {/* Dashboard preview */}
-        <div className="relative mt-16 w-full max-w-4xl mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/60 animate-fade-up" style={{ animationDelay: '360ms' }}>
-          <div className="flex items-center gap-1.5 px-4 py-3 bg-white/[0.04] border-b border-white/[0.06]">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
-            <span className="ml-3 text-white/20 text-xs">ShopCommand — Dashboard</span>
+        {/* Multi-shop comparison table */}
+        <div className="relative mt-16 w-full max-w-3xl mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/60 animate-fade-up" style={{ animationDelay: '360ms' }}>
+          <div className="flex items-center justify-between px-5 py-3 bg-white/[0.04] border-b border-white/[0.06]">
+            <span className="text-white/30 text-xs uppercase tracking-wider">All Locations — Today</span>
+            <span className="text-orange-400 text-xs font-semibold">$25,870 total</span>
           </div>
-          <div className="bg-[#0F1018] p-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-[#0F1018]">
+            <div className="grid grid-cols-4 gap-4 px-5 py-2.5 border-b border-white/[0.06]">
+              {['Shop', 'Revenue', 'Open ROs', 'Techs'].map((h, i) => (
+                <div key={h} className={`text-white/25 text-xs ${i > 0 ? 'text-right' : ''}`}>{h}</div>
+              ))}
+            </div>
             {[
-              { label: 'Revenue Today', value: '$25,870', sub: '↑ 8.4% vs last week' },
-              { label: 'Open ROs', value: '73', sub: 'Across all shops' },
-              { label: 'Active Techs', value: '34', sub: 'Clocked in now' },
-              { label: 'Avg Efficiency', value: '84%', sub: '↑ 2.1% vs last week' },
-            ].map(({ label, value, sub }) => (
-              <div key={label} className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4">
-                <div className="text-white/40 text-xs mb-2 uppercase tracking-wider">{label}</div>
-                <div className="text-white text-2xl font-bold mb-1" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{value}</div>
-                <div className="text-orange-400 text-xs">{sub}</div>
+              { name: 'Tulsa Main', sub: '8 techs clocked in', revenue: '$8,240', ros: 21, techs: '8 / 10', best: false },
+              { name: 'Broken Arrow', sub: '6 techs clocked in', revenue: '$6,180', ros: 17, techs: '6 / 8', best: false },
+              { name: 'Owasso', sub: '↑ Best day this month', revenue: '$11,450', ros: 35, techs: '10 / 10', best: true },
+            ].map(({ name, sub, revenue, ros, techs, best }) => (
+              <div key={name} className="grid grid-cols-4 gap-4 px-5 py-3.5 border-b border-white/[0.04] last:border-0 items-center">
+                <div>
+                  <div className="text-white text-sm font-medium">{name}</div>
+                  <div className={`text-xs mt-0.5 ${best ? 'text-green-400/80' : 'text-white/35'}`}>{sub}</div>
+                </div>
+                <div className="text-orange-400 text-sm font-bold text-right">{revenue}</div>
+                <div className="text-right">
+                  <span className="bg-orange-500/10 text-orange-400 text-xs px-2 py-0.5 rounded-md">{ros}</span>
+                </div>
+                <div className="text-white/50 text-sm text-right">{techs}</div>
               </div>
             ))}
+            <div className="px-5 py-2.5 border-t border-white/[0.04]">
+              <span className="text-white/20 text-xs">3 of 5 locations shown</span>
+            </div>
           </div>
         </div>
       </section>
