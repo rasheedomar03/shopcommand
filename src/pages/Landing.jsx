@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Building2, Wrench, Users } from 'lucide-react'
 
 // ─── Hex mark ────────────────────────────────────────────────────────────────
 function HexMark({ size = 36 }) {
@@ -74,19 +75,25 @@ const steps = [
 
 const features = [
   {
-    icon: '🏪',
+    icon: Building2,
     title: 'Multi-Shop Command Center',
     desc: 'Manage all your locations from a single dashboard. Revenue, open ROs, and technician status — everything at a glance.',
+    stat: '$375K',
+    statLabel: 'Revenue MTD',
   },
   {
-    icon: '🔧',
+    icon: Wrench,
     title: 'Repair Order Tracking',
     desc: 'Create, assign, and track repair orders through every stage. No more clipboards or lost tickets.',
+    stat: '73',
+    statLabel: 'Open ROs',
   },
   {
-    icon: '👥',
+    icon: Users,
     title: 'Team & Tech Management',
     desc: 'Clock-in status, efficiency scores, and customer histories — all the data your team needs to perform.',
+    stat: '34',
+    statLabel: 'Active Techs',
   },
 ]
 
@@ -284,13 +291,21 @@ export default function Landing() {
             <p className="text-white/65 max-w-md mx-auto leading-relaxed">Built specifically for multi-location auto repair — not a generic tool bolted onto your workflow.</p>
           </div>
         </Reveal>
-        <div className="grid md:grid-cols-3 gap-6">
-          {features.map(({ icon, title, desc }, i) => (
+        <div className="divide-y divide-white/[0.06]">
+          {features.map(({ icon: Icon, title, desc, stat, statLabel }, i) => (
             <Reveal key={title} delay={i * 80}>
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 hover:border-orange-500/30 hover:bg-orange-500/[0.04] transition-all duration-300 h-full">
-                <div className="text-3xl mb-4">{icon}</div>
-                <h3 className="text-base font-semibold text-white mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{title}</h3>
-                <p className="text-white/40 text-sm leading-relaxed">{desc}</p>
+              <div className="flex items-center gap-6 py-6 first:pt-0 last:pb-0">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                  <Icon size={18} className="text-orange-400" strokeWidth={1.8} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-white mb-1" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{title}</h3>
+                  <p className="text-white/65 text-sm leading-relaxed">{desc}</p>
+                </div>
+                <div className="flex-shrink-0 bg-[#0F1018] border border-white/[0.06] rounded-xl px-4 py-3 text-right min-w-[90px]">
+                  <div className="text-orange-400 text-lg font-bold leading-none mb-1" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{stat}</div>
+                  <div className="text-white/40 text-xs">{statLabel}</div>
+                </div>
               </div>
             </Reveal>
           ))}
