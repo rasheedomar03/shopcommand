@@ -266,11 +266,11 @@ export default function Landing() {
         </Reveal>
         <div className="grid md:grid-cols-3 gap-8 relative">
           {/* Connector line */}
-          <div className="hidden md:block absolute top-8 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
+          <div className="hidden md:block absolute top-7 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px z-0 bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
           {steps.map(({ num, title, desc }, i) => (
             <Reveal key={num} delay={i * 100}>
-              <div className="relative flex flex-col items-start md:items-center text-left md:text-center">
-                <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5 flex-shrink-0">
+              <div className="relative z-10 flex flex-col items-start md:items-center text-left md:text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#0A0B12] border border-orange-500/20 flex items-center justify-center mb-5 flex-shrink-0" style={{ boxShadow: '0 0 0 4px #0A0B12' }}>
                   <span className="text-orange-400 text-sm font-bold" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{num}</span>
                 </div>
                 <h3 className="text-base font-semibold text-white mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{title}</h3>
@@ -417,7 +417,6 @@ export default function Landing() {
             >
               See the dashboard →
             </Link>
-            <span className="text-white/25 text-sm">No credit card required</span>
           </div>
         </Reveal>
       </section>
