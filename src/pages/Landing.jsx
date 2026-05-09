@@ -293,8 +293,8 @@ export default function Landing() {
         </Reveal>
         <div className="divide-y divide-white/[0.06]">
           {features.map(({ icon: Icon, title, desc, stat, statLabel }, i) => (
-            <Reveal key={title} delay={i * 80}>
-              <div className="flex items-center gap-6 py-6 first:pt-0 last:pb-0">
+            <Reveal key={title} delay={i * 80} className="py-7 first:pt-0 last:pb-0">
+              <div className="flex items-center gap-6">
                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
                   <Icon size={18} className="text-orange-400" strokeWidth={1.8} />
                 </div>
@@ -351,38 +351,74 @@ export default function Landing() {
       </section>
 
       {/* Pricing teaser */}
-      <Reveal>
-        <section className="border-t border-white/[0.06] py-14 px-6">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-white/50 text-xs font-medium mb-4">
-              Simple pricing
+      <section className="border-t border-white/[0.06] py-24 px-6">
+        <div className="max-w-3xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-white/40 text-xs font-medium mb-4">
+                Simple pricing
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+                Per location. No per-seat fees.
+              </h2>
+              <p className="text-white/65 leading-relaxed max-w-md mx-auto">
+                Pay for the shops you run, not the people who help you run them.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-3" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
-              Per location. No per-seat fees.
-            </h3>
-            <p className="text-white/65 text-sm leading-relaxed max-w-md mx-auto">
-              Pay for the locations you run, not the people who help you run them. Early access pricing locked in for the first year.
-            </p>
-          </div>
-        </section>
-      </Reveal>
+          </Reveal>
+          <Reveal delay={80}>
+            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
+              <div className="flex-1 text-center md:text-left">
+                <div className="text-white/40 text-xs uppercase tracking-widest mb-2">Early access</div>
+                <div className="flex items-end gap-1.5 justify-center md:justify-start mb-1">
+                  <span className="text-5xl font-bold text-white" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.03em' }}>$149</span>
+                  <span className="text-white/40 text-sm mb-2">/location/mo</span>
+                </div>
+                <p className="text-white/40 text-xs">Price locked in for your first year. Cancel anytime.</p>
+              </div>
+              <div className="w-px self-stretch bg-white/[0.06] hidden md:block" />
+              <div className="flex-1 space-y-3">
+                {[
+                  'Unlimited technicians and users',
+                  'All locations in one dashboard',
+                  'Repair order tracking',
+                  'Real-time revenue and efficiency data',
+                ].map(item => (
+                  <div key={item} className="flex items-center gap-2.5">
+                    <div className="w-4 h-4 rounded-full bg-orange-500/15 flex items-center justify-center flex-shrink-0">
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.5 6L6.5 2" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <span className="text-white/65 text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
       {/* CTA */}
-      <section className="relative py-24 px-6 text-center overflow-hidden border-t border-white/[0.06]">
+      <section className="relative py-28 px-6 text-center overflow-hidden border-t border-white/[0.06]">
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[500px] h-[300px] bg-orange-500/10 rounded-full blur-[100px] animate-glow-pulse" />
+          <div className="w-[600px] h-[350px] bg-orange-500/[0.08] rounded-full blur-[120px] animate-glow-pulse" />
         </div>
         <Reveal>
-          <h2 className="relative text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
-            Ready to take command?
+          <p className="relative text-orange-400/80 text-xs uppercase tracking-widest font-medium mb-4">Early access open now</p>
+          <h2 className="relative text-4xl md:text-5xl font-bold text-white mb-5 max-w-xl mx-auto" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.03em' }}>
+            Stop driving to your shops to find out how they're doing.
           </h2>
-          <p className="relative text-white/65 mb-8 max-w-sm mx-auto leading-relaxed">Join shop owners who've stopped guessing and started knowing.</p>
-          <Link
-            to="/dashboard"
-            className="relative inline-block px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors shadow-lg shadow-orange-500/20"
-          >
-            View the dashboard demo →
-          </Link>
+          <p className="relative text-white/65 mb-10 max-w-sm mx-auto leading-relaxed">
+            Everything across all your locations, right in front of you. Always.
+          </p>
+          <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              to="/dashboard"
+              className="px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors shadow-lg shadow-orange-500/25"
+            >
+              See the dashboard →
+            </Link>
+            <span className="text-white/25 text-sm">No credit card required</span>
+          </div>
         </Reveal>
       </section>
 
