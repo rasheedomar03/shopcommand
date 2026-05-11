@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
+import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
 import { formatCurrency, RO_STAGES } from '@/lib/utils'
 import { CheckCircle, MessageSquare, Phone, ChevronRight, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -21,6 +22,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const [paymentPending, setPaymentPending] = useState(null)
   const [saving, setSaving] = useState(false)
   const [showNewRO, setShowNewRO] = useState(false)
+  const [showPrintPacket, setShowPrintPacket] = useState(false)
 
   if (!ro) return null
 
@@ -279,11 +281,20 @@ export function RODetailModal({ open, onClose, ro }) {
         </div>
       </div>
 
-      {/* Text receipt */}
-      <button className="w-full border border-border rounded-lg py-2.5 text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.2)] active:scale-[0.98] flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange">
-        <Phone size={14} />
-        Text receipt
-      </button>
+      {/* Text receipt + Print packet */}
+      <div className="grid grid-cols-2 gap-2">
+        <button className="border border-border rounded-lg py-2.5 text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.2)] active:scale-[0.98] flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange">
+          <Phone size={14} />
+          Text receipt
+        </button>
+        <button
+          onClick={() => setShowPrintPacket(true)}
+          className="border border-border rounded-lg py-2.5 text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.2)] active:scale-[0.98] flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
+        >
+          <FileText size={14} />
+          Print packet
+        </button>
+      </div>
 
       {/* Start new RO */}
       <button
@@ -329,6 +340,15 @@ export function RODetailModal({ open, onClose, ro }) {
           preShopId={ro.shopId}
           preCustomerName={ro.customerName}
           preCustomerPhone={ro.customerPhone}
+        />
+      )}
+
+      {showPrintPacket && (
+        <PrintPacketModal
+          open={showPrintPacket}
+          onClose={() => setShowPrintPacket(false)}
+          ro={ro}
+          payment={payment}
         />
       )}
     </>
