@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
 import { formatCurrency, RO_STAGES } from '@/lib/utils'
-import { CheckCircle, MessageSquare, Phone, ChevronRight, FileText, Plus, X } from 'lucide-react'
+import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const TAX_RATE = 0.085
@@ -16,9 +16,45 @@ const METHOD_LABELS = {
   'check': 'Check',
 }
 
+const STATUS_CYCLE = ['unchecked', 'green', 'yellow', 'red']
+
+const DEFAULT_MPI_ITEMS = [
+  { category: 'Tires',                label: 'Front Left',         detail: '', status: 'unchecked' },
+  { category: 'Tires',                label: 'Front Right',        detail: '', status: 'unchecked' },
+  { category: 'Tires',                label: 'Rear Left',          detail: '', status: 'unchecked' },
+  { category: 'Tires',                label: 'Rear Right',         detail: '', status: 'unchecked' },
+  { category: 'Brakes',               label: 'Front Pads',         detail: '', status: 'unchecked' },
+  { category: 'Brakes',               label: 'Rear Pads',          detail: '', status: 'unchecked' },
+  { category: 'Brakes',               label: 'Rotors',             detail: '', status: 'unchecked' },
+  { category: 'Brakes',               label: 'Brake Fluid',        detail: '', status: 'unchecked' },
+  { category: 'Fluids',               label: 'Engine Oil',         detail: '', status: 'unchecked' },
+  { category: 'Fluids',               label: 'Coolant',            detail: '', status: 'unchecked' },
+  { category: 'Fluids',               label: 'Transmission',       detail: '', status: 'unchecked' },
+  { category: 'Fluids',               label: 'Power Steering',     detail: '', status: 'unchecked' },
+  { category: 'Battery & Electrical', label: 'Battery',            detail: '', status: 'unchecked' },
+  { category: 'Battery & Electrical', label: 'Alternator',         detail: '', status: 'unchecked' },
+  { category: 'Filters',              label: 'Engine Air Filter',  detail: '', status: 'unchecked' },
+  { category: 'Filters',              label: 'Cabin Air Filter',   detail: '', status: 'unchecked' },
+  { category: 'Exterior',             label: 'All Lights',         detail: '', status: 'unchecked' },
+  { category: 'Exterior',             label: 'Wiper Blades',       detail: '', status: 'unchecked' },
+  { category: 'Exterior',             label: 'Serpentine Belt',    detail: '', status: 'unchecked' },
+]
+
+function groupMpi(items) {
+  return items.reduce((acc, item, idx) => {
+    if (!acc[item.category]) acc[item.category] = []
+    acc[item.category].push({ ...item, _idx: idx })
+    return acc
+  }, {})
+}
+
 export function RODetailModal({ open, onClose, ro }) {
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
   const [services, setServices] = useState(ro?.services || [])
+  const [mpiItems, setMpiItems] = useState(
+    ro?.mpi?.items?.length ? ro.mpi.items : DEFAULT_MPI_ITEMS
+  )
+  const [mpiExpanded, setMpiExpanded] = useState(false)
   const [payment, setPayment] = useState(ro?.payment || null)
   const [paymentPending, setPaymentPending] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -31,6 +67,24 @@ export function RODetailModal({ open, onClose, ro }) {
   const subtotal = services.reduce((sum, s) => sum + (Number(s.price) || 0), 0)
   const taxAmount = Math.round(subtotal * TAX_RATE * 100) / 100
   const grandTotal = subtotal + taxAmount
+
+  // MPI helpers
+  const cycleStatus = (idx) => {
+    setMpiItems(items => items.map((item, i) =>
+      i === idx
+        ? { ...item, status: STATUS_CYCLE[(STATUS_CYCLE.indexOf(item.status) + 1) % STATUS_CYCLE.length] }
+        : item
+    ))
+  }
+  const updateDetail = (idx, val) => {
+    setMpiItems(items => items.map((item, i) => i === idx ? { ...item, detail: val } : item))
+  }
+
+  const mpiGreen    = mpiItems.filter(i => i.status === 'green').length
+  const mpiYellow   = mpiItems.filter(i => i.status === 'yellow').length
+  const mpiRed      = mpiItems.filter(i => i.status === 'red').length
+  const mpiChecked  = mpiGreen + mpiYellow + mpiRed
+  const mpiGrouped  = groupMpi(mpiItems)
 
   // Service line editing
   const addService    = () => setServices(s => [...s, { name: '', price: '' }])
@@ -60,8 +114,12 @@ export function RODetailModal({ open, onClose, ro }) {
     ? new Date(payment.paidAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
     : ''
 
-  // Enriched ro passed to print modal so it always reflects edited services
-  const roForPrint = { ...ro, services, total: subtotal }
+  const roForPrint = {
+    ...ro,
+    services,
+    total: subtotal,
+    mpi: { ...(ro.mpi || {}), items: mpiItems },
+  }
 
   // ── Stage bar ────────────────────────────────────────────────────────────
   const stageBar = (
@@ -88,6 +146,23 @@ export function RODetailModal({ open, onClose, ro }) {
         })}
       </div>
     </div>
+  )
+
+  // ── MPI dot ──────────────────────────────────────────────────────────────
+  const StatusDot = ({ status, onClick, size = 'md' }) => (
+    <button
+      onClick={onClick}
+      title={onClick ? 'Click to cycle: good → monitor → urgent' : undefined}
+      className={cn(
+        'rounded-full flex-shrink-0 transition-all duration-150',
+        size === 'sm' ? 'w-2 h-2' : 'w-3 h-3',
+        onClick ? 'hover:scale-125 active:scale-95 cursor-pointer' : 'cursor-default',
+        status === 'green'     ? 'bg-green-500' :
+        status === 'yellow'    ? 'bg-yellow-400' :
+        status === 'red'       ? 'bg-red-500' :
+        'bg-transparent border-2 border-slate-300'
+      )}
+    />
   )
 
   // ── Left column ──────────────────────────────────────────────────────────
@@ -128,7 +203,9 @@ export function RODetailModal({ open, onClose, ro }) {
                   ) : (
                     <div className="w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0" />
                   )}
-                  <span className="text-text-primary truncate">{svc.name || <span className="text-text-muted italic">Unnamed service</span>}</span>
+                  <span className="text-text-primary truncate">
+                    {svc.name || <span className="text-text-muted italic">Unnamed service</span>}
+                  </span>
                 </div>
                 {Number(svc.price) > 0 && (
                   <span className="text-text-secondary font-medium tabular-nums flex-shrink-0">
@@ -140,6 +217,86 @@ export function RODetailModal({ open, onClose, ro }) {
           </div>
         ) : (
           <p className="text-sm text-text-muted">No services added yet</p>
+        )}
+      </div>
+
+      {/* Vehicle Inspection (MPI) */}
+      <div>
+        {/* Header — always visible, click to expand */}
+        <button
+          onClick={() => setMpiExpanded(e => !e)}
+          className="w-full flex items-center justify-between group"
+        >
+          <div className="text-2xs font-medium text-text-muted uppercase tracking-wider">
+            Vehicle Inspection
+          </div>
+          <div className="flex items-center gap-2">
+            {mpiChecked > 0 ? (
+              <div className="flex items-center gap-1.5">
+                {mpiGreen  > 0 && <span className="flex items-center gap-1 text-[10px] text-green-600"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" />{mpiGreen}</span>}
+                {mpiYellow > 0 && <span className="flex items-center gap-1 text-[10px] text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />{mpiYellow}</span>}
+                {mpiRed    > 0 && <span className="flex items-center gap-1 text-[10px] text-red-600"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" />{mpiRed}</span>}
+              </div>
+            ) : (
+              <span className="text-[10px] text-text-muted">Not started</span>
+            )}
+            <ChevronDown
+              size={12}
+              className={cn('text-text-muted transition-transform duration-200', mpiExpanded && 'rotate-180')}
+            />
+          </div>
+        </button>
+
+        {/* Expanded inspection grid */}
+        {mpiExpanded && (
+          <div className="mt-3 space-y-4">
+            {Object.entries(mpiGrouped).map(([category, items]) => (
+              <div key={category}>
+                <div className="text-[10px] font-semibold uppercase text-text-muted tracking-wider mb-2">
+                  {category}
+                </div>
+                <div className="space-y-1.5">
+                  {items.map((item) => (
+                    <div key={item._idx} className="flex items-center gap-2">
+                      {/* Clickable status dot */}
+                      <StatusDot
+                        status={item.status}
+                        onClick={() => cycleStatus(item._idx)}
+                      />
+                      {/* Label */}
+                      <span className={cn(
+                        'text-xs flex-1',
+                        item.status === 'red'    ? 'text-red-600 font-medium' :
+                        item.status === 'yellow' ? 'text-yellow-700' :
+                        item.status === 'green'  ? 'text-text-primary' :
+                        'text-text-muted'
+                      )}>
+                        {item.label}
+                      </span>
+                      {/* Detail note — shown once status is set */}
+                      {item.status !== 'unchecked' && (
+                        <input
+                          type="text"
+                          value={item.detail}
+                          onChange={e => updateDetail(item._idx, e.target.value)}
+                          placeholder="Note…"
+                          className="w-28 text-[10px] text-text-muted bg-transparent border-b border-border focus:border-orange focus:outline-none placeholder:text-text-muted/40 text-right"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* Legend */}
+            <div className="flex gap-4 pt-1 text-[10px] text-text-muted border-t border-border">
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500" /> Good</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-400" /> Monitor</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500" /> Urgent</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full border-2 border-slate-300" /> Not checked</span>
+            </div>
+          </div>
         )}
       </div>
 
@@ -164,11 +321,9 @@ export function RODetailModal({ open, onClose, ro }) {
       <div>
         <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-2">Services &amp; Estimate</div>
 
-        {/* Line items */}
         <div className="space-y-1.5">
           {services.map((svc, i) => (
             <div key={i} className="flex items-center gap-1.5">
-              {/* Name */}
               <input
                 type="text"
                 placeholder="Service name"
@@ -176,7 +331,6 @@ export function RODetailModal({ open, onClose, ro }) {
                 onChange={e => updateService(i, 'name', e.target.value)}
                 className="flex-1 min-w-0 text-sm bg-surface border border-border rounded px-2 py-1.5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange transition-colors"
               />
-              {/* Price */}
               <div className="relative w-[72px] flex-shrink-0">
                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-xs pointer-events-none">$</span>
                 <input
@@ -189,7 +343,6 @@ export function RODetailModal({ open, onClose, ro }) {
                   className="w-full text-sm bg-surface border border-border rounded pl-5 pr-2 py-1.5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange transition-colors tabular-nums"
                 />
               </div>
-              {/* Remove */}
               <button
                 onClick={() => removeService(i)}
                 className="flex-shrink-0 text-text-muted hover:text-red-400 transition-colors p-0.5"
@@ -200,7 +353,6 @@ export function RODetailModal({ open, onClose, ro }) {
           ))}
         </div>
 
-        {/* Add line */}
         <button
           onClick={addService}
           className="mt-2 flex items-center gap-1 text-xs font-medium text-orange hover:text-orange-hover transition-colors"
@@ -210,7 +362,6 @@ export function RODetailModal({ open, onClose, ro }) {
         </button>
       </div>
 
-      {/* Live totals */}
       {subtotal > 0 && (
         <div className="space-y-1 pt-3 border-t border-border">
           <div className="flex justify-between text-xs text-text-muted">
@@ -284,7 +435,6 @@ export function RODetailModal({ open, onClose, ro }) {
   // ── Right panel: payment panel (Invoiced) ────────────────────────────────
   const rightPanelInvoiced = (
     <div className="flex flex-col gap-4">
-      {/* Invoice summary */}
       <div>
         <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-3">Invoice Summary</div>
         <div className="space-y-1.5">
@@ -305,7 +455,6 @@ export function RODetailModal({ open, onClose, ro }) {
         </div>
       </div>
 
-      {/* Payment actions */}
       {paymentPending === 'text-to-pay' ? (
         <div className="flex flex-col gap-2.5">
           <div className="bg-orange-subtle border border-orange/20 rounded-lg p-3 text-center">
@@ -322,7 +471,6 @@ export function RODetailModal({ open, onClose, ro }) {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {/* Text-to-pay — primary */}
           <button
             onClick={() => setPaymentPending('text-to-pay')}
             className="w-full bg-orange hover:bg-orange-hover text-white rounded-lg p-3 text-left transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_18px_rgba(249,115,22,0.45)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-2"
@@ -340,14 +488,12 @@ export function RODetailModal({ open, onClose, ro }) {
             </div>
           </button>
 
-          {/* Divider */}
           <div className="flex items-center gap-2">
             <div className="flex-1 h-px bg-border" />
             <span className="text-2xs text-text-muted whitespace-nowrap">or mark as paid</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
-          {/* Cash / Card / Check */}
           <div className="grid grid-cols-3 gap-2">
             {['cash', 'card', 'check'].map(method => (
               <button
@@ -367,7 +513,6 @@ export function RODetailModal({ open, onClose, ro }) {
   // ── Right panel: paid confirmation ───────────────────────────────────────
   const rightPanelPaid = (
     <div className="flex flex-col gap-4">
-      {/* Green success card */}
       <div className="bg-status-green-subtle border border-status-green/20 rounded-xl p-5 text-center">
         <div className="w-11 h-11 rounded-full bg-status-green/20 flex items-center justify-center mx-auto mb-3">
           <CheckCircle size={22} className="text-status-green" />
@@ -380,7 +525,6 @@ export function RODetailModal({ open, onClose, ro }) {
         </div>
       </div>
 
-      {/* Text receipt + Print packet */}
       <div className="grid grid-cols-2 gap-2">
         <button className="border border-border rounded-lg py-2.5 text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.2)] active:scale-[0.98] flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange">
           <Phone size={14} />
@@ -395,7 +539,6 @@ export function RODetailModal({ open, onClose, ro }) {
         </button>
       </div>
 
-      {/* Start new RO */}
       <button
         onClick={() => setShowNewRO(true)}
         className="w-full border border-border rounded-md py-2.5 px-3 text-left hover:border-orange transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.2)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
@@ -423,11 +566,11 @@ export function RODetailModal({ open, onClose, ro }) {
         size="xl"
       >
         {stageBar}
-        <div className="grid grid-cols-[3fr_2fr]">
-          <div className="p-5">
+        <div className="grid grid-cols-[3fr_2fr] overflow-hidden">
+          <div className="p-5 overflow-y-auto max-h-[65vh]">
             {leftColumn}
           </div>
-          <div className="border-l border-border p-5">
+          <div className="border-l border-border p-5 overflow-y-auto max-h-[65vh]">
             {rightPanel}
           </div>
         </div>
