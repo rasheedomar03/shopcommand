@@ -1,0 +1,177 @@
+<h2>Hero Visual — Replace the stat card grid</h2>
+<p class="subtitle">The current 4 big-number cards are a banned SaaS template. These show the <em>product</em> instead of just numbers.</p>
+
+<div class="cards">
+
+  <!-- Option A: App shell mockup -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0A0B12;border-radius:8px;overflow:hidden;font-family:system-ui;border:1px solid rgba(255,255,255,0.08)">
+        <!-- Fake browser bar -->
+        <div style="background:#0F1018;padding:8px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(255,255,255,0.06)">
+          <span style="width:8px;height:8px;border-radius:50%;background:rgba(239,68,68,0.5)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;background:rgba(234,179,8,0.5)"></span>
+          <span style="width:8px;height:8px;border-radius:50%;background:rgba(34,197,94,0.5)"></span>
+          <span style="margin-left:8px;color:rgba(255,255,255,0.2);font-size:10px">ShopCommand — Dashboard</span>
+        </div>
+        <!-- App shell -->
+        <div style="display:flex;height:160px">
+          <!-- Sidebar -->
+          <div style="width:100px;background:#0D0E16;border-right:1px solid rgba(255,255,255,0.06);padding:10px 8px;flex-shrink:0">
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06)">
+              <div style="width:12px;height:12px;background:#F97316;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)"></div>
+              <span style="color:white;font-size:9px;font-weight:600">Shop<span style="color:#F97316">Command</span></span>
+            </div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Overview</div>
+            <div style="background:rgba(249,115,22,0.12);border-radius:4px;padding:4px 6px;margin-bottom:2px">
+              <span style="color:#F97316;font-size:9px;font-weight:500">Dashboard</span>
+            </div>
+            <div style="padding:4px 6px;margin-bottom:2px"><span style="color:rgba(255,255,255,0.4);font-size:9px">All Shops</span></div>
+            <div style="padding:4px 6px;margin-bottom:8px"><span style="color:rgba(255,255,255,0.4);font-size:9px">Reports</span></div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Operations</div>
+            <div style="padding:4px 6px;margin-bottom:2px"><span style="color:rgba(255,255,255,0.4);font-size:9px">Repair Orders</span></div>
+            <div style="padding:4px 6px"><span style="color:rgba(255,255,255,0.4);font-size:9px">Technicians</span></div>
+          </div>
+          <!-- Main content -->
+          <div style="flex:1;padding:12px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+              <div style="background:#0F1018;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:8px">
+                <div style="color:rgba(255,255,255,0.3);font-size:8px;margin-bottom:3px">REVENUE TODAY</div>
+                <div style="color:white;font-size:14px;font-weight:700">$25,870</div>
+                <div style="color:#F97316;font-size:8px">↑ 8.4%</div>
+              </div>
+              <div style="background:#0F1018;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:8px">
+                <div style="color:rgba(255,255,255,0.3);font-size:8px;margin-bottom:3px">OPEN ROs</div>
+                <div style="color:white;font-size:14px;font-weight:700">73</div>
+                <div style="color:rgba(255,255,255,0.3);font-size:8px">Across all shops</div>
+              </div>
+            </div>
+            <!-- Mini chart placeholder -->
+            <div style="background:#0F1018;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:8px;height:70px;display:flex;align-items:flex-end;gap:3px">
+              <div style="color:rgba(255,255,255,0.2);font-size:8px;position:absolute;margin-top:-8px">Daily Revenue</div>
+              <div style="margin-top:auto;display:flex;align-items:flex-end;gap:3px;width:100%">
+                <div style="flex:1;background:rgba(249,115,22,0.3);border-radius:2px;height:30px"></div>
+                <div style="flex:1;background:rgba(249,115,22,0.3);border-radius:2px;height:42px"></div>
+                <div style="flex:1;background:rgba(249,115,22,0.3);border-radius:2px;height:35px"></div>
+                <div style="flex:1;background:rgba(249,115,22,0.3);border-radius:2px;height:50px"></div>
+                <div style="flex:1;background:rgba(249,115,22,0.3);border-radius:2px;height:38px"></div>
+                <div style="flex:1;background:#F97316;border-radius:2px;height:55px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Mini app shell</h3>
+      <p>Shows the actual product interface — sidebar, nav, cards, chart. Feels like a real screenshot. Strongest "this is a real product" signal.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Shop comparison table -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0A0B12;border-radius:8px;padding:16px;font-family:system-ui">
+        <div style="color:rgba(255,255,255,0.4);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px">All Locations — Today</div>
+        <!-- Table header -->
+        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)">
+          <div style="color:rgba(255,255,255,0.25);font-size:9px">Shop</div>
+          <div style="color:rgba(255,255,255,0.25);font-size:9px;text-align:right">Revenue</div>
+          <div style="color:rgba(255,255,255,0.25);font-size:9px;text-align:right">Open ROs</div>
+          <div style="color:rgba(255,255,255,0.25);font-size:9px;text-align:right">Techs</div>
+        </div>
+        <!-- Rows -->
+        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:8px;margin-bottom:6px;align-items:center">
+          <div>
+            <div style="color:white;font-size:10px;font-weight:500">Tulsa Main</div>
+            <div style="color:rgba(255,255,255,0.3);font-size:8px">8 techs clocked in</div>
+          </div>
+          <div style="color:#F97316;font-size:11px;font-weight:700;text-align:right">$8,240</div>
+          <div style="text-align:right"><span style="background:rgba(249,115,22,0.1);color:#F97316;font-size:9px;padding:2px 6px;border-radius:4px">21</span></div>
+          <div style="color:rgba(255,255,255,0.6);font-size:10px;text-align:right">8 / 10</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:8px;margin-bottom:6px;align-items:center">
+          <div>
+            <div style="color:white;font-size:10px;font-weight:500">Broken Arrow</div>
+            <div style="color:rgba(255,255,255,0.3);font-size:8px">6 techs clocked in</div>
+          </div>
+          <div style="color:#F97316;font-size:11px;font-weight:700;text-align:right">$6,180</div>
+          <div style="text-align:right"><span style="background:rgba(249,115,22,0.1);color:#F97316;font-size:9px;padding:2px 6px;border-radius:4px">17</span></div>
+          <div style="color:rgba(255,255,255,0.6);font-size:10px;text-align:right">6 / 8</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:8px;align-items:center">
+          <div>
+            <div style="color:white;font-size:10px;font-weight:500">Owasso</div>
+            <div style="color:rgba(34,197,94,0.8);font-size:8px">↑ Best day this month</div>
+          </div>
+          <div style="color:#F97316;font-size:11px;font-weight:700;text-align:right">$11,450</div>
+          <div style="text-align:right"><span style="background:rgba(249,115,22,0.1);color:#F97316;font-size:9px;padding:2px 6px;border-radius:4px">35</span></div>
+          <div style="color:rgba(255,255,255,0.6);font-size:10px;text-align:right">10 / 10</div>
+        </div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between">
+          <span style="color:rgba(255,255,255,0.25);font-size:9px">3 of 5 locations shown</span>
+          <span style="color:#F97316;font-size:9px;font-weight:600">$25,870 total</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Multi-shop comparison table</h3>
+      <p>Shows the core value prop directly: all your locations in one view. A shop owner instantly recognizes this problem they've been solving with spreadsheets.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Live activity feed -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0A0B12;border-radius:8px;padding:16px;font-family:system-ui">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="color:rgba(255,255,255,0.4);font-size:9px;text-transform:uppercase;letter-spacing:0.1em">Live Activity</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <div style="width:5px;height:5px;border-radius:50%;background:#22C55E;animation:pulse 2s infinite"></div>
+            <span style="color:#22C55E;font-size:8px">3 shops active</span>
+          </div>
+        </div>
+        <!-- Events -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px;background:#0F1018;border-radius:6px;padding:8px">
+            <div style="width:6px;height:6px;border-radius:50%;background:#22C55E;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div style="color:white;font-size:10px">RO #4821 marked complete</div>
+              <div style="color:rgba(255,255,255,0.3);font-size:8px">Owasso · Marcus T. · 2m ago</div>
+            </div>
+            <div style="color:#22C55E;font-size:10px;font-weight:600">$340</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:#0F1018;border-radius:6px;padding:8px">
+            <div style="width:6px;height:6px;border-radius:50%;background:#F97316;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div style="color:white;font-size:10px">New RO opened — 2019 F-150</div>
+              <div style="color:rgba(255,255,255,0.3);font-size:8px">Tulsa Main · walk-in · just now</div>
+            </div>
+            <div style="color:rgba(255,255,255,0.3);font-size:9px">Pending</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:#0F1018;border-radius:6px;padding:8px">
+            <div style="width:6px;height:6px;border-radius:50%;background:#3B82F6;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div style="color:white;font-size:10px">Darnell clocked in</div>
+              <div style="color:rgba(255,255,255,0.3);font-size:8px">Broken Arrow · 8:03 AM</div>
+            </div>
+            <div style="color:rgba(255,255,255,0.3);font-size:9px">Tech</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:#0F1018;border-radius:6px;padding:8px">
+            <div style="width:6px;height:6px;border-radius:50%;background:#EAB308;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div style="color:white;font-size:10px">Parts low — brake pads (SKU 4821)</div>
+              <div style="color:rgba(255,255,255,0.3);font-size:8px">Owasso · inventory alert</div>
+            </div>
+            <div style="color:#EAB308;font-size:9px">Alert</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Live activity feed</h3>
+      <p>Real-time stream of events across all shops. Emphasizes the "always know what's happening" angle. Feels alive and dynamic.</p>
+    </div>
+  </div>
+
+</div>

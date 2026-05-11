@@ -1,0 +1,130 @@
+<h2>Repair Order Detail — Layout Options</h2>
+<p class="subtitle">When a shop owner clicks an RO, what do they see? Pick the layout that feels most useful.</p>
+
+<div class="cards">
+
+  <!-- Option A: Stage bar + two-column -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#F8FAFC;border-radius:8px;overflow:hidden;font-family:system-ui;border:1px solid #E2E8F0;font-size:11px">
+        <!-- Stage bar -->
+        <div style="background:#fff;padding:10px 14px;border-bottom:1px solid #E2E8F0">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:8px">
+            <span style="color:#0F172A;font-weight:600;font-size:12px">RO #4821</span>
+            <span style="color:#64748B;font-size:10px">· 2019 F-150 · James Harrington</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0">
+            {['Estimate','Approved','In Progress','Complete','Invoiced','Paid'].map((s,i) => `
+            <div style="flex:1;text-align:center;padding:5px 4px;font-size:9px;font-weight:500;background:${i<=2?'#F97316':'#F1F5F9'};color:${i<=2?'#fff':'#94A3B8'};border-radius:${i===0?'6px 0 0 6px':i===5?'0 6px 6px 0':'0'}">${s}</div>
+            `).join('')}
+          </div>
+        </div>
+        <!-- Two-column body -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px">
+          <div>
+            <div style="color:#64748B;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Job Details</div>
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px;margin-bottom:6px">
+              <div style="font-weight:600;color:#0F172A;margin-bottom:3px">Brake pad replacement (front)</div>
+              <div style="color:#64748B;font-size:9px">Assigned: Marcus T. · Est. 2.5 hrs</div>
+            </div>
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px">
+              <div style="font-weight:600;color:#0F172A;margin-bottom:3px">Oil change — full synthetic</div>
+              <div style="color:#64748B;font-size:9px">Assigned: Marcus T. · Est. 0.5 hrs</div>
+            </div>
+          </div>
+          <div>
+            <div style="color:#64748B;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Summary</div>
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#64748B">Labor</span><span style="color:#0F172A;font-weight:500">$180.00</span></div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#64748B">Parts</span><span style="color:#0F172A;font-weight:500">$220.00</span></div>
+              <div style="display:flex;justify-content:space-between;padding-top:5px;border-top:1px solid #E2E8F0"><span style="font-weight:600;color:#0F172A">Total</span><span style="font-weight:700;color:#F97316;font-size:13px">$400.00</span></div>
+            </div>
+            <div style="margin-top:8px;background:#F97316;color:white;text-align:center;padding:7px;border-radius:6px;font-weight:600;font-size:10px">Collect Payment →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Stage bar + two columns</h3>
+      <p>Progress bar across the top shows where the RO is. Job details on the left, invoice summary and payment on the right. Quick to scan.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Timeline sidebar -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#F8FAFC;border-radius:8px;overflow:hidden;font-family:system-ui;border:1px solid #E2E8F0;font-size:11px;display:flex">
+        <!-- Left timeline -->
+        <div style="width:110px;background:#fff;border-right:1px solid #E2E8F0;padding:10px 8px;flex-shrink:0">
+          <div style="font-weight:600;color:#0F172A;font-size:10px;margin-bottom:10px">RO #4821</div>
+          {['Estimate','Approved','In Progress','Complete','Invoiced','Paid'].map((s,i) => `
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+            <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${i<=2?'#F97316':'#E2E8F0'}"></div>
+            <span style="font-size:9px;color:${i<=2?'#0F172A':'#94A3B8'};font-weight:${i===2?'600':'400'}">${s}</span>
+          </div>
+          `).join('')}
+          <div style="margin-top:10px;padding-top:8px;border-top:1px solid #E2E8F0">
+            <div style="font-size:9px;color:#64748B">Total</div>
+            <div style="font-size:13px;font-weight:700;color:#F97316">$400</div>
+          </div>
+        </div>
+        <!-- Main content -->
+        <div style="flex:1;padding:10px">
+          <div style="color:#64748B;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Activity</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:7px">
+              <div style="font-weight:600;color:#0F172A;font-size:10px">Brake pad replacement (front)</div>
+              <div style="color:#64748B;font-size:9px;margin-top:2px">Marcus T. · Started 9:15 AM · Est. 2.5 hrs</div>
+              <div style="margin-top:4px;background:#E2E8F0;border-radius:3px;height:4px"><div style="background:#F97316;width:60%;height:4px;border-radius:3px"></div></div>
+            </div>
+            <div style="background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:7px">
+              <div style="font-weight:600;color:#0F172A;font-size:10px">Oil change — full synthetic</div>
+              <div style="color:#64748B;font-size:9px;margin-top:2px">Marcus T. · Waiting to start</div>
+            </div>
+            <div style="margin-top:4px;background:#F97316;color:white;text-align:center;padding:6px;border-radius:6px;font-weight:600;font-size:9px">Mark Complete + Generate Invoice →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Timeline sidebar + activity</h3>
+      <p>Stages run down the left as a vertical timeline. Main area shows job progress bars and technician activity. Feels more like a live view.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Full-width stacked sections -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#F8FAFC;border-radius:8px;overflow:hidden;font-family:system-ui;border:1px solid #E2E8F0;font-size:11px">
+        <!-- Header with status pill -->
+        <div style="background:#fff;padding:10px 14px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;color:#0F172A;font-size:12px">RO #4821 — 2019 Ford F-150</div>
+            <div style="color:#64748B;font-size:9px;margin-top:1px">James Harrington · Tulsa Main · Opened 8:02 AM</div>
+          </div>
+          <div style="background:#FFF7ED;color:#F97316;padding:3px 8px;border-radius:20px;font-size:9px;font-weight:600;border:1px solid #FED7AA">In Progress</div>
+        </div>
+        <!-- Stacked sections -->
+        <div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px">
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:8px">
+            <div style="color:#64748B;font-size:8px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">Services</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#0F172A;font-size:10px">Brake pad replacement (front)</span><span style="color:#0F172A;font-weight:500">$280</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:#0F172A;font-size:10px">Oil change — full synthetic</span><span style="color:#0F172A;font-weight:500">$120</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:8px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="color:#64748B;font-size:8px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">Invoice Total</div>
+              <div style="font-size:16px;font-weight:700;color:#F97316">$400.00</div>
+            </div>
+            <div style="background:#F97316;color:white;padding:6px 12px;border-radius:6px;font-weight:600;font-size:9px">Collect Payment</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Stacked sections + status pill</h3>
+      <p>Clean header with a status pill. Stacked cards below for services and invoice. Payment button is prominent. Simplest and most mobile-friendly.</p>
+    </div>
+  </div>
+
+</div>

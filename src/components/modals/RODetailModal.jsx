@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
@@ -49,6 +50,7 @@ function groupMpi(items) {
 }
 
 export function RODetailModal({ open, onClose, ro }) {
+  const navigate = useNavigate()
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
   const [services, setServices] = useState(ro?.services || [])
   const [mpiItems, setMpiItems] = useState(
@@ -173,13 +175,22 @@ export function RODetailModal({ open, onClose, ro }) {
       {/* Customer / Vehicle / Tech row */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Customer',   value: ro.customerName },
+          { label: 'Customer',   value: ro.customerName, link: ro.customerId ? `/customers/${ro.customerId}` : null },
           { label: 'Vehicle',    value: ro.vehicle },
           { label: 'Technician', value: ro.techName || 'Unassigned' },
-        ].map(({ label, value }) => (
+        ].map(({ label, value, link }) => (
           <div key={label}>
             <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-1">{label}</div>
-            <div className="text-sm font-medium text-text-primary leading-snug">{value}</div>
+            {link ? (
+              <button
+                onClick={() => { onClose(); navigate(link) }}
+                className="text-sm font-medium text-orange hover:underline leading-snug text-left"
+              >
+                {value}
+              </button>
+            ) : (
+              <div className="text-sm font-medium text-text-primary leading-snug">{value}</div>
+            )}
           </div>
         ))}
       </div>

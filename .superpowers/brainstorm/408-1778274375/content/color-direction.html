@@ -1,0 +1,81 @@
+<h2>Which visual direction feels right for ShopCommand?</h2>
+<p class="subtitle">Think about what a shop owner would want to look at every day. Not fancy — practical and clear.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="clean-pro" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;border-radius:8px;height:160px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+        <div style="width:28px;height:28px;background:#2563eb;border-radius:6px;"></div>
+        <div style="color:#fff;font-weight:700;font-size:13px;">ShopCommand</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <div style="background:#1e293b;border-radius:6px;padding:6px 10px;color:#94a3b8;font-size:11px;">Dashboard</div>
+        <div style="background:#2563eb;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;">Repair Orders</div>
+      </div>
+      <div style="background:#fff;border-radius:8px;padding:10px;flex:1;display:flex;gap:8px;">
+        <div style="flex:1;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:800;color:#0f172a;">$16,890</div><div style="font-size:9px;color:#94a3b8;">TODAY'S REV</div></div>
+        </div>
+        <div style="flex:1;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:800;color:#0f172a;">50</div><div style="font-size:9px;color:#94a3b8;">OPEN ROs</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Clean Pro</h3>
+      <p>Dark navy sidebar, white content area, blue accents. Current look but significantly polished. Professional and familiar.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="bold-utility" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1a2e;padding:16px;border-radius:8px;height:160px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+        <div style="width:28px;height:28px;background:#f97316;border-radius:6px;"></div>
+        <div style="color:#fff;font-weight:700;font-size:13px;">ShopCommand</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <div style="background:#16213e;border-radius:6px;padding:6px 10px;color:#64748b;font-size:11px;">Dashboard</div>
+        <div style="background:#f97316;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;">Repair Orders</div>
+      </div>
+      <div style="background:#16213e;border-radius:8px;padding:10px;flex:1;display:flex;gap:8px;">
+        <div style="flex:1;background:#1a1a2e;border-radius:6px;border:1px solid #2a2a4e;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:800;color:#f97316;">$16,890</div><div style="font-size:9px;color:#64748b;">TODAY'S REV</div></div>
+        </div>
+        <div style="flex:1;background:#1a1a2e;border-radius:6px;border:1px solid #2a2a4e;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:800;color:#fff;">50</div><div style="font-size:9px;color:#64748b;">OPEN ROs</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Bold Utility</h3>
+      <p>Dark everything with orange accents. High contrast for bright shop environments. Feels like a tool, not a website.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="modern-light" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:16px;border-radius:8px;height:160px;display:flex;flex-direction:column;gap:8px;border:1px solid #e2e8f0;">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+        <div style="width:28px;height:28px;background:#0f172a;border-radius:6px;"></div>
+        <div style="color:#0f172a;font-weight:700;font-size:13px;">ShopCommand</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <div style="background:#e2e8f0;border-radius:6px;padding:6px 10px;color:#64748b;font-size:11px;">Dashboard</div>
+        <div style="background:#0f172a;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;">Repair Orders</div>
+      </div>
+      <div style="background:#fff;border-radius:8px;padding:10px;flex:1;display:flex;gap:8px;border:1px solid #f1f5f9;">
+        <div style="flex:1;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:800;color:#0f172a;">$16,890</div><div style="font-size:9px;color:#94a3b8;">TODAY'S REV</div></div>
+        </div>
+        <div style="flex:1;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:800;color:#0f172a;">50</div><div style="font-size:9px;color:#94a3b8;">OPEN ROs</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Modern Light</h3>
+      <p>Light backgrounds, slate grays, dark navy accents. Clean and modern — easy to read in any lighting. Like Linear or Notion.</p>
+    </div>
+  </div>
+
+</div>

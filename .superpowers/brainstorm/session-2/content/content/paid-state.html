@@ -1,0 +1,95 @@
+<h2>After Payment — The "Paid" State</h2>
+<p class="subtitle">What the service advisor sees the moment payment is confirmed. This is the end of the RO lifecycle.</p>
+
+<div class="mockup">
+  <div class="mockup-header">RO #4821 — Paid</div>
+  <div class="mockup-body">
+    <div style="background:#F8FAFC;border-radius:8px;overflow:hidden;font-family:system-ui;border:1px solid #E2E8F0">
+
+      <!-- Stage bar — all green -->
+      <div style="background:#fff;padding:10px 14px;border-bottom:1px solid #E2E8F0">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:8px">
+          <span style="color:#0F172A;font-weight:600;font-size:12px">RO #4821</span>
+          <span style="color:#64748B;font-size:10px">· 2019 F-150 · James Harrington</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0">
+          <div style="flex:1;text-align:center;padding:5px 4px;font-size:9px;font-weight:500;background:#22C55E;color:#fff;border-radius:6px 0 0 6px">Estimate</div>
+          <div style="flex:1;text-align:center;padding:5px 4px;font-size:9px;font-weight:500;background:#22C55E;color:#fff">Approved</div>
+          <div style="flex:1;text-align:center;padding:5px 4px;font-size:9px;font-weight:500;background:#22C55E;color:#fff">In Progress</div>
+          <div style="flex:1;text-align:center;padding:5px 4px;font-size:9px;font-weight:500;background:#22C55E;color:#fff">Complete</div>
+          <div style="flex:1;text-align:center;padding:5px 4px;font-size:9px;font-weight:500;background:#22C55E;color:#fff">Invoiced</div>
+          <div style="flex:1;text-align:center;padding:5px 4px;font-size:9px;font-weight:600;background:#16A34A;color:#fff;border-radius:0 6px 6px 0">✓ Paid</div>
+        </div>
+      </div>
+
+      <!-- Two column body -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px">
+
+        <!-- Left: services summary -->
+        <div>
+          <div style="color:#64748B;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Services Completed</div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:8px;margin-bottom:6px">
+            <div style="display:flex;justify-content:space-between;align-items:start">
+              <div>
+                <div style="font-weight:600;color:#0F172A;font-size:11px">Brake pad replacement</div>
+                <div style="color:#64748B;font-size:9px;margin-top:1px">Marcus T. · 2.5 hrs</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:3px">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span style="color:#0F172A;font-weight:500;font-size:11px">$280</span>
+              </div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:8px;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:start">
+              <div>
+                <div style="font-weight:600;color:#0F172A;font-size:11px">Oil change</div>
+                <div style="color:#64748B;font-size:9px;margin-top:1px">Marcus T. · 0.5 hrs</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:3px">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span style="color:#0F172A;font-weight:500;font-size:11px">$120</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next visit nudge -->
+          <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:6px;padding:8px">
+            <div style="color:#C2410C;font-size:9px;font-weight:600;margin-bottom:3px">Next service due</div>
+            <div style="color:#0F172A;font-size:10px">Oil change in ~3,000 miles</div>
+            <div style="color:#F97316;font-size:9px;margin-top:4px;cursor:pointer;font-weight:500">Schedule next appointment →</div>
+          </div>
+        </div>
+
+        <!-- Right: payment confirmed -->
+        <div>
+          <div style="color:#64748B;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Payment</div>
+          <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:12px;margin-bottom:8px;text-align:center">
+            <div style="width:36px;height:36px;border-radius:50%;background:#DCFCE7;display:flex;align-items:center;justify-content:center;margin:0 auto 6px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="font-weight:700;color:#15803D;font-size:13px;margin-bottom:2px">$434.00 received</div>
+            <div style="color:#64748B;font-size:9px">Text-to-pay · 11:42 AM</div>
+          </div>
+
+          <!-- Receipt options -->
+          <div style="color:#64748B;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Receipt</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px">
+            <div style="border:1px solid #E2E8F0;border-radius:6px;padding:7px;text-align:center;cursor:pointer">
+              <div style="font-size:10px;color:#475569;font-weight:500">Text receipt</div>
+            </div>
+            <div style="border:1px solid #E2E8F0;border-radius:6px;padding:7px;text-align:center;cursor:pointer">
+              <div style="font-size:10px;color:#475569;font-weight:500">Print receipt</div>
+            </div>
+          </div>
+
+          <!-- New RO -->
+          <div style="background:#0F172A;color:#fff;text-align:center;padding:8px;border-radius:6px;font-weight:600;font-size:10px;cursor:pointer">
+            Start new RO for this customer →
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
