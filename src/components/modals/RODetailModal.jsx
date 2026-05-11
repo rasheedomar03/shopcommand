@@ -224,7 +224,7 @@ export function RODetailModal({ open, onClose, ro }) {
           {/* Text-to-pay — primary */}
           <button
             onClick={() => setPaymentPending('text-to-pay')}
-            className="w-full bg-orange hover:bg-orange-hover text-white rounded-lg p-3 text-left transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-2"
+            className="w-full bg-orange hover:bg-orange-hover text-white rounded-lg p-3 text-left transition-all duration-150 hover:-translate-y-px active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-2"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center flex-shrink-0">
@@ -252,7 +252,7 @@ export function RODetailModal({ open, onClose, ro }) {
               <button
                 key={method}
                 onClick={() => markPaid(method)}
-                className="border border-border rounded-lg py-2.5 text-center text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-colors duration-150 capitalize focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
+                className="border border-border rounded-lg py-2.5 text-center text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px active:scale-[0.98] capitalize focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
               >
                 {method.charAt(0).toUpperCase() + method.slice(1)}
               </button>
@@ -280,7 +280,7 @@ export function RODetailModal({ open, onClose, ro }) {
       </div>
 
       {/* Text receipt */}
-      <button className="w-full border border-border rounded-lg py-2.5 text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-colors duration-150 flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange">
+      <button className="w-full border border-border rounded-lg py-2.5 text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px active:scale-[0.98] flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange">
         <Phone size={14} />
         Text receipt
       </button>
@@ -288,7 +288,7 @@ export function RODetailModal({ open, onClose, ro }) {
       {/* Start new RO */}
       <button
         onClick={() => setShowNewRO(true)}
-        className="w-full border border-border rounded-md py-2.5 px-3 text-left hover:border-orange transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
+        className="w-full border border-border rounded-md py-2.5 px-3 text-left hover:border-orange transition-all duration-150 hover:-translate-y-px active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
       >
         <div className="text-2xs text-text-muted mb-0.5">Start new RO for</div>
         <div className="text-sm font-medium text-text-primary">{ro.customerName} →</div>
