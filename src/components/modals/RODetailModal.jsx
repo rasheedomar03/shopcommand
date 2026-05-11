@@ -286,9 +286,13 @@ export function RODetailModal({ open, onClose, ro }) {
       </button>
 
       {/* Start new RO */}
-      <Button variant="secondary" className="w-full" onClick={() => setShowNewRO(true)}>
-        Start new RO for {ro.customerName} →
-      </Button>
+      <button
+        onClick={() => setShowNewRO(true)}
+        className="w-full border border-border rounded-md py-2.5 px-3 text-left hover:border-orange transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
+      >
+        <div className="text-2xs text-text-muted mb-0.5">Start new RO for</div>
+        <div className="text-sm font-medium text-text-primary">{ro.customerName} →</div>
+      </button>
     </div>
   )
 
