@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
 import { formatCurrency, RO_STAGES } from '@/lib/utils'
-import { CheckCircle, MessageSquare, Phone, ChevronRight, FileText } from 'lucide-react'
+import { CheckCircle, MessageSquare, Phone, ChevronRight, FileText, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const TAX_RATE = 0.085
@@ -18,6 +18,7 @@ const METHOD_LABELS = {
 
 export function RODetailModal({ open, onClose, ro }) {
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
+  const [services, setServices] = useState(ro?.services || [])
   const [payment, setPayment] = useState(ro?.payment || null)
   const [paymentPending, setPaymentPending] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -27,9 +28,16 @@ export function RODetailModal({ open, onClose, ro }) {
   if (!ro) return null
 
   const currentStageIdx = RO_STAGES.indexOf(stage)
-  const subtotal = ro.total
+  const subtotal = services.reduce((sum, s) => sum + (Number(s.price) || 0), 0)
   const taxAmount = Math.round(subtotal * TAX_RATE * 100) / 100
   const grandTotal = subtotal + taxAmount
+
+  // Service line editing
+  const addService    = () => setServices(s => [...s, { name: '', price: '' }])
+  const removeService = (i) => setServices(s => s.filter((_, idx) => idx !== i))
+  const updateService = (i, field, val) => setServices(s =>
+    s.map((svc, idx) => idx === i ? { ...svc, [field]: val } : svc)
+  )
 
   const advanceStage = async () => {
     if (currentStageIdx >= RO_STAGES.length - 1) return
@@ -51,6 +59,9 @@ export function RODetailModal({ open, onClose, ro }) {
   const paidAt = payment?.paidAt
     ? new Date(payment.paidAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
     : ''
+
+  // Enriched ro passed to print modal so it always reflects edited services
+  const roForPrint = { ...ro, services, total: subtotal }
 
   // ── Stage bar ────────────────────────────────────────────────────────────
   const stageBar = (
@@ -107,25 +118,29 @@ export function RODetailModal({ open, onClose, ro }) {
       {/* Services list */}
       <div>
         <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-2">Services</div>
-        <div className="space-y-2">
-          {ro.services.map((svc, i) => (
-            <div key={i} className="flex items-center justify-between gap-3 text-sm">
-              <div className="flex items-center gap-2 min-w-0">
-                {isPastComplete ? (
-                  <CheckCircle size={13} className="text-status-green flex-shrink-0" />
-                ) : (
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0" />
+        {services.length > 0 ? (
+          <div className="space-y-2">
+            {services.map((svc, i) => (
+              <div key={i} className="flex items-center justify-between gap-3 text-sm">
+                <div className="flex items-center gap-2 min-w-0">
+                  {isPastComplete ? (
+                    <CheckCircle size={13} className="text-status-green flex-shrink-0" />
+                  ) : (
+                    <div className="w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0" />
+                  )}
+                  <span className="text-text-primary truncate">{svc.name || <span className="text-text-muted italic">Unnamed service</span>}</span>
+                </div>
+                {Number(svc.price) > 0 && (
+                  <span className="text-text-secondary font-medium tabular-nums flex-shrink-0">
+                    {formatCurrency(Number(svc.price))}
+                  </span>
                 )}
-                <span className="text-text-primary truncate">{svc.name}</span>
               </div>
-              {svc.price > 0 && (
-                <span className="text-text-secondary font-medium tabular-nums flex-shrink-0">
-                  {formatCurrency(svc.price)}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted">No services added yet</p>
+        )}
       </div>
 
       {/* Next service due nudge (Paid only) */}
@@ -143,28 +158,112 @@ export function RODetailModal({ open, onClose, ro }) {
     </div>
   )
 
-  // ── Right panel: pre-invoice stages ─────────────────────────────────────
+  // ── Right panel: Estimate — editable services ────────────────────────────
+  const rightPanelEstimate = (
+    <div className="flex flex-col gap-4">
+      <div>
+        <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-2">Services &amp; Estimate</div>
+
+        {/* Line items */}
+        <div className="space-y-1.5">
+          {services.map((svc, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              {/* Name */}
+              <input
+                type="text"
+                placeholder="Service name"
+                value={svc.name}
+                onChange={e => updateService(i, 'name', e.target.value)}
+                className="flex-1 min-w-0 text-sm bg-surface border border-border rounded px-2 py-1.5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange transition-colors"
+              />
+              {/* Price */}
+              <div className="relative w-[72px] flex-shrink-0">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-xs pointer-events-none">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  value={svc.price === 0 || svc.price === '' ? '' : svc.price}
+                  onChange={e => updateService(i, 'price', e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  className="w-full text-sm bg-surface border border-border rounded pl-5 pr-2 py-1.5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange transition-colors tabular-nums"
+                />
+              </div>
+              {/* Remove */}
+              <button
+                onClick={() => removeService(i)}
+                className="flex-shrink-0 text-text-muted hover:text-red-400 transition-colors p-0.5"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Add line */}
+        <button
+          onClick={addService}
+          className="mt-2 flex items-center gap-1 text-xs font-medium text-orange hover:text-orange-hover transition-colors"
+        >
+          <Plus size={12} />
+          Add service
+        </button>
+      </div>
+
+      {/* Live totals */}
+      {subtotal > 0 && (
+        <div className="space-y-1 pt-3 border-t border-border">
+          <div className="flex justify-between text-xs text-text-muted">
+            <span>Subtotal</span>
+            <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+          </div>
+          <div className="flex justify-between text-xs text-text-muted">
+            <span>Tax (8.5%)</span>
+            <span className="tabular-nums">{formatCurrency(taxAmount)}</span>
+          </div>
+          <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
+            <span className="text-text-primary">Total</span>
+            <span className="text-orange tabular-nums">{formatCurrency(grandTotal)}</span>
+          </div>
+        </div>
+      )}
+
+      <Button
+        className="w-full"
+        onClick={advanceStage}
+        loading={saving}
+        disabled={services.length === 0 || subtotal === 0}
+      >
+        Send estimate to customer
+        <ChevronRight size={14} />
+      </Button>
+    </div>
+  )
+
+  // ── Right panel: Approved → Complete — read-only summary ─────────────────
   const rightPanelEarly = (
     <div className="flex flex-col gap-4">
       <div>
-        <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-3">Financials</div>
-        {ro.total > 0 ? (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-text-muted">Parts</span>
-              <span className="text-text-primary tabular-nums">{formatCurrency(ro.parts)}</span>
+        <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-3">Estimate</div>
+        {subtotal > 0 ? (
+          <div className="space-y-1.5">
+            {services.map((svc, i) => (
+              <div key={i} className="flex justify-between text-sm">
+                <span className="text-text-muted truncate mr-2">{svc.name}</span>
+                <span className="text-text-primary tabular-nums flex-shrink-0">{formatCurrency(Number(svc.price))}</span>
+              </div>
+            ))}
+            <div className="flex justify-between text-xs text-text-muted pt-2 border-t border-border">
+              <span>Tax (8.5%)</span>
+              <span className="tabular-nums">{formatCurrency(taxAmount)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-text-muted">Labor</span>
-              <span className="text-text-primary tabular-nums">{formatCurrency(ro.labor)}</span>
-            </div>
-            <div className="flex justify-between text-sm pt-2 border-t border-border">
-              <span className="font-semibold text-text-primary">Total</span>
-              <span className="font-semibold text-orange tabular-nums">{formatCurrency(ro.total)}</span>
+            <div className="flex justify-between text-sm font-semibold pt-1.5 border-t border-border">
+              <span className="text-text-primary">Total</span>
+              <span className="text-orange tabular-nums">{formatCurrency(grandTotal)}</span>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-text-muted">Awaiting estimate approval</p>
+          <p className="text-sm text-text-muted">No estimate on file</p>
         )}
       </div>
 
@@ -189,10 +288,10 @@ export function RODetailModal({ open, onClose, ro }) {
       <div>
         <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-3">Invoice Summary</div>
         <div className="space-y-1.5">
-          {ro.services.map((svc, i) => (
+          {services.map((svc, i) => (
             <div key={i} className="flex justify-between text-sm">
               <span className="text-text-muted truncate mr-2">{svc.name}</span>
-              <span className="text-text-primary tabular-nums flex-shrink-0">{formatCurrency(svc.price)}</span>
+              <span className="text-text-primary tabular-nums flex-shrink-0">{formatCurrency(Number(svc.price))}</span>
             </div>
           ))}
           <div className="flex justify-between text-sm pt-2 border-t border-border">
@@ -311,6 +410,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const rightPanel =
     stage === 'Paid'     ? rightPanelPaid :
     stage === 'Invoiced' ? rightPanelInvoiced :
+    stage === 'Estimate' ? rightPanelEstimate :
                            rightPanelEarly
 
   return (
@@ -347,7 +447,7 @@ export function RODetailModal({ open, onClose, ro }) {
         <PrintPacketModal
           open={showPrintPacket}
           onClose={() => setShowPrintPacket(false)}
-          ro={ro}
+          ro={roForPrint}
           payment={payment}
         />
       )}
