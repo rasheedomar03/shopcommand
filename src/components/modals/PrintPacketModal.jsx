@@ -38,6 +38,11 @@ function groupBy(arr, key) {
     return acc
   }, {})
 }
+function chunk(arr, size) {
+  const out = []
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+  return out
+}
 
 export function PrintPacketModal({ open, onClose, ro, payment }) {
   if (!ro) return null
@@ -258,24 +263,25 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       <div class="section-label">Vehicle Inspection</div>
       ${mpiGroups.map(([category, items]) => `
         <div style="margin-bottom:14px;">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:7px;">${category}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;">
-            ${items.map(item => `
-              <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:#334155;">
-                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${STATUS_DOT_HEX[item.status] || '#cbd5e1'};"></span>
-                <span>${item.label}</span>
-                ${item.detail ? `<span style="font-size:10px;color:#94a3b8;margin-left:auto;">${item.detail}</span>` : ''}
-              </div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;border-bottom:1px solid #f1f5f9;padding-bottom:4px;margin-bottom:6px;">${category}</div>
+          <table style="width:100%;border-collapse:collapse;">
+            ${chunk(items, 2).map(pair => `
+              <tr>
+                ${pair.map(item => `
+                  <td style="width:50%;padding:3px 16px 3px 0;font-size:12px;color:#334155;vertical-align:middle;">
+                    <span style="color:${STATUS_DOT_HEX[item.status] || '#94a3b8'};font-size:11px;margin-right:5px;">&#9679;</span>${item.label}${item.detail ? `<span style="font-size:10px;color:#94a3b8;"> &mdash; ${item.detail}</span>` : ''}
+                  </td>
+                `).join('')}
+                ${pair.length === 1 ? '<td style="width:50%;"></td>' : ''}
+              </tr>
             `).join('')}
-          </div>
+          </table>
         </div>
       `).join('')}
-      <div style="display:flex;gap:16px;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;">
-        ${[['#22c55e','Good'],['#facc15','Monitor'],['#ef4444','Urgent']].map(([color,label]) => `
-          <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:#94a3b8;">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};"></span>${label}
-          </span>
-        `).join('')}
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9;font-size:10px;color:#94a3b8;">
+        <span style="margin-right:14px;"><span style="color:#22c55e;">&#9679;</span> Good</span>
+        <span style="margin-right:14px;"><span style="color:#facc15;">&#9679;</span> Monitor</span>
+        <span><span style="color:#ef4444;">&#9679;</span> Urgent</span>
       </div>
     </div>
   ` : ''
