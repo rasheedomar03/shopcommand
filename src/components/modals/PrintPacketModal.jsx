@@ -13,11 +13,30 @@ const METHOD_LABELS = {
   'check': 'Check',
 }
 
+const STATUS_DOT = {
+  green:  'bg-green-500',
+  yellow: 'bg-yellow-400',
+  red:    'bg-red-500',
+}
+const STATUS_DOT_HEX = {
+  green:  '#22c55e',
+  yellow: '#facc15',
+  red:    '#ef4444',
+}
+
 function fmt(dateStr, opts) {
   return new Date(dateStr).toLocaleDateString('en-US', opts)
 }
 function fmtTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+}
+function groupBy(arr, key) {
+  return arr.reduce((acc, item) => {
+    const g = item[key]
+    if (!acc[g]) acc[g] = []
+    acc[g].push(item)
+    return acc
+  }, {})
 }
 
 export function PrintPacketModal({ open, onClose, ro, payment }) {
@@ -30,16 +49,17 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
   const roDate = fmt(ro.updated, { month: 'long', day: 'numeric', year: 'numeric' })
   const paidDate = payment?.paidAt ? fmt(payment.paidAt, { month: 'long', day: 'numeric', year: 'numeric' }) : ''
   const paidTime = payment?.paidAt ? fmtTime(payment.paidAt) : ''
+  const mpiGroups = ro.mpi ? Object.entries(groupBy(ro.mpi.items, 'category')) : []
 
   const handlePrint = () => {
-    const w = window.open('', '_blank', 'width=780,height=960')
-    w.document.write(buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate, paidTime, payment }))
+    const w = window.open('', '_blank', 'width=780,height=1100')
+    w.document.write(buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate, paidTime, payment, mpiGroups }))
     w.document.close()
     w.focus()
     setTimeout(() => { w.print(); w.close() }, 250)
   }
 
-  // ── Preview (in-modal) ────────────────────────────────────────────────────
+  // ── Preview ───────────────────────────────────────────────────────────────
   return (
     <Modal open={open} onClose={onClose} title="Service Packet" subtitle={`${ro.id} · ${ro.customerName}`} size="lg">
       <div className="p-5 space-y-4">
@@ -62,7 +82,7 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
             </div>
           </div>
 
-          {/* Customer + Vehicle */}
+          {/* Customer + Vehicle + Tech */}
           <div className="grid grid-cols-3 gap-4">
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">Customer</div>
@@ -76,6 +96,22 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">Technician</div>
               <div className="font-semibold text-slate-900">{ro.techName}</div>
+            </div>
+          </div>
+
+          {/* VIN + Odometer */}
+          <div className="grid grid-cols-2 gap-4 pt-1 border-t border-slate-100">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">VIN</div>
+              <div className="font-mono text-xs text-slate-700 tracking-wide">{ro.vin || '—'}</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">Odometer</div>
+              <div className="text-xs text-slate-700">
+                {ro.odometerIn != null && <span>In: <span className="font-semibold">{ro.odometerIn.toLocaleString()} mi</span></span>}
+                {ro.odometerOut != null && <span className="ml-3">Out: <span className="font-semibold">{ro.odometerOut.toLocaleString()} mi</span></span>}
+                {ro.odometerIn == null && '—'}
+              </div>
             </div>
           </div>
 
@@ -129,6 +165,42 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
             </div>
           )}
 
+          {/* Multi-Point Inspection */}
+          {mpiGroups.length > 0 && (
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
+                Vehicle Inspection
+              </div>
+              <div className="space-y-3">
+                {mpiGroups.map(([category, items]) => (
+                  <div key={category}>
+                    <div className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5">{category}</div>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                      {items.map((item, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_DOT[item.status] || 'bg-slate-300'}`} />
+                          <span className="text-xs text-slate-700">{item.label}</span>
+                          {item.detail && (
+                            <span className="text-[10px] text-slate-400 ml-auto whitespace-nowrap">{item.detail}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Legend */}
+              <div className="mt-3 flex gap-4 text-[10px] text-slate-400">
+                {[['green', 'Good'], ['yellow', 'Monitor'], ['red', 'Urgent']].map(([s, label]) => (
+                  <span key={s} className="flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${STATUS_DOT[s]}`} />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Recommendations */}
           {ro.nextServiceDue && (
             <div>
@@ -150,7 +222,8 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
           {/* Footer */}
           <div className="pt-4 border-t border-slate-200 text-center text-xs text-slate-400 leading-relaxed">
             Thank you for choosing <span className="font-semibold text-slate-600">{shop.name}</span>.<br />
-            Call {shop.phone} to schedule your next service appointment.
+            Call {shop.phone} to schedule your next service appointment.<br />
+            <span className="text-[10px] mt-1 block">All parts and labor warranted for 12 months / 12,000 miles.</span>
           </div>
 
         </div>
@@ -169,8 +242,8 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
   )
 }
 
-// ── Print HTML (new window) ───────────────────────────────────────────────────
-function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate, paidTime, payment }) {
+// ── Print HTML ────────────────────────────────────────────────────────────────
+function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate, paidTime, payment, mpiGroups }) {
   const serviceRows = ro.services.map(svc => `
     <tr>
       <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;color:#0f172a;">
@@ -179,6 +252,33 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:600;color:#0f172a;">${formatCurrency(svc.price)}</td>
     </tr>
   `).join('')
+
+  const mpiSection = mpiGroups.length > 0 ? `
+    <div class="section">
+      <div class="section-label">Vehicle Inspection</div>
+      ${mpiGroups.map(([category, items]) => `
+        <div style="margin-bottom:14px;">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:7px;">${category}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;">
+            ${items.map(item => `
+              <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:#334155;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${STATUS_DOT_HEX[item.status] || '#cbd5e1'};"></span>
+                <span>${item.label}</span>
+                ${item.detail ? `<span style="font-size:10px;color:#94a3b8;margin-left:auto;">${item.detail}</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <div style="display:flex;gap:16px;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;">
+        ${[['#22c55e','Good'],['#facc15','Monitor'],['#ef4444','Urgent']].map(([color,label]) => `
+          <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:#94a3b8;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};"></span>${label}
+          </span>
+        `).join('')}
+      </div>
+    </div>
+  ` : ''
 
   const recommendSection = ro.nextServiceDue ? `
     <div class="section">
@@ -203,6 +303,26 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
           <div style="font-size:11px;color:#64748b;margin-top:2px;">${METHOD_LABELS[payment.method]} · ${paidDate} at ${paidTime}</div>
         </div>
       </div>
+    </div>
+  ` : ''
+
+  const vinOdoRow = (ro.vin || ro.odometerIn != null) ? `
+    <div class="meta-grid" style="grid-template-columns:1fr 1fr;margin-bottom:22px;padding-top:12px;border-top:1px solid #f1f5f9;">
+      ${ro.vin ? `
+        <div>
+          <div class="meta-label">VIN</div>
+          <div style="font-size:12px;font-family:monospace;letter-spacing:0.05em;color:#334155;">${ro.vin}</div>
+        </div>
+      ` : ''}
+      ${ro.odometerIn != null ? `
+        <div>
+          <div class="meta-label">Odometer</div>
+          <div class="meta-value" style="font-size:12px;">
+            In: ${ro.odometerIn.toLocaleString()} mi
+            ${ro.odometerOut != null ? `&nbsp;&nbsp;Out: ${ro.odometerOut.toLocaleString()} mi` : ''}
+          </div>
+        </div>
+      ` : ''}
     </div>
   ` : ''
 
@@ -232,6 +352,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
     .total-amount { font-size: 20px; color: #f97316; }
     .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8; line-height: 1.8; }
     .footer strong { color: #475569; }
+    .warranty { font-size: 10px; color: #94a3b8; margin-top: 6px; }
     @media print { body { padding: 24px; } }
   </style>
 </head>
@@ -264,6 +385,8 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
     </div>
   </div>
 
+  ${vinOdoRow}
+
   <div class="section">
     <div class="section-label">Customer Concern</div>
     <p class="concern">${ro.complaint}</p>
@@ -282,11 +405,13 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
   </div>
 
   ${paymentSection}
+  ${mpiSection}
   ${recommendSection}
 
   <div class="footer">
     Thank you for choosing <strong>${shop.name || 'our shop'}</strong>.<br>
-    Call <strong>${shop.phone || ''}</strong> to schedule your next service appointment.
+    Call <strong>${shop.phone || ''}</strong> to schedule your next service appointment.<br>
+    <div class="warranty">All parts and labor warranted for 12 months / 12,000 miles.</div>
   </div>
 
 </body>
