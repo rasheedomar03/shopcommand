@@ -45,11 +45,47 @@ export function formatRelativeTime(dateStr) {
   return formatDate(dateStr)
 }
 
+// Time tracking helpers
+
+export function startOfToday() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+export function startOfWeek() {
+  const d = new Date()
+  const day = d.getDay()
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+export function computeHoursMs(timeEntries, techId, sinceMs) {
+  const now = Date.now()
+  return (timeEntries || [])
+    .filter(e => e.techId === techId && new Date(e.clockInAt).getTime() >= sinceMs)
+    .reduce((sum, e) => {
+      const start = new Date(e.clockInAt).getTime()
+      const end = e.clockOutAt ? new Date(e.clockOutAt).getTime() : now
+      return sum + Math.max(0, end - start)
+    }, 0)
+}
+
+export function formatHours(ms) {
+  if (ms <= 0) return '—'
+  const totalMins = Math.floor(ms / 60000)
+  const h = Math.floor(totalMins / 60)
+  const m = totalMins % 60
+  if (h === 0) return `${m}m`
+  return m === 0 ? `${h}h` : `${h}h ${m}m`
+}
+
 export const RO_STAGES = [
   'Estimate',
   'Approved',
-  'In Progress',
   'Waiting Parts',
+  'In Progress',
   'Complete',
   'Invoiced',
   'Paid',

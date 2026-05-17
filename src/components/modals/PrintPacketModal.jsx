@@ -247,12 +247,14 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
   )
 }
 
+const esc = str => String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
 // ── Print HTML ────────────────────────────────────────────────────────────────
 function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate, paidTime, payment, mpiGroups }) {
   const serviceRows = ro.services.map(svc => `
     <tr>
       <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;color:#0f172a;">
-        <span style="color:#22c55e;margin-right:8px;font-weight:700;">✓</span>${svc.name}
+        <span style="color:#22c55e;margin-right:8px;font-weight:700;">✓</span>${esc(svc.name)}
       </td>
       <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:600;color:#0f172a;">${formatCurrency(svc.price)}</td>
     </tr>
@@ -263,13 +265,13 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       <div class="section-label">Vehicle Inspection</div>
       ${mpiGroups.map(([category, items]) => `
         <div style="margin-bottom:14px;">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;border-bottom:1px solid #f1f5f9;padding-bottom:4px;margin-bottom:6px;">${category}</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;border-bottom:1px solid #f1f5f9;padding-bottom:4px;margin-bottom:6px;">${esc(category)}</div>
           <table style="width:100%;border-collapse:collapse;">
             ${chunk(items, 2).map(pair => `
               <tr>
                 ${pair.map(item => `
                   <td style="width:50%;padding:3px 16px 3px 0;font-size:12px;color:#334155;vertical-align:middle;">
-                    <span style="color:${STATUS_DOT_HEX[item.status] || '#94a3b8'};font-size:11px;margin-right:5px;">&#9679;</span>${item.label}${item.detail ? `<span style="font-size:10px;color:#94a3b8;"> &mdash; ${item.detail}</span>` : ''}
+                    <span style="color:${STATUS_DOT_HEX[item.status] || '#94a3b8'};font-size:11px;margin-right:5px;">&#9679;</span>${esc(item.label)}${item.detail ? `<span style="font-size:10px;color:#94a3b8;"> &mdash; ${esc(item.detail)}</span>` : ''}
                   </td>
                 `).join('')}
                 ${pair.length === 1 ? '<td style="width:50%;"></td>' : ''}
@@ -292,7 +294,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;">
         <span style="color:#f97316;font-weight:700;font-size:16px;line-height:1;">›</span>
         <div>
-          <div style="font-size:13px;font-weight:600;color:#0f172a;">${ro.nextServiceDue.service} in ~${ro.nextServiceDue.miles.toLocaleString()} miles</div>
+          <div style="font-size:13px;font-weight:600;color:#0f172a;">${esc(ro.nextServiceDue.service)} in ~${ro.nextServiceDue.miles.toLocaleString()} miles</div>
           <div style="font-size:11px;color:#64748b;margin-top:3px;">Call us or book online to schedule your next visit.</div>
         </div>
       </div>
@@ -306,7 +308,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
         <span style="color:#16a34a;font-size:18px;font-weight:700;">✓</span>
         <div>
           <div style="font-size:13px;font-weight:700;color:#15803d;">Paid — ${formatCurrency(grandTotal)}</div>
-          <div style="font-size:11px;color:#64748b;margin-top:2px;">${METHOD_LABELS[payment.method]} · ${paidDate} at ${paidTime}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(METHOD_LABELS[payment.method])} · ${esc(paidDate)} at ${esc(paidTime)}</div>
         </div>
       </div>
     </div>
@@ -317,7 +319,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       ${ro.vin ? `
         <div>
           <div class="meta-label">VIN</div>
-          <div style="font-size:12px;font-family:monospace;letter-spacing:0.05em;color:#334155;">${ro.vin}</div>
+          <div style="font-size:12px;font-family:monospace;letter-spacing:0.05em;color:#334155;">${esc(ro.vin)}</div>
         </div>
       ` : ''}
       ${ro.odometerIn != null ? `
@@ -336,7 +338,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>${ro.id} — Service Packet</title>
+  <title>${esc(ro.id)} — Service Packet</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #0f172a; background: #fff; padding: 44px; max-width: 720px; margin: 0 auto; font-size: 13px; }
@@ -366,28 +368,28 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
 
   <div class="header">
     <div>
-      <div class="shop-name">${shop.name || 'ShopCommand'}</div>
-      <div class="shop-sub">${shop.address || ''}<br>${shop.phone || ''}</div>
+      <div class="shop-name">${esc(shop.name || 'ShopCommand')}</div>
+      <div class="shop-sub">${esc(shop.address || '')}<br>${esc(shop.phone || '')}</div>
     </div>
     <div>
-      <div class="ro-number">${ro.id}</div>
-      <div class="ro-date">${roDate}</div>
+      <div class="ro-number">${esc(ro.id)}</div>
+      <div class="ro-date">${esc(roDate)}</div>
     </div>
   </div>
 
   <div class="meta-grid">
     <div>
       <div class="meta-label">Customer</div>
-      <div class="meta-value">${ro.customerName}</div>
-      <div class="meta-sub">${ro.customerPhone || ''}</div>
+      <div class="meta-value">${esc(ro.customerName)}</div>
+      <div class="meta-sub">${esc(ro.customerPhone || '')}</div>
     </div>
     <div>
       <div class="meta-label">Vehicle</div>
-      <div class="meta-value">${ro.vehicle}</div>
+      <div class="meta-value">${esc(ro.vehicle)}</div>
     </div>
     <div>
       <div class="meta-label">Technician</div>
-      <div class="meta-value">${ro.techName}</div>
+      <div class="meta-value">${esc(ro.techName)}</div>
     </div>
   </div>
 
@@ -395,7 +397,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
 
   <div class="section">
     <div class="section-label">Customer Concern</div>
-    <p class="concern">${ro.complaint}</p>
+    <p class="concern">${esc(ro.complaint)}</p>
   </div>
 
   <div class="section">
@@ -415,8 +417,8 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
   ${recommendSection}
 
   <div class="footer">
-    Thank you for choosing <strong>${shop.name || 'our shop'}</strong>.<br>
-    Call <strong>${shop.phone || ''}</strong> to schedule your next service appointment.<br>
+    Thank you for choosing <strong>${esc(shop.name || 'our shop')}</strong>.<br>
+    Call <strong>${esc(shop.phone || '')}</strong> to schedule your next service appointment.<br>
     <div class="warranty">All parts and labor warranted for 12 months / 12,000 miles.</div>
   </div>
 

@@ -1,6 +1,6 @@
+headersOrigin = "config"
 redirectsOrigin = "config"
 plugins = []
-headers = []
 
 [functions]
 
@@ -8,8 +8,8 @@ headers = []
 
 [build]
 publish = "C:\\Users\\rashe\\shopcommand\\dist"
-publishOrigin = "ui"
-commandOrigin = "ui"
+publishOrigin = "config"
+commandOrigin = "config"
 command = "npm run build"
 
 [build.environment]
@@ -25,6 +25,18 @@ command = "npm run build"
 [build.processing.js]
 
 [build.services]
+
+[[headers]]
+for = "/assets/*"
+
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "/index.html"
+
+[headers.values]
+Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[redirects]]
 from = "/*"

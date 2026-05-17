@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, UserCircle } from 'lucide-react'
 import { customers, shops } from '@/data/mock'
+import { useAuth } from '@/contexts/AuthContext'
 import { Badge } from '@/components/ui/Badge'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -16,10 +17,16 @@ const STATUS_CONFIG = {
 
 export default function Customers() {
   const navigate = useNavigate()
+  const { session } = useAuth()
+  const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
 
-  const filtered = customers.filter(c => {
+  const scopedCustomers = isAdvisor
+    ? customers.filter(c => c.shopId === session.shopId)
+    : customers
+
+  const filtered = scopedCustomers.filter(c => {
     const q = search.toLowerCase()
     const matchSearch = !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.includes(q)
     const matchStatus = statusFilter === 'All' || c.status === statusFilter
@@ -30,16 +37,16 @@ export default function Customers() {
     <div className="p-5 lg:p-6 space-y-5 animate-fade-in">
       <div>
         <h1 className="text-xl font-semibold text-text-primary">Customers</h1>
-        <p className="text-xs text-text-muted mt-0.5">{customers.length} customers across all locations</p>
+        <p className="text-xs text-text-muted mt-0.5">{scopedCustomers.length} customers{isAdvisor ? ' at your location' : ' across all locations'}</p>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total', value: customers.length },
-          { label: 'VIP', value: customers.filter(c => c.status === 'vip').length },
-          { label: 'New', value: customers.filter(c => c.status === 'new').length },
-          { label: 'At Risk', value: customers.filter(c => c.status === 'at-risk').length },
+          { label: 'Total',   value: scopedCustomers.length },
+          { label: 'VIP',     value: scopedCustomers.filter(c => c.status === 'vip').length },
+          { label: 'New',     value: scopedCustomers.filter(c => c.status === 'new').length },
+          { label: 'At Risk', value: scopedCustomers.filter(c => c.status === 'at-risk').length },
         ].map(s => (
           <div key={s.label} className="bg-surface border border-border rounded-lg px-4 py-3">
             <div className="text-xs text-text-muted uppercase tracking-wider mb-1">{s.label}</div>
@@ -77,8 +84,40 @@ export default function Customers() {
         </div>
       </div>
 
+      {/* Mobile */}
+      <div className="sm:hidden space-y-2">
+        {filtered.map(c => {
+          const sc = STATUS_CONFIG[c.status] || STATUS_CONFIG.regular
+          return (
+            <button
+              key={c.id}
+              onClick={() => navigate(`/customers/${c.id}`)}
+              className="w-full text-left bg-surface border border-border rounded-xl p-4 hover:border-orange/40 transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-orange/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-semibold text-orange">{c.name.split(' ').map(n => n[0]).join('').slice(0,2)}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold text-text-primary truncate">{c.name}</div>
+                  <div className="text-xs text-text-muted">{c.phone}</div>
+                </div>
+                <Badge variant={sc.variant}>{sc.label}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs text-text-muted">
+                <span>{c.roCount} visit{c.roCount !== 1 ? 's' : ''}</span>
+                <span className="font-medium text-text-primary tabular-nums">{formatCurrency(c.totalSpent)}</span>
+              </div>
+            </button>
+          )
+        })}
+        {filtered.length === 0 && (
+          <div className="py-12 text-center text-sm text-text-muted">No customers found.</div>
+        )}
+      </div>
+
       {/* Table */}
-      <div className="bg-surface border border-border rounded-lg overflow-hidden">
+      <div className="hidden sm:block bg-surface border border-border rounded-lg overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <div className="w-12 h-12 rounded-xl bg-border mx-auto mb-3 flex items-center justify-center">

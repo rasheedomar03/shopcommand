@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /repair-orders
+Disallow: /technicians
+Disallow: /customers
+Disallow: /parts
+Disallow: /reports
+Disallow: /settings
+Disallow: /shops
+Disallow: /dispatch
+Disallow: /appointments
+Disallow: /tech-board
+
+Sitemap: https://shopcommand.net/sitemap.xml

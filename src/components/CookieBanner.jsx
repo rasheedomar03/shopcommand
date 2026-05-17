@@ -1,0 +1,48 @@
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+
+export function CookieBanner() {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const consent = localStorage.getItem('sc_cookie_consent')
+    if (!consent) setVisible(true)
+  }, [])
+
+  const accept = () => {
+    localStorage.setItem('sc_cookie_consent', 'accepted')
+    setVisible(false)
+  }
+
+  const decline = () => {
+    localStorage.setItem('sc_cookie_consent', 'declined')
+    setVisible(false)
+  }
+
+  if (!visible) return null
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 flex justify-center">
+      <div className="max-w-2xl w-full bg-[#13141f] border border-white/[0.10] rounded-xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-2xl">
+        <p className="text-white/60 text-xs leading-relaxed flex-1">
+          We use cookies to keep you logged in and improve the product. See our{' '}
+          <Link to="/privacy" className="text-orange-400 hover:underline">Privacy Policy</Link>.
+        </p>
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={decline}
+            className="h-7 px-3 rounded-md border border-white/10 text-white/40 hover:text-white/70 text-xs font-medium transition-colors"
+          >
+            Decline
+          </button>
+          <button
+            onClick={accept}
+            className="h-7 px-4 rounded-md bg-orange-500 hover:bg-orange-400 text-white text-xs font-semibold transition-colors"
+          >
+            Accept
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,17 +1,27 @@
-import { NavLink, Link } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   Building2,
   ClipboardList,
+  CalendarDays,
   Users,
   UserCircle,
   Package,
   BarChart3,
   Settings,
+  LogOut,
   X,
+  ArrowRightLeft,
+  FileText,
+  Receipt,
+  MessageSquare,
+  ClipboardCheck,
+  CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { useData } from '@/contexts/DataContext'
 
 // Hex socket mark — pointy-top, 0.56 wall ratio, 0.5px optical nudge
 function HexMark({ size = 28, bg = '#12131A' }) {
@@ -44,17 +54,38 @@ const navGroups = [
   {
     label: 'Operations',
     items: [
-      { to: '/repair-orders', label: 'Repair Orders', icon: ClipboardList },
-      { to: '/technicians', label: 'Technicians', icon: Users },
-      { to: '/customers', label: 'Customers', icon: UserCircle },
-      { to: '/parts', label: 'Parts', icon: Package },
+      { to: '/estimates',      label: 'Estimates',      icon: FileText       },
+      { to: '/repair-orders',  label: 'Repair Orders',  icon: ClipboardList  },
+      { to: '/inspections',    label: 'Inspections',    icon: ClipboardCheck },
+      { to: '/invoices',       label: 'Invoices',       icon: Receipt        },
+      { to: '/payments',       label: 'Payments',       icon: CreditCard     },
+      { to: '/appointments',   label: 'Appointments',   icon: CalendarDays   },
+      { to: '/dispatch',       label: 'Dispatch',       icon: ArrowRightLeft },
+      { to: '/technicians',    label: 'Technicians',    icon: Users          },
+      { to: '/customers',      label: 'Customers',      icon: UserCircle     },
+      { to: '/messages',       label: 'Messages',       icon: MessageSquare  },
+      { to: '/parts',          label: 'Parts',          icon: Package        },
     ],
   },
 ]
 
+const ADVISOR_HIDDEN = new Set(['/shops', '/technicians', '/reports'])
+
 export function Sidebar({ open, onClose }) {
   const { theme } = useTheme()
+  const { logout, session } = useAuth()
+  const { parts, shops } = useData()
+  const navigate = useNavigate()
   const hexBg = theme === 'light' ? '#FFFFFF' : '#12131A'
+  const isAdvisor = session?.role === 'advisor'
+  const advisorShop = isAdvisor && session?.shopId ? shops.find(s => s.id === session.shopId) : null
+  const scopedParts = isAdvisor ? parts.filter(p => p.shopId === session.shopId) : parts
+  const lowStockCount = scopedParts.filter(p => p.qty <= p.minQty).length
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <>
@@ -97,13 +128,16 @@ export function Sidebar({ open, onClose }) {
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto">
           <div className="space-y-4">
-            {navGroups.map(({ label, items }) => (
+            {navGroups.map(({ label, items }) => {
+              const visibleItems = isAdvisor ? items.filter(i => !ADVISOR_HIDDEN.has(i.to)) : items
+              if (visibleItems.length === 0) return null
+              return (
               <div key={label}>
                 <div className="px-3 mb-1 text-xs font-semibold uppercase tracking-widest text-text-muted">
                   {label}
                 </div>
                 <div className="space-y-0.5">
-                  {items.map(({ to, label: itemLabel, icon: Icon }) => (
+                  {visibleItems.map(({ to, label: itemLabel, icon: Icon }) => (
                     <NavLink
                       key={to}
                       to={to}
@@ -124,13 +158,19 @@ export function Sidebar({ open, onClose }) {
                         <>
                           <Icon size={16} strokeWidth={isActive ? 2.5 : 1.8} />
                           {itemLabel}
+                          {to === '/parts' && lowStockCount > 0 && (
+                            <span className="ml-auto text-2xs px-1.5 py-0.5 rounded-full bg-status-yellow/15 text-status-yellow font-medium tabular-nums">
+                              {lowStockCount}
+                            </span>
+                          )}
                         </>
                       )}
                     </NavLink>
                   ))}
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         </nav>
 
@@ -160,12 +200,26 @@ export function Sidebar({ open, onClose }) {
           <div className="mt-3 px-3 py-2.5 rounded-md bg-background border border-border">
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-full bg-orange/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-semibold text-orange">RO</span>
+                <span className="text-xs font-semibold text-orange">
+                  {session?.name ? session.name.split(' ').map(n => n[0]).join('').slice(0, 2) : '?'}
+                </span>
               </div>
-              <div className="min-w-0">
-                <div className="text-xs font-medium text-text-primary truncate">Rasheed Omar</div>
-                <div className="text-2xs text-text-muted">Owner · 5 Locations</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-text-primary truncate">{session?.name || 'User'}</div>
+                <div className="text-2xs text-text-muted">
+                  {isAdvisor
+                    ? advisorShop ? `Service Advisor · ${advisorShop.name.split(' ').slice(0, 2).join(' ')}` : 'Service Advisor'
+                    : 'Owner · 5 Locations'
+                  }
+                </div>
               </div>
+              <button
+                onClick={handleLogout}
+                className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+                title="Sign out"
+              >
+                <LogOut size={13} />
+              </button>
             </div>
           </div>
         </div>

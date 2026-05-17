@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Phone, Mail, MapPin, Plus, Star, Clock, TrendingUp, Wrench, Car } from 'lucide-react'
-import { customers, repairOrders, shops } from '@/data/mock'
+import { ArrowLeft, Phone, Mail, MapPin, Plus, Star, Clock, TrendingUp, Wrench, Car, Check, Shield } from 'lucide-react'
+import { customers, shops } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { RODetailModal } from '@/components/modals/RODetailModal'
@@ -23,12 +24,31 @@ const METHOD_LABELS = {
   'check': 'Check',
 }
 
+// Warranty helpers (module-level, no state needed)
+const warrantyExpires = (svc) => {
+  if (!svc.warrantyMonths || !svc.warrantyStartDate) return null
+  const d = new Date(svc.warrantyStartDate)
+  d.setMonth(d.getMonth() + svc.warrantyMonths)
+  return d
+}
+const isWarrantyActive = (svc) => {
+  const exp = warrantyExpires(svc)
+  return exp && exp > new Date()
+}
+
 export default function CustomerProfile() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [selectedRO, setSelectedRO] = useState(null)
   const [newROOpen, setNewROOpen] = useState(false)
+  const [textSent, setTextSent] = useState(false)
 
+  const handleTextCustomer = () => {
+    setTextSent(true)
+    setTimeout(() => setTextSent(false), 3000)
+  }
+
+  const { repairOrders } = useData()
   const customer = customers.find(c => String(c.id) === String(id))
   if (!customer) {
     return (
@@ -62,6 +82,7 @@ export default function CustomerProfile() {
         lastOdometer: ro.odometerOut || ro.odometerIn,
         roCount: 0,
         totalSpent: 0,
+        activeWarranties: [],
       }
     }
     vehicleMap[ro.vehicle].roCount++
@@ -70,6 +91,12 @@ export default function CustomerProfile() {
       vehicleMap[ro.vehicle].lastService = ro.updated
       vehicleMap[ro.vehicle].lastOdometer = ro.odometerOut || ro.odometerIn
     }
+    // Collect active warranties for this vehicle
+    ;(ro.services || []).forEach(svc => {
+      if (isWarrantyActive(svc)) {
+        vehicleMap[ro.vehicle].activeWarranties.push({ ...svc, roId: ro.id })
+      }
+    })
   })
   const vehicles = Object.values(vehicleMap)
 
@@ -138,9 +165,17 @@ export default function CustomerProfile() {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <button className="flex items-center gap-2 h-8 px-3 rounded-md border border-border text-xs font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.15)]">
-              <Phone size={12} />
-              Text customer
+            <button
+              onClick={handleTextCustomer}
+              className={cn(
+                'flex items-center gap-2 h-8 px-3 rounded-md border text-xs font-medium transition-all duration-150 hover:-translate-y-px',
+                textSent
+                  ? 'border-green-500/50 text-green-400 bg-green-500/10'
+                  : 'border-border text-text-secondary hover:border-orange hover:text-text-primary hover:shadow-[0_0_10px_rgba(249,115,22,0.15)]'
+              )}
+            >
+              {textSent ? <Check size={12} /> : <Phone size={12} />}
+              {textSent ? 'Message sent!' : 'Text customer'}
             </button>
             <Button onClick={() => setNewROOpen(true)}>
               <Plus size={13} />
@@ -216,7 +251,16 @@ export default function CustomerProfile() {
                         {ro.services?.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
                             {ro.services.slice(0, 3).map((svc, i) => (
-                              <span key={i} className="text-2xs px-1.5 py-0.5 rounded bg-border text-text-muted">
+                              <span
+                                key={i}
+                                className={cn(
+                                  'text-2xs px-1.5 py-0.5 rounded font-medium inline-flex items-center gap-1',
+                                  isWarrantyActive(svc)
+                                    ? 'bg-status-green/10 text-status-green border border-status-green/20'
+                                    : 'bg-border text-text-muted'
+                                )}
+                              >
+                                {isWarrantyActive(svc) && <Shield size={8} />}
                                 {svc.name}
                               </span>
                             ))}
@@ -281,6 +325,23 @@ export default function CustomerProfile() {
                           )}
                           <span className="text-2xs text-text-muted">{v.roCount} visit{v.roCount !== 1 ? 's' : ''}</span>
                         </div>
+                        {v.activeWarranties.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {v.activeWarranties.map((svc, idx) => {
+                              const exp = warrantyExpires(svc)
+                              return (
+                                <span
+                                  key={idx}
+                                  title={`Expires ${exp?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                  className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-status-green/10 text-status-green border border-status-green/20 font-medium"
+                                >
+                                  <Shield size={8} />
+                                  {svc.name}
+                                </span>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -304,12 +365,28 @@ export default function CustomerProfile() {
                 <div className="text-2xs text-text-muted">Start a new job for this customer</div>
               </div>
             </button>
-            <button className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.15)] text-left">
-              <div className="w-7 h-7 rounded-md bg-border flex items-center justify-center flex-shrink-0">
-                <Phone size={13} className="text-text-muted" />
+            <button
+              onClick={handleTextCustomer}
+              className={cn(
+                'w-full flex items-center gap-3 p-3 rounded-lg border transition-all duration-150 hover:-translate-y-px text-left',
+                textSent
+                  ? 'border-green-500/50 bg-green-500/10'
+                  : 'border-border hover:border-orange hover:text-text-primary hover:shadow-[0_0_10px_rgba(249,115,22,0.15)]'
+              )}
+            >
+              <div className={cn(
+                'w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0',
+                textSent ? 'bg-green-500/15' : 'bg-border'
+              )}>
+                {textSent
+                  ? <Check size={13} className="text-green-400" />
+                  : <Phone size={13} className="text-text-muted" />
+                }
               </div>
               <div>
-                <div className="text-sm font-medium text-text-primary leading-tight">Text customer</div>
+                <div className={cn('text-sm font-medium leading-tight', textSent ? 'text-green-400' : 'text-text-primary')}>
+                  {textSent ? 'Message sent!' : 'Text customer'}
+                </div>
                 <div className="text-2xs text-text-muted">{customer.phone}</div>
               </div>
             </button>
