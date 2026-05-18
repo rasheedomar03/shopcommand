@@ -522,7 +522,7 @@ export default function Landing() {
 
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link to="/login" className="px-4 py-1.5 text-sm font-medium text-white/60 hover:text-white transition-colors">
-            Log in
+            See the demo
           </Link>
           <a href="#founding" className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors whitespace-nowrap">
             Reserve your spot
