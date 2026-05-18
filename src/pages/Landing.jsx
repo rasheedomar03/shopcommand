@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Wrench, Users, Check, Phone, Mail, ChevronDown } from 'lucide-react'
+import { Building2, Wrench, Users, Check, Mail, ChevronDown } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 
 const TOTAL_SPOTS = 25
 const CLAIMED_SPOTS = 0    // ← update this manually as signups come in
 const CALENDLY_URL = 'https://calendly.com/rasheed-omar/30min'
-const CONTACT_PHONE = '(713) 966-0328'
 const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
 
 // ─── Hex mark ────────────────────────────────────────────────────────────────
@@ -397,6 +396,10 @@ function FoundingSection() {
               </form>
             )}
           </div>
+
+          <p className="text-center text-white/35 text-sm mt-6 leading-relaxed">
+            You won't get a ticket queue. Every founding member gets direct access to Rasheed — real answers, no support portal, no waiting.
+          </p>
         </Reveal>
       </div>
     </section>
@@ -937,33 +940,6 @@ export default function Landing() {
       </section>
 
       {/* Support promise */}
-      <section className="px-6 pb-6">
-        <div className="max-w-2xl mx-auto">
-          <Reveal>
-            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] px-7 py-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-                <Phone size={17} className="text-orange-400" strokeWidth={1.8} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-white text-sm font-semibold mb-1" style={{ fontFamily: '"Space Grotesk", system-ui' }}>
-                  You won't get a ticket queue. You get our number.
-                </div>
-                <p className="text-white/40 text-sm leading-relaxed">
-                  Every founding member gets direct access to Rasheed — real answers, no support portal, no waiting.
-                </p>
-              </div>
-              <a
-                href={`tel:${CONTACT_PHONE.replace(/\D/g, '')}`}
-                className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 text-white/45 hover:text-white text-sm transition-colors whitespace-nowrap"
-              >
-                <Phone size={12} />
-                {CONTACT_PHONE}
-              </a>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
       {/* Founding Member signup */}
       <FoundingSection />
 
@@ -1008,10 +984,6 @@ export default function Landing() {
 
           {/* Contact */}
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-            <a href={`tel:${CONTACT_PHONE.replace(/\D/g, '')}`} className="flex items-center gap-2 text-white/35 hover:text-white/60 text-sm transition-colors">
-              <Phone size={13} className="flex-shrink-0" />
-              {CONTACT_PHONE}
-            </a>
             <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 text-white/35 hover:text-white/60 text-sm transition-colors">
               <Mail size={13} className="flex-shrink-0" />
               {CONTACT_EMAIL}
