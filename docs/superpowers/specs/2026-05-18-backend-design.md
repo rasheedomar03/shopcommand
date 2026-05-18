@@ -28,7 +28,7 @@ organizations
   id              uuid PK
   name            text NOT NULL
   owner_user_id   uuid FK → users
-  plan            enum('starter','pro','multi')  DEFAULT 'starter'
+  is_founding     boolean DEFAULT false
   stripe_customer_id  text
   created_at      timestamptz
 
@@ -244,13 +244,14 @@ payments
 subscriptions
   id              uuid PK
   org_id          uuid FK → organizations
-  plan            enum('starter','pro','multi')
   stripe_subscription_id  text
   status          enum('active','past_due','canceled')
+  is_founding     boolean DEFAULT false  -- locked at $125/mo
+  price_cents     int NOT NULL           -- 12500 for founding members
   current_period_start  timestamptz
   current_period_end    timestamptz
-  message_limit   int NOT NULL      -- 250 / 1000 / 2500
-  overage_rate    decimal(5,4)      -- 0.04 / 0.03 / 0.025
+  message_limit   int DEFAULT 500
+  overage_rate    decimal(5,4) DEFAULT 0.03
 ```
 
 ### QuickBooks Sync
@@ -392,12 +393,7 @@ On every outbound SMS:
 
 **Billing cycle reset:** Cron job runs daily, checks if `period_end < today` for any `sms_usage` row, creates next period row with counters at 0.
 
-**Plan limits:**
-| Plan | Included msgs | Overage rate |
-|------|--------------|--------------|
-| Starter | 250/mo | $0.04/msg |
-| Pro | 1,000/mo | $0.03/msg |
-| Multi-Shop | 2,500/mo pooled | $0.025/msg |
+**Limits:** 500 messages/mo included, $0.03/msg overage. Same for all customers.
 
 ### 2. NHTSA VIN Decoder
 
@@ -509,21 +505,21 @@ vin_cache
 
 ---
 
-## Plan Tiers
+## Pricing
 
-| | Starter | Pro | Multi-Shop |
-|---|---|---|---|
-| **Price** | $49/mo | $149/mo | $349/mo |
-| **Shops** | 1 | 1 | Up to 10 |
-| **Users** | 5 | 15 | Unlimited |
-| **SMS included** | 250/mo | 1,000/mo | 2,500/mo pooled |
-| **SMS overage** | $0.04/msg | $0.03/msg | $0.025/msg |
-| **Stripe payments** | ✓ | ✓ | ✓ |
-| **QuickBooks sync** | — | ✓ | ✓ |
-| **E-signatures** | ✓ | ✓ | ✓ |
-| **VIN decode** | ✓ | ✓ | ✓ |
-| **Canned jobs** | 10 max | Unlimited | Unlimited |
-| **Reports** | Basic | Full | Full + multi-shop |
+**Founding Member Plan — $125/mo per shop** (first 25 customers, locked in)
+
+Everything included, no tiers, no feature gates:
+- Unlimited users (owners, advisors, techs)
+- 500 SMS/mo included, $0.03/msg overage
+- Stripe payments
+- QuickBooks sync
+- E-signatures
+- VIN decode
+- Unlimited canned jobs
+- Full reports
+
+No plan selection logic in the codebase. One plan, one price. Tiers can be introduced later once we have real usage data from 25+ shops.
 
 ---
 
