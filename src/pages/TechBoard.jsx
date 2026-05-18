@@ -98,7 +98,7 @@ function NavItem({ icon: Icon, label, active, onClick, badge }) {
 
 // ── job card ──────────────────────────────────────────────────────────────────
 
-function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now, jobTimers, startJobTimer, stopJobTimer, onRequestPart, photoCount, onPhoto, onInspect }) {
+function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now, jobTimers, startJobTimer, stopJobTimer, onRequestPart, photoCount, onPhoto, onInspect, clockedIn = true }) {
   const isQueued  = status === 'queued'
   const isActive  = status === 'active'
   const isWaiting = status === 'waiting'
@@ -184,9 +184,10 @@ function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now
                   )}
                   {!isDone && (
                     <button
+                      disabled={!clockedIn}
                       onClick={e => { e.stopPropagation(); running ? stopJobTimer(ro.id, i) : startJobTimer(ro.id, i) }}
-                      className={cn('flex-shrink-0 transition-colors', running ? 'text-orange hover:text-orange/70' : 'text-text-muted hover:text-orange')}
-                      title={running ? 'Stop' : 'Start timer'}
+                      className={cn('flex-shrink-0 transition-colors', !clockedIn ? 'text-text-muted/40 cursor-not-allowed' : running ? 'text-orange hover:text-orange/70' : 'text-text-muted hover:text-orange')}
+                      title={!clockedIn ? 'Clock in to use timers' : running ? 'Stop' : 'Start timer'}
                     >
                       {running ? <Square size={9} fill="currentColor" /> : <PlayCircle size={12} />}
                     </button>
@@ -242,18 +243,18 @@ function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now
       )}
 
       {isQueued && (
-        <button onClick={e => { e.stopPropagation(); onStart() }} className="w-full h-10 rounded-lg bg-orange text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-orange/90 active:scale-[0.98] transition-all duration-150">
-          <PlayCircle size={15} /> Start Job
+        <button disabled={!clockedIn} onClick={e => { e.stopPropagation(); onStart() }} className={cn("w-full h-10 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-150", clockedIn ? "bg-orange text-white hover:bg-orange/90 active:scale-[0.98]" : "bg-orange/30 text-white/50 cursor-not-allowed")}>
+          <PlayCircle size={15} /> {clockedIn ? 'Start Job' : 'Clock in to start'}
         </button>
       )}
       {isWaiting && (
-        <button onClick={e => { e.stopPropagation(); onResume() }} className="w-full h-10 rounded-lg border border-status-yellow/30 bg-status-yellow/10 text-status-yellow text-sm font-semibold flex items-center justify-center gap-2 hover:bg-status-yellow/20 active:scale-[0.98] transition-all duration-150">
-          <PlayCircle size={15} /> Parts In — Resume
+        <button disabled={!clockedIn} onClick={e => { e.stopPropagation(); onResume() }} className={cn("w-full h-10 rounded-lg border text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-150", clockedIn ? "border-status-yellow/30 bg-status-yellow/10 text-status-yellow hover:bg-status-yellow/20 active:scale-[0.98]" : "border-border bg-border/30 text-text-muted cursor-not-allowed")}>
+          <PlayCircle size={15} /> {clockedIn ? 'Parts In — Resume' : 'Clock in to resume'}
         </button>
       )}
       {isActive && (
-        <button onClick={e => { e.stopPropagation(); onDone() }} className="w-full h-10 rounded-lg bg-status-green text-white text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all duration-150">
-          <Flag size={14} /> Mark Done
+        <button disabled={!clockedIn} onClick={e => { e.stopPropagation(); onDone() }} className={cn("w-full h-10 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-150", clockedIn ? "bg-status-green text-white hover:opacity-90 active:scale-[0.98]" : "bg-status-green/30 text-white/50 cursor-not-allowed")}>
+          <Flag size={14} /> {clockedIn ? 'Mark Done' : 'Clock in to complete'}
         </button>
       )}
       {isDone && (
@@ -345,12 +346,12 @@ function ColHeader({ label, count, accent }) {
 
 // ── tabs ──────────────────────────────────────────────────────────────────────
 
-function JobsTab({ techROs, startTimes, now, onStart, onDone, onResume, onOpen, onRequestPart, jobTimers, startJobTimer, stopJobTimer, photoCount, onPhoto, onInspect }) {
+function JobsTab({ techROs, startTimes, now, onStart, onDone, onResume, onOpen, onRequestPart, jobTimers, startJobTimer, stopJobTimer, photoCount, onPhoto, onInspect, clockedIn }) {
   const queued  = techROs.filter(ro => deriveStatus(ro) === 'queued')
   const waiting = techROs.filter(ro => deriveStatus(ro) === 'waiting')
   const active  = techROs.filter(ro => deriveStatus(ro) === 'active')
   const done    = techROs.filter(ro => deriveStatus(ro) === 'done')
-  const timerProps = { jobTimers, startJobTimer, stopJobTimer, onRequestPart, photoCount, onPhoto, onInspect }
+  const timerProps = { jobTimers, startJobTimer, stopJobTimer, onRequestPart, photoCount, onPhoto, onInspect, clockedIn }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
@@ -1263,26 +1264,19 @@ export default function TechBoard() {
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
-
-          {/* Clocked out */}
-          {!clockedIn ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-border flex items-center justify-center mx-auto mb-4">
-                  <Clock size={24} className="text-text-muted" />
-                </div>
-                <div className="text-lg font-semibold text-text-primary mb-1">You're clocked out</div>
-                <p className="text-sm text-text-muted mb-5">Clock in to see your jobs.</p>
-                <button onClick={handleToggleClock} className="h-10 px-6 rounded-lg bg-orange text-white text-sm font-semibold hover:bg-orange/90 transition-colors">
-                  Clock In
-                </button>
-                {clockError && (
-                  <p className="mt-3 text-xs text-status-red max-w-xs">{clockError}</p>
-                )}
-              </div>
-            </div>
-          ) : (
             <div className="p-4 sm:p-5 lg:p-6">
+
+              {/* Clocked-out banner */}
+              {!clockedIn && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-status-yellow/5 border border-status-yellow/20 mb-5">
+                  <Clock size={15} className="text-status-yellow flex-shrink-0" />
+                  <span className="text-sm text-text-secondary flex-1">You're clocked out — clock in to start or move jobs.</span>
+                  <button onClick={handleToggleClock} className="h-7 px-3 rounded-md bg-orange text-white text-xs font-semibold hover:bg-orange/90 transition-colors flex-shrink-0">
+                    Clock In
+                  </button>
+                  {clockError && <span className="text-2xs text-status-red flex-shrink-0">{clockError}</span>}
+                </div>
+              )}
               {activeTab === 'jobs' && (() => {
                 const paidROs    = techROs.filter(ro => ro.stage === 'Paid')
                 const totalRev   = paidROs.reduce((s, ro) => s + (ro.total || 0), 0)
@@ -1339,6 +1333,7 @@ export default function TechBoard() {
                     photoCount={photoCount}
                     onPhoto={(ro) => setPhotoCount(prev => ({ ...prev, [ro.id]: (prev[ro.id] || 0) + 1 }))}
                     onInspect={(ro) => setInspectRO(ro)}
+                    clockedIn={clockedIn}
                     onRequestPart={(ro, draft) => {
                       const req = {
                         id: crypto.randomUUID(),
@@ -1384,7 +1379,6 @@ export default function TechBoard() {
                 <PayTab techROs={techROs} tech={tech} timeEntries={timeEntries} now={now} />
               )}
             </div>
-          )}
         </main>
       </div>
 
