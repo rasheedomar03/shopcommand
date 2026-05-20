@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { DataProvider } from './contexts/DataContext'
+import { Analytics } from '@vercel/analytics/react'
 import App from './App.jsx'
 import './index.css'
 
@@ -14,6 +15,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <BrowserRouter>
             <App />
+            <Analytics />
           </BrowserRouter>
         </AuthProvider>
       </DataProvider>
