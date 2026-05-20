@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
 import { customers } from '@/data/mock'
-import { RO_STAGES } from '@/lib/utils'
+import { RO_STAGES, sanitizeVin, sanitizeField } from '@/lib/utils'
 import { Search, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -45,7 +45,7 @@ export function NewROModal({
   const availableTechs = technicians.filter(t => String(t.shopId) === String(form.shopId))
 
   const decodeVin = async (vin) => {
-    const clean = vin.trim().toUpperCase()
+    const clean = sanitizeVin(vin)
     if (clean.length !== 17) {
       setVinState('error')
       setVinError('VIN must be 17 characters')

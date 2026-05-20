@@ -8,7 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
-import { cn } from '@/lib/utils'
+import { cn, sanitizeField } from '@/lib/utils'
 
 function SearchDropdown({ query, onClose }) {
   const { repairOrders } = useData()
@@ -151,7 +151,7 @@ export function Header({ onMenuOpen }) {
           <input
             type="search"
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => setQuery(sanitizeField(e.target.value, 100))}
             onFocus={() => setFocused(true)}
             placeholder="Search ROs, customers, vehicles…"
             className={cn(

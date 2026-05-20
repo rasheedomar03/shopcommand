@@ -81,6 +81,30 @@ export function formatHours(ms) {
   return m === 0 ? `${h}h` : `${h}h ${m}m`
 }
 
+// ─── Input sanitization ──────────────────────────────────────────────────────
+
+/** Strip HTML tags and trim whitespace */
+export function sanitize(str) {
+  if (typeof str !== 'string') return ''
+  return str.replace(/<[^>]*>/g, '').trim()
+}
+
+/** Sanitize and cap length */
+export function sanitizeField(str, maxLen = 200) {
+  return sanitize(str).slice(0, maxLen)
+}
+
+/** Validate email format */
+export function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+/** Sanitize VIN: uppercase alphanumeric only, 17 chars max */
+export function sanitizeVin(str) {
+  if (typeof str !== 'string') return ''
+  return str.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 17)
+}
+
 export const RO_STAGES = [
   'Estimate',
   'Approved',

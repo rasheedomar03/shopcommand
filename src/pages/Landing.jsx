@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Wrench, ClipboardList, Gauge, Car, Check, Mail, ChevronDown, Menu, X } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
+import { sanitizeField, isValidEmail } from '@/lib/utils'
 
 const TOTAL_SPOTS = 25
 const CLAIMED_SPOTS = 0    // ← update this manually as signups come in
@@ -290,23 +291,47 @@ function FoundingSection() {
   const pct = Math.round((CLAIMED_SPOTS / TOTAL_SPOTS) * 100)
 
   const [form, setForm] = useState({ name: '', email: '', shop: '' })
+  const [honeypot, setHoneypot] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const lastSubmitRef = useRef(0)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.name.trim() || !form.email.trim() || !form.shop.trim()) {
+
+    // Honeypot — bots fill hidden fields
+    if (honeypot) return
+
+    // Rate limit — 30 seconds between submissions
+    const now = Date.now()
+    if (now - lastSubmitRef.current < 30000) {
+      setError('Please wait a moment before submitting again.')
+      return
+    }
+
+    // Sanitize all inputs
+    const name  = sanitizeField(form.name, 100)
+    const email = sanitizeField(form.email, 150)
+    const shop  = sanitizeField(form.shop, 150)
+
+    if (!name || !email || !shop) {
       setError('Please fill in all three fields.')
       return
     }
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address.')
+      return
+    }
+
     setError('')
     setSubmitting(true)
+    lastSubmitRef.current = now
     try {
       const res = await fetch('https://formspree.io/f/mwvzeojn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name: form.name, email: form.email, shop: form.shop, _gotcha: '' }),
+        body: JSON.stringify({ name, email, shop, _gotcha: '' }),
       })
       if (!res.ok) throw new Error('Submit failed')
     } catch {
@@ -375,6 +400,17 @@ function FoundingSection() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Honeypot — hidden from humans, bots fill it */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={e => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+                  aria-hidden="true"
+                />
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Your name</label>
