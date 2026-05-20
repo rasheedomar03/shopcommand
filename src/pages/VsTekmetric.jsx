@@ -16,7 +16,7 @@ function HexMark({ size = 36 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
-      <polygon points={pts(32, 32.5, r)} fill="#0A0B12" />
+      <polygon points={pts(32, 32.5, r)} fill="#FAFAF8" />
     </svg>
   )
 }
@@ -38,9 +38,9 @@ const rows = [
 ]
 
 function Tick({ win }) {
-  if (win === true)  return <Check size={15} className="text-orange-400 mx-auto" strokeWidth={2.5} />
-  if (win === false) return <Minus size={15} className="text-white/20 mx-auto" strokeWidth={2} />
-  return <X size={15} className="text-white/20 mx-auto" strokeWidth={2} />
+  if (win === true)  return <Check size={15} className="text-orange-600 mx-auto" strokeWidth={2.5} />
+  if (win === false) return <Minus size={15} className="text-slate-400 mx-auto" strokeWidth={2} />
+  return <X size={15} className="text-slate-400 mx-auto" strokeWidth={2} />
 }
 
 const TITLE = 'ShopCommand vs. Tekmetric — Auto Shop Software Comparison'
@@ -61,55 +61,55 @@ export default function VsTekmetric() {
   useEffect(() => { setMeta(TITLE, DESC, URL) }, [])
 
   return (
-    <div className="min-h-screen bg-[#0A0B12] text-white overflow-x-hidden" style={{ fontFamily: '"Inter", system-ui, sans-serif' }}>
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden" style={{ fontFamily: '"General Sans", system-ui, sans-serif' }}>
 
       <CompareNav />
 
       {/* Hero */}
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-white/40 text-xs font-medium mb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-slate-100 text-slate-500 text-xs font-medium mb-6">
           Comparison
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-5" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.03em' }}>
+        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5" style={{ fontFamily: '"Gambetta", Georgia, serif', letterSpacing: '-0.03em' }}>
           ShopCommand vs. Tekmetric
         </h1>
-        <p className="text-white/55 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+        <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
           Tekmetric is a mature, full-featured shop management platform. ShopCommand is built for a different problem — the owner managing multiple locations who needs cross-shop visibility without jumping between logins.
         </p>
       </section>
 
       {/* Table */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
-        <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
+        <div className="rounded-2xl border border-slate-200 overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-3 bg-white/[0.03] border-b border-white/[0.08] px-6 py-4">
-            <div className="text-white/25 text-xs uppercase tracking-widest" />
-            <div className="text-white/35 text-xs text-center uppercase tracking-widest font-medium">Tekmetric</div>
-            <div className="text-orange-400 text-xs text-center uppercase tracking-widest font-semibold">ShopCommand</div>
+          <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
+            <div className="text-slate-400 text-xs uppercase tracking-widest" />
+            <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium">Tekmetric</div>
+            <div className="text-orange-600 text-xs text-center uppercase tracking-widest font-semibold">ShopCommand</div>
           </div>
 
           {rows.map(({ label, sc, them, scWin }, i) => (
-            <div key={label} className={`grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-white/[0.05]' : ''}`}>
-              <div className="text-white/50 text-sm font-medium pt-0.5">{label}</div>
+            <div key={label} className={`grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
+              <div className="text-slate-500 text-sm font-medium pt-0.5">{label}</div>
               <div className="text-center">
-                <span className={`text-xs leading-relaxed ${scWin ? 'text-white/30' : 'text-white/55'}`}>{them}</span>
+                <span className={`text-xs leading-relaxed ${scWin ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
               </div>
               <div className="text-center">
-                <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-400' : 'text-white/35'}`}>{sc}</span>
+                <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-600' : 'text-slate-400'}`}>{sc}</span>
               </div>
             </div>
           ))}
         </div>
 
-        <p className="text-white/20 text-xs text-center mt-4">
+        <p className="text-slate-400 text-xs text-center mt-4">
           Tekmetric data sourced from their public website and G2 reviews. ShopCommand is in early access — features marked "coming" are on the roadmap.
         </p>
       </section>
 
       {/* The honest take */}
-      <section className="border-t border-white/[0.06] py-20 px-6">
+      <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ fontFamily: '"Gambetta", Georgia, serif', letterSpacing: '-0.02em' }}>
             The honest take
           </h2>
           <div className="space-y-6">
@@ -128,10 +128,10 @@ export default function VsTekmetric() {
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
-                <div className="w-1 rounded-full bg-orange-500/30 flex-shrink-0 mt-1" />
+                <div className="w-1 rounded-full bg-orange-400/40 flex-shrink-0 mt-1" />
                 <div>
-                  <div className="text-white text-sm font-semibold mb-1.5" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{heading}</div>
-                  <p className="text-white/50 text-sm leading-relaxed">{body}</p>
+                  <div className="text-slate-900 text-sm font-semibold mb-1.5" style={{ fontFamily: '"Gambetta", Georgia, serif' }}>{heading}</div>
+                  <p className="text-slate-500 text-sm leading-relaxed">{body}</p>
                 </div>
               </div>
             ))}
@@ -140,34 +140,34 @@ export default function VsTekmetric() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-white/[0.06] py-20 px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+      <section className="border-t border-slate-200 py-20 px-6 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: '"Gambetta", Georgia, serif', letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-white/50 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $125/mo locked forever. Price goes to $199 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $125/mo locked forever. Price goes to $199 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors shadow-lg shadow-orange-500/20">
+          <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →
           </a>
-          <Link to="/login" className="px-6 py-3.5 rounded-xl text-base font-medium text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-colors">
+          <Link to="/login" className="px-6 py-3.5 rounded-xl text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
             See the dashboard
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 md:px-12 py-8 flex items-center justify-between">
+      <footer className="border-t border-slate-200 px-6 md:px-12 py-8 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
           <HexMark size={20} />
-          <span className="text-white/35 text-sm" style={{ fontFamily: '"Space Grotesk", system-ui' }}>ShopCommand</span>
+          <span className="text-slate-400 text-sm" style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif' }}>ShopCommand</span>
         </Link>
         <div className="flex flex-wrap gap-5">
-          <Link to="/compare/shopmonkey" className="text-white/25 hover:text-white/50 text-xs transition-colors">vs. Shopmonkey</Link>
-          <Link to="/compare/mitchell1"  className="text-white/25 hover:text-white/50 text-xs transition-colors">vs. Mitchell1</Link>
-          <Link to="/compare/shop-ware"  className="text-white/25 hover:text-white/50 text-xs transition-colors">vs. Shop-Ware</Link>
-          <Link to="/compare/ro-writer"  className="text-white/25 hover:text-white/50 text-xs transition-colors">vs. R.O. Writer</Link>
-          <Link to="/terms"   className="text-white/25 hover:text-white/50 text-xs transition-colors">Terms</Link>
-          <Link to="/privacy" className="text-white/25 hover:text-white/50 text-xs transition-colors">Privacy</Link>
+          <Link to="/compare/shopmonkey" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">vs. Shopmonkey</Link>
+          <Link to="/compare/mitchell1"  className="text-slate-400 hover:text-slate-600 text-xs transition-colors">vs. Mitchell1</Link>
+          <Link to="/compare/shop-ware"  className="text-slate-400 hover:text-slate-600 text-xs transition-colors">vs. Shop-Ware</Link>
+          <Link to="/compare/ro-writer"  className="text-slate-400 hover:text-slate-600 text-xs transition-colors">vs. R.O. Writer</Link>
+          <Link to="/terms"   className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Terms</Link>
+          <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Privacy</Link>
         </div>
       </footer>
 
