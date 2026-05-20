@@ -324,6 +324,16 @@ function FoundingSection() {
       return
     }
 
+    // Prevent duplicate signups from the same device
+    const emailKey = email.toLowerCase().trim()
+    try {
+      const prev = JSON.parse(localStorage.getItem('sc_founding_emails') || '[]')
+      if (prev.includes(emailKey)) {
+        setError('This email has already been submitted. Check your inbox or email us directly.')
+        return
+      }
+    } catch {}
+
     setError('')
     setSubmitting(true)
     lastSubmitRef.current = now
@@ -334,6 +344,13 @@ function FoundingSection() {
         body: JSON.stringify({ name, email, shop, _gotcha: '' }),
       })
       if (!res.ok) throw new Error('Submit failed')
+
+      // Remember this email to prevent duplicates
+      try {
+        const prev = JSON.parse(localStorage.getItem('sc_founding_emails') || '[]')
+        prev.push(emailKey)
+        localStorage.setItem('sc_founding_emails', JSON.stringify(prev))
+      } catch {}
     } catch {
       setError('Something went wrong. Try emailing rasheed.omar@outlook.com directly.')
       setSubmitting(false)
