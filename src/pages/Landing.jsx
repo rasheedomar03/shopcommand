@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Wrench, Users, Check, Mail, ChevronDown } from 'lucide-react'
+import { Building2, Wrench, Users, Check, Mail, ChevronDown, Menu, X } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 
 const TOTAL_SPOTS = 25
 const CLAIMED_SPOTS = 0    // ← update this manually as signups come in
 const CALENDLY_URL = 'https://calendly.com/rasheed-omar/30min'
 const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
+
+/* ─── Color tokens ────────────────────────────────────────────────────────────
+   Warm light palette. Every neutral tinted toward warm-gray.
+   Orange stays brand (#F97316) but used deliberately, not everywhere.
+   ──────────────────────────────────────────────────────────────────────────── */
+const FONT_HEADING = '"Bricolage Grotesque", system-ui, sans-serif'
+const FONT_BODY    = '"Figtree", system-ui, sans-serif'
 
 // ─── Hex mark ────────────────────────────────────────────────────────────────
 function HexMark({ size = 36 }) {
@@ -21,7 +28,7 @@ function HexMark({ size = 36 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
-      <polygon points={pts(32, 32.5, r)} fill="#0A0B12" />
+      <polygon points={pts(32, 32.5, r)} fill="#1C2030" />
     </svg>
   )
 }
@@ -52,7 +59,7 @@ function Reveal({ children, delay = 0, className = '' }) {
       style={{
         transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(28px)',
+        transform: visible ? 'translateY(0)' : 'translateY(24px)',
       }}
     >
       {children}
@@ -65,7 +72,7 @@ const steps = [
   {
     num: '01',
     title: 'Connect your shop',
-    desc: 'Add your location in minutes — one shop or ten. No IT required, no hardware to install. Just log in and go.',
+    desc: 'Add your location in minutes. One shop or ten. No IT required, no hardware to install. Just log in and go.',
   },
   {
     num: '02',
@@ -83,7 +90,7 @@ const features = [
   {
     icon: Building2,
     title: 'Your whole business, one tab',
-    desc: 'Stop guessing how your shop is doing. Revenue, open ROs, and technician status — live, the moment you open your laptop. Running multiple locations? See them all at once.',
+    desc: 'Stop guessing how your shop is doing. Revenue, open ROs, and technician status live, the moment you open your laptop. Running multiple locations? See them all at once.',
     badge: 'Real-time',
     badgeSub: 'One dashboard',
   },
@@ -97,7 +104,7 @@ const features = [
   {
     icon: Users,
     title: 'Know your team without the check-in calls',
-    desc: "Who's clocked in, who's behind, who's carrying the day — without being there. Efficiency scores, clock-ins, and performance data at your fingertips.",
+    desc: "Who's clocked in, who's behind, who's carrying the day. Without being there. Efficiency scores, clock-ins, and performance data at your fingertips.",
     badge: 'Real-time',
     badgeSub: 'Clock-ins & efficiency',
   },
@@ -114,7 +121,7 @@ const faqs = [
   },
   {
     q: 'Is this only for multi-location shops?',
-    a: 'No — single-location shops get the same full dashboard. Multi-location owners just get the added ability to see everything across all their shops at once.',
+    a: 'No. Single-location shops get the same full dashboard. Multi-location owners just get the added ability to see everything across all their shops at once.',
   },
   {
     q: 'What happens to my data if I cancel?',
@@ -122,15 +129,15 @@ const faqs = [
   },
   {
     q: 'When will the backend be ready for founding members?',
-    a: 'We\'re onboarding our first shops now. Founding members get direct access to us during setup — you\'re not going through a ticket queue.',
+    a: 'We\'re onboarding our first shops now. Founding members get direct access to us during setup. You\'re not going through a ticket queue.',
   },
   {
     q: 'What does the $125/mo founding rate cover?',
-    a: 'One shop location — unlimited technicians, users, and repair orders. The rate locks in forever as long as you stay subscribed. Price goes to $199 at public launch.',
+    a: 'One shop location with unlimited technicians, users, and repair orders. The rate locks in forever as long as you stay subscribed. Price goes to $199 at public launch.',
   },
   {
     q: 'How is this different from Tekmetric or Shopmonkey?',
-    a: 'Those are full shop management platforms — great at day-to-day operations for a single location. ShopCommand is built for the owner sitting above all their locations who needs real-time visibility across every shop without jumping between logins. Different problem, different tool.',
+    a: 'Those are full shop management platforms, great at day-to-day operations for a single location. ShopCommand is built for the owner sitting above all their locations who needs real-time visibility across every shop without jumping between logins. Different problem, different tool.',
   },
 ]
 
@@ -159,6 +166,11 @@ function DashboardPreview() {
 
   useEffect(() => {
     if (!triggered) return
+    // Respect reduced motion
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setCounts(shopRows.map(r => r.revenue))
+      return
+    }
     const targets = shopRows.map(r => r.revenue)
     const duration = 900
     let start = null
@@ -177,21 +189,22 @@ function DashboardPreview() {
   }, [triggered])
 
   return (
-    <div ref={containerRef} className="relative mt-16 w-full max-w-3xl mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/60 animate-fade-up" style={{ animationDelay: '360ms' }}>
-      <div className="flex items-center justify-between px-5 py-3 bg-white/[0.04] border-b border-white/[0.06]">
-        <span className="text-white/30 text-xs uppercase tracking-wider">Live preview</span>
-        <span className="text-orange-400/60 text-xs font-medium italic">sample data</span>
+    <div ref={containerRef} className="relative mt-14 w-full max-w-3xl mx-auto rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
+      {/* Keep dashboard dark-themed — it IS the product */}
+      <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
+        <span className="text-white/40 text-xs uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Live preview</span>
+        <span className="text-orange-400/70 text-xs font-medium italic" style={{ fontFamily: FONT_BODY }}>sample data</span>
       </div>
       <div className="bg-[#0F1018]">
-        <div className="grid grid-cols-4 gap-4 px-5 py-2.5 border-b border-white/[0.06]">
+        <div className="grid grid-cols-4 gap-4 px-5 py-2.5 border-b border-white/[0.08]">
           {['Shop', 'Revenue', 'Open ROs', 'Techs'].map((h, i) => (
-            <div key={h} className={`text-white/25 text-xs ${i > 0 ? 'text-right' : ''}`}>{h}</div>
+            <div key={h} className={`text-white/30 text-xs ${i > 0 ? 'text-right' : ''}`} style={{ fontFamily: FONT_BODY }}>{h}</div>
           ))}
         </div>
         {shopRows.map(({ name, sub, ros, techs, best }, i) => (
           <div
             key={name}
-            className="grid grid-cols-4 gap-4 px-5 py-3.5 border-b border-white/[0.04] last:border-0 items-center"
+            className="grid grid-cols-4 gap-4 px-5 py-3.5 border-b border-white/[0.06] last:border-0 items-center motion-safe:transition-all"
             style={{
               opacity: triggered ? 1 : 0,
               transform: triggered ? 'translateY(0)' : 'translateY(10px)',
@@ -199,20 +212,20 @@ function DashboardPreview() {
             }}
           >
             <div>
-              <div className="text-white text-sm font-medium">{name}</div>
-              <div className={`text-xs mt-0.5 ${best ? 'text-green-400/80' : 'text-white/35'}`}>{sub}</div>
+              <div className="text-white text-sm font-medium" style={{ fontFamily: FONT_BODY }}>{name}</div>
+              <div className={`text-xs mt-0.5 ${best ? 'text-emerald-400/90' : 'text-white/40'}`} style={{ fontFamily: FONT_BODY }}>{sub}</div>
             </div>
-            <div className="text-orange-400 text-sm font-bold text-right tabular-nums">
+            <div className="text-orange-400 text-sm font-bold text-right tabular-nums" style={{ fontFamily: FONT_BODY }}>
               ${counts[i].toLocaleString()}
             </div>
             <div className="text-right">
-              <span className="bg-orange-500/10 text-orange-400 text-xs px-2 py-0.5 rounded-md">{ros}</span>
+              <span className="bg-orange-500/15 text-orange-400 text-xs px-2 py-0.5 rounded-md">{ros}</span>
             </div>
-            <div className="text-white/50 text-sm text-right">{techs}</div>
+            <div className="text-white/55 text-sm text-right" style={{ fontFamily: FONT_BODY }}>{techs}</div>
           </div>
         ))}
-        <div className="px-5 py-2.5 border-t border-white/[0.04]">
-          <span className="text-white/20 text-xs">3 of 5 locations shown</span>
+        <div className="px-5 py-2.5 border-t border-white/[0.06]">
+          <span className="text-white/25 text-xs" style={{ fontFamily: FONT_BODY }}>3 of 5 locations shown</span>
         </div>
       </div>
     </div>
@@ -220,7 +233,7 @@ function DashboardPreview() {
 }
 
 // ─── FAQ item ─────────────────────────────────────────────────────────────────
-function FAQItem({ q, a, delay }) {
+function FAQItem({ q, a, delay, id }) {
   const [open, setOpen] = useState(false)
   const bodyRef = useRef(null)
   const [height, setHeight] = useState(0)
@@ -231,20 +244,30 @@ function FAQItem({ q, a, delay }) {
     }
   }, [open])
 
+  const panelId = `faq-panel-${id}`
+  const buttonId = `faq-btn-${id}`
+
   return (
     <Reveal delay={delay}>
       <div className="py-5">
         <button
+          id={buttonId}
           onClick={() => setOpen(o => !o)}
-          className="w-full flex items-center justify-between gap-4 text-left group"
+          aria-expanded={open}
+          aria-controls={panelId}
+          className="w-full flex items-center justify-between gap-4 text-left group focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 rounded-lg"
         >
-          <span className="text-sm font-medium text-white group-hover:text-orange-400 transition-colors duration-200">{q}</span>
+          <span className="text-sm font-medium text-slate-800 group-hover:text-orange-600 transition-colors duration-200" style={{ fontFamily: FONT_BODY }}>{q}</span>
           <span
-            className="text-white/30 text-xl leading-none flex-shrink-0 transition-transform duration-300"
+            className="text-slate-400 text-xl leading-none flex-shrink-0 motion-safe:transition-transform duration-300"
+            aria-hidden="true"
             style={{ transform: open ? 'rotate(45deg)' : 'rotate(0deg)' }}
           >+</span>
         </button>
         <div
+          id={panelId}
+          role="region"
+          aria-labelledby={buttonId}
           style={{
             height: `${height}px`,
             overflow: 'hidden',
@@ -252,7 +275,7 @@ function FAQItem({ q, a, delay }) {
           }}
         >
           <div ref={bodyRef} style={{ paddingTop: '12px', paddingBottom: '8px' }}>
-            <p className="text-sm text-white/50 leading-relaxed pr-8">{a}</p>
+            <p className="text-sm text-slate-500 leading-relaxed pr-8" style={{ fontFamily: FONT_BODY }}>{a}</p>
           </div>
         </div>
       </div>
@@ -295,19 +318,19 @@ function FoundingSection() {
   }
 
   return (
-    <section id="founding" className="border-t border-white/[0.06] py-24 px-6">
+    <section id="founding" className="border-t border-slate-200 py-24 px-6 bg-orange-50/40">
       <div className="max-w-2xl mx-auto">
         <Reveal>
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 text-xs font-semibold mb-5">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-300 bg-orange-100 text-orange-700 text-xs font-semibold mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
               Founding Member Program
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
               Lock in $125/mo forever.
             </h2>
-            <p className="text-white/55 leading-relaxed max-w-sm mx-auto">
-              First {TOTAL_SPOTS} shops get founding member pricing — locked for life. Price goes to $199 when we open to everyone.
+            <p className="text-slate-500 leading-relaxed max-w-sm mx-auto" style={{ fontFamily: FONT_BODY }}>
+              First {TOTAL_SPOTS} shops get founding member pricing, locked for life. Price goes to $199 when we open to everyone.
             </p>
           </div>
         </Reveal>
@@ -315,38 +338,37 @@ function FoundingSection() {
         <Reveal delay={80}>
           {/* Spot counter */}
           <div className="mb-8">
-            <div className="flex justify-between text-xs mb-2">
-              <span className="text-white/40">{CLAIMED_SPOTS === 0 ? 'Be the first to reserve a spot' : `${CLAIMED_SPOTS} of ${TOTAL_SPOTS} spots claimed`}</span>
-              <span className="text-orange-400 font-semibold">{remaining} of {TOTAL_SPOTS} left</span>
+            <div className="flex justify-between text-xs mb-2" style={{ fontFamily: FONT_BODY }}>
+              <span className="text-slate-400">{CLAIMED_SPOTS === 0 ? 'Be the first to reserve a spot' : `${CLAIMED_SPOTS} of ${TOTAL_SPOTS} spots claimed`}</span>
+              <span className="text-orange-600 font-semibold">{remaining} of {TOTAL_SPOTS} left</span>
             </div>
-            <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-orange-600 to-orange-400 transition-all duration-700"
+                className="h-full rounded-full bg-orange-500 motion-safe:transition-all duration-700"
                 style={{ width: `${Math.max(pct, CLAIMED_SPOTS === 0 ? 0 : 4)}%` }}
               />
             </div>
           </div>
 
           {/* Walkthrough alternative */}
-          <p className="text-center text-white/35 text-base mb-8">
+          <p className="text-center text-slate-400 text-base mb-8" style={{ fontFamily: FONT_BODY }}>
             Want to see it first?{' '}
-            <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-400/70 hover:text-orange-400 underline underline-offset-4 decoration-orange-400/30 transition-colors">
+            <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
               Book a free 15-min walkthrough →
             </a>
           </p>
 
           {/* Form / success */}
-          <div className="rounded-2xl border border-orange-500/20 bg-orange-500/[0.04] p-7"
-            style={{ boxShadow: '0 0 60px rgba(249,115,22,0.06)' }}>
+          <div className="rounded-2xl border border-orange-200 bg-white p-7 shadow-sm">
             {submitted ? (
               <div className="text-center py-6">
-                <div className="w-14 h-14 rounded-full bg-orange-500/15 border border-orange-500/30 flex items-center justify-center mx-auto mb-5">
-                  <Check size={24} className="text-orange-400" strokeWidth={2} />
+                <div className="w-14 h-14 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center mx-auto mb-5">
+                  <Check size={24} className="text-orange-600" strokeWidth={2} />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2" style={{ fontFamily: FONT_HEADING }}>
                   You're on the list.
                 </h3>
-                <p className="text-white/50 text-sm leading-relaxed max-w-xs mx-auto">
+                <p className="text-slate-500 text-sm leading-relaxed max-w-xs mx-auto" style={{ fontFamily: FONT_BODY }}>
                   We'll reach out to {form.email} within 24 hours with next steps. Welcome to the founding crew.
                 </p>
               </div>
@@ -354,51 +376,55 @@ function FoundingSection() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-white/40 font-medium mb-1.5 uppercase tracking-wider">Your name</label>
+                    <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Your name</label>
                     <input
                       type="text"
                       placeholder="Marcus Webb"
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      className="w-full h-11 px-4 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white text-sm placeholder-white/25 focus:outline-none focus:border-orange-500/60 transition-colors"
+                      className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                      style={{ fontFamily: FONT_BODY }}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-white/40 font-medium mb-1.5 uppercase tracking-wider">Email</label>
+                    <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Email</label>
                     <input
                       type="email"
                       placeholder="marcus@northhoustonauto.com"
                       value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                      className="w-full h-11 px-4 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white text-sm placeholder-white/25 focus:outline-none focus:border-orange-500/60 transition-colors"
+                      className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                      style={{ fontFamily: FONT_BODY }}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-white/40 font-medium mb-1.5 uppercase tracking-wider">Shop name</label>
+                  <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Shop name</label>
                   <input
                     type="text"
                     placeholder="North Houston Auto"
                     value={form.shop}
                     onChange={e => setForm(f => ({ ...f, shop: e.target.value }))}
-                    className="w-full h-11 px-4 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white text-sm placeholder-white/25 focus:outline-none focus:border-orange-500/60 transition-colors"
+                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                    style={{ fontFamily: FONT_BODY }}
                   />
                 </div>
-                {error && <p className="text-orange-400/80 text-xs">{error}</p>}
+                {error && <p className="text-red-600 text-xs" role="alert" style={{ fontFamily: FONT_BODY }}>{error}</p>}
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full h-12 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-400 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-lg shadow-orange-500/20"
+                  className="w-full h-12 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm"
+                  style={{ fontFamily: FONT_BODY }}
                 >
                   {submitting ? 'Reserving your spot…' : 'Reserve my founding spot →'}
                 </button>
-                <p className="text-center text-white/25 text-xs">No credit card. No commitment. We'll reach out within 24 hours.</p>
+                <p className="text-center text-slate-400 text-xs" style={{ fontFamily: FONT_BODY }}>No credit card. No commitment. We'll reach out within 24 hours.</p>
               </form>
             )}
           </div>
 
-          <p className="text-center text-white/35 text-sm mt-6 leading-relaxed">
-            You won't get a ticket queue. Every founding member gets direct access to Rasheed — real answers, no support portal, no waiting.
+          <p className="text-center text-slate-400 text-sm mt-6 leading-relaxed" style={{ fontFamily: FONT_BODY }}>
+            You won't get a ticket queue. Every founding member gets direct access to Rasheed: real answers, no support portal, no waiting.
           </p>
         </Reveal>
       </div>
@@ -408,7 +434,7 @@ function FoundingSection() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const LANDING_TITLE = 'ShopCommand — Auto Shop Management Software'
-const LANDING_DESC = 'Know exactly where your business stands before your first call of the day. Revenue, open ROs, and technician status — whether you\'re running one shop or five. Founding spots at $125/mo.'
+const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member spots at $125/mo.'
 const LANDING_URL = 'https://shopcommand.net'
 
 export default function Landing() {
@@ -440,6 +466,7 @@ export default function Landing() {
   }, [])
 
   const [compareOpen, setCompareOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const compareRef = useRef(null)
 
   useEffect(() => {
@@ -452,144 +479,174 @@ export default function Landing() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  // Close mobile menu on route navigation or escape
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') setMobileMenuOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
   return (
-    <div className="min-h-screen bg-[#0A0B12] text-white overflow-x-hidden" style={{ fontFamily: '"Inter", system-ui, sans-serif' }}>
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden" style={{ fontFamily: FONT_BODY }}>
 
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
+      <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-slate-200/80 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
         <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
           <HexMark size={30} />
-          <span style={{ fontFamily: '"Space Grotesk", system-ui, sans-serif', letterSpacing: '-0.02em' }} className="text-base font-semibold">
-            <span className="text-white">Shop</span>
-            <span className="text-orange-400">Command</span>
+          <span style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }} className="text-base font-semibold">
+            <span className="text-slate-900">Shop</span>
+            <span className="text-orange-500">Command</span>
           </span>
         </Link>
 
-        {/* Center links — desktop only */}
+        {/* Center links: desktop */}
         <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          <a href="#how-it-works" className="px-3 py-1.5 text-sm text-white/45 hover:text-white transition-colors rounded-lg hover:bg-white/[0.05]">
+          <a href="#how-it-works" className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-100">
             How it works
           </a>
-          <a href="#pricing" className="px-3 py-1.5 text-sm text-white/45 hover:text-white transition-colors rounded-lg hover:bg-white/[0.05]">
+          <a href="#pricing" className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-100">
             Pricing
           </a>
           <div className="relative" ref={compareRef}>
             <button
               onClick={() => setCompareOpen(o => !o)}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-white/45 hover:text-white transition-colors rounded-lg hover:bg-white/[0.05]"
+              aria-expanded={compareOpen}
+              aria-haspopup="true"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-100"
             >
               Compare
-              <ChevronDown size={13} className={`transition-transform duration-200 ${compareOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={13} className={`motion-safe:transition-transform duration-200 ${compareOpen ? 'rotate-180' : ''}`} />
             </button>
             {compareOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-[#13141F] border border-white/[0.08] rounded-xl overflow-hidden shadow-2xl shadow-black/60 z-50 w-52">
-                <Link
-                  to="/compare/tekmetric"
-                  onClick={() => setCompareOpen(false)}
-                  className="flex items-center px-4 py-3 text-sm text-white/55 hover:text-white hover:bg-white/[0.05] transition-colors"
-                >
-                  ShopCommand vs. Tekmetric
-                </Link>
-                <Link
-                  to="/compare/shopmonkey"
-                  onClick={() => setCompareOpen(false)}
-                  className="flex items-center px-4 py-3 text-sm text-white/55 hover:text-white hover:bg-white/[0.05] transition-colors border-t border-white/[0.06]"
-                >
-                  ShopCommand vs. Shopmonkey
-                </Link>
-                <Link
-                  to="/compare/mitchell1"
-                  onClick={() => setCompareOpen(false)}
-                  className="flex items-center px-4 py-3 text-sm text-white/55 hover:text-white hover:bg-white/[0.05] transition-colors border-t border-white/[0.06]"
-                >
-                  ShopCommand vs. Mitchell1
-                </Link>
-                <Link
-                  to="/compare/shop-ware"
-                  onClick={() => setCompareOpen(false)}
-                  className="flex items-center px-4 py-3 text-sm text-white/55 hover:text-white hover:bg-white/[0.05] transition-colors border-t border-white/[0.06]"
-                >
-                  ShopCommand vs. Shop-Ware
-                </Link>
-                <Link
-                  to="/compare/ro-writer"
-                  onClick={() => setCompareOpen(false)}
-                  className="flex items-center px-4 py-3 text-sm text-white/55 hover:text-white hover:bg-white/[0.05] transition-colors border-t border-white/[0.06]"
-                >
-                  ShopCommand vs. R.O. Writer
-                </Link>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg shadow-slate-900/[0.08] z-50 w-52">
+                {[
+                  { to: '/compare/tekmetric', label: 'ShopCommand vs. Tekmetric' },
+                  { to: '/compare/shopmonkey', label: 'ShopCommand vs. Shopmonkey' },
+                  { to: '/compare/mitchell1', label: 'ShopCommand vs. Mitchell1' },
+                  { to: '/compare/shop-ware', label: 'ShopCommand vs. Shop-Ware' },
+                  { to: '/compare/ro-writer', label: 'ShopCommand vs. R.O. Writer' },
+                ].map(({ to, label }, i) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={() => setCompareOpen(false)}
+                    className={`flex items-center px-4 py-3 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors ${i > 0 ? 'border-t border-slate-100' : ''}`}
+                  >
+                    {label}
+                  </Link>
+                ))}
               </div>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-3 flex-shrink-0">
-          <Link to="/login" className="px-4 py-1.5 text-sm font-medium text-white/60 hover:text-white transition-colors">
+          <Link to="/login" className="hidden sm:inline-flex px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
             See the demo
           </Link>
-          <a href="#founding" className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors whitespace-nowrap">
+          <a href="#founding" className="hidden sm:inline-flex px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors whitespace-nowrap">
             Reserve your spot
           </a>
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            onClick={() => setMobileMenuOpen(o => !o)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative flex flex-col items-center text-center px-6 pt-24 pb-20 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full bg-orange-500/10 blur-[120px] pointer-events-none animate-glow-pulse" />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-            maskImage: 'radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 75%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 75%)',
-          }}
-        />
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-x-0 top-16 z-40 bg-white border-b border-slate-200 shadow-lg shadow-slate-900/[0.06] px-6 py-4 space-y-1">
+          {[
+            { href: '#how-it-works', label: 'How it works' },
+            { href: '#pricing', label: 'Pricing' },
+            { href: '#founding', label: 'Reserve your spot' },
+          ].map(({ href, label }) => (
+            <a
+              key={href}
+              href={href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-3 text-sm font-medium text-slate-700 hover:text-orange-600 hover:bg-slate-50 rounded-lg transition-colors"
+            >
+              {label}
+            </a>
+          ))}
+          <Link
+            to="/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-3 text-sm font-medium text-slate-700 hover:text-orange-600 hover:bg-slate-50 rounded-lg transition-colors"
+          >
+            See the demo
+          </Link>
+          <div className="pt-2 border-t border-slate-100">
+            {[
+              { to: '/compare/tekmetric', label: 'vs. Tekmetric' },
+              { to: '/compare/shopmonkey', label: 'vs. Shopmonkey' },
+              { to: '/compare/mitchell1', label: 'vs. Mitchell1' },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2.5 text-sm text-slate-500 hover:text-orange-600 rounded-lg transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
+      {/* Hero */}
+      <section className="relative flex flex-col items-center text-center px-6 pt-20 md:pt-28 pb-20 overflow-hidden">
         <div className="animate-fade-up" style={{ animationDelay: '0ms' }}>
-          <a href="#founding" className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 text-xs font-medium mb-6 hover:border-orange-500/50 transition-colors">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-            Founding member rate — {TOTAL_SPOTS - CLAIMED_SPOTS} of {TOTAL_SPOTS} spots left
+          <a href="#founding" className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-300 bg-orange-50 text-orange-700 text-xs font-medium mb-6 hover:border-orange-400 transition-colors">
+            Auto repair shop management software
           </a>
         </div>
 
         <h1
-          className="text-4xl md:text-6xl font-bold text-white mb-5 max-w-3xl leading-tight animate-fade-up"
-          style={{ fontFamily: '"Space Grotesk", system-ui, sans-serif', letterSpacing: '-0.03em', animationDelay: '80ms' }}
+          className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-5 max-w-3xl leading-tight animate-fade-up"
+          style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em', animationDelay: '80ms' }}
         >
           Stop flying blind.
           <br />
-          <span className="text-orange-400">Run your shop smarter.</span>
+          <span className="text-orange-500">Run your auto shop on data.</span>
         </h1>
 
-        <p className="text-white/65 text-base md:text-lg max-w-xl mb-7 leading-relaxed animate-fade-up" style={{ animationDelay: '160ms' }}>
-          Know exactly where your business stands before your first call of the day. Revenue, open ROs, and technician status — live, whether you're running one shop or five.
+        <p className="text-slate-500 text-base md:text-lg max-w-xl mb-7 leading-relaxed animate-fade-up" style={{ fontFamily: FONT_BODY, animationDelay: '160ms' }}>
+          Know exactly where every shop stands before your first call of the day. Repair orders, tech efficiency, and revenue across every bay and every location.
         </p>
 
         <div className="flex flex-wrap justify-center gap-2 mb-8 animate-fade-up" style={{ animationDelay: '210ms' }}>
           {[
-            'Run on data, not gut feel',
-            'Catch problems before they get expensive',
-            'Replace spreadsheets and manager calls',
+            'Track every RO from estimate to paid',
+            'See every tech\'s efficiency across every bay',
+            'Replace whiteboards and manager calls',
           ].map(item => (
-            <span key={item} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/45 text-xs">
-              <Check size={10} className="text-orange-400 flex-shrink-0" strokeWidth={2.5} />
+            <span key={item} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs" style={{ fontFamily: FONT_BODY }}>
+              <Check size={10} className="text-orange-500 flex-shrink-0" strokeWidth={2.5} />
               {item}
             </span>
           ))}
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 animate-fade-up" style={{ animationDelay: '280ms' }}>
-          <Link to="/login" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors shadow-lg shadow-orange-500/20">
+          <Link to="/login" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm" style={{ fontFamily: FONT_BODY }}>
             See the dashboard →
           </Link>
-          <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/20 transition-colors">
+          <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors" style={{ fontFamily: FONT_BODY }}>
             How it works
           </a>
         </div>
-        <p className="text-white/35 text-base mt-2 text-center animate-fade-up" style={{ animationDelay: '320ms' }}>
+        <p className="text-slate-400 text-base mt-2 text-center animate-fade-up" style={{ fontFamily: FONT_BODY, animationDelay: '320ms' }}>
           Not ready to commit?{' '}
-          <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-white/55 hover:text-orange-400 underline underline-offset-4 decoration-white/20 hover:decoration-orange-400/50 transition-colors">
+          <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
             Book a free 15-min walkthrough →
           </a>
         </p>
@@ -601,23 +658,23 @@ export default function Landing() {
       <section id="how-it-works" className="max-w-5xl mx-auto px-6 py-24">
         <Reveal>
           <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
               Up and running in a day
             </h2>
-            <p className="text-white/65 max-w-sm mx-auto leading-relaxed">No long onboarding calls. No implementation fees. Just connect and go.</p>
+            <p className="text-slate-500 max-w-sm mx-auto leading-relaxed" style={{ fontFamily: FONT_BODY }}>No long onboarding calls. No implementation fees. Just connect and go.</p>
           </div>
         </Reveal>
         <div className="grid md:grid-cols-3 gap-8 relative">
           {/* Connector line */}
-          <div className="hidden md:block absolute top-7 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px z-0 bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
+          <div className="hidden md:block absolute top-7 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px z-0 bg-gradient-to-r from-transparent via-orange-300 to-transparent" />
           {steps.map(({ num, title, desc }, i) => (
             <Reveal key={num} delay={i * 100}>
               <div className="relative z-10 flex flex-col items-start md:items-center text-left md:text-center">
-                <div className="w-14 h-14 rounded-2xl bg-[#0A0B12] border border-orange-500/20 flex items-center justify-center mb-5 flex-shrink-0" style={{ boxShadow: '0 0 0 4px #0A0B12' }}>
-                  <span className="text-orange-400 text-sm font-bold" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{num}</span>
+                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-5 flex-shrink-0 shadow-sm" style={{ boxShadow: '0 0 0 4px #FAFAF8' }}>
+                  <span className="text-orange-500 text-sm font-bold" style={{ fontFamily: FONT_HEADING }}>{num}</span>
                 </div>
-                <h3 className="text-base font-semibold text-white mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{title}</h3>
-                <p className="text-white/65 text-sm leading-relaxed">{desc}</p>
+                <h3 className="text-base font-semibold text-slate-900 mb-2" style={{ fontFamily: FONT_HEADING }}>{title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: FONT_BODY }}>{desc}</p>
               </div>
             </Reveal>
           ))}
@@ -628,26 +685,26 @@ export default function Landing() {
       <section className="max-w-5xl mx-auto px-6 pb-24">
         <Reveal>
           <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
               Everything your shop needs
             </h2>
-            <p className="text-white/65 max-w-md mx-auto leading-relaxed">Built specifically for auto repair shops — not a generic tool bolted onto your workflow.</p>
+            <p className="text-slate-500 max-w-md mx-auto leading-relaxed" style={{ fontFamily: FONT_BODY }}>Built specifically for auto repair shops, not a generic tool bolted onto your workflow.</p>
           </div>
         </Reveal>
-        <div className="divide-y divide-white/[0.06]">
+        <div className="divide-y divide-slate-200">
           {features.map(({ icon: Icon, title, desc, badge, badgeSub }, i) => (
             <Reveal key={title} delay={i * 80} className="py-7 first:pt-0 last:pb-0">
               <div className="flex items-center gap-6">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-                  <Icon size={18} className="text-orange-400" strokeWidth={1.8} />
+                <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center flex-shrink-0">
+                  <Icon size={18} className="text-orange-500" strokeWidth={1.8} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-white mb-1" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{title}</h3>
-                  <p className="text-white/65 text-sm leading-relaxed">{desc}</p>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-1" style={{ fontFamily: FONT_HEADING }}>{title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: FONT_BODY }}>{desc}</p>
                 </div>
-                <div className="flex-shrink-0 bg-[#0F1018] border border-white/[0.06] rounded-xl px-4 py-3 text-right min-w-[90px]">
-                  <div className="text-orange-400 text-sm font-semibold leading-none mb-1" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{badge}</div>
-                  <div className="text-white/40 text-xs">{badgeSub}</div>
+                <div className="hidden sm:block flex-shrink-0 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-right min-w-[90px]">
+                  <div className="text-orange-500 text-sm font-semibold leading-none mb-1" style={{ fontFamily: FONT_HEADING }}>{badge}</div>
+                  <div className="text-slate-400 text-xs" style={{ fontFamily: FONT_BODY }}>{badgeSub}</div>
                 </div>
               </div>
             </Reveal>
@@ -656,14 +713,14 @@ export default function Landing() {
       </section>
 
       {/* Who it's built for */}
-      <section className="border-t border-white/[0.06] py-24 px-6">
+      <section className="border-t border-slate-200 py-24 px-6 bg-slate-50/60">
         <div className="max-w-5xl mx-auto">
           <Reveal>
             <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
                 Built for every role in your shop
               </h2>
-              <p className="text-white/50 max-w-md mx-auto text-sm md:text-base leading-relaxed">
+              <p className="text-slate-500 max-w-md mx-auto text-sm md:text-base leading-relaxed" style={{ fontFamily: FONT_BODY }}>
                 One login, every role. Owners see the full picture. Advisors run their board. Techs see their queue.
               </p>
             </div>
@@ -694,20 +751,20 @@ export default function Landing() {
                 headline: 'Clock in and know exactly where to start',
                 points: [
                   'See your assigned jobs the moment you log in',
-                  'No clipboard, no whiteboard — everything\'s in your queue',
+                  'No clipboard, no whiteboard. Everything\'s in your queue',
                   'Update job status from your phone between lifts',
                 ],
               },
             ].map(({ role, headline, points, highlight }, i) => (
               <Reveal key={role} delay={i * 80}>
-                <div className={`rounded-2xl border p-7 h-full flex flex-col ${highlight ? 'border-orange-500/30 bg-orange-500/[0.05]' : 'border-white/[0.08] bg-white/[0.02]'}`}>
-                  <div className={`text-xs uppercase tracking-widest font-semibold mb-4 ${highlight ? 'text-orange-400' : 'text-white/30'}`}>{role}</div>
-                  <h3 className="text-base font-semibold text-white mb-5 leading-snug" style={{ fontFamily: '"Space Grotesk", system-ui' }}>{headline}</h3>
+                <div className={`rounded-2xl border p-7 h-full flex flex-col ${highlight ? 'border-orange-300 bg-orange-50/60 shadow-sm' : 'border-slate-200 bg-white'}`}>
+                  <div className={`text-xs uppercase tracking-widest font-semibold mb-4 ${highlight ? 'text-orange-600' : 'text-slate-400'}`} style={{ fontFamily: FONT_BODY }}>{role}</div>
+                  <h3 className="text-base font-semibold text-slate-900 mb-5 leading-snug" style={{ fontFamily: FONT_HEADING }}>{headline}</h3>
                   <ul className="space-y-3">
                     {points.map(point => (
                       <li key={point} className="flex items-start gap-2.5">
-                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${highlight ? 'bg-orange-400' : 'bg-white/25'}`} />
-                        <span className="text-white/55 text-sm leading-relaxed">{point}</span>
+                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${highlight ? 'bg-orange-500' : 'bg-slate-300'}`} />
+                        <span className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: FONT_BODY }}>{point}</span>
                       </li>
                     ))}
                   </ul>
@@ -719,14 +776,14 @@ export default function Landing() {
       </section>
 
       {/* What's included */}
-      <section className="border-t border-white/[0.06] py-20 px-6">
+      <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <Reveal>
             <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
                 Everything's included. No tiers, no add-ons.
               </h2>
-              <p className="text-white/45 text-sm">One plan. One price. Every feature on day one.</p>
+              <p className="text-slate-400 text-sm" style={{ fontFamily: FONT_BODY }}>One plan. One price. Every feature on day one.</p>
             </div>
           </Reveal>
           <div className="grid sm:grid-cols-2 gap-x-10 gap-y-3.5">
@@ -737,15 +794,15 @@ export default function Landing() {
               'Tech efficiency scores and clock-ins',
               'Per-shop monthly revenue targets',
               'Mobile board for technicians',
-              'Role-based access — owner, advisor, tech',
+              'Role-based access: owner, advisor, tech',
               'No per-seat fees. Ever.',
             ].map((item, i) => (
               <Reveal key={item} delay={i * 40}>
                 <div className="flex items-center gap-3 py-1">
-                  <div className="w-5 h-5 rounded-full bg-orange-500/15 border border-orange-500/25 flex items-center justify-center flex-shrink-0">
-                    <Check size={10} className="text-orange-400" strokeWidth={2.5} />
+                  <div className="w-5 h-5 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0">
+                    <Check size={10} className="text-orange-600" strokeWidth={2.5} />
                   </div>
-                  <span className="text-white/60 text-sm">{item}</span>
+                  <span className="text-slate-600 text-sm" style={{ fontFamily: FONT_BODY }}>{item}</span>
                 </div>
               </Reveal>
             ))}
@@ -754,28 +811,28 @@ export default function Landing() {
       </section>
 
       {/* Comparison */}
-      <section className="border-t border-white/[0.06] py-24 px-6">
+      <section className="border-t border-slate-200 py-24 px-6 bg-slate-50/60">
         <div className="max-w-4xl mx-auto">
           <Reveal>
             <div className="text-center mb-12">
-              <div className="text-xs text-white/30 uppercase tracking-widest font-medium mb-4">A different kind of tool</div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+              <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4" style={{ fontFamily: FONT_BODY }}>A different kind of tool</div>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
                 Most shop software is complex and overpriced.
                 <br className="hidden md:block" />
-                <span className="text-orange-400"> Ours is built to be neither.</span>
+                <span className="text-orange-500"> Ours is built to be neither.</span>
               </h2>
-              <p className="text-white/50 max-w-lg mx-auto leading-relaxed text-sm md:text-base">
-                The big platforms hide pricing, charge per seat, and lock basics behind upgrade tiers. ShopCommand is one price per location — everything included, day one.
+              <p className="text-slate-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base" style={{ fontFamily: FONT_BODY }}>
+                The big platforms hide pricing, charge per seat, and lock basics behind upgrade tiers. ShopCommand is one price per location, everything included, day one.
               </p>
             </div>
           </Reveal>
 
-          <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
+          <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
             {/* Header row */}
-            <div className="grid grid-cols-3 bg-white/[0.03] border-b border-white/[0.08] px-5 md:px-8 py-4">
+            <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-5 md:px-8 py-4">
               <div />
-              <div className="text-white/30 text-xs text-center uppercase tracking-widest font-medium">Typical shop software</div>
-              <div className="text-orange-400 text-xs text-center uppercase tracking-widest font-semibold">ShopCommand</div>
+              <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium" style={{ fontFamily: FONT_BODY }}>Typical shop software</div>
+              <div className="text-orange-600 text-xs text-center uppercase tracking-widest font-semibold" style={{ fontFamily: FONT_BODY }}>ShopCommand</div>
             </div>
             {[
               { label: 'Default view',     them: 'One location at a time',      us: 'All shops, one screen' },
@@ -785,19 +842,19 @@ export default function Landing() {
               { label: 'Feature access',   them: 'Upgrade tiers to unlock basics', us: 'One plan. Everything in.' },
             ].map(({ label, them, us }, i, arr) => (
               <Reveal key={label} delay={i * 60}>
-                <div className={`grid grid-cols-3 px-5 md:px-8 py-4 items-center ${i < arr.length - 1 ? 'border-b border-white/[0.05]' : ''}`}>
-                  <div className="text-white/55 text-sm font-medium pr-4">{label}</div>
-                  <div className="text-white/28 text-xs md:text-sm text-center px-2 leading-snug">{them}</div>
-                  <div className="text-orange-400 text-xs md:text-sm text-center font-semibold px-2 leading-snug">{us}</div>
+                <div className={`grid grid-cols-3 px-5 md:px-8 py-4 items-center ${i < arr.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                  <div className="text-slate-700 text-sm font-medium pr-4" style={{ fontFamily: FONT_BODY }}>{label}</div>
+                  <div className="text-slate-400 text-xs md:text-sm text-center px-2 leading-snug" style={{ fontFamily: FONT_BODY }}>{them}</div>
+                  <div className="text-orange-600 text-xs md:text-sm text-center font-semibold px-2 leading-snug" style={{ fontFamily: FONT_BODY }}>{us}</div>
                 </div>
               </Reveal>
             ))}
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mt-8">
-            <Link to="/compare/tekmetric" className="text-white/30 hover:text-orange-400 text-xs underline underline-offset-2 transition-colors">
+            <Link to="/compare/tekmetric" className="text-slate-400 hover:text-orange-600 text-xs underline underline-offset-2 transition-colors">
               Full breakdown: ShopCommand vs. Tekmetric →
             </Link>
-            <Link to="/compare/shopmonkey" className="text-white/30 hover:text-orange-400 text-xs underline underline-offset-2 transition-colors">
+            <Link to="/compare/shopmonkey" className="text-slate-400 hover:text-orange-600 text-xs underline underline-offset-2 transition-colors">
               Full breakdown: ShopCommand vs. Shopmonkey →
             </Link>
           </div>
@@ -805,17 +862,17 @@ export default function Landing() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="border-t border-white/[0.06] py-24 px-6">
+      <section id="pricing" className="border-t border-slate-200 py-24 px-6">
         <div className="max-w-4xl mx-auto">
           <Reveal>
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-white/40 text-xs font-medium mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-500 text-xs font-medium mb-4" style={{ fontFamily: FONT_BODY }}>
                 Simple pricing
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
                 Per location. No per-seat fees.
               </h2>
-              <p className="text-white/65 leading-relaxed max-w-md mx-auto">
+              <p className="text-slate-500 leading-relaxed max-w-md mx-auto" style={{ fontFamily: FONT_BODY }}>
                 Pay for the shops you run, not the people who help you run them.
               </p>
             </div>
@@ -823,24 +880,22 @@ export default function Landing() {
           <div className="grid md:grid-cols-2 gap-5">
             {/* Founding Member */}
             <Reveal delay={0}>
-              <div className="relative rounded-2xl border border-orange-500/40 bg-orange-500/[0.06] p-7 flex flex-col h-full"
-                style={{ boxShadow: '0 0 40px rgba(249,115,22,0.08)' }}>
+              <div className="relative rounded-2xl border-2 border-orange-400 bg-white p-7 flex flex-col h-full shadow-sm">
                 <div className="absolute -top-3 left-6">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse" />
                     {TOTAL_SPOTS - CLAIMED_SPOTS} spots left
                   </span>
                 </div>
                 <div className="mb-5 pt-2">
-                  <div className="text-orange-400/80 text-xs uppercase tracking-widest mb-3 font-medium">Founding Member</div>
+                  <div className="text-orange-600 text-xs uppercase tracking-widest mb-3 font-medium" style={{ fontFamily: FONT_BODY }}>Founding Member</div>
                   <div className="flex items-end gap-2 mb-1">
-                    <span className="text-5xl font-bold text-white" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.03em' }}>$125</span>
+                    <span className="text-5xl font-bold text-slate-900" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em' }}>$125</span>
                     <div className="mb-2">
-                      <div className="text-white/35 text-sm line-through leading-none mb-0.5">$199</div>
-                      <div className="text-white/40 text-xs">/mo forever</div>
+                      <div className="text-slate-400 text-sm line-through leading-none mb-0.5">$199</div>
+                      <div className="text-slate-500 text-xs">/mo forever</div>
                     </div>
                   </div>
-                  <p className="text-white/45 text-xs leading-relaxed">Single shop. Locked in for life — price never goes up as long as you stay subscribed.</p>
+                  <p className="text-slate-500 text-xs leading-relaxed" style={{ fontFamily: FONT_BODY }}>Single shop. Locked in for life: price never goes up as long as you stay subscribed.</p>
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[
@@ -850,15 +905,15 @@ export default function Landing() {
                     'Shape the product roadmap',
                   ].map(item => (
                     <div key={item} className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
-                        <Check size={9} className="text-orange-400" strokeWidth={2.5} />
+                      <div className="w-4 h-4 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <Check size={9} className="text-orange-600" strokeWidth={2.5} />
                       </div>
-                      <span className="text-white/65 text-sm">{item}</span>
+                      <span className="text-slate-600 text-sm" style={{ fontFamily: FONT_BODY }}>{item}</span>
                     </div>
                   ))}
                 </div>
                 <a href="#founding"
-                  className="mt-auto w-full py-3 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors text-center shadow-lg shadow-orange-500/20">
+                  className="mt-auto w-full py-3 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors text-center shadow-sm">
                   Reserve my founding spot →
                 </a>
               </div>
@@ -866,14 +921,14 @@ export default function Landing() {
 
             {/* Standard */}
             <Reveal delay={80}>
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-7 flex flex-col h-full">
+              <div className="rounded-2xl border border-slate-200 bg-white p-7 flex flex-col h-full">
                 <div className="mb-5">
-                  <div className="text-white/35 text-xs uppercase tracking-widest mb-3 font-medium">Standard — After launch</div>
+                  <div className="text-slate-400 text-xs uppercase tracking-widest mb-3 font-medium" style={{ fontFamily: FONT_BODY }}>Standard: After launch</div>
                   <div className="flex items-end gap-1.5 mb-1">
-                    <span className="text-5xl font-bold text-white/70" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.03em' }}>$199</span>
-                    <span className="text-white/30 text-sm mb-2">/mo</span>
+                    <span className="text-5xl font-bold text-slate-400" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em' }}>$199</span>
+                    <span className="text-slate-400 text-sm mb-2">/mo</span>
                   </div>
-                  <p className="text-white/30 text-xs leading-relaxed">Single shop. $149/location for 3+ shops. Cancel anytime.</p>
+                  <p className="text-slate-400 text-xs leading-relaxed" style={{ fontFamily: FONT_BODY }}>Single shop. $149/location for 3+ shops. Cancel anytime.</p>
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[
@@ -883,14 +938,14 @@ export default function Landing() {
                     'Real-time revenue and efficiency data',
                   ].map(item => (
                     <div key={item} className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full bg-white/[0.06] flex items-center justify-center flex-shrink-0">
-                        <Check size={9} className="text-white/30" strokeWidth={2.5} />
+                      <div className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <Check size={9} className="text-slate-400" strokeWidth={2.5} />
                       </div>
-                      <span className="text-white/35 text-sm">{item}</span>
+                      <span className="text-slate-400 text-sm" style={{ fontFamily: FONT_BODY }}>{item}</span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-auto w-full py-3 rounded-xl text-sm font-medium border border-white/[0.08] text-white/25 text-center cursor-default">
+                <div className="mt-auto w-full py-3 rounded-xl text-sm font-medium border border-slate-200 text-slate-400 text-center cursor-default" style={{ fontFamily: FONT_BODY }}>
                   Available at launch
                 </div>
               </div>
@@ -900,23 +955,23 @@ export default function Landing() {
       </section>
 
       {/* Founder */}
-      <section className="border-t border-white/[0.06] py-24 px-6">
+      <section className="border-t border-slate-200 py-24 px-6 bg-slate-50/60">
         <div className="max-w-2xl mx-auto">
           <Reveal>
-            <div className="text-xs text-white/35 uppercase tracking-widest font-medium mb-10">Why I built this</div>
-            <p className="text-white/80 text-xl md:text-2xl leading-relaxed mb-6" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.01em' }}>
+            <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-10" style={{ fontFamily: FONT_BODY }}>Why I built this</div>
+            <p className="text-slate-800 text-xl md:text-2xl leading-relaxed mb-6" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.01em' }}>
               "I watched shop owners spend their Fridays driving location to location just to get a picture of how the week went. Calling managers, chasing spreadsheets, guessing at numbers that should have been obvious."
             </p>
-            <p className="text-white/45 text-base leading-relaxed mb-10">
-              ShopCommand started as a tool to fix that one problem — give shop owners a real-time view of their business without leaving their desk. One location or ten, it grew from there.
+            <p className="text-slate-500 text-base leading-relaxed mb-10" style={{ fontFamily: FONT_BODY }}>
+              ShopCommand started as a tool to fix that one problem: give shop owners a real-time view of their business without leaving their desk. One location or ten, it grew from there.
             </p>
             <div className="flex items-center gap-4">
-              <div className="w-11 h-11 rounded-full bg-orange-500/15 border border-orange-500/25 flex items-center justify-center flex-shrink-0">
-                <span className="text-orange-400 text-xs font-bold tracking-wide" style={{ fontFamily: '"Space Grotesk", system-ui' }}>RO</span>
+              <div className="w-11 h-11 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0">
+                <span className="text-orange-600 text-xs font-bold tracking-wide" style={{ fontFamily: FONT_HEADING }}>RO</span>
               </div>
               <div>
-                <div className="text-white text-sm font-semibold">Rasheed Omar</div>
-                <div className="text-white/35 text-xs mt-0.5">Founder · ShopCommand · Houston, TX</div>
+                <div className="text-slate-900 text-sm font-semibold" style={{ fontFamily: FONT_BODY }}>Rasheed Omar</div>
+                <div className="text-slate-400 text-xs mt-0.5" style={{ fontFamily: FONT_BODY }}>Founder, ShopCommand, Houston TX</div>
               </div>
             </div>
           </Reveal>
@@ -924,48 +979,46 @@ export default function Landing() {
       </section>
 
       {/* FAQ */}
-      <section className="border-t border-white/[0.06] py-20 px-6">
+      <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-2xl mx-auto">
           <Reveal>
-            <h2 className="text-2xl font-bold text-white mb-8" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }}>
+            <h2 className="text-2xl font-bold text-slate-900 mb-8" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
               Common questions
             </h2>
           </Reveal>
-          <div className="space-y-0 divide-y divide-white/[0.06]">
+          <div className="space-y-0 divide-y divide-slate-200">
             {faqs.map(({ q, a }, i) => (
-              <FAQItem key={i} q={q} a={a} delay={i * 50} />
+              <FAQItem key={i} q={q} a={a} delay={i * 50} id={i} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Support promise */}
       {/* Founding Member signup */}
       <FoundingSection />
 
       {/* CTA */}
-      <section className="relative py-28 px-6 text-center overflow-hidden border-t border-white/[0.06]">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[600px] h-[350px] bg-orange-500/[0.08] rounded-full blur-[120px] animate-glow-pulse" />
-        </div>
+      <section className="relative py-28 px-6 text-center overflow-hidden border-t border-slate-200">
         <Reveal>
-          <p className="relative text-orange-400/80 text-xs uppercase tracking-widest font-medium mb-4">Early access open now</p>
-          <h2 className="relative text-4xl md:text-5xl font-bold text-white mb-5 max-w-xl mx-auto" style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.03em' }}>
-            Stop driving to your shops to find out how they're doing.
+          <p className="relative text-orange-600 text-xs uppercase tracking-widest font-medium mb-4" style={{ fontFamily: FONT_BODY }}>Early access open now</p>
+          <h2 className="relative text-4xl md:text-5xl font-bold text-slate-900 mb-5 max-w-xl mx-auto" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em' }}>
+            Stop driving to your shops to check on every bay.
           </h2>
-          <p className="relative text-white/65 mb-10 max-w-sm mx-auto leading-relaxed">
-            Everything across all your locations, right in front of you. Always.
+          <p className="relative text-slate-500 mb-10 max-w-sm mx-auto leading-relaxed" style={{ fontFamily: FONT_BODY }}>
+            Every repair order, every tech, every location. Right in front of you.
           </p>
           <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
               href="#founding"
-              className="px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors shadow-lg shadow-orange-500/25"
+              className="px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm"
+              style={{ fontFamily: FONT_BODY }}
             >
-              Reserve your founding spot — {TOTAL_SPOTS - CLAIMED_SPOTS} left →
+              Reserve your founding spot: {TOTAL_SPOTS - CLAIMED_SPOTS} left →
             </a>
             <Link
               to="/login"
-              className="px-6 py-3.5 rounded-xl text-base font-medium text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-colors"
+              className="px-6 py-3.5 rounded-xl text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors"
+              style={{ fontFamily: FONT_BODY }}
             >
               See the dashboard
             </Link>
@@ -974,17 +1027,17 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 md:px-12 py-10">
+      <footer className="border-t border-slate-200 px-6 md:px-12 py-10 bg-slate-50/60">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity flex-shrink-0">
             <HexMark size={22} />
-            <span className="text-white/40 text-sm" style={{ fontFamily: '"Space Grotesk", system-ui' }}>ShopCommand</span>
+            <span className="text-slate-400 text-sm" style={{ fontFamily: FONT_HEADING }}>ShopCommand</span>
           </Link>
 
           {/* Contact */}
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-            <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 text-white/35 hover:text-white/60 text-sm transition-colors">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 text-slate-400 hover:text-slate-600 text-sm transition-colors" style={{ fontFamily: FONT_BODY }}>
               <Mail size={13} className="flex-shrink-0" />
               {CONTACT_EMAIL}
             </a>
@@ -993,11 +1046,11 @@ export default function Landing() {
           {/* Links + copyright */}
           <div className="flex flex-col items-center md:items-end gap-2.5">
             <div className="flex gap-5">
-              <Link to="/terms" className="text-white/25 hover:text-white/50 text-xs transition-colors">Terms</Link>
-              <Link to="/privacy" className="text-white/25 hover:text-white/50 text-xs transition-colors">Privacy</Link>
-              <Link to="/dpa" className="text-white/25 hover:text-white/50 text-xs transition-colors">DPA</Link>
+              <Link to="/terms" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Terms</Link>
+              <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Privacy</Link>
+              <Link to="/dpa" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">DPA</Link>
             </div>
-            <p className="text-white/20 text-xs">© 2026 ShopCommand. All rights reserved.</p>
+            <p className="text-slate-300 text-xs" style={{ fontFamily: FONT_BODY }}>© 2026 ShopCommand. All rights reserved.</p>
           </div>
         </div>
       </footer>
