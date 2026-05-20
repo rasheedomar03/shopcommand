@@ -665,7 +665,7 @@ export default function Landing() {
       {/* How it works */}
       <section
         id="how-it-works"
-        className="px-6 py-24 relative"
+        className="px-6 pt-24 pb-32 relative"
         style={{
           backgroundColor: '#F0EDEA',
           backgroundImage: 'radial-gradient(circle, #D9D5D0 0.5px, transparent 0.5px)',
@@ -700,7 +700,7 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section className="max-w-5xl mx-auto px-6 pb-24">
+      <section className="max-w-5xl mx-auto px-6 py-24">
         <Reveal>
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
