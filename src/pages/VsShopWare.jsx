@@ -31,9 +31,7 @@ const rows = [
   { label: 'Digital inspections',  sc: 'Coming',                             them: 'Best-in-class — core feature',        scWin: false },
   { label: 'Customer texting',     sc: 'Coming',                             them: 'Yes — built in',                      scWin: false },
   { label: 'Workflow automation',  sc: 'Coming',                             them: 'Strong — built-in automation',        scWin: false },
-  { label: 'Modern UI',            sc: 'Built in 2024',                      them: 'Modern — strong design focus',        scWin: false },
   { label: 'Shops using it',       sc: 'Early access — founding stage',      them: '1,000+ shops',                        scWin: false },
-  { label: 'Per-seat fees',        sc: 'Never',                              them: 'No — per-location model',             scWin: false },
 ]
 
 const TITLE = 'ShopCommand vs. Shop-Ware — Auto Shop Software Comparison'
