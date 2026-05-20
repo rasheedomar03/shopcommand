@@ -1075,7 +1075,7 @@ export default function Landing() {
               <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Privacy</Link>
               <Link to="/dpa" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">DPA</Link>
             </div>
-            <p className="text-slate-300 text-xs" style={{ fontFamily: FONT_BODY }}>© 2026 ShopCommand. All rights reserved.</p>
+            <p className="text-slate-500 text-xs" style={{ fontFamily: FONT_BODY }}>© 2026 ShopCommand. All rights reserved.</p>
           </div>
         </div>
       </footer>

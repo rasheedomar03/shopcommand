@@ -193,7 +193,7 @@ export default function DPA() {
 
       {/* Footer */}
       <footer className="border-t border-white/[0.06] px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
-        <p className="text-white/20 text-xs">© 2026 ShopCommand. All rights reserved.</p>
+        <p className="text-slate-500 text-xs">© 2026 ShopCommand. All rights reserved.</p>
         <div className="flex gap-4">
           <Link to="/terms" className="text-white/30 hover:text-white/60 text-xs transition-colors">Terms of Service</Link>
           <Link to="/privacy" className="text-white/30 hover:text-white/60 text-xs transition-colors">Privacy Policy</Link>
