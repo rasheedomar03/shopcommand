@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Wrench, Users, Check, Mail, ChevronDown, Menu, X } from 'lucide-react'
+import { Wrench, ClipboardList, Gauge, Car, Check, Mail, ChevronDown, Menu, X } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 
 const TOTAL_SPOTS = 25
@@ -12,8 +12,9 @@ const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
    Warm light palette. Every neutral tinted toward warm-gray.
    Orange stays brand (#F97316) but used deliberately, not everywhere.
    ──────────────────────────────────────────────────────────────────────────── */
-const FONT_HEADING = '"Bricolage Grotesque", system-ui, sans-serif'
-const FONT_BODY    = '"Figtree", system-ui, sans-serif'
+const FONT_HEADING = '"Gambetta", Georgia, serif'
+const FONT_BODY    = '"General Sans", system-ui, sans-serif'
+const FONT_LOGO    = '"Bricolage Grotesque", system-ui, sans-serif'
 
 // ─── Hex mark ────────────────────────────────────────────────────────────────
 function HexMark({ size = 36 }) {
@@ -88,21 +89,21 @@ const steps = [
 
 const features = [
   {
-    icon: Building2,
+    icon: Gauge,
     title: 'Your whole business, one tab',
     desc: 'Stop guessing how your shop is doing. Revenue, open ROs, and technician status live, the moment you open your laptop. Running multiple locations? See them all at once.',
     badge: 'Real-time',
     badgeSub: 'One dashboard',
   },
   {
-    icon: Wrench,
+    icon: ClipboardList,
     title: 'Every job, accounted for',
     desc: "No more calling the manager to find out where a job stands. Every RO moves through stages digitally, with full history and accountability from the moment it's written.",
     badge: 'Every stage',
     badgeSub: 'Full visibility',
   },
   {
-    icon: Users,
+    icon: Wrench,
     title: 'Know your team without the check-in calls',
     desc: "Who's clocked in, who's behind, who's carrying the day. Without being there. Efficiency scores, clock-ins, and performance data at your fingertips.",
     badge: 'Real-time',
@@ -189,7 +190,7 @@ function DashboardPreview() {
   }, [triggered])
 
   return (
-    <div ref={containerRef} className="relative mt-14 w-full max-w-3xl mx-auto rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
+    <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
       {/* Keep dashboard dark-themed — it IS the product */}
       <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
         <span className="text-white/40 text-xs uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Live preview</span>
@@ -493,7 +494,7 @@ export default function Landing() {
       <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-slate-200/80 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
         <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
           <HexMark size={30} />
-          <span style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }} className="text-base font-semibold">
+          <span style={{ fontFamily: FONT_LOGO, letterSpacing: '-0.02em' }} className="text-base font-semibold">
             <span className="text-slate-900">Shop</span>
             <span className="text-orange-500">Command</span>
           </span>
@@ -602,60 +603,76 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Hero */}
-      <section className="relative flex flex-col items-center text-center px-6 pt-20 md:pt-28 pb-20 overflow-hidden">
-        <div className="animate-fade-up" style={{ animationDelay: '0ms' }}>
-          <a href="#founding" className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-300 bg-orange-50 text-orange-700 text-xs font-medium mb-6 hover:border-orange-400 transition-colors">
-            Auto repair shop management software
-          </a>
+      {/* Hero — split layout */}
+      <section className="relative px-6 pt-16 md:pt-20 pb-16 overflow-hidden">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+          {/* Left: copy */}
+          <div className="animate-fade-up">
+            <a href="#founding" className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-300 bg-orange-50 text-orange-700 text-xs font-medium mb-6 hover:border-orange-400 transition-colors">
+              <Car size={12} className="text-orange-500" />
+              Auto repair shop management software
+            </a>
+
+            <h1
+              className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 mb-5 leading-[1.1]"
+              style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em' }}
+            >
+              Stop flying blind.
+              <br />
+              <span className="text-orange-500">Run your auto shop on data.</span>
+            </h1>
+
+            <p className="text-slate-500 text-base md:text-lg max-w-lg mb-6 leading-relaxed" style={{ fontFamily: FONT_BODY }}>
+              Know exactly where every shop stands before your first call of the day. Repair orders, tech efficiency, and revenue across every bay and every location.
+            </p>
+
+            <div className="flex flex-wrap gap-2 mb-7">
+              {[
+                'Track every RO from estimate to paid',
+                'See every tech\'s efficiency across every bay',
+                'Replace whiteboards and manager calls',
+              ].map(item => (
+                <span key={item} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs" style={{ fontFamily: FONT_BODY }}>
+                  <Check size={10} className="text-orange-500 flex-shrink-0" strokeWidth={2.5} />
+                  {item}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start gap-3">
+              <Link to="/login" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm" style={{ fontFamily: FONT_BODY }}>
+                See the dashboard →
+              </Link>
+              <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors" style={{ fontFamily: FONT_BODY }}>
+                How it works
+              </a>
+            </div>
+            <p className="text-slate-400 text-sm mt-3" style={{ fontFamily: FONT_BODY }}>
+              Not ready to commit?{' '}
+              <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
+                Book a free 15-min walkthrough →
+              </a>
+            </p>
+          </div>
+
+          {/* Right: dashboard preview */}
+          <div className="animate-fade-up" style={{ animationDelay: '200ms' }}>
+            <DashboardPreview />
+          </div>
         </div>
-
-        <h1
-          className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-5 max-w-3xl leading-tight animate-fade-up"
-          style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em', animationDelay: '80ms' }}
-        >
-          Stop flying blind.
-          <br />
-          <span className="text-orange-500">Run your auto shop on data.</span>
-        </h1>
-
-        <p className="text-slate-500 text-base md:text-lg max-w-xl mb-7 leading-relaxed animate-fade-up" style={{ fontFamily: FONT_BODY, animationDelay: '160ms' }}>
-          Know exactly where every shop stands before your first call of the day. Repair orders, tech efficiency, and revenue across every bay and every location.
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-2 mb-8 animate-fade-up" style={{ animationDelay: '210ms' }}>
-          {[
-            'Track every RO from estimate to paid',
-            'See every tech\'s efficiency across every bay',
-            'Replace whiteboards and manager calls',
-          ].map(item => (
-            <span key={item} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs" style={{ fontFamily: FONT_BODY }}>
-              <Check size={10} className="text-orange-500 flex-shrink-0" strokeWidth={2.5} />
-              {item}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 animate-fade-up" style={{ animationDelay: '280ms' }}>
-          <Link to="/login" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm" style={{ fontFamily: FONT_BODY }}>
-            See the dashboard →
-          </Link>
-          <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors" style={{ fontFamily: FONT_BODY }}>
-            How it works
-          </a>
-        </div>
-        <p className="text-slate-400 text-base mt-2 text-center animate-fade-up" style={{ fontFamily: FONT_BODY, animationDelay: '320ms' }}>
-          Not ready to commit?{' '}
-          <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
-            Book a free 15-min walkthrough →
-          </a>
-        </p>
-
-        <DashboardPreview />
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="max-w-5xl mx-auto px-6 py-24">
+      <section
+        id="how-it-works"
+        className="px-6 py-24 relative"
+        style={{
+          backgroundColor: '#F0EDEA',
+          backgroundImage: 'radial-gradient(circle, #D9D5D0 0.5px, transparent 0.5px)',
+          backgroundSize: '16px 16px',
+        }}
+      >
+        <div className="max-w-5xl mx-auto">
         <Reveal>
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
@@ -670,7 +687,7 @@ export default function Landing() {
           {steps.map(({ num, title, desc }, i) => (
             <Reveal key={num} delay={i * 100}>
               <div className="relative z-10 flex flex-col items-start md:items-center text-left md:text-center">
-                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-5 flex-shrink-0 shadow-sm" style={{ boxShadow: '0 0 0 4px #FAFAF8' }}>
+                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-5 flex-shrink-0 shadow-sm" style={{ boxShadow: '0 0 0 4px #F0EDEA' }}>
                   <span className="text-orange-500 text-sm font-bold" style={{ fontFamily: FONT_HEADING }}>{num}</span>
                 </div>
                 <h3 className="text-base font-semibold text-slate-900 mb-2" style={{ fontFamily: FONT_HEADING }}>{title}</h3>
@@ -678,6 +695,7 @@ export default function Landing() {
               </div>
             </Reveal>
           ))}
+        </div>
         </div>
       </section>
 
@@ -713,7 +731,14 @@ export default function Landing() {
       </section>
 
       {/* Who it's built for */}
-      <section className="border-t border-slate-200 py-24 px-6 bg-slate-50/60">
+      <section
+        className="border-t border-slate-200 py-24 px-6"
+        style={{
+          backgroundColor: '#F0EDEA',
+          backgroundImage: 'radial-gradient(circle, #D9D5D0 0.5px, transparent 0.5px)',
+          backgroundSize: '16px 16px',
+        }}
+      >
         <div className="max-w-5xl mx-auto">
           <Reveal>
             <div className="text-center mb-14">
@@ -1032,7 +1057,7 @@ export default function Landing() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity flex-shrink-0">
             <HexMark size={22} />
-            <span className="text-slate-400 text-sm" style={{ fontFamily: FONT_HEADING }}>ShopCommand</span>
+            <span className="text-slate-400 text-sm" style={{ fontFamily: FONT_LOGO }}>ShopCommand</span>
           </Link>
 
           {/* Contact */}
