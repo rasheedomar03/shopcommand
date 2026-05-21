@@ -30,7 +30,7 @@ function HexMark({ size = 36 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
-      <polygon points={pts(32, 32.5, r)} fill="#1C2030" />
+      <polygon points={pts(32, 32.5, r)} fill="#0D0E14" />
     </svg>
   )
 }
