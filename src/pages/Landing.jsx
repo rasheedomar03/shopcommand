@@ -546,7 +546,7 @@ export default function Landing() {
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-slate-200/80 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
         <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
-          <HexMark size={30} />
+          <HexMark size={28} />
           <span style={{ fontFamily: FONT_LOGO, letterSpacing: '-0.02em' }} className="text-base font-semibold">
             <span className="text-slate-900">Shop</span>
             <span className="text-orange-500">Command</span>

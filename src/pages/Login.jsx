@@ -54,7 +54,7 @@ export default function Login() {
 
       {/* Logo */}
       <div className="flex items-center gap-3 mb-10">
-        <HexMark size={36} />
+        <HexMark size={32} />
         <span
           className="text-2xl font-semibold tracking-tight"
           style={{ fontFamily: '"Space Grotesk", system-ui, sans-serif', letterSpacing: '-0.025em' }}

@@ -153,7 +153,7 @@ export default function VsShopWare() {
       {/* Footer */}
       <footer className="border-t border-slate-200 px-6 md:px-12 py-8 flex items-center justify-between flex-wrap gap-4">
         <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-          <HexMark size={20} />
+          <HexMark size={22} />
           <span className="text-slate-400 text-sm" style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif' }}>ShopCommand</span>
         </Link>
         <div className="flex flex-wrap gap-5">

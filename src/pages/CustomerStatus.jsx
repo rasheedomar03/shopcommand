@@ -41,7 +41,7 @@ export default function CustomerStatus() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <div className="flex items-center gap-2 mb-8">
-          <HexMark size={26} />
+          <HexMark size={32} />
           <span className="text-lg font-semibold text-text-primary" style={{ fontFamily: '"Space Grotesk", system-ui, sans-serif' }}>
             Shop<span className="text-orange">Command</span>
           </span>
