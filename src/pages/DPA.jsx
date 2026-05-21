@@ -10,8 +10,8 @@ export default function DPA() {
             <polygon points="32,4 57.86,18 57.86,46 32,60 6.14,46 6.14,18" fill="#F97316" />
             <polygon points="32,18.56 46.78,26.78 46.78,43.22 32,51.44 17.22,43.22 17.22,26.78" fill="#0A0B12" />
           </svg>
-          <span style={{ fontFamily: '"Space Grotesk", system-ui' }} className="text-sm font-semibold">
-            Shop<span className="text-orange-400">Command</span>
+          <span style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }} className="text-sm font-semibold">
+            Shop<span className="text-orange-500">Command</span>
           </span>
         </Link>
         <Link to="/login" className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors">

@@ -47,7 +47,7 @@ export function CompareNav() {
         <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <HexMark size={28} />
           <span style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }} className="text-base font-semibold">
-            <span className="text-slate-900">Shop</span><span className="text-orange-400">Command</span>
+            <span className="text-slate-900">Shop</span><span className="text-orange-500">Command</span>
           </span>
         </Link>
       </div>
