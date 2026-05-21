@@ -813,6 +813,7 @@ export default function Landing() {
                   'Spot problems and top performers at a glance',
                   'Set monthly targets and track progress live',
                 ],
+                highlight: true,
               },
               {
                 role: 'Service Advisor',
@@ -822,7 +823,6 @@ export default function Landing() {
                   'Pull full vehicle history before writing a line',
                   'Keep customers updated without chasing them down',
                 ],
-                highlight: true,
               },
               {
                 role: 'Technician',
