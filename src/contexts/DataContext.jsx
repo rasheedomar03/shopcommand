@@ -121,9 +121,11 @@ export function DataProvider({ children }) {
   // ── shop CRUD ─────────────────────────────────────────────────────────────
 
   const updateShop = (id, patch) => {
-    const next = shops.map(s => s.id === id ? { ...s, ...patch } : s)
-    setShops(next)
-    save('sc_shops', next)
+    setShops(prev => {
+      const next = prev.map(s => s.id === id ? { ...s, ...patch } : s)
+      save('sc_shops', next)
+      return next
+    })
   }
 
   const addShop = (shop) => {
@@ -150,33 +152,41 @@ export function DataProvider({ children }) {
       maxShiftHours: 12,
       maxShiftAction: 'alert',
     }
-    const next = [...shops, newShop]
-    setShops(next)
-    save('sc_shops', next)
+    setShops(prev => {
+      const next = [...prev, newShop]
+      save('sc_shops', next)
+      return next
+    })
     return newShop
   }
 
   const removeShop = (id) => {
-    const next = shops.filter(s => s.id !== id)
-    setShops(next)
-    save('sc_shops', next)
+    setShops(prev => {
+      const next = prev.filter(s => s.id !== id)
+      save('sc_shops', next)
+      return next
+    })
   }
 
   // ── technician CRUD ────────────────────────────────────────────────────────
 
   const addTechnician = (tech) => {
-    const next = [
-      ...technicians,
-      { ...tech, id: crypto.randomUUID(), activeROs: 0, completedToday: 0, hoursWorked: 0 },
-    ]
-    setTechnicians(next)
-    save('sc_technicians', next)
+    setTechnicians(prev => {
+      const next = [
+        ...prev,
+        { ...tech, id: crypto.randomUUID(), activeROs: 0, completedToday: 0, hoursWorked: 0 },
+      ]
+      save('sc_technicians', next)
+      return next
+    })
   }
 
   const removeTechnician = (techId) => {
-    const next = technicians.filter(t => t.id !== techId)
-    setTechnicians(next)
-    save('sc_technicians', next)
+    setTechnicians(prev => {
+      const next = prev.filter(t => t.id !== techId)
+      save('sc_technicians', next)
+      return next
+    })
   }
 
   // ── repairOrder CRUD ───────────────────────────────────────────────────────
@@ -196,9 +206,11 @@ export function DataProvider({ children }) {
       services: ro.services || [],
       mpi: ro.mpi || null,
     }
-    const next = [newRO, ...repairOrders]
-    setRepairOrders(next)
-    save('sc_ros', next)
+    setRepairOrders(prev => {
+      const next = [newRO, ...prev]
+      save('sc_ros', next)
+      return next
+    })
     triggerStageSMS(newRO, 'Estimate')
     return newRO
   }
@@ -214,48 +226,56 @@ export function DataProvider({ children }) {
   }
 
   const updateRepairOrder = (id, patch) => {
-    const existing = repairOrders.find(ro => ro.id === id)
-    if (existing && patch.stage && patch.stage !== existing.stage) {
-      triggerStageSMS(existing, patch.stage)
-    }
-    const next = repairOrders.map(ro => ro.id === id ? { ...ro, ...patch, updated: new Date().toISOString() } : ro)
-    setRepairOrders(next)
-    save('sc_ros', next)
+    setRepairOrders(prev => {
+      const existing = prev.find(ro => ro.id === id)
+      if (existing && patch.stage && patch.stage !== existing.stage) {
+        triggerStageSMS(existing, patch.stage)
+      }
+      const next = prev.map(ro => ro.id === id ? { ...ro, ...patch, updated: new Date().toISOString() } : ro)
+      save('sc_ros', next)
+      return next
+    })
   }
 
   // ── parts inventory ───────────────────────────────────────────────────────
 
   const addPart = (part) => {
-    const next = [...parts, { ...part, id: crypto.randomUUID(), lastOrdered: null }]
-    setParts(next)
-    save('sc_parts', next)
+    setParts(prev => {
+      const next = [...prev, { ...part, id: crypto.randomUUID(), lastOrdered: null }]
+      save('sc_parts', next)
+      return next
+    })
   }
 
   const updatePart = (id, patch) => {
-    const part = parts.find(p => p.id === id)
-    const next = parts.map(p => p.id === id ? { ...p, ...patch } : p)
-    setParts(next)
-    save('sc_parts', next)
-    // Notify if a manual qty edit just crossed below minimum
-    if (part && 'qty' in patch) {
-      const newQty   = Number(patch.qty)
-      const minQty   = 'minQty' in patch ? Number(patch.minQty) : part.minQty
-      if (newQty <= minQty && part.qty > minQty) {
-        addNotification({
-          type:     'low_stock',
-          partName: part.name,
-          qty:      newQty,
-          minQty,
-          shopId:   part.shopId,
-        })
+    setParts(prev => {
+      const part = prev.find(p => p.id === id)
+      const next = prev.map(p => p.id === id ? { ...p, ...patch } : p)
+      save('sc_parts', next)
+      // Notify if a manual qty edit just crossed below minimum
+      if (part && 'qty' in patch) {
+        const newQty   = Number(patch.qty)
+        const minQty   = 'minQty' in patch ? Number(patch.minQty) : part.minQty
+        if (newQty <= minQty && part.qty > minQty) {
+          setTimeout(() => addNotification({
+            type:     'low_stock',
+            partName: part.name,
+            qty:      newQty,
+            minQty,
+            shopId:   part.shopId,
+          }), 0)
+        }
       }
-    }
+      return next
+    })
   }
 
   const deletePart = (id) => {
-    const next = parts.filter(p => p.id !== id)
-    setParts(next)
-    save('sc_parts', next)
+    setParts(prev => {
+      const next = prev.filter(p => p.id !== id)
+      save('sc_parts', next)
+      return next
+    })
   }
 
   const usePart = (partId, qty = 1) => {
@@ -322,6 +342,8 @@ export function DataProvider({ children }) {
   // ── clock in/out ──────────────────────────────────────────────────────────
 
   const clockIn = (techId) => {
+    // Read current state via refs to avoid stale closures for validation
+    // (technicians/shops are needed for the hours check before mutating)
     const tech = technicians.find(t => t.id === techId)
     const shop = shops.find(s => s.id === tech?.shopId)
 
@@ -357,29 +379,37 @@ export function DataProvider({ children }) {
       }
     }
 
-    const next = new Set(clockedInTechs)
-    next.add(techId)
-    setClockedInTechs(next)
-    save('sc_clocked_in', [...next])
+    setClockedInTechs(prev => {
+      const next = new Set(prev)
+      next.add(techId)
+      save('sc_clocked_in', [...next])
+      return next
+    })
 
-    const entry = { id: crypto.randomUUID(), techId, clockInAt: new Date().toISOString(), clockOutAt: null }
-    const nextEntries = [...timeEntries, entry]
-    setTimeEntries(nextEntries)
-    save('sc_time_entries', nextEntries)
+    setTimeEntries(prev => {
+      const entry = { id: crypto.randomUUID(), techId, clockInAt: new Date().toISOString(), clockOutAt: null }
+      const next = [...prev, entry]
+      save('sc_time_entries', next)
+      return next
+    })
   }
 
   const clockOut = (techId) => {
-    const next = new Set(clockedInTechs)
-    next.delete(techId)
-    setClockedInTechs(next)
-    save('sc_clocked_in', [...next])
+    setClockedInTechs(prev => {
+      const next = new Set(prev)
+      next.delete(techId)
+      save('sc_clocked_in', [...next])
+      return next
+    })
 
     const now = new Date().toISOString()
-    const nextEntries = timeEntries.map(e =>
-      e.techId === techId && !e.clockOutAt ? { ...e, clockOutAt: now } : e
-    )
-    setTimeEntries(nextEntries)
-    save('sc_time_entries', nextEntries)
+    setTimeEntries(prev => {
+      const next = prev.map(e =>
+        e.techId === techId && !e.clockOutAt ? { ...e, clockOutAt: now } : e
+      )
+      save('sc_time_entries', next)
+      return next
+    })
   }
 
   // ── reset (dev helper) ────────────────────────────────────────────────────

@@ -7,23 +7,26 @@ import { DataProvider } from './contexts/DataContext'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { TooltipProvider } from './components/ui/Tooltip'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import App from './App.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <DataProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <BrowserRouter>
-              <App />
-              <Analytics />
-              <SpeedInsights />
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </DataProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <DataProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <BrowserRouter>
+                <App />
+                <Analytics />
+                <SpeedInsights />
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
+        </DataProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

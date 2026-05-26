@@ -196,7 +196,7 @@ export default function Appointments() {
       </div>
 
       {selectedRO && (
-        <RODetailModal open={!!selectedRO} onClose={() => setSelectedRO(null)} ro={selectedRO} />
+        <RODetailModal key={selectedRO?.id} open={!!selectedRO} onClose={() => setSelectedRO(null)} ro={selectedRO} />
       )}
       {newROOpen && (
         <NewROModal open={newROOpen} onClose={() => setNewROOpen(false)} defaultDate={newRODate} />

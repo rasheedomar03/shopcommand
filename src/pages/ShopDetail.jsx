@@ -151,7 +151,7 @@ export default function ShopDetail() {
       </div>
 
       <NewROModal open={newROOpen} onClose={() => setNewROOpen(false)} preShopId={shop.id} />
-      {selectedRO && <RODetailModal open={!!selectedRO} onClose={() => setSelectedRO(null)} ro={selectedRO} />}
+      {selectedRO && <RODetailModal key={selectedRO.id} open={!!selectedRO} onClose={() => setSelectedRO(null)} ro={selectedRO} />}
     </div>
   )
 }

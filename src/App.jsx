@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 function ScrollToTop() {
@@ -6,39 +6,52 @@ function ScrollToTop() {
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
   return null
 }
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-full min-h-[200px]">
+      <div className="h-6 w-6 rounded-full border-2 border-orange border-t-transparent animate-spin" />
+    </div>
+  )
+}
+
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { useAuth } from '@/contexts/AuthContext'
+
+// Eagerly load landing + login (first paint)
 import Landing from '@/pages/Landing'
 import Login from '@/pages/Login'
-import Dashboard from '@/pages/Dashboard'
-import AllShops from '@/pages/AllShops'
-import ShopDetail from '@/pages/ShopDetail'
-import RepairOrders from '@/pages/RepairOrders'
-import Technicians from '@/pages/Technicians'
-import Customers from '@/pages/Customers'
-import CustomerProfile from '@/pages/CustomerProfile'
-import TechnicianProfile from '@/pages/TechnicianProfile'
-import TechBoard from '@/pages/TechBoard'
-import Parts from '@/pages/Parts'
-import Estimates from '@/pages/Estimates'
-import Invoices from '@/pages/Invoices'
-import Messages from '@/pages/Messages'
-import Inspections from '@/pages/Inspections'
-import Payments from '@/pages/Payments'
-import Reports from '@/pages/Reports'
-import Settings from '@/pages/Settings'
-import CustomerStatus from '@/pages/CustomerStatus'
-import Dispatch from '@/pages/Dispatch'
-import Appointments from '@/pages/Appointments'
-import Terms from '@/pages/Terms'
-import Privacy from '@/pages/Privacy'
-import DPA from '@/pages/DPA'
-import VsTekmetric from '@/pages/VsTekmetric'
-import VsShopmonkey from '@/pages/VsShopmonkey'
-import VsMitchell1 from '@/pages/VsMitchell1'
-import VsShopWare from '@/pages/VsShopWare'
-import VsROWriter from '@/pages/VsROWriter'
+
+// Lazy-load everything behind auth
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const AllShops = lazy(() => import('@/pages/AllShops'))
+const ShopDetail = lazy(() => import('@/pages/ShopDetail'))
+const RepairOrders = lazy(() => import('@/pages/RepairOrders'))
+const Technicians = lazy(() => import('@/pages/Technicians'))
+const Customers = lazy(() => import('@/pages/Customers'))
+const CustomerProfile = lazy(() => import('@/pages/CustomerProfile'))
+const TechnicianProfile = lazy(() => import('@/pages/TechnicianProfile'))
+const TechBoard = lazy(() => import('@/pages/TechBoard'))
+const Parts = lazy(() => import('@/pages/Parts'))
+const Estimates = lazy(() => import('@/pages/Estimates'))
+const Invoices = lazy(() => import('@/pages/Invoices'))
+const Messages = lazy(() => import('@/pages/Messages'))
+const Inspections = lazy(() => import('@/pages/Inspections'))
+const Payments = lazy(() => import('@/pages/Payments'))
+const Reports = lazy(() => import('@/pages/Reports'))
+const Settings = lazy(() => import('@/pages/Settings'))
+const CustomerStatus = lazy(() => import('@/pages/CustomerStatus'))
+const Dispatch = lazy(() => import('@/pages/Dispatch'))
+const Appointments = lazy(() => import('@/pages/Appointments'))
+const Terms = lazy(() => import('@/pages/Terms'))
+const Privacy = lazy(() => import('@/pages/Privacy'))
+const DPA = lazy(() => import('@/pages/DPA'))
+const VsTekmetric = lazy(() => import('@/pages/VsTekmetric'))
+const VsShopmonkey = lazy(() => import('@/pages/VsShopmonkey'))
+const VsMitchell1 = lazy(() => import('@/pages/VsMitchell1'))
+const VsShopWare = lazy(() => import('@/pages/VsShopWare'))
+const VsROWriter = lazy(() => import('@/pages/VsROWriter'))
 
 // ── guards ───────────────────────────────────────────────────────────────────
 
@@ -113,37 +126,37 @@ function AppShell() {
 
 export default function App() {
   return (
-    <>
+    <Suspense fallback={<PageLoader />}>
       <ScrollToTop />
       <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/status/:roId" element={<CustomerStatus />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/dpa" element={<DPA />} />
-      <Route path="/compare/tekmetric" element={<VsTekmetric />} />
-      <Route path="/compare/shopmonkey" element={<VsShopmonkey />} />
-      <Route path="/compare/mitchell1" element={<VsMitchell1 />} />
-      <Route path="/compare/shop-ware" element={<VsShopWare />} />
-      <Route path="/compare/ro-writer" element={<VsROWriter />} />
-      <Route
-        path="/tech-board"
-        element={
-          <RequireTech>
-            <TechBoard />
-          </RequireTech>
-        }
-      />
-      <Route
-        path="/*"
-        element={
-          <RequireOwner>
-            <AppShell />
-          </RequireOwner>
-        }
-      />
-    </Routes>
-    </>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/status/:roId" element={<CustomerStatus />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/dpa" element={<DPA />} />
+        <Route path="/compare/tekmetric" element={<VsTekmetric />} />
+        <Route path="/compare/shopmonkey" element={<VsShopmonkey />} />
+        <Route path="/compare/mitchell1" element={<VsMitchell1 />} />
+        <Route path="/compare/shop-ware" element={<VsShopWare />} />
+        <Route path="/compare/ro-writer" element={<VsROWriter />} />
+        <Route
+          path="/tech-board"
+          element={
+            <RequireTech>
+              <TechBoard />
+            </RequireTech>
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <RequireOwner>
+              <AppShell />
+            </RequireOwner>
+          }
+        />
+      </Routes>
+    </Suspense>
   )
 }

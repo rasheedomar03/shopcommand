@@ -398,6 +398,7 @@ export default function CustomerProfile() {
       {/* Modals */}
       {selectedRO && (
         <RODetailModal
+          key={selectedRO?.id}
           open={!!selectedRO}
           onClose={() => setSelectedRO(null)}
           ro={selectedRO}

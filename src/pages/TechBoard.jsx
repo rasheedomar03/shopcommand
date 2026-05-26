@@ -1388,6 +1388,7 @@ export default function TechBoard() {
 
       {selectedRO && (
         <RODetailModal
+          key={selectedRO?.id}
           open={!!selectedRO}
           onClose={() => setSelectedRO(null)}
           ro={selectedRO}

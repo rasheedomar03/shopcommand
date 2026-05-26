@@ -262,6 +262,7 @@ export default function TechnicianProfile() {
       {/* RO Detail Modal */}
       {selectedRO && (
         <RODetailModal
+          key={selectedRO?.id}
           open={!!selectedRO}
           onClose={() => setSelectedRO(null)}
           ro={selectedRO}

@@ -19,11 +19,14 @@ export function formatNumber(value) {
 }
 
 export function formatPercent(value, decimals = 1) {
-  return `${value.toFixed(decimals)}%`
+  if (value == null || isNaN(value)) return '—'
+  return `${Number(value).toFixed(decimals)}%`
 }
 
 export function formatDate(dateStr) {
+  if (!dateStr) return '—'
   const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return '—'
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
@@ -32,7 +35,9 @@ export function formatDate(dateStr) {
 }
 
 export function formatRelativeTime(dateStr) {
+  if (!dateStr) return '—'
   const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return '—'
   const now = new Date()
   const diffMs = now - date
   const diffMins = Math.floor(diffMs / 60000)

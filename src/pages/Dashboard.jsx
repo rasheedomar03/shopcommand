@@ -492,7 +492,7 @@ export default function Dashboard() {
       </div>
 
       <NewROModal open={newROOpen} onClose={() => setNewROOpen(false)} />
-      {selectedRO && <RODetailModal open={!!selectedRO} onClose={() => setSelectedRO(null)} ro={selectedRO} />}
+      {selectedRO && <RODetailModal key={selectedRO.id} open={!!selectedRO} onClose={() => setSelectedRO(null)} ro={selectedRO} />}
     </div>
   )
 }
