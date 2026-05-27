@@ -780,7 +780,7 @@ export default function Landing() {
           <p className="text-center text-slate-400 text-xs uppercase tracking-widest font-medium mb-6">Works with the tools you already use</p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {integrations.map(name => (
-              <span key={name} className="text-slate-300 text-sm font-semibold tracking-wide select-none" style={{ letterSpacing: '0.05em' }}>{name}</span>
+              <span key={name} className="text-slate-400 text-sm font-semibold tracking-wide select-none" style={{ letterSpacing: '0.05em' }}>{name}</span>
             ))}
           </div>
         </div>
