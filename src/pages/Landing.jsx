@@ -70,27 +70,6 @@ const features = [
 // ─── Integration partners ────────────────────────────────────────────────────
 const integrations = ['CARFAX', 'QuickBooks', 'PartsTech', 'Worldpac', 'Stripe']
 
-// ─── Testimonials ────────────────────────────────────────────────────────────
-const testimonials = [
-  {
-    quote: "I used to drive to each shop on Fridays just to see how the week went. Now I check the dashboard from my couch at 6am and know more than I ever did in person.",
-    name: 'Marcus Webb',
-    role: 'Owner, 3 locations',
-    initials: 'MW',
-  },
-  {
-    quote: "We tried Tekmetric and it was built for the advisor, not the owner. This is the first tool where I can see all my shops without switching between five logins.",
-    name: 'DeAndre Johnson',
-    role: 'Owner, Precision Auto Group',
-    initials: 'DJ',
-  },
-  {
-    quote: "Setup took maybe 20 minutes. I was honestly skeptical but it just worked. My service advisor picked it up same day.",
-    name: 'Kyle Whitfield',
-    role: 'Owner, Whitfield Automotive',
-    initials: 'KW',
-  },
-]
 
 const faqs = [
   {
@@ -777,7 +756,7 @@ export default function Landing() {
       {/* Integration logos */}
       <section className="border-t border-slate-200/60 py-10 px-6">
         <div className="max-w-4xl mx-auto">
-          <p className="text-center text-slate-400 text-xs uppercase tracking-widest font-medium mb-6">Works with the tools you already use</p>
+          <p className="text-center text-slate-400 text-xs uppercase tracking-widest font-medium mb-6">Planned integrations</p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {integrations.map(name => (
               <span key={name} className="text-slate-400 text-sm font-semibold tracking-wide select-none" style={{ letterSpacing: '0.05em' }}>{name}</span>
@@ -978,29 +957,6 @@ export default function Landing() {
             <Link to="/compare/shopmonkey" className="text-slate-400 hover:text-orange-600 text-xs underline underline-offset-2 transition-colors">
               Full breakdown: ShopCommand vs. Shopmonkey →
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="border-t border-slate-200 py-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-center text-xs text-slate-400 uppercase tracking-widest font-medium mb-10">Early access feedback</p>
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map(({ quote, name, role, initials }) => (
-              <div key={name} className="bg-white rounded-xl border border-slate-200 p-6">
-                <p className="text-slate-600 text-sm leading-relaxed mb-5">"{quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-slate-500 text-xs font-semibold">{initials}</span>
-                  </div>
-                  <div>
-                    <div className="text-slate-900 text-sm font-medium">{name}</div>
-                    <div className="text-slate-400 text-xs">{role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
