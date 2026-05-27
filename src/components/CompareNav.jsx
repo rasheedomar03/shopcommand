@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Menu, X } from 'lucide-react'
 
 function HexMark({ size = 36 }) {
   const pts = (cx, cy, r) =>
@@ -29,6 +29,7 @@ const compareLinks = [
 
 export function CompareNav() {
   const [compareOpen, setCompareOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const compareRef = useRef(null)
 
   useEffect(() => {
@@ -41,17 +42,23 @@ export function CompareNav() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  return (
-    <nav className="flex items-center px-6 md:px-12 h-16 border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/80">
-      <div className="flex-1 flex items-center">
-        <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <HexMark size={28} />
-          <span style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }} className="text-base font-semibold">
-            <span className="text-slate-900">Shop</span><span className="text-orange-500">Command</span>
-          </span>
-        </Link>
-      </div>
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') setMobileOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
 
+  return (
+    <>
+    <nav className="flex items-center justify-between px-5 md:px-12 h-16 border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
+      <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
+        <HexMark size={28} />
+        <span className="text-base font-semibold tracking-tight">
+          <span className="text-slate-900">Shop</span><span className="text-orange-500">Command</span>
+        </span>
+      </Link>
+
+      {/* Desktop center links */}
       <div className="hidden md:flex items-center gap-1">
         <a href="/#how-it-works" className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-50">
           How it works
@@ -84,10 +91,83 @@ export function CompareNav() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-end gap-3">
-        <Link to="/login" className="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Log in</Link>
-        <a href="/#founding" className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm whitespace-nowrap">Reserve your spot</a>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <Link to="/login" className="hidden sm:inline-flex px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Log in</Link>
+        <a href="/#founding" className="hidden sm:inline-flex px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm whitespace-nowrap">Reserve your spot</a>
+        {/* Mobile hamburger */}
+        <button
+          className="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          onClick={() => setMobileOpen(o => !o)}
+          aria-expanded={mobileOpen}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+        >
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
     </nav>
+
+    {/* Mobile overlay */}
+    {mobileOpen && (
+      <div className="md:hidden fixed inset-0 top-16 z-40 bg-black/40" onClick={() => setMobileOpen(false)} />
+    )}
+
+    {/* Mobile menu */}
+    <div
+      className="md:hidden fixed inset-x-0 top-16 z-50 bg-white border-b border-slate-200 shadow-xl shadow-slate-900/[0.08]"
+      style={{
+        transition: 'opacity 200ms ease-out, transform 200ms ease-out',
+        opacity: mobileOpen ? 1 : 0,
+        transform: mobileOpen ? 'translateY(0)' : 'translateY(-8px)',
+        pointerEvents: mobileOpen ? 'auto' : 'none',
+      }}
+    >
+      <div className="px-5 py-4 space-y-1 max-h-[calc(100dvh-4rem)] overflow-y-auto">
+        <a
+          href="/#how-it-works"
+          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+        >
+          How it works
+        </a>
+        <a
+          href="/#pricing"
+          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+        >
+          Pricing
+        </a>
+        <Link
+          to="/login"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+        >
+          Log in
+        </Link>
+
+        {/* Compare links */}
+        <div className="pt-2 border-t border-slate-100">
+          <div className="px-3 pt-2 pb-1 text-xs font-medium text-slate-400 uppercase tracking-wider">Compare</div>
+          {compareLinks.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center h-11 px-3 text-sm text-slate-500 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Mobile CTA */}
+        <div className="pt-3 pb-1 border-t border-slate-100">
+          <a
+            href="/#founding"
+            className="flex items-center justify-center h-12 rounded-xl text-sm font-semibold bg-orange-500 active:bg-orange-600 text-white transition-colors"
+          >
+            Reserve your spot →
+          </a>
+        </div>
+      </div>
+    </div>
+    </>
   )
 }

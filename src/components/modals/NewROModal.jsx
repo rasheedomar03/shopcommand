@@ -96,23 +96,30 @@ export function NewROModal({
     await new Promise(r => setTimeout(r, 600))
 
     const tech = technicians.find(t => String(t.id) === String(form.techId))
-    const vehicle = `${form.year} ${form.make} ${form.model}`.trim()
+    const cleanName  = sanitizeField(form.customerName, 100)
+    const cleanPhone = sanitizeField(form.customerPhone, 30)
+    const cleanYear  = sanitizeField(form.year, 4)
+    const cleanMake  = sanitizeField(form.make, 50)
+    const cleanModel = sanitizeField(form.model, 50)
+    const cleanTrim  = sanitizeField(form.trim, 50)
+    const cleanComplaint = sanitizeField(form.complaint, 1000)
+    const vehicle = `${cleanYear} ${cleanMake} ${cleanModel}`.trim()
 
     const newRO = addRepairOrder({
       shopId: Number(form.shopId),
       customerId: form.customerId,
-      customerName: form.customerName,
-      customerPhone: form.customerPhone,
+      customerName: cleanName,
+      customerPhone: cleanPhone,
       vehicle,
       techId: form.techId ? Number(form.techId) : null,
       techName: tech?.name || null,
       stage: form.stage,
-      complaint: form.complaint,
+      complaint: cleanComplaint,
       odometerIn: form.mileage ? Number(form.mileage.replace(/,/g, '')) : null,
       odometerOut: null,
       services: [],
       vin: form.vin || null,
-      trim: form.trim || null,
+      trim: cleanTrim || null,
     })
 
     setSubmitting(false)

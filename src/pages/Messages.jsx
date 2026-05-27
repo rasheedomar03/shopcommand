@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Search, Send, Phone, ChevronLeft, Clock } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime, sanitizeField } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { shops } from '@/data/mock'
 
@@ -181,7 +181,7 @@ function MessageThread({ conversation, onBack }) {
             onChange={e => setDraft(e.target.value)}
             placeholder="Type a message..."
             className="flex-1 h-10 px-4 rounded-full bg-background border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40 transition-shadow"
-            onKeyDown={e => { if (e.key === 'Enter' && draft.trim()) setDraft('') }}
+            onKeyDown={e => { if (e.key === 'Enter' && draft.trim()) { sanitizeField(draft, 1000); setDraft('') } }}
           />
           <button
             disabled={!draft.trim()}
@@ -231,7 +231,7 @@ export default function Messages() {
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
             <input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => setSearch(sanitizeField(e.target.value, 100))}
               placeholder="Search conversations..."
               className="w-full h-8 pl-9 pr-3 rounded-lg bg-background border border-border text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40 transition-shadow"
             />

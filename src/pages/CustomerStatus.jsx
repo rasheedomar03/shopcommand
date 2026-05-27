@@ -42,7 +42,7 @@ export default function CustomerStatus() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <div className="flex items-center gap-2 mb-8">
           <HexMark size={32} />
-          <span className="text-lg font-semibold text-text-primary" style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }}>
+          <span className="text-lg font-semibold text-text-primary" style={{ letterSpacing: '-0.02em' }}>
             Shop<span className="text-orange">Command</span>
           </span>
         </div>
@@ -67,7 +67,7 @@ export default function CustomerStatus() {
       <header className="h-14 border-b border-border flex items-center px-5">
         <div className="flex items-center gap-2">
           <HexMark size={24} />
-          <span className="text-base font-semibold text-text-primary" style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }}>
+          <span className="text-base font-semibold text-text-primary" style={{ letterSpacing: '-0.02em' }}>
             Shop<span className="text-orange">Command</span>
           </span>
         </div>

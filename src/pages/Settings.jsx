@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { cn } from '@/lib/utils'
+import { cn, sanitizeField } from '@/lib/utils'
 
 const SECTIONS = [
   { id: 'profile', label: 'Account', icon: Users },
@@ -37,7 +37,16 @@ export default function Settings() {
   }
 
   const handleProfileSave = async () => {
-    localStorage.setItem('sc_profile', JSON.stringify(profile))
+    const cleaned = {
+      firstName:    sanitizeField(profile.firstName, 100),
+      lastName:     sanitizeField(profile.lastName, 100),
+      email:        sanitizeField(profile.email, 150),
+      phone:        sanitizeField(profile.phone, 30),
+      businessName: sanitizeField(profile.businessName, 150),
+      taxId:        sanitizeField(profile.taxId, 20),
+    }
+    setProfile(cleaned)
+    localStorage.setItem('sc_profile', JSON.stringify(cleaned))
     setSaved(true)
     await new Promise(r => setTimeout(r, 1200))
     setSaved(false)
@@ -228,7 +237,15 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
 
   const handleAdd = () => {
     if (!draft.name.trim() || !draft.address.trim()) return
-    onAdd({ ...draft, bays: Number(draft.bays) || 0, monthlyTarget: Number(draft.monthlyTarget) || 0 })
+    onAdd({
+      name:          sanitizeField(draft.name, 100),
+      address:       sanitizeField(draft.address, 200),
+      phone:         sanitizeField(draft.phone, 30),
+      twilioPhone:   sanitizeField(draft.twilioPhone, 30),
+      manager:       sanitizeField(draft.manager, 100),
+      bays:          Number(draft.bays) || 0,
+      monthlyTarget: Number(draft.monthlyTarget) || 0,
+    })
     setDraft(EMPTY_SHOP)
     setAdding(false)
     setSaved(true)
@@ -400,7 +417,7 @@ function ShopPhoneField({ field, icon: Icon, iconClass, label, shop, onSave }) {
   const [draft, setDraft] = useState('')
 
   const startEdit = () => { setDraft(shop[field] || ''); setEditing(true) }
-  const commit = () => { if (draft.trim()) onSave({ [field]: draft.trim() }); setEditing(false) }
+  const commit = () => { if (draft.trim()) onSave({ [field]: sanitizeField(draft, 30) }); setEditing(false) }
   const cancel = () => setEditing(false)
 
   return (

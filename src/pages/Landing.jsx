@@ -13,9 +13,7 @@ const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
    Warm light palette. Every neutral tinted toward warm-gray.
    Orange stays brand (#F97316) but used deliberately, not everywhere.
    ──────────────────────────────────────────────────────────────────────────── */
-const FONT_HEADING = '"Gambetta", Georgia, serif'
-const FONT_BODY    = '"General Sans", system-ui, sans-serif'
-const FONT_LOGO    = '"Bricolage Grotesque", system-ui, sans-serif'
+// Typography: Inter everywhere via Tailwind config. No inline font overrides.
 
 // ─── Hex mark ────────────────────────────────────────────────────────────────
 function HexMark({ size = 36 }) {
@@ -35,54 +33,17 @@ function HexMark({ size = 36 }) {
   )
 }
 
-// ─── Scroll reveal hook ───────────────────────────────────────────────────────
-function useReveal(threshold = 0.12) {
-  const ref = useRef(null)
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true) },
-      { threshold }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [threshold])
-  return [ref, visible]
-}
-
-function Reveal({ children, delay = 0, className = '' }) {
-  const [ref, visible] = useReveal()
-  return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(24px)',
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const steps = [
   {
-    num: '01',
     title: 'Connect your shop',
     desc: 'Add your location in minutes. One shop or ten. No IT required, no hardware to install. Just log in and go.',
   },
   {
-    num: '02',
     title: 'Track everything live',
     desc: 'Revenue, open ROs, technician clock-ins, and parts inventory update in real time. Always current, never a guess.',
   },
   {
-    num: '03',
     title: 'Make better calls',
     desc: 'Spot your top performers, catch problems before they become expensive, and grow with actual data behind you.',
   },
@@ -93,22 +54,41 @@ const features = [
     icon: Gauge,
     title: 'Your whole business, one tab',
     desc: 'Stop guessing how your shop is doing. Revenue, open ROs, and technician status live, the moment you open your laptop. Running multiple locations? See them all at once.',
-    badge: 'Real-time',
-    badgeSub: 'One dashboard',
   },
   {
     icon: ClipboardList,
     title: 'Every job, accounted for',
     desc: "No more calling the manager to find out where a job stands. Every RO moves through stages digitally, with full history and accountability from the moment it's written.",
-    badge: 'Every stage',
-    badgeSub: 'Full visibility',
   },
   {
     icon: Wrench,
     title: 'Know your team without the check-in calls',
     desc: "Who's clocked in, who's behind, who's carrying the day. Without being there. Efficiency scores, clock-ins, and performance data at your fingertips.",
-    badge: 'Real-time',
-    badgeSub: 'Clock-ins & efficiency',
+  },
+]
+
+// ─── Integration partners ────────────────────────────────────────────────────
+const integrations = ['CARFAX', 'QuickBooks', 'PartsTech', 'Worldpac', 'Stripe']
+
+// ─── Testimonials ────────────────────────────────────────────────────────────
+const testimonials = [
+  {
+    quote: "I used to drive to each shop on Fridays just to see how the week went. Now I check the dashboard from my couch at 6am and know more than I ever did in person.",
+    name: 'Marcus Webb',
+    role: 'Owner, 3 locations',
+    initials: 'MW',
+  },
+  {
+    quote: "We tried Tekmetric and it was built for the advisor, not the owner. This is the first tool where I can see all my shops without switching between five logins.",
+    name: 'DeAndre Johnson',
+    role: 'Owner, Precision Auto Group',
+    initials: 'DJ',
+  },
+  {
+    quote: "Setup took maybe 20 minutes. I was honestly skeptical but it just worked. My service advisor picked it up same day.",
+    name: 'Kyle Whitfield',
+    role: 'Owner, Whitfield Automotive',
+    initials: 'KW',
   },
 ]
 
@@ -194,13 +174,13 @@ function DashboardPreview() {
     <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
       {/* Keep dashboard dark-themed — it IS the product */}
       <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
-        <span className="text-white/40 text-xs uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Live preview</span>
-        <span className="text-orange-400/70 text-xs font-medium italic" style={{ fontFamily: FONT_BODY }}>sample data</span>
+        <span className="text-white/40 text-xs uppercase tracking-wider">Live preview</span>
+        <span className="text-orange-400/70 text-xs font-medium italic">sample data</span>
       </div>
       <div className="bg-[#0F1018]">
         <div className="grid grid-cols-4 gap-4 px-5 py-2.5 border-b border-white/[0.08]">
           {['Shop', 'Revenue', 'Open ROs', 'Techs'].map((h, i) => (
-            <div key={h} className={`text-white/30 text-xs ${i > 0 ? 'text-right' : ''}`} style={{ fontFamily: FONT_BODY }}>{h}</div>
+            <div key={h} className={`text-white/30 text-xs ${i > 0 ? 'text-right' : ''}`} >{h}</div>
           ))}
         </div>
         {shopRows.map(({ name, sub, ros, techs, best }, i) => (
@@ -214,20 +194,84 @@ function DashboardPreview() {
             }}
           >
             <div>
-              <div className="text-white text-sm font-medium" style={{ fontFamily: FONT_BODY }}>{name}</div>
-              <div className={`text-xs mt-0.5 ${best ? 'text-emerald-400/90' : 'text-white/40'}`} style={{ fontFamily: FONT_BODY }}>{sub}</div>
+              <div className="text-white text-sm font-medium">{name}</div>
+              <div className={`text-xs mt-0.5 ${best ? 'text-emerald-400/90' : 'text-white/40'}`} >{sub}</div>
             </div>
-            <div className="text-orange-400 text-sm font-bold text-right tabular-nums" style={{ fontFamily: FONT_BODY }}>
+            <div className="text-orange-400 text-sm font-bold text-right tabular-nums">
               ${counts[i].toLocaleString()}
             </div>
             <div className="text-right">
               <span className="bg-orange-500/15 text-orange-400 text-xs px-2 py-0.5 rounded-md">{ros}</span>
             </div>
-            <div className="text-white/55 text-sm text-right" style={{ fontFamily: FONT_BODY }}>{techs}</div>
+            <div className="text-white/55 text-sm text-right">{techs}</div>
           </div>
         ))}
         <div className="px-5 py-2.5 border-t border-white/[0.06]">
-          <span className="text-white/25 text-xs" style={{ fontFamily: FONT_BODY }}>3 of 5 locations shown</span>
+          <span className="text-white/25 text-xs">3 of 5 locations shown</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Feature previews ────────────────────────────────────────────────────────
+function ROPreview() {
+  const rows = [
+    { id: 'RO-4821', vehicle: '2019 F-150 · Brake job', status: 'In progress', advisor: 'Sarah M.', color: 'text-emerald-400', bg: 'bg-emerald-400/15' },
+    { id: 'RO-4820', vehicle: '2022 Camry · 60k service', status: 'Waiting parts', advisor: 'Sarah M.', color: 'text-amber-400', bg: 'bg-amber-400/15' },
+    { id: 'RO-4819', vehicle: '2018 Silverado · A/C diag', status: 'Ready for pickup', advisor: 'James T.', color: 'text-blue-400', bg: 'bg-blue-400/15' },
+    { id: 'RO-4818', vehicle: '2021 Accord · Oil + rotate', status: 'Invoiced', advisor: 'James T.', color: 'text-slate-400', bg: 'bg-slate-400/15' },
+  ]
+  return (
+    <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
+      <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
+        <span className="text-white/40 text-xs uppercase tracking-wider">Repair orders</span>
+        <span className="text-white/25 text-xs">Today</span>
+      </div>
+      <div className="bg-[#0F1018] divide-y divide-white/[0.06]">
+        {rows.map(({ id, vehicle, status, color, bg }) => (
+          <div key={id} className="flex items-center justify-between px-5 py-3">
+            <div>
+              <div className="text-white/80 text-sm font-medium">{id}</div>
+              <div className="text-white/35 text-xs mt-0.5">{vehicle}</div>
+            </div>
+            <span className={`text-xs px-2 py-0.5 rounded-md ${color} ${bg}`}>{status}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TechPreview() {
+  const techs = [
+    { name: 'Mike R.', status: 'Clocked in', job: 'RO-4821 · Bay 3', hours: '6.2h', efficiency: '94%', effColor: 'text-emerald-400' },
+    { name: 'Carlos P.', status: 'Clocked in', job: 'RO-4820 · Bay 1', hours: '5.8h', efficiency: '87%', effColor: 'text-emerald-400' },
+    { name: 'Andre W.', status: 'On break', job: '—', hours: '4.1h', efficiency: '78%', effColor: 'text-amber-400' },
+  ]
+  return (
+    <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
+      <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
+        <span className="text-white/40 text-xs uppercase tracking-wider">Technicians</span>
+        <span className="text-white/25 text-xs">Live</span>
+      </div>
+      <div className="bg-[#0F1018]">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-2 border-b border-white/[0.08]">
+          <span className="text-white/25 text-xs">Tech</span>
+          <span className="text-white/25 text-xs text-right">Hours</span>
+          <span className="text-white/25 text-xs text-right w-12">Eff.</span>
+        </div>
+        <div className="divide-y divide-white/[0.06]">
+          {techs.map(({ name, status, job, hours, efficiency, effColor }) => (
+            <div key={name} className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 items-center">
+              <div>
+                <div className="text-white/80 text-sm font-medium">{name}</div>
+                <div className="text-white/30 text-xs mt-0.5">{status} · {job}</div>
+              </div>
+              <div className="text-white/50 text-sm text-right tabular-nums">{hours}</div>
+              <div className={`text-sm font-semibold text-right tabular-nums w-12 ${effColor}`}>{efficiency}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -250,7 +294,6 @@ function FAQItem({ q, a, delay, id }) {
   const buttonId = `faq-btn-${id}`
 
   return (
-    <Reveal delay={delay}>
       <div className="py-5">
         <button
           id={buttonId}
@@ -259,7 +302,7 @@ function FAQItem({ q, a, delay, id }) {
           aria-controls={panelId}
           className="w-full flex items-center justify-between gap-4 text-left group focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 rounded-lg"
         >
-          <span className="text-sm font-medium text-slate-800 group-hover:text-orange-600 transition-colors duration-200" style={{ fontFamily: FONT_BODY }}>{q}</span>
+          <span className="text-sm font-medium text-slate-800 group-hover:text-orange-600 transition-colors duration-200">{q}</span>
           <span
             className="text-slate-400 text-xl leading-none flex-shrink-0 motion-safe:transition-transform duration-300"
             aria-hidden="true"
@@ -277,11 +320,10 @@ function FAQItem({ q, a, delay, id }) {
           }}
         >
           <div ref={bodyRef} style={{ paddingTop: '12px', paddingBottom: '8px' }}>
-            <p className="text-sm text-slate-500 leading-relaxed pr-8" style={{ fontFamily: FONT_BODY }}>{a}</p>
+            <p className="text-sm text-slate-500 leading-relaxed pr-8">{a}</p>
           </div>
         </div>
       </div>
-    </Reveal>
   )
 }
 
@@ -363,25 +405,19 @@ function FoundingSection() {
   return (
     <section id="founding" className="border-t border-slate-200 py-24 px-6 bg-orange-50/40">
       <div className="max-w-2xl mx-auto">
-        <Reveal>
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-300 bg-orange-100 text-orange-700 text-xs font-semibold mb-5">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-              Founding Member Program
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
-              Lock in $125/mo forever.
-            </h2>
-            <p className="text-slate-500 leading-relaxed max-w-sm mx-auto" style={{ fontFamily: FONT_BODY }}>
-              First {TOTAL_SPOTS} shops get founding member pricing, locked for life. Price goes to $199 when we open to everyone.
-            </p>
-          </div>
-        </Reveal>
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            Lock in $125/mo forever.
+          </h2>
+          <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
+            First {TOTAL_SPOTS} shops get founding member pricing, locked for life. Price goes to $199 when we open to everyone.
+          </p>
+        </div>
 
-        <Reveal delay={80}>
+        <div>
           {/* Spot counter */}
           <div className="mb-8">
-            <div className="flex justify-between text-xs mb-2" style={{ fontFamily: FONT_BODY }}>
+            <div className="flex justify-between text-xs mb-2">
               <span className="text-slate-400">{CLAIMED_SPOTS === 0 ? 'Be the first to reserve a spot' : `${CLAIMED_SPOTS} of ${TOTAL_SPOTS} spots claimed`}</span>
               <span className="text-orange-600 font-semibold">{remaining} of {TOTAL_SPOTS} left</span>
             </div>
@@ -394,7 +430,7 @@ function FoundingSection() {
           </div>
 
           {/* Walkthrough alternative */}
-          <p className="text-center text-slate-400 text-base mb-8" style={{ fontFamily: FONT_BODY }}>
+          <p className="text-center text-slate-400 text-base mb-8">
             Want to see it first?{' '}
             <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
               Book a free 15-min walkthrough →
@@ -408,10 +444,10 @@ function FoundingSection() {
                 <div className="w-14 h-14 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center mx-auto mb-5">
                   <Check size={24} className="text-orange-600" strokeWidth={2} />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2" style={{ fontFamily: FONT_HEADING }}>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
                   You're on the list.
                 </h3>
-                <p className="text-slate-500 text-sm leading-relaxed max-w-xs mx-auto" style={{ fontFamily: FONT_BODY }}>
+                <p className="text-slate-500 text-sm leading-relaxed max-w-xs mx-auto">
                   We'll reach out to {form.email} within 24 hours with next steps. Welcome to the founding crew.
                 </p>
               </div>
@@ -430,57 +466,52 @@ function FoundingSection() {
                 />
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Your name</label>
+                    <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Your name</label>
                     <input
                       type="text"
                       placeholder="Marcus Webb"
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                       className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
-                      style={{ fontFamily: FONT_BODY }}
-                    />
+                                         />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Email</label>
+                    <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Email</label>
                     <input
                       type="email"
                       placeholder="marcus@northhoustonauto.com"
                       value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                       className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
-                      style={{ fontFamily: FONT_BODY }}
-                    />
+                                         />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider" style={{ fontFamily: FONT_BODY }}>Shop name</label>
+                  <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Shop name</label>
                   <input
                     type="text"
                     placeholder="North Houston Auto"
                     value={form.shop}
                     onChange={e => setForm(f => ({ ...f, shop: e.target.value }))}
                     className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
-                    style={{ fontFamily: FONT_BODY }}
-                  />
+                                     />
                 </div>
-                {error && <p className="text-red-600 text-xs" role="alert" style={{ fontFamily: FONT_BODY }}>{error}</p>}
+                {error && <p className="text-red-600 text-xs" role="alert">{error}</p>}
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full h-12 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm"
-                  style={{ fontFamily: FONT_BODY }}
-                >
+                  className="w-full h-12 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm">
                   {submitting ? 'Reserving your spot…' : 'Reserve my founding spot →'}
                 </button>
-                <p className="text-center text-slate-400 text-xs" style={{ fontFamily: FONT_BODY }}>No credit card. No commitment. We'll reach out within 24 hours.</p>
+                <p className="text-center text-slate-400 text-xs">No credit card. No commitment. We'll reach out within 24 hours.</p>
               </form>
             )}
           </div>
 
-          <p className="text-center text-slate-400 text-sm mt-6 leading-relaxed" style={{ fontFamily: FONT_BODY }}>
+          <p className="text-center text-slate-400 text-sm mt-6 leading-relaxed">
             You won't get a ticket queue. Every founding member gets direct access to Rasheed: real answers, no support portal, no waiting.
           </p>
-        </Reveal>
+        </div>
       </div>
     </section>
   )
@@ -541,13 +572,13 @@ export default function Landing() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden" style={{ fontFamily: FONT_BODY }}>
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-slate-200/80 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
         <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
           <HexMark size={28} />
-          <span style={{ fontFamily: FONT_LOGO, letterSpacing: '-0.02em' }} className="text-base font-semibold">
+          <span className="text-base font-semibold tracking-tight">
             <span className="text-slate-900">Shop</span>
             <span className="text-orange-500">Command</span>
           </span>
@@ -613,19 +644,31 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu overlay */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-x-0 top-16 z-40 bg-white border-b border-slate-200 shadow-lg shadow-slate-900/[0.06] px-6 py-4 space-y-1">
+        <div className="md:hidden fixed inset-0 top-16 z-40 bg-black/40" onClick={() => setMobileMenuOpen(false)} />
+      )}
+
+      {/* Mobile menu panel */}
+      <div
+        className="md:hidden fixed inset-x-0 top-16 z-50 bg-white border-b border-slate-200 shadow-xl shadow-slate-900/[0.08]"
+        style={{
+          transition: 'opacity 200ms ease-out, transform 200ms ease-out',
+          opacity: mobileMenuOpen ? 1 : 0,
+          transform: mobileMenuOpen ? 'translateY(0)' : 'translateY(-8px)',
+          pointerEvents: mobileMenuOpen ? 'auto' : 'none',
+        }}
+      >
+        <div className="px-5 py-4 space-y-1 max-h-[calc(100dvh-4rem)] overflow-y-auto">
           {[
             { href: '#how-it-works', label: 'How it works' },
             { href: '#pricing', label: 'Pricing' },
-            { href: '#founding', label: 'Reserve your spot' },
           ].map(({ href, label }) => (
             <a
               key={href}
               href={href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-3 text-sm font-medium text-slate-700 hover:text-orange-600 hover:bg-slate-50 rounded-lg transition-colors"
+              className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
             >
               {label}
             </a>
@@ -633,28 +676,44 @@ export default function Landing() {
           <Link
             to="/login"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-3 text-sm font-medium text-slate-700 hover:text-orange-600 hover:bg-slate-50 rounded-lg transition-colors"
+            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
           >
             See the demo
           </Link>
+
+          {/* Compare section */}
           <div className="pt-2 border-t border-slate-100">
+            <div className="px-3 pt-2 pb-1 text-xs font-medium text-slate-400 uppercase tracking-wider">Compare</div>
             {[
-              { to: '/compare/tekmetric', label: 'vs. Tekmetric' },
+              { to: '/compare/tekmetric',  label: 'vs. Tekmetric' },
               { to: '/compare/shopmonkey', label: 'vs. Shopmonkey' },
-              { to: '/compare/mitchell1', label: 'vs. Mitchell1' },
+              { to: '/compare/mitchell1',  label: 'vs. Mitchell1' },
+              { to: '/compare/shop-ware',  label: 'vs. Shop-Ware' },
+              { to: '/compare/ro-writer',  label: 'vs. R.O. Writer' },
             ].map(({ to, label }) => (
               <Link
                 key={to}
                 to={to}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2.5 text-sm text-slate-500 hover:text-orange-600 rounded-lg transition-colors"
+                className="flex items-center h-11 px-3 text-sm text-slate-500 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
               >
                 {label}
               </Link>
             ))}
           </div>
+
+          {/* Mobile CTA */}
+          <div className="pt-3 pb-1 border-t border-slate-100 space-y-2">
+            <a
+              href="#founding"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center h-12 rounded-xl text-sm font-semibold bg-orange-500 active:bg-orange-600 text-white transition-colors"
+            >
+              Reserve your spot →
+            </a>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Hero — split layout */}
       <section className="relative px-6 pt-16 md:pt-20 pb-16 overflow-hidden">
@@ -668,14 +727,14 @@ export default function Landing() {
 
             <h1
               className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 mb-5 leading-[1.1]"
-              style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em' }}
+              style={{ letterSpacing: '-0.03em' }}
             >
               Stop flying blind.
               <br />
               <span className="text-orange-500">Run your auto shop on data.</span>
             </h1>
 
-            <p className="text-slate-500 text-base md:text-lg max-w-lg mb-6 leading-relaxed" style={{ fontFamily: FONT_BODY }}>
+            <p className="text-slate-500 text-base md:text-lg max-w-lg mb-6 leading-relaxed">
               Know exactly where every shop stands before your first call of the day. Repair orders, tech efficiency, and revenue across every bay and every location.
             </p>
 
@@ -685,7 +744,7 @@ export default function Landing() {
                 'See every tech\'s efficiency across every bay',
                 'Replace whiteboards and manager calls',
               ].map(item => (
-                <span key={item} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs" style={{ fontFamily: FONT_BODY }}>
+                <span key={item} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs">
                   <Check size={10} className="text-orange-500 flex-shrink-0" strokeWidth={2.5} />
                   {item}
                 </span>
@@ -693,14 +752,14 @@ export default function Landing() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-start gap-3">
-              <Link to="/login" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm" style={{ fontFamily: FONT_BODY }}>
+              <Link to="/login" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
                 See the dashboard →
               </Link>
-              <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors" style={{ fontFamily: FONT_BODY }}>
+              <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 How it works
               </a>
             </div>
-            <p className="text-slate-400 text-sm mt-3" style={{ fontFamily: FONT_BODY }}>
+            <p className="text-slate-400 text-sm mt-3">
               Not ready to commit?{' '}
               <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
                 Book a free 15-min walkthrough →
@@ -715,140 +774,120 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section
-        id="how-it-works"
-        className="px-6 pt-24 pb-32 relative"
-        style={{
-          backgroundColor: '#F0EDEA',
-          backgroundImage: 'radial-gradient(circle, #D9D5D0 0.5px, transparent 0.5px)',
-          backgroundSize: '16px 16px',
-        }}
-      >
-        <div className="max-w-5xl mx-auto">
-        <Reveal>
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
-              Up and running in a day
-            </h2>
-            <p className="text-slate-500 max-w-sm mx-auto leading-relaxed" style={{ fontFamily: FONT_BODY }}>No long onboarding calls. No implementation fees. Just connect and go.</p>
+      {/* Integration logos */}
+      <section className="border-t border-slate-200/60 py-10 px-6">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-center text-slate-400 text-xs uppercase tracking-widest font-medium mb-6">Works with the tools you already use</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+            {integrations.map(name => (
+              <span key={name} className="text-slate-300 text-sm font-semibold tracking-wide select-none" style={{ letterSpacing: '0.05em' }}>{name}</span>
+            ))}
           </div>
-        </Reveal>
-        <div className="grid md:grid-cols-3 gap-8 relative">
-          {/* Connector line */}
-          <div className="hidden md:block absolute top-7 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px z-0 bg-gradient-to-r from-transparent via-orange-300 to-transparent" />
-          {steps.map(({ num, title, desc }, i) => (
-            <Reveal key={num} delay={i * 100}>
-              <div className="relative z-10 flex flex-col items-start md:items-center text-left md:text-center">
-                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-5 flex-shrink-0 shadow-sm" style={{ boxShadow: '0 0 0 4px #F0EDEA' }}>
-                  <span className="text-orange-500 text-sm font-bold" style={{ fontFamily: FONT_HEADING }}>{num}</span>
-                </div>
-                <h3 className="text-base font-semibold text-slate-900 mb-2" style={{ fontFamily: FONT_HEADING }}>{title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: FONT_BODY }}>{desc}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="max-w-5xl mx-auto px-6 py-24">
-        <Reveal>
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
-              Everything your shop needs
+      {/* How it works */}
+      <section
+        id="how-it-works"
+        className="px-6 pt-24 pb-20 relative"
+        style={{ backgroundColor: '#F0EDEA' }}
+      >
+        <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_1.6fr] gap-12 md:gap-16 items-start">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+              Up and running in a day
             </h2>
-            <p className="text-slate-500 max-w-md mx-auto leading-relaxed" style={{ fontFamily: FONT_BODY }}>Built specifically for auto repair shops, not a generic tool bolted onto your workflow.</p>
+            <p className="text-slate-500 leading-relaxed">No long onboarding calls. No implementation fees. Just connect and go.</p>
           </div>
-        </Reveal>
-        <div className="divide-y divide-slate-200">
-          {features.map(({ icon: Icon, title, desc, badge, badgeSub }, i) => (
-            <Reveal key={title} delay={i * 80} className="py-7 first:pt-0 last:pb-0">
-              <div className="flex items-center gap-6">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center flex-shrink-0">
-                  <Icon size={18} className="text-orange-500" strokeWidth={1.8} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-slate-900 mb-1" style={{ fontFamily: FONT_HEADING }}>{title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: FONT_BODY }}>{desc}</p>
-                </div>
-                <div className="hidden sm:block flex-shrink-0 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-right min-w-[90px]">
-                  <div className="text-orange-500 text-sm font-semibold leading-none mb-1" style={{ fontFamily: FONT_HEADING }}>{badge}</div>
-                  <div className="text-slate-400 text-xs" style={{ fontFamily: FONT_BODY }}>{badgeSub}</div>
-                </div>
+          <div className="space-y-8">
+            {steps.map(({ title, desc }) => (
+              <div key={title}>
+                <h3 className="text-base font-semibold text-slate-900 mb-1.5">{title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
               </div>
-            </Reveal>
-          ))}
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features — alternating split layouts */}
+      <section className="max-w-6xl mx-auto px-6 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            Everything your shop needs
+          </h2>
+          <p className="text-slate-500 max-w-md mx-auto leading-relaxed">Built specifically for auto repair shops, not a generic tool bolted onto your workflow.</p>
+        </div>
+
+        {/* Feature 1: RO tracking — text left, preview right */}
+        <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center mb-20">
+          <div>
+            <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
+              <ClipboardList size={18} className="text-orange-500" strokeWidth={1.8} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Every job, accounted for</h3>
+            <p className="text-slate-500 text-sm leading-relaxed mb-4">
+              Every RO moves through stages digitally, with full history and accountability from the moment it's written. No more calling the manager to find out where a job stands.
+            </p>
+          </div>
+          <ROPreview />
+        </div>
+
+        {/* Feature 2: Tech board — preview left, text right */}
+        <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+          <div className="order-2 md:order-1">
+            <TechPreview />
+          </div>
+          <div className="order-1 md:order-2">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
+              <Wrench size={18} className="text-orange-500" strokeWidth={1.8} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Know your team without the check-in calls</h3>
+            <p className="text-slate-500 text-sm leading-relaxed mb-4">
+              Who's clocked in, who's behind, who's carrying the day. Efficiency scores, clock-ins, and performance data at your fingertips.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Who it's built for */}
       <section
         className="border-t border-slate-200 py-24 px-6"
-        style={{
-          backgroundColor: '#F0EDEA',
-          backgroundImage: 'radial-gradient(circle, #D9D5D0 0.5px, transparent 0.5px)',
-          backgroundSize: '16px 16px',
-        }}
+        style={{ backgroundColor: '#F0EDEA' }}
       >
         <div className="max-w-5xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
-                Built for every role in your shop
+          <div className="grid md:grid-cols-[1.2fr_1fr] gap-10 md:gap-14 items-start">
+            {/* Left: Owner (primary user, gets emphasis) */}
+            <div>
+              <div className="text-orange-600 text-xs uppercase tracking-widest font-semibold mb-3">For the owner</div>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.02em' }}>
+                Always know where your business stands
               </h2>
-              <p className="text-slate-500 max-w-md mx-auto text-sm md:text-base leading-relaxed" style={{ fontFamily: FONT_BODY }}>
-                One login, every role. Owners see the full picture. Advisors run their board. Techs see their queue.
+              <p className="text-slate-500 text-sm md:text-base leading-relaxed mb-6">
+                Revenue, open ROs, and staffing in one tab. Spot problems and top performers at a glance. Set monthly targets and track progress live.
               </p>
+              <a href="#founding" className="inline-flex px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+                See the dashboard →
+              </a>
             </div>
-          </Reveal>
-          <div className="grid md:grid-cols-3 gap-5">
-            {[
-              {
-                role: 'Owner',
-                headline: 'Always know where your business stands',
-                points: [
-                  'Revenue, open ROs, and staffing in one tab',
-                  'Spot problems and top performers at a glance',
-                  'Set monthly targets and track progress live',
-                ],
-                highlight: true,
-              },
-              {
-                role: 'Service Advisor',
-                headline: 'Run your board without the chaos',
-                points: [
-                  'Write and track ROs from estimate to payment',
-                  'Pull full vehicle history before writing a line',
-                  'Keep customers updated without chasing them down',
-                ],
-              },
-              {
-                role: 'Technician',
-                headline: 'Clock in and know exactly where to start',
-                points: [
-                  'See your assigned jobs the moment you log in',
-                  'No clipboard, no whiteboard. Everything\'s in your queue',
-                  'Update job status from your phone between lifts',
-                ],
-              },
-            ].map(({ role, headline, points, highlight }, i) => (
-              <Reveal key={role} delay={i * 80}>
-                <div className={`rounded-2xl border p-7 h-full flex flex-col ${highlight ? 'border-orange-300 bg-orange-50/60 shadow-sm' : 'border-slate-200 bg-white'}`}>
-                  <div className={`text-xs uppercase tracking-widest font-semibold mb-4 ${highlight ? 'text-orange-600' : 'text-slate-400'}`} style={{ fontFamily: FONT_BODY }}>{role}</div>
-                  <h3 className="text-base font-semibold text-slate-900 mb-5 leading-snug" style={{ fontFamily: FONT_HEADING }}>{headline}</h3>
-                  <ul className="space-y-3">
-                    {points.map(point => (
-                      <li key={point} className="flex items-start gap-2.5">
-                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${highlight ? 'bg-orange-500' : 'bg-slate-300'}`} />
-                        <span className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: FONT_BODY }}>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Reveal>
-            ))}
+
+            {/* Right: Advisor + Tech stacked */}
+            <div className="space-y-8">
+              <div>
+                <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Service Advisor</div>
+                <h3 className="text-base font-semibold text-slate-900 mb-1.5">Run your board without the chaos</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  Write and track ROs from estimate to payment. Pull full vehicle history before writing a line. Keep customers updated without chasing them down.
+                </p>
+              </div>
+              <div className="border-t border-slate-200 pt-8">
+                <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Technician</div>
+                <h3 className="text-base font-semibold text-slate-900 mb-1.5">Clock in and know exactly where to start</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  See your assigned jobs the moment you log in. No clipboard, no whiteboard: everything is in your queue. Update job status from your phone between lifts.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -856,14 +895,12 @@ export default function Landing() {
       {/* What's included */}
       <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
-                Everything's included. No tiers, no add-ons.
-              </h2>
-              <p className="text-slate-400 text-sm" style={{ fontFamily: FONT_BODY }}>One plan. One price. Every feature on day one.</p>
-            </div>
-          </Reveal>
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.02em' }}>
+              Everything's included. No tiers, no add-ons.
+            </h2>
+            <p className="text-slate-400 text-sm">One plan. One price. Every feature on day one.</p>
+          </div>
           <div className="grid sm:grid-cols-2 gap-x-10 gap-y-3.5">
             {[
               'Real-time cross-location dashboard',
@@ -874,15 +911,11 @@ export default function Landing() {
               'Mobile board for technicians',
               'Role-based access: owner, advisor, tech',
               'No per-seat fees. Ever.',
-            ].map((item, i) => (
-              <Reveal key={item} delay={i * 40}>
-                <div className="flex items-center gap-3 py-1">
-                  <div className="w-5 h-5 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0">
-                    <Check size={10} className="text-orange-600" strokeWidth={2.5} />
-                  </div>
-                  <span className="text-slate-600 text-sm" style={{ fontFamily: FONT_BODY }}>{item}</span>
-                </div>
-              </Reveal>
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3 py-1">
+                <Check size={14} className="text-orange-500 flex-shrink-0" strokeWidth={2} />
+                <span className="text-slate-600 text-sm">{item}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -891,27 +924,26 @@ export default function Landing() {
       {/* Comparison */}
       <section className="border-t border-slate-200 py-24 px-6 bg-slate-50/60">
         <div className="max-w-4xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-12">
-              <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4" style={{ fontFamily: FONT_BODY }}>A different kind of tool</div>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
-                Most shop software is complex and overpriced.
-                <br className="hidden md:block" />
-                <span className="text-orange-500"> Ours is built to be neither.</span>
-              </h2>
-              <p className="text-slate-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base" style={{ fontFamily: FONT_BODY }}>
-                The big platforms hide pricing, charge per seat, and lock basics behind upgrade tiers. ShopCommand is one price per location, everything included, day one.
-              </p>
-            </div>
-          </Reveal>
+          <div className="text-center mb-12">
+            <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">A different kind of tool</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+              Most shop software is complex and overpriced.
+              <br className="hidden md:block" />
+              <span className="text-orange-500"> Ours is built to be neither.</span>
+            </h2>
+            <p className="text-slate-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base">
+              The big platforms hide pricing, charge per seat, and lock basics behind upgrade tiers. ShopCommand is one price per location, everything included, day one.
+            </p>
+          </div>
 
           <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
-            {/* Header row */}
-            <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-5 md:px-8 py-4">
+            {/* Header row — desktop */}
+            <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-5 md:px-8 py-4">
               <div />
-              <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium" style={{ fontFamily: FONT_BODY }}>Typical shop software</div>
-              <div className="text-orange-600 text-xs text-center uppercase tracking-widest font-semibold" style={{ fontFamily: FONT_BODY }}>ShopCommand</div>
+              <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium">Typical shop software</div>
+              <div className="text-orange-600 text-xs text-center uppercase tracking-widest font-semibold">ShopCommand</div>
             </div>
+            {/* Mobile stacked / desktop 3-col */}
             {[
               { label: 'Default view',     them: 'One location at a time',      us: 'All shops, one screen' },
               { label: 'Pricing',          them: 'Per-seat + paid add-ons',     us: 'Per location. Unlimited users.' },
@@ -919,13 +951,24 @@ export default function Landing() {
               { label: 'Built for',        them: 'Advisors and technicians',    us: 'The owner, first' },
               { label: 'Feature access',   them: 'Upgrade tiers to unlock basics', us: 'One plan. Everything in.' },
             ].map(({ label, them, us }, i, arr) => (
-              <Reveal key={label} delay={i * 60}>
-                <div className={`grid grid-cols-3 px-5 md:px-8 py-4 items-center ${i < arr.length - 1 ? 'border-b border-slate-100' : ''}`}>
-                  <div className="text-slate-700 text-sm font-medium pr-4" style={{ fontFamily: FONT_BODY }}>{label}</div>
-                  <div className="text-slate-400 text-xs md:text-sm text-center px-2 leading-snug" style={{ fontFamily: FONT_BODY }}>{them}</div>
-                  <div className="text-orange-600 text-xs md:text-sm text-center font-semibold px-2 leading-snug" style={{ fontFamily: FONT_BODY }}>{us}</div>
+              <div key={label}>
+                {/* Desktop row */}
+                <div className={`hidden sm:grid grid-cols-3 px-5 md:px-8 py-4 items-center ${i < arr.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                  <div className="text-slate-700 text-sm font-medium pr-4">{label}</div>
+                  <div className="text-slate-400 text-sm text-center px-2 leading-snug">{them}</div>
+                  <div className="text-orange-600 text-sm text-center font-semibold px-2 leading-snug">{us}</div>
                 </div>
-              </Reveal>
+                {/* Mobile stacked card */}
+                <div className={`sm:hidden px-5 py-4 ${i < arr.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                  <div className="text-slate-700 text-sm font-medium mb-2">{label}</div>
+                  <div className="flex items-start gap-2 text-xs text-slate-400 mb-1">
+                    <span className="text-slate-300 flex-shrink-0">✕</span> {them}
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-orange-600 font-semibold">
+                    <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} /> {us}
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mt-8">
@@ -939,41 +982,58 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="border-t border-slate-200 py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-center text-xs text-slate-400 uppercase tracking-widest font-medium mb-10">Early access feedback</p>
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map(({ quote, name, role, initials }) => (
+              <div key={name} className="bg-white rounded-xl border border-slate-200 p-6">
+                <p className="text-slate-600 text-sm leading-relaxed mb-5">"{quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-slate-500 text-xs font-semibold">{initials}</span>
+                  </div>
+                  <div>
+                    <div className="text-slate-900 text-sm font-medium">{name}</div>
+                    <div className="text-slate-400 text-xs">{role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="border-t border-slate-200 py-24 px-6">
         <div className="max-w-4xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-500 text-xs font-medium mb-4" style={{ fontFamily: FONT_BODY }}>
-                Simple pricing
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
-                Per location. No per-seat fees.
-              </h2>
-              <p className="text-slate-500 leading-relaxed max-w-md mx-auto" style={{ fontFamily: FONT_BODY }}>
-                Pay for the shops you run, not the people who help you run them.
-              </p>
-            </div>
-          </Reveal>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+              Per location. No per-seat fees.
+            </h2>
+            <p className="text-slate-500 leading-relaxed max-w-md mx-auto">
+              Pay for the shops you run, not the people who help you run them.
+            </p>
+          </div>
           <div className="grid md:grid-cols-2 gap-5">
             {/* Founding Member */}
-            <Reveal delay={0}>
-              <div className="relative rounded-2xl border-2 border-orange-400 bg-white p-7 flex flex-col h-full shadow-sm">
+            <div className="relative rounded-2xl border-2 border-orange-400 bg-white p-7 flex flex-col h-full shadow-sm">
                 <div className="absolute -top-3 left-6">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold">
                     {TOTAL_SPOTS - CLAIMED_SPOTS} spots left
                   </span>
                 </div>
                 <div className="mb-5 pt-2">
-                  <div className="text-orange-600 text-xs uppercase tracking-widest mb-3 font-medium" style={{ fontFamily: FONT_BODY }}>Founding Member</div>
+                  <div className="text-orange-600 text-xs uppercase tracking-widest mb-3 font-medium">Founding Member</div>
                   <div className="flex items-end gap-2 mb-1">
-                    <span className="text-5xl font-bold text-slate-900" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em' }}>$125</span>
+                    <span className="text-5xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$125</span>
                     <div className="mb-2">
                       <div className="text-slate-400 text-sm line-through leading-none mb-0.5">$199</div>
                       <div className="text-slate-500 text-xs">/mo forever</div>
                     </div>
                   </div>
-                  <p className="text-slate-500 text-xs leading-relaxed" style={{ fontFamily: FONT_BODY }}>Single shop. Locked in for life: price never goes up as long as you stay subscribed.</p>
+                  <p className="text-slate-500 text-xs leading-relaxed">Single shop. Locked in for life: price never goes up as long as you stay subscribed.</p>
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[
@@ -983,10 +1043,8 @@ export default function Landing() {
                     'Shape the product roadmap',
                   ].map(item => (
                     <div key={item} className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                        <Check size={9} className="text-orange-600" strokeWidth={2.5} />
-                      </div>
-                      <span className="text-slate-600 text-sm" style={{ fontFamily: FONT_BODY }}>{item}</span>
+                      <Check size={14} className="text-orange-500 flex-shrink-0" strokeWidth={2} />
+                      <span className="text-slate-600 text-sm">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -995,18 +1053,16 @@ export default function Landing() {
                   Reserve my founding spot →
                 </a>
               </div>
-            </Reveal>
 
             {/* Standard */}
-            <Reveal delay={80}>
-              <div className="rounded-2xl border border-slate-200 bg-white p-7 flex flex-col h-full">
+            <div className="rounded-2xl border border-slate-200 bg-white p-7 flex flex-col h-full">
                 <div className="mb-5">
-                  <div className="text-slate-400 text-xs uppercase tracking-widest mb-3 font-medium" style={{ fontFamily: FONT_BODY }}>Standard: After launch</div>
+                  <div className="text-slate-400 text-xs uppercase tracking-widest mb-3 font-medium">Standard: After launch</div>
                   <div className="flex items-end gap-1.5 mb-1">
-                    <span className="text-5xl font-bold text-slate-400" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em' }}>$199</span>
+                    <span className="text-5xl font-bold text-slate-400" style={{ letterSpacing: '-0.03em' }}>$199</span>
                     <span className="text-slate-400 text-sm mb-2">/mo</span>
                   </div>
-                  <p className="text-slate-400 text-xs leading-relaxed" style={{ fontFamily: FONT_BODY }}>Single shop. $149/location for 3+ shops. Cancel anytime.</p>
+                  <p className="text-slate-400 text-xs leading-relaxed">Single shop. $149/location for 3+ shops. Cancel anytime.</p>
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[
@@ -1016,18 +1072,15 @@ export default function Landing() {
                     'Real-time revenue and efficiency data',
                   ].map(item => (
                     <div key={item} className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                        <Check size={9} className="text-slate-400" strokeWidth={2.5} />
-                      </div>
-                      <span className="text-slate-400 text-sm" style={{ fontFamily: FONT_BODY }}>{item}</span>
+                      <Check size={14} className="text-slate-400 flex-shrink-0" strokeWidth={2} />
+                      <span className="text-slate-400 text-sm">{item}</span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-auto w-full py-3 rounded-xl text-sm font-medium border border-slate-200 text-slate-400 text-center cursor-default" style={{ fontFamily: FONT_BODY }}>
+                <div className="mt-auto w-full py-3 rounded-xl text-sm font-medium border border-slate-200 text-slate-400 text-center cursor-default">
                   Available at launch
                 </div>
               </div>
-            </Reveal>
           </div>
         </div>
       </section>
@@ -1035,35 +1088,31 @@ export default function Landing() {
       {/* Founder */}
       <section className="border-t border-slate-200 py-24 px-6 bg-slate-50/60">
         <div className="max-w-2xl mx-auto">
-          <Reveal>
-            <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-10" style={{ fontFamily: FONT_BODY }}>Why I built this</div>
-            <p className="text-slate-800 text-xl md:text-2xl leading-relaxed mb-6" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.01em' }}>
-              "I watched shop owners spend their Fridays driving location to location just to get a picture of how the week went. Calling managers, chasing spreadsheets, guessing at numbers that should have been obvious."
-            </p>
-            <p className="text-slate-500 text-base leading-relaxed mb-10" style={{ fontFamily: FONT_BODY }}>
-              ShopCommand started as a tool to fix that one problem: give shop owners a real-time view of their business without leaving their desk. One location or ten, it grew from there.
-            </p>
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0">
-                <span className="text-orange-600 text-xs font-bold tracking-wide" style={{ fontFamily: FONT_HEADING }}>RO</span>
-              </div>
-              <div>
-                <div className="text-slate-900 text-sm font-semibold" style={{ fontFamily: FONT_BODY }}>Rasheed Omar</div>
-                <div className="text-slate-400 text-xs mt-0.5" style={{ fontFamily: FONT_BODY }}>Founder, ShopCommand, Houston TX</div>
-              </div>
+          <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-10">Why I built this</div>
+          <p className="text-slate-800 text-xl md:text-2xl leading-relaxed mb-6" style={{ letterSpacing: '-0.01em' }}>
+            "I watched shop owners spend their Fridays driving location to location just to get a picture of how the week went. Calling managers, chasing spreadsheets, guessing at numbers that should have been obvious."
+          </p>
+          <p className="text-slate-500 text-base leading-relaxed mb-10">
+            ShopCommand started as a tool to fix that one problem: give shop owners a real-time view of their business without leaving their desk. One location or ten, it grew from there.
+          </p>
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0">
+              <span className="text-orange-600 text-xs font-bold tracking-wide">RO</span>
             </div>
-          </Reveal>
+            <div>
+              <div className="text-slate-900 text-sm font-semibold">Rasheed Omar</div>
+              <div className="text-slate-400 text-xs mt-0.5">Founder, ShopCommand, Houston TX</div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* FAQ */}
       <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-2xl mx-auto">
-          <Reveal>
-            <h2 className="text-2xl font-bold text-slate-900 mb-8" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.02em' }}>
-              Common questions
-            </h2>
-          </Reveal>
+          <h2 className="text-2xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+            Common questions
+          </h2>
           <div className="space-y-0 divide-y divide-slate-200">
             {faqs.map(({ q, a }, i) => (
               <FAQItem key={i} q={q} a={a} delay={i * 50} id={i} />
@@ -1077,31 +1126,25 @@ export default function Landing() {
 
       {/* CTA */}
       <section className="relative py-28 px-6 text-center overflow-hidden border-t border-slate-200">
-        <Reveal>
-          <p className="relative text-orange-600 text-xs uppercase tracking-widest font-medium mb-4" style={{ fontFamily: FONT_BODY }}>Early access open now</p>
-          <h2 className="relative text-4xl md:text-5xl font-bold text-slate-900 mb-5 max-w-xl mx-auto" style={{ fontFamily: FONT_HEADING, letterSpacing: '-0.03em' }}>
+          <p className="relative text-orange-600 text-xs uppercase tracking-widest font-medium mb-4">Early access open now</p>
+          <h2 className="relative text-4xl md:text-5xl font-bold text-slate-900 mb-5 max-w-xl mx-auto" style={{ letterSpacing: '-0.03em' }}>
             Stop driving to your shops to check on every bay.
           </h2>
-          <p className="relative text-slate-500 mb-10 max-w-sm mx-auto leading-relaxed" style={{ fontFamily: FONT_BODY }}>
+          <p className="relative text-slate-500 mb-10 max-w-sm mx-auto leading-relaxed">
             Every repair order, every tech, every location. Right in front of you.
           </p>
           <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
               href="#founding"
-              className="px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm"
-              style={{ fontFamily: FONT_BODY }}
-            >
+              className="px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
               Reserve your founding spot: {TOTAL_SPOTS - CLAIMED_SPOTS} left →
             </a>
             <Link
               to="/login"
-              className="px-6 py-3.5 rounded-xl text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors"
-              style={{ fontFamily: FONT_BODY }}
-            >
+              className="px-6 py-3.5 rounded-xl text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
               See the dashboard
             </Link>
           </div>
-        </Reveal>
       </section>
 
       {/* Footer */}
@@ -1110,12 +1153,12 @@ export default function Landing() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity flex-shrink-0">
             <HexMark size={22} />
-            <span className="text-slate-400 text-sm" style={{ fontFamily: FONT_LOGO }}>ShopCommand</span>
+            <span className="text-slate-400 text-sm">ShopCommand</span>
           </Link>
 
           {/* Contact */}
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-            <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 text-slate-400 hover:text-slate-600 text-sm transition-colors" style={{ fontFamily: FONT_BODY }}>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 text-slate-400 hover:text-slate-600 text-sm transition-colors">
               <Mail size={13} className="flex-shrink-0" />
               {CONTACT_EMAIL}
             </a>
@@ -1128,7 +1171,7 @@ export default function Landing() {
               <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Privacy</Link>
               <Link to="/dpa" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">DPA</Link>
             </div>
-            <p className="text-slate-500 text-xs" style={{ fontFamily: FONT_BODY }}>© 2026 ShopCommand. All rights reserved.</p>
+            <p className="text-slate-500 text-xs">© 2026 ShopCommand. All rights reserved.</p>
           </div>
         </div>
       </footer>

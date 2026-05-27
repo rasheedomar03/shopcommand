@@ -1157,7 +1157,7 @@ export default function TechBoard() {
 
         <div className="flex items-center gap-2">
           <HexMark size={24} />
-          <span className="text-base font-semibold text-text-primary" style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }}>
+          <span className="text-base font-semibold text-text-primary" style={{ letterSpacing: '-0.02em' }}>
             Shop<span className="text-orange">Command</span>
           </span>
           <span className="text-xs text-text-muted hidden sm:inline ml-1">· Tech Board</span>

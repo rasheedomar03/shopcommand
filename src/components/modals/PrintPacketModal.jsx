@@ -57,11 +57,24 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
   const mpiGroups = ro.mpi ? Object.entries(groupBy(ro.mpi.items, 'category')) : []
 
   const handlePrint = () => {
-    const w = window.open('', '_blank', 'width=780,height=1100')
-    w.document.write(buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate, paidTime, payment, mpiGroups }))
-    w.document.close()
-    w.focus()
-    setTimeout(() => { w.print(); w.close() }, 250)
+    const html = buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate, paidTime, payment, mpiGroups })
+    // Use a hidden iframe to avoid popup blockers
+    let iframe = document.getElementById('sc-print-frame')
+    if (!iframe) {
+      iframe = document.createElement('iframe')
+      iframe.id = 'sc-print-frame'
+      iframe.style.cssText = 'position:fixed;width:0;height:0;border:none;left:-9999px;'
+      document.body.appendChild(iframe)
+    }
+    const doc = iframe.contentDocument || iframe.contentWindow.document
+    doc.open()
+    doc.write(html)
+    doc.close()
+    // Wait for content to render, then print
+    setTimeout(() => {
+      iframe.contentWindow.focus()
+      iframe.contentWindow.print()
+    }, 250)
   }
 
   // ── Preview ───────────────────────────────────────────────────────────────

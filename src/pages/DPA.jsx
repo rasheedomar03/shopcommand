@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function DPA() {
   return (
-    <div className="min-h-screen bg-[#0A0B12] text-white" style={{ fontFamily: '"Inter", system-ui, sans-serif' }}>
+    <div className="min-h-screen bg-[#0A0B12] text-white">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
         <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
@@ -10,7 +10,7 @@ export default function DPA() {
             <polygon points="32,4 57.86,18 57.86,46 32,60 6.14,46 6.14,18" fill="#F97316" />
             <polygon points="32,18.56 46.78,26.78 46.78,43.22 32,51.44 17.22,43.22 17.22,26.78" fill="#0A0B12" />
           </svg>
-          <span style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }} className="text-sm font-semibold">
+          <span style={{ letterSpacing: '-0.02em' }} className="text-sm font-semibold">
             Shop<span className="text-orange-500">Command</span>
           </span>
         </Link>
@@ -22,7 +22,7 @@ export default function DPA() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
-          <h1 style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Data Processing Agreement</h1>
+          <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Data Processing Agreement</h1>
           <p className="text-white/40 text-sm">Last updated: May 13, 2026</p>
           <p className="text-white/40 text-sm mt-1">This DPA is incorporated into and forms part of the ShopCommand <Link to="/terms" className="text-orange-400 hover:underline">Terms of Service</Link>.</p>
         </div>
@@ -30,7 +30,7 @@ export default function DPA() {
         <div className="prose prose-invert prose-sm max-w-none space-y-8 text-white/70 leading-relaxed">
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>1. Parties and Purpose</h2>
+            <h2 className="text-white text-base font-semibold mb-2">1. Parties and Purpose</h2>
             <p>
               This Data Processing Agreement ("DPA") is entered into between ShopCommand, Inc. ("ShopCommand" or "Data Processor") and the business entity subscribing to the ShopCommand Service ("Customer" or "Data Controller"). This DPA governs ShopCommand's processing of personal data on behalf of the Customer in connection with the delivery of the ShopCommand platform and associated services.
             </p>
@@ -43,7 +43,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>2. Data We Process on Your Behalf</h2>
+            <h2 className="text-white text-base font-semibold mb-2">2. Data We Process on Your Behalf</h2>
             <p>
               In the course of providing the Service, ShopCommand processes the following categories of personal data on behalf of the Customer:
             </p>
@@ -67,7 +67,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>3. How We Process Data</h2>
+            <h2 className="text-white text-base font-semibold mb-2">3. How We Process Data</h2>
             <p>
               ShopCommand processes personal data only on documented instructions from the Data Controller. In practice, those instructions are provided through your configuration and use of the ShopCommand platform — for example, entering a repair order, assigning a technician, or triggering an SMS notification. ShopCommand will not process personal data for its own independent purposes without the Controller's explicit instruction, except where required to do so by applicable law, in which case ShopCommand will notify the Controller before processing unless prohibited by law.
             </p>
@@ -77,7 +77,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>4. Sub-processors</h2>
+            <h2 className="text-white text-base font-semibold mb-2">4. Sub-processors</h2>
             <p>
               The Customer grants ShopCommand general authorization to engage sub-processors to assist in delivering the Service. ShopCommand's current sub-processors are:
             </p>
@@ -110,7 +110,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>5. Security Measures</h2>
+            <h2 className="text-white text-base font-semibold mb-2">5. Security Measures</h2>
             <p>
               ShopCommand implements and maintains appropriate technical and organizational measures to protect Customer personal data against unauthorized access, disclosure, loss, destruction, or alteration. These measures include, but are not limited to:
             </p>
@@ -127,7 +127,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>6. Data Subject Requests</h2>
+            <h2 className="text-white text-base font-semibold mb-2">6. Data Subject Requests</h2>
             <p>
               ShopCommand will provide commercially reasonable assistance to the Customer in fulfilling its obligations to respond to requests from data subjects exercising their rights under applicable data protection law, including rights of access, rectification, erasure, restriction, portability, and objection.
             </p>
@@ -137,7 +137,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>7. Data Breach Notification</h2>
+            <h2 className="text-white text-base font-semibold mb-2">7. Data Breach Notification</h2>
             <p>
               In the event that ShopCommand becomes aware of a security breach involving Customer personal data, ShopCommand will notify the Customer without undue delay and in any event within 72 hours of becoming aware of the breach.
             </p>
@@ -150,7 +150,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>8. Data Deletion</h2>
+            <h2 className="text-white text-base font-semibold mb-2">8. Data Deletion</h2>
             <p>
               Upon termination or expiration of the Customer's subscription, the Customer's personal data will be handled as follows:
             </p>
@@ -165,7 +165,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>9. Governing Law</h2>
+            <h2 className="text-white text-base font-semibold mb-2">9. Governing Law</h2>
             <p>
               This DPA shall be governed by the laws of the State of Texas, consistent with the governing law provision of the ShopCommand <Link to="/terms" className="text-orange-400 hover:underline">Terms of Service</Link>. Any disputes arising under this DPA shall be resolved in the courts of Houston, Texas.
             </p>
@@ -175,7 +175,7 @@ export default function DPA() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>10. Contact</h2>
+            <h2 className="text-white text-base font-semibold mb-2">10. Contact</h2>
             <p>
               For questions about this DPA, to exercise data subject rights, or to request additional information about ShopCommand's data processing practices, contact:
             </p>

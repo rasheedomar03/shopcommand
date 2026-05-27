@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Check } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 import { CompareNav } from '@/components/CompareNav'
 
@@ -55,7 +56,7 @@ export default function VsMitchell1() {
   useEffect(() => { setMeta(TITLE, DESC, URL) }, [])
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden" style={{ fontFamily: '"General Sans", system-ui, sans-serif' }}>
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
 
       <CompareNav />
 
@@ -64,7 +65,7 @@ export default function VsMitchell1() {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-slate-100 text-slate-500 text-xs font-medium mb-6">
           Comparison
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5" style={{ fontFamily: '"Gambetta", Georgia, serif', letterSpacing: '-0.03em' }}>
+        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5" style={{ letterSpacing: '-0.03em' }}>
           ShopCommand vs. Mitchell1
         </h1>
         <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
@@ -75,20 +76,34 @@ export default function VsMitchell1() {
       {/* Table */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <div className="rounded-2xl border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
+          {/* Header — desktop */}
+          <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
             <div className="text-slate-400 text-xs uppercase tracking-widest" />
             <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium">Mitchell1</div>
             <div className="text-orange-600 text-xs text-center uppercase tracking-widest font-semibold">ShopCommand</div>
           </div>
 
           {rows.map(({ label, sc, them, scWin }, i) => (
-            <div key={label} className={`grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
-              <div className="text-slate-500 text-sm font-medium pt-0.5">{label}</div>
-              <div className="text-center">
-                <span className={`text-xs leading-relaxed ${scWin ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
+            <div key={label}>
+              {/* Desktop row */}
+              <div className={`hidden sm:grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                <div className="text-slate-500 text-sm font-medium pt-0.5">{label}</div>
+                <div className="text-center">
+                  <span className={`text-xs leading-relaxed ${scWin ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
+                </div>
+                <div className="text-center">
+                  <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-600' : 'text-slate-400'}`}>{sc}</span>
+                </div>
               </div>
-              <div className="text-center">
-                <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-600' : 'text-slate-400'}`}>{sc}</span>
+              {/* Mobile stacked */}
+              <div className={`sm:hidden px-5 py-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                <div className="text-slate-700 text-sm font-medium mb-2">{label}</div>
+                <div className="flex items-start gap-2 text-xs text-slate-400 mb-1">
+                  <span className="text-slate-300 flex-shrink-0">✕</span> {them}
+                </div>
+                <div className="flex items-start gap-2 text-xs text-orange-600 font-semibold">
+                  <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} /> {sc}
+                </div>
               </div>
             </div>
           ))}
@@ -102,7 +117,7 @@ export default function VsMitchell1() {
       {/* The honest take */}
       <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ fontFamily: '"Gambetta", Georgia, serif', letterSpacing: '-0.02em' }}>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
             The honest take
           </h2>
           <div className="space-y-6">
@@ -127,7 +142,7 @@ export default function VsMitchell1() {
               <div key={heading} className="flex gap-5">
                 <div className="w-1 rounded-full bg-orange-400/40 flex-shrink-0 mt-1" />
                 <div>
-                  <div className="text-slate-900 text-sm font-semibold mb-1.5" style={{ fontFamily: '"Gambetta", Georgia, serif' }}>{heading}</div>
+                  <div className="text-slate-900 text-sm font-semibold mb-1.5">{heading}</div>
                   <p className="text-slate-500 text-sm leading-relaxed">{body}</p>
                 </div>
               </div>
@@ -138,7 +153,7 @@ export default function VsMitchell1() {
 
       {/* CTA */}
       <section className="border-t border-slate-200 py-20 px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: '"Gambetta", Georgia, serif', letterSpacing: '-0.02em' }}>
+        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
         <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $125/mo locked forever. Price goes to $199 at public launch.</p>
@@ -156,7 +171,7 @@ export default function VsMitchell1() {
       <footer className="border-t border-slate-200 px-6 md:px-12 py-8 flex items-center justify-between flex-wrap gap-4">
         <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
           <HexMark size={22} />
-          <span className="text-slate-400 text-sm" style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif' }}>ShopCommand</span>
+          <span className="text-slate-400 text-sm">ShopCommand</span>
         </Link>
         <div className="flex flex-wrap gap-5">
           <Link to="/compare/tekmetric"   className="text-slate-400 hover:text-slate-600 text-xs transition-colors">vs. Tekmetric</Link>

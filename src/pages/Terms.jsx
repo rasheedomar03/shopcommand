@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function Terms() {
   return (
-    <div className="min-h-screen bg-[#0A0B12] text-white" style={{ fontFamily: '"Inter", system-ui, sans-serif' }}>
+    <div className="min-h-screen bg-[#0A0B12] text-white">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
         <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
@@ -10,7 +10,7 @@ export default function Terms() {
             <polygon points="32,4 57.86,18 57.86,46 32,60 6.14,46 6.14,18" fill="#F97316" />
             <polygon points="32,18.56 46.78,26.78 46.78,43.22 32,51.44 17.22,43.22 17.22,26.78" fill="#0A0B12" />
           </svg>
-          <span style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }} className="text-sm font-semibold">
+          <span style={{ letterSpacing: '-0.02em' }} className="text-sm font-semibold">
             Shop<span className="text-orange-500">Command</span>
           </span>
         </Link>
@@ -22,14 +22,14 @@ export default function Terms() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
-          <h1 style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Terms of Service</h1>
+          <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Terms of Service</h1>
           <p className="text-white/40 text-sm">Last updated: May 13, 2026</p>
         </div>
 
         <div className="prose prose-invert prose-sm max-w-none space-y-8 text-white/70 leading-relaxed">
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>1. Acceptance of Terms</h2>
+            <h2 className="text-white text-base font-semibold mb-2">1. Acceptance of Terms</h2>
             <p>
               By accessing or using the ShopCommand platform, including any web-based application, API, or associated services (collectively, the "Service"), you agree to be bound by these Terms of Service ("Terms"). If you are entering into these Terms on behalf of a business entity, you represent that you have the authority to bind that entity to these Terms, and references to "you" shall mean that entity. If you do not agree to these Terms, you must not access or use the Service.
             </p>
@@ -39,7 +39,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>2. Description of Service</h2>
+            <h2 className="text-white text-base font-semibold mb-2">2. Description of Service</h2>
             <p>
               ShopCommand is a cloud-based auto repair shop management platform designed for independent and multi-location auto repair businesses. The Service provides tools for managing repair orders, tracking technician activity, monitoring revenue and shop performance, communicating with customers via SMS, managing parts inventory, and obtaining operational visibility across multiple shop locations from a single interface.
             </p>
@@ -49,7 +49,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>3. Account Registration</h2>
+            <h2 className="text-white text-base font-semibold mb-2">3. Account Registration</h2>
             <p>
               To access the Service, you must register for an account and provide accurate, current, and complete information as prompted during the registration process. You agree to maintain and promptly update your account information to keep it accurate, current, and complete. Each subscription account is intended for use by a single business entity. You may not create multiple accounts to circumvent subscription limits or usage restrictions.
             </p>
@@ -59,7 +59,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>4. Subscription and Payment</h2>
+            <h2 className="text-white text-base font-semibold mb-2">4. Subscription and Payment</h2>
             <p>
               Access to ShopCommand requires a paid subscription. Current pricing is <strong className="text-white">$199 per month</strong> for a single location, or <strong className="text-white">$149 per location per month</strong> for accounts with multiple locations. An annual subscription option is available and provides savings equivalent to two months of service at no additional charge.
             </p>
@@ -75,7 +75,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>5. Acceptable Use</h2>
+            <h2 className="text-white text-base font-semibold mb-2">5. Acceptable Use</h2>
             <p>
               You agree to use the Service only for lawful purposes and in accordance with these Terms. The following conduct is expressly prohibited:
             </p>
@@ -95,7 +95,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>6. Data Ownership</h2>
+            <h2 className="text-white text-base font-semibold mb-2">6. Data Ownership</h2>
             <p>
               All data you input into ShopCommand — including repair order records, customer names and contact information, vehicle histories, technician records, and any other business data — remains your property ("Customer Data"). ShopCommand does not claim ownership of Customer Data.
             </p>
@@ -108,7 +108,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>7. Privacy</h2>
+            <h2 className="text-white text-base font-semibold mb-2">7. Privacy</h2>
             <p>
               Your use of the Service is also governed by ShopCommand's <Link to="/privacy" className="text-orange-400 hover:underline">Privacy Policy</Link>, which is incorporated into these Terms by reference. The Privacy Policy describes how we collect, use, and share information about you and your use of the Service.
             </p>
@@ -118,7 +118,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>8. Intellectual Property</h2>
+            <h2 className="text-white text-base font-semibold mb-2">8. Intellectual Property</h2>
             <p>
               ShopCommand and its licensors own all right, title, and interest in and to the Service, including all software, algorithms, interfaces, visual design, user experience, documentation, trademarks, logos, and brand elements (collectively, "ShopCommand IP"). These Terms do not grant you any rights in ShopCommand IP other than the limited right to access and use the Service as described herein.
             </p>
@@ -131,7 +131,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>9. Limitation of Liability</h2>
+            <h2 className="text-white text-base font-semibold mb-2">9. Limitation of Liability</h2>
             <p>
               To the fullest extent permitted by applicable law, ShopCommand's total aggregate liability to you for any claims arising out of or relating to these Terms or your use of the Service shall not exceed the total subscription fees paid by you to ShopCommand in the three (3) months immediately preceding the event giving rise to the claim.
             </p>
@@ -144,7 +144,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>10. Indemnification</h2>
+            <h2 className="text-white text-base font-semibold mb-2">10. Indemnification</h2>
             <p>
               You agree to indemnify, defend, and hold harmless ShopCommand, its officers, directors, employees, contractors, agents, licensors, and suppliers from and against any and all claims, liabilities, damages, judgments, awards, losses, costs, expenses, and fees (including reasonable attorneys' fees) arising out of or relating to:
             </p>
@@ -157,7 +157,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>11. Termination</h2>
+            <h2 className="text-white text-base font-semibold mb-2">11. Termination</h2>
             <p>
               Either party may terminate the subscription at any time. You may cancel your subscription through your account settings or by contacting <a href="mailto:support@shopcommand.io" className="text-orange-400 hover:underline">support@shopcommand.io</a>. Cancellation takes effect at the end of your current billing period.
             </p>
@@ -170,14 +170,14 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>12. Governing Law</h2>
+            <h2 className="text-white text-base font-semibold mb-2">12. Governing Law</h2>
             <p>
               These Terms shall be governed by and construed in accordance with the laws of the State of Texas, without regard to its conflict of law principles. Any dispute, claim, or controversy arising out of or relating to these Terms or your use of the Service shall be subject to the exclusive jurisdiction of the state and federal courts located in Houston, Texas. You irrevocably consent to personal jurisdiction and venue in such courts and waive any objection you may have to the exercise of jurisdiction by such courts.
             </p>
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>13. Changes to Terms</h2>
+            <h2 className="text-white text-base font-semibold mb-2">13. Changes to Terms</h2>
             <p>
               ShopCommand reserves the right to modify these Terms at any time. For material changes — including changes to pricing, data rights, liability limitations, or dispute resolution — we will notify you via email to the address associated with your account at least 14 days before the changes take effect. Non-material changes (such as clarifications or minor formatting updates) may take effect immediately upon posting.
             </p>
@@ -187,7 +187,7 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>14. Contact</h2>
+            <h2 className="text-white text-base font-semibold mb-2">14. Contact</h2>
             <p>
               If you have any questions about these Terms, please contact our legal team at:
             </p>

@@ -57,7 +57,7 @@ export default function Login() {
         <HexMark size={32} />
         <span
           className="text-2xl font-semibold tracking-tight"
-          style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }}
+          style={{ letterSpacing: '-0.02em' }}
         >
           <span className="text-text-primary">Shop</span>
           <span className="text-orange">Command</span>

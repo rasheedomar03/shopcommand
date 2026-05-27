@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen bg-[#0A0B12] text-white" style={{ fontFamily: '"Inter", system-ui, sans-serif' }}>
+    <div className="min-h-screen bg-[#0A0B12] text-white">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
         <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
@@ -10,7 +10,7 @@ export default function Privacy() {
             <polygon points="32,4 57.86,18 57.86,46 32,60 6.14,46 6.14,18" fill="#F97316" />
             <polygon points="32,18.56 46.78,26.78 46.78,43.22 32,51.44 17.22,43.22 17.22,26.78" fill="#0A0B12" />
           </svg>
-          <span style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif', letterSpacing: '-0.02em' }} className="text-sm font-semibold">
+          <span style={{ letterSpacing: '-0.02em' }} className="text-sm font-semibold">
             Shop<span className="text-orange-500">Command</span>
           </span>
         </Link>
@@ -22,14 +22,14 @@ export default function Privacy() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
-          <h1 style={{ fontFamily: '"Space Grotesk", system-ui', letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
+          <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
           <p className="text-white/40 text-sm">Last updated: May 13, 2026</p>
         </div>
 
         <div className="prose prose-invert prose-sm max-w-none space-y-8 text-white/70 leading-relaxed">
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>1. Information We Collect</h2>
+            <h2 className="text-white text-base font-semibold mb-2">1. Information We Collect</h2>
             <p>
               ShopCommand collects several categories of information in connection with your use of the Service:
             </p>
@@ -52,7 +52,7 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>2. How We Use Your Information</h2>
+            <h2 className="text-white text-base font-semibold mb-2">2. How We Use Your Information</h2>
             <p>
               ShopCommand uses the information we collect for the following purposes:
             </p>
@@ -68,7 +68,7 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>3. How We Share Your Information</h2>
+            <h2 className="text-white text-base font-semibold mb-2">3. How We Share Your Information</h2>
             <p>
               ShopCommand does not sell your personal information or your Customer Data to third parties. We share information only in the following limited circumstances:
             </p>
@@ -92,7 +92,7 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>4. Data Retention</h2>
+            <h2 className="text-white text-base font-semibold mb-2">4. Data Retention</h2>
             <p>
               We retain your account and Customer Data for as long as your subscription is active. After you cancel your subscription, your data remains available within the platform for 30 days to allow you to export it. Following that 30-day window, your Customer Data is permanently deleted within 90 days of your subscription end date.
             </p>
@@ -102,7 +102,7 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>5. Security</h2>
+            <h2 className="text-white text-base font-semibold mb-2">5. Security</h2>
             <p>
               ShopCommand takes the security of your data seriously. We implement the following measures to protect your information:
             </p>
@@ -119,7 +119,7 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>6. Your Rights</h2>
+            <h2 className="text-white text-base font-semibold mb-2">6. Your Rights</h2>
             <p>
               Depending on where you are located, you may have certain rights regarding your personal information:
             </p>
@@ -137,7 +137,7 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>7. Cookies</h2>
+            <h2 className="text-white text-base font-semibold mb-2">7. Cookies</h2>
             <p>
               ShopCommand uses cookies and similar tracking technologies to operate the Service and improve your experience. We use two categories of cookies:
             </p>
@@ -151,14 +151,14 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>8. Children's Privacy</h2>
+            <h2 className="text-white text-base font-semibold mb-2">8. Children's Privacy</h2>
             <p>
               The Service is designed for use by businesses and is not directed at children under the age of 13. ShopCommand does not knowingly collect personal information from children under 13. If we become aware that we have inadvertently collected information from a child under 13, we will take prompt steps to delete that information. If you believe we may have collected such information, please contact us at <a href="mailto:privacy@shopcommand.io" className="text-orange-400 hover:underline">privacy@shopcommand.io</a>.
             </p>
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>9. Changes to This Policy</h2>
+            <h2 className="text-white text-base font-semibold mb-2">9. Changes to This Policy</h2>
             <p>
               We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or for other reasons. For material changes — such as changes to how we use or share personal information — we will notify you by email to the address associated with your account at least 14 days before the changes take effect.
             </p>
@@ -168,7 +168,7 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-white text-base font-semibold mb-2" style={{ fontFamily: '"Space Grotesk", system-ui' }}>10. Contact</h2>
+            <h2 className="text-white text-base font-semibold mb-2">10. Contact</h2>
             <p>
               For questions about this Privacy Policy or to exercise your data rights, contact our privacy team at:
             </p>

@@ -111,7 +111,7 @@ export function Sidebar({ open, onClose }) {
         <div className="flex items-center justify-between h-14 px-4 border-b border-border flex-shrink-0">
           <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <HexMark size={28} bg={hexBg} />
-            <div className="leading-none" style={{ fontFamily: '"Bricolage Grotesque", system-ui, sans-serif' }}>
+            <div className="leading-none">
               <span className="text-base font-semibold text-text-primary" style={{ letterSpacing: '-0.02em' }}>Shop</span>
               <span className="text-base font-semibold text-orange" style={{ letterSpacing: '-0.02em' }}>Command</span>
             </div>
