@@ -961,6 +961,42 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* What we hear from shop owners */}
+      <section className="border-t border-slate-200 py-24 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">From our conversations</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+              What we hear from shop owners
+            </h2>
+            <p className="text-slate-500 max-w-md mx-auto leading-relaxed text-sm md:text-base">
+              We talk to independent shop owners about what frustrates them. These problems keep coming up.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-5">
+            {[
+              {
+                quote: "I run three locations and I still can't see all of them on one screen. I'm logging in and out of the same software three times a day.",
+                attr: 'Multi-location owner, 3 shops',
+              },
+              {
+                quote: "We were paying almost $800 a month and half the features were locked behind an upgrade tier. I didn't even know what we were paying for anymore.",
+                attr: 'Independent shop owner',
+              },
+              {
+                quote: "I just want to know if we had a good day without calling my service advisor. That shouldn't require a $300/month add-on.",
+                attr: 'Owner-operator, single location',
+              },
+            ].map(({ quote, attr }, i) => (
+              <div key={i} className="rounded-xl border border-slate-200 bg-white p-6 flex flex-col justify-between">
+                <p className="text-slate-600 text-sm leading-relaxed mb-5">"{quote}"</p>
+                <p className="text-slate-400 text-xs font-medium">{attr}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="border-t border-slate-200 py-24 px-6">
         <div className="max-w-4xl mx-auto">
