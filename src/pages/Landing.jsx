@@ -37,7 +37,7 @@ function HexMark({ size = 36 }) {
 const steps = [
   {
     title: 'Connect your shop',
-    desc: "Add your location in minutes. No IT guy, no hardware, no three-week onboarding. You'll have your first dashboard open before lunch.",
+    desc: "Add your location in under five minutes. No IT guy, no hardware, no three-week onboarding. You'll have your first dashboard open before lunch.",
   },
   {
     title: 'Stop calling your managers',
@@ -74,7 +74,7 @@ const integrations = ['CARFAX', 'QuickBooks', 'PartsTech', 'Worldpac', 'Stripe']
 const faqs = [
   {
     q: 'Do I need to install anything?',
-    a: 'No. ShopCommand is fully browser-based. You log in, add your locations, and you\'re running. Nothing to download, no IT required.',
+    a: 'No. ShopCommand is fully browser-based and loads instantly on any device. You log in, add your locations, and you\'re running. Nothing to download, no IT required.',
   },
   {
     q: 'Can my technicians use it on their phone?',
@@ -830,7 +830,7 @@ export default function Landing() {
             </h1>
 
             <p className="text-slate-500 text-base md:text-lg max-w-lg mb-6 leading-relaxed">
-              Know exactly where every shop stands before your first call of the day. Repair orders, tech efficiency, and revenue across every bay and every location.
+              Know exactly where every shop stands before your first call of the day. Repair orders, tech efficiency, and revenue across every bay and every location. Loads in under a second.
             </p>
 
             <div className="flex flex-wrap gap-2 mb-7">
@@ -911,7 +911,7 @@ export default function Landing() {
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
             Everything your shop needs
           </h2>
-          <p className="text-slate-500 max-w-md mx-auto leading-relaxed">Built specifically for auto repair shops, not a generic tool bolted onto your workflow.</p>
+          <p className="text-slate-500 max-w-md mx-auto leading-relaxed">Built specifically for auto repair shops. Fast enough that you never wait on a loading screen.</p>
         </div>
 
         {/* Feature 1: RO tracking — text left, preview right */}
@@ -922,7 +922,7 @@ export default function Landing() {
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Stop asking "where's that RO?"</h3>
             <p className="text-slate-500 text-sm leading-relaxed mb-4">
-              You know the call. It's 2pm, a customer wants a status update, and nobody can find the ticket. Every RO lives here, from the moment it's written to the moment it's paid. Full history, no digging.
+              You know the call. It's 2pm, a customer wants a status update, and nobody can find the ticket. Every RO lives here, from the moment it's written to the moment it's paid. Search any customer, any vehicle, any ticket in seconds.
             </p>
           </div>
           <ROPreview />
@@ -972,14 +972,14 @@ export default function Landing() {
                 <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Service Advisor</div>
                 <h3 className="text-base font-semibold text-slate-900 mb-1.5">Run your board without the chaos</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                  Write and track ROs from estimate to payment. Pull full vehicle history before writing a line. Keep customers updated without chasing them down.
+                  Write and track ROs from estimate to payment. Pull full vehicle history instantly before writing a line. No loading spinners, no waiting on your software.
                 </p>
               </div>
               <div className="border-t border-slate-200 pt-8">
                 <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Technician</div>
                 <h3 className="text-base font-semibold text-slate-900 mb-1.5">Clock in and know exactly where to start</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                  See your assigned jobs the moment you log in. No clipboard, no whiteboard: everything is in your queue. Update job status from your phone between lifts.
+                  See your assigned jobs the moment you log in. No clipboard, no whiteboard. Everything loads instantly on your phone. Update job status between lifts.
                 </p>
               </div>
             </div>
