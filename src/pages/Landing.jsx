@@ -37,15 +37,15 @@ function HexMark({ size = 36 }) {
 const steps = [
   {
     title: 'Connect your shop',
-    desc: 'Add your location in minutes. One shop or ten. No IT required, no hardware to install. Just log in and go.',
+    desc: "Add your location in minutes. No IT guy, no hardware, no three-week onboarding. You'll have your first dashboard open before lunch.",
   },
   {
-    title: 'Track everything live',
-    desc: 'Revenue, open ROs, technician clock-ins, and parts inventory update in real time. Always current, never a guess.',
+    title: 'Stop calling your managers',
+    desc: "Revenue, open ROs, tech hours, and who clocked in late. All live. You don't need to call the shop at 4pm to find out how the day went.",
   },
   {
-    title: 'Make better calls',
-    desc: 'Spot your top performers, catch problems before they become expensive, and grow with actual data behind you.',
+    title: 'Catch problems on Tuesday, not Friday',
+    desc: "See which tech is falling behind, which location missed target, and where your money is going. Before it becomes an expensive surprise.",
   },
 ]
 
@@ -496,6 +496,117 @@ function FoundingSection() {
   )
 }
 
+// ─── ROI Calculator ──────────────────────────────────────────────────────────
+function ROICalculator() {
+  const [locations, setLocations] = useState(2)
+  const [managerCalls, setManagerCalls] = useState(4)
+  const [currentCost, setCurrentCost] = useState(300)
+
+  // Each call averages ~8 min. Valued at $50/hr for owner time.
+  const minutesSavedPerDay = managerCalls * locations * 8
+  const hoursSavedPerMonth = Math.round((minutesSavedPerDay * 22) / 60)
+  const timeSavingsPerMonth = Math.round(hoursSavedPerMonth * 50)
+  const softwareSavings = Math.max(0, (currentCost * locations) - (locations <= 2 ? 100 : 125) * locations)
+  const totalSavings = timeSavingsPerMonth + softwareSavings
+
+  return (
+    <section className="border-t border-slate-200 py-24 px-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">See your numbers</div>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            What's this actually worth to you?
+          </h2>
+          <p className="text-slate-500 text-base max-w-xl mx-auto leading-relaxed">
+            Plug in your numbers. No email required, no sales pitch. Just math.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-10">
+          <div className="space-y-8">
+            {/* Locations */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-slate-700 text-sm font-medium">How many locations do you run?</label>
+                <span className="text-orange-600 text-sm font-semibold tabular-nums w-8 text-right">{locations}</span>
+              </div>
+              <input
+                type="range" min={1} max={10} step={1} value={locations}
+                onChange={e => setLocations(+e.target.value)}
+                className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-orange-500"
+              />
+              <div className="flex justify-between text-xs text-slate-400 mt-1.5">
+                <span>1</span><span>10</span>
+              </div>
+            </div>
+
+            {/* Manager calls */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-slate-700 text-sm font-medium">Check-in calls per location, per day?</label>
+                <span className="text-orange-600 text-sm font-semibold tabular-nums w-8 text-right">{managerCalls}</span>
+              </div>
+              <input
+                type="range" min={0} max={10} step={1} value={managerCalls}
+                onChange={e => setManagerCalls(+e.target.value)}
+                className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-orange-500"
+              />
+              <div className="flex justify-between text-xs text-slate-400 mt-1.5">
+                <span>0</span><span>10</span>
+              </div>
+            </div>
+
+            {/* Current cost */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-slate-700 text-sm font-medium">Current software cost per location?</label>
+                <span className="text-orange-600 text-sm font-semibold tabular-nums">${currentCost}/mo</span>
+              </div>
+              <input
+                type="range" min={0} max={800} step={25} value={currentCost}
+                onChange={e => setCurrentCost(+e.target.value)}
+                className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-orange-500"
+              />
+              <div className="flex justify-between text-xs text-slate-400 mt-1.5">
+                <span>$0</span><span>$800</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="mt-10 pt-8 border-t border-slate-100">
+            <div className="grid sm:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-slate-900 tabular-nums">{hoursSavedPerMonth}<span className="text-lg text-slate-400 font-medium ml-1">hrs</span></div>
+                <div className="text-slate-500 text-xs mt-1">Owner time saved per month</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-slate-900 tabular-nums">${softwareSavings.toLocaleString()}</div>
+                <div className="text-slate-500 text-xs mt-1">Software cost reduction</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-orange-600 tabular-nums">${totalSavings.toLocaleString()}</div>
+                <div className="text-slate-500 text-xs mt-1">Total monthly value</div>
+              </div>
+            </div>
+            {totalSavings > 0 && (
+              <p className="text-center text-slate-400 text-xs mt-6">
+                Based on {minutesSavedPerDay} fewer minutes on the phone per day and {locations} location{locations > 1 ? 's' : ''} on ShopCommand.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="text-center mt-8">
+          <a href="#founding" className="inline-flex px-7 py-3.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
+            Lock in $100/mo before it's gone →
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 const LANDING_TITLE = 'ShopCommand — Auto Shop Management Software'
 const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member spots at $100/mo.'
@@ -804,9 +915,9 @@ export default function Landing() {
             <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
               <ClipboardList size={18} className="text-orange-500" strokeWidth={1.8} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Every job, accounted for</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Stop asking "where's that RO?"</h3>
             <p className="text-slate-500 text-sm leading-relaxed mb-4">
-              Every RO moves through stages digitally, with full history and accountability from the moment it's written. No more calling the manager to find out where a job stands.
+              You know the call. It's 2pm, a customer wants a status update, and nobody can find the ticket. Every RO lives here, from the moment it's written to the moment it's paid. Full history, no digging.
             </p>
           </div>
           <ROPreview />
@@ -821,9 +932,9 @@ export default function Landing() {
             <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
               <Wrench size={18} className="text-orange-500" strokeWidth={1.8} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Know your team without the check-in calls</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Know who showed up and who's producing</h3>
             <p className="text-slate-500 text-sm leading-relaxed mb-4">
-              Who's clocked in, who's behind, who's carrying the day. Efficiency scores, clock-ins, and performance data at your fingertips.
+              It's 7:15am. You open the app. Mike clocked in at 6:58, Carlos is on a brake job in bay 1, Andre hasn't shown up yet. You didn't call anyone. You just know.
             </p>
           </div>
         </div>
@@ -840,10 +951,10 @@ export default function Landing() {
             <div>
               <div className="text-orange-600 text-xs uppercase tracking-widest font-semibold mb-3">For the owner</div>
               <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.02em' }}>
-                Always know where your business stands
+                Stop driving across town to check on your shop
               </h2>
               <p className="text-slate-500 text-sm md:text-base leading-relaxed mb-6">
-                Revenue, open ROs, and staffing in one tab. Spot problems and top performers at a glance. Set monthly targets and track progress live.
+                You shouldn't need to be physically present to know if today was a $4k day or a $12k day. Revenue, open ROs, and who's on the clock, all in one tab, before your first coffee.
               </p>
               <a href="#founding" className="inline-flex px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                 See the dashboard →
@@ -1076,6 +1187,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* ROI Calculator */}
+      <ROICalculator />
 
       {/* Founder */}
       <section className="border-t border-slate-200 py-24 px-6 bg-slate-50/60">
