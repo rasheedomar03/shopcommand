@@ -22,14 +22,14 @@ function HexMark({ size = 36 }) {
 }
 
 const rows = [
-  { label: 'Pricing',              sc: '$125/mo founding · $199 standard',   them: 'Not disclosed — demo required',     scWin: true  },
+  { label: 'Pricing',              sc: '$100/mo founding · $175 standard',   them: 'Not disclosed — demo required',     scWin: true  },
   { label: 'Pricing transparency', sc: 'Shown openly on our site',            them: 'Hidden behind a sales call',        scWin: true  },
   { label: 'Multi-location view',  sc: 'Core product — day one',              them: 'Available, but not the core focus', scWin: true  },
   { label: 'Setup time',           sc: 'Up and running same day',             them: 'Enterprise onboarding process',     scWin: true  },
   { label: 'Per-seat fees',        sc: 'Never',                               them: 'Yes',                               scWin: true  },
   { label: 'Feature tiers',        sc: 'One plan, everything included',       them: 'Multiple tiers — basics gated',     scWin: true  },
   { label: 'Founder access',       sc: 'Direct line, every founding member',  them: 'Standard support team',             scWin: true  },
-  { label: 'Founding rate lock',   sc: '$125/mo locked forever',              them: 'No equivalent offer',               scWin: true  },
+  { label: 'Founding rate lock',   sc: '$100/mo locked forever',              them: 'No equivalent offer',               scWin: true  },
   { label: 'Shops using it',       sc: 'Early access — founding stage',       them: '8,000+ shops',                      scWin: false },
   { label: 'Two-way texting',      sc: 'Coming',                              them: 'Yes — all plans',                   scWin: false },
   { label: 'Buy Now Pay Later',    sc: 'Coming',                              them: 'Yes — integrated',                  scWin: false },
@@ -38,7 +38,7 @@ const rows = [
 ]
 
 const SM_TITLE = 'ShopCommand vs. Shopmonkey — Auto Shop Software Comparison'
-const SM_DESC = 'No demo required, no hidden pricing. See how ShopCommand compares to Shopmonkey on price transparency, multi-location focus, and setup time. Founding spots at $125/mo.'
+const SM_DESC = 'No demo required, no hidden pricing. See how ShopCommand compares to Shopmonkey on price transparency, multi-location focus, and setup time. Founding spots at $100/mo.'
 const SM_URL = 'https://shopcommand.net/compare/shopmonkey'
 
 function setMeta(title, desc, url) {
@@ -128,7 +128,7 @@ export default function VsShopmonkey() {
               },
               {
                 heading: 'The pricing model is a real difference.',
-                body: 'Shopmonkey doesn\'t publish pricing. You book a demo, talk to sales, and get a quote. ShopCommand shows you $125/mo founding and $199 standard, right on the page. Per-seat fees vs. per-location — for a shop with 8 techs, that difference adds up fast.',
+                body: 'Shopmonkey doesn\'t publish pricing. You book a demo, talk to sales, and get a quote. ShopCommand shows you $100/mo founding and $175 standard, right on the page. Per-seat fees vs. per-location — for a shop with 8 techs, that difference adds up fast.',
               },
               {
                 heading: 'ShopCommand is built for the multi-location owner first.',
@@ -136,7 +136,7 @@ export default function VsShopmonkey() {
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $125/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor.',
+                body: 'Founding members get $100/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
@@ -156,7 +156,7 @@ export default function VsShopmonkey() {
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $125/mo locked forever. Price goes to $199 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →

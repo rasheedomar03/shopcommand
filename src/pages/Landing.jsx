@@ -93,8 +93,8 @@ const faqs = [
     a: 'We\'re onboarding our first shops now. Founding members get direct access to us during setup. You\'re not going through a ticket queue.',
   },
   {
-    q: 'What does the $125/mo founding rate cover?',
-    a: 'One shop location with unlimited technicians, users, and repair orders. The rate locks in forever as long as you stay subscribed. Price goes to $199 at public launch.',
+    q: 'What does the $100/mo founding rate cover?',
+    a: 'One shop location with unlimited technicians, users, and repair orders. The rate locks in forever as long as you stay subscribed. Price goes to $175 at public launch.',
   },
   {
     q: 'How is this different from Tekmetric or Shopmonkey?',
@@ -386,10 +386,10 @@ function FoundingSection() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
-            Lock in $125/mo forever.
+            Lock in $100/mo forever.
           </h2>
           <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
-            First {TOTAL_SPOTS} shops get founding member pricing, locked for life. Price goes to $199 when we open to everyone.
+            First {TOTAL_SPOTS} shops get founding member pricing, locked for life. Price goes to $175 when we open to everyone.
           </p>
         </div>
 
@@ -498,7 +498,7 @@ function FoundingSection() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const LANDING_TITLE = 'ShopCommand — Auto Shop Management Software'
-const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member spots at $125/mo.'
+const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member spots at $100/mo.'
 const LANDING_URL = 'https://shopcommand.net'
 
 export default function Landing() {
@@ -1019,9 +1019,9 @@ export default function Landing() {
                 <div className="mb-5 pt-2">
                   <div className="text-orange-600 text-xs uppercase tracking-widest mb-3 font-medium">Founding Member</div>
                   <div className="flex items-end gap-2 mb-1">
-                    <span className="text-5xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$125</span>
+                    <span className="text-5xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$100</span>
                     <div className="mb-2">
-                      <div className="text-slate-400 text-sm line-through leading-none mb-0.5">$199</div>
+                      <div className="text-slate-400 text-sm line-through leading-none mb-0.5">$175</div>
                       <div className="text-slate-500 text-xs">/mo forever</div>
                     </div>
                   </div>
@@ -1051,10 +1051,10 @@ export default function Landing() {
                 <div className="mb-5">
                   <div className="text-slate-400 text-xs uppercase tracking-widest mb-3 font-medium">Standard: After launch</div>
                   <div className="flex items-end gap-1.5 mb-1">
-                    <span className="text-5xl font-bold text-slate-400" style={{ letterSpacing: '-0.03em' }}>$199</span>
+                    <span className="text-5xl font-bold text-slate-400" style={{ letterSpacing: '-0.03em' }}>$175</span>
                     <span className="text-slate-400 text-sm mb-2">/mo</span>
                   </div>
-                  <p className="text-slate-400 text-xs leading-relaxed">Single shop. $149/location for 3+ shops. Cancel anytime.</p>
+                  <p className="text-slate-400 text-xs leading-relaxed">Single shop. $125/location for 3+ shops. Cancel anytime.</p>
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[

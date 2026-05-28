@@ -22,13 +22,13 @@ function HexMark({ size = 36 }) {
 }
 
 const rows = [
-  { label: 'Pricing',              sc: '$125/mo founding · $199 standard',  them: 'Not disclosed — demo required',       scWin: true  },
+  { label: 'Pricing',              sc: '$100/mo founding · $175 standard',  them: 'Not disclosed — demo required',       scWin: true  },
   { label: 'Pricing transparency', sc: 'Shown openly on our site',           them: 'Hidden behind a sales call',          scWin: true  },
   { label: 'Multi-location view',  sc: 'Core product — day one',             them: 'Available, single-location focus',    scWin: true  },
   { label: 'Setup time',           sc: 'Up and running same day',            them: 'Guided onboarding process',           scWin: true  },
   { label: 'Feature tiers',        sc: 'One plan, everything included',      them: 'Multiple tiers — features gated',     scWin: true  },
   { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',              scWin: true  },
-  { label: 'Founding rate lock',   sc: '$125/mo locked forever',             them: 'No equivalent offer',                 scWin: true  },
+  { label: 'Founding rate lock',   sc: '$100/mo locked forever',             them: 'No equivalent offer',                 scWin: true  },
   { label: 'Digital inspections',  sc: 'Coming',                             them: 'Best-in-class — core feature',        scWin: false },
   { label: 'Customer texting',     sc: 'Coming',                             them: 'Yes — built in',                      scWin: false },
   { label: 'Workflow automation',  sc: 'Coming',                             them: 'Strong — built-in automation',        scWin: false },
@@ -36,7 +36,7 @@ const rows = [
 ]
 
 const TITLE = 'ShopCommand vs. Shop-Ware — Auto Shop Software Comparison'
-const DESC = 'Shop-Ware has excellent digital inspections and customer texting. ShopCommand is built for the multi-location owner who needs cross-shop visibility with transparent pricing. Founding spots at $125/mo.'
+const DESC = 'Shop-Ware has excellent digital inspections and customer texting. ShopCommand is built for the multi-location owner who needs cross-shop visibility with transparent pricing. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/shop-ware'
 
 function setMeta(title, desc, url) {
@@ -126,7 +126,7 @@ export default function VsShopWare() {
               },
               {
                 heading: 'The pricing model is opaque.',
-                body: 'You can\'t find a number on their website. You book a demo, talk to sales, and get a quote. For an owner trying to evaluate five different platforms without six sales calls, that friction is real. ShopCommand shows you $125/mo founding and $199 standard right on the page.',
+                body: 'You can\'t find a number on their website. You book a demo, talk to sales, and get a quote. For an owner trying to evaluate five different platforms without six sales calls, that friction is real. ShopCommand shows you $100/mo founding and $175 standard right on the page.',
               },
               {
                 heading: 'ShopCommand is built for the owner layer.',
@@ -134,7 +134,7 @@ export default function VsShopWare() {
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $125/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re shaping what comes next.',
+                body: 'Founding members get $100/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re shaping what comes next.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
@@ -154,7 +154,7 @@ export default function VsShopWare() {
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $125/mo locked forever. Price goes to $199 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →

@@ -22,7 +22,7 @@ function HexMark({ size = 36 }) {
 }
 
 const rows = [
-  { label: 'Pricing',              sc: '$125/mo founding · $199 standard',  them: 'Not disclosed — contact sales',       scWin: true  },
+  { label: 'Pricing',              sc: '$100/mo founding · $175 standard',  them: 'Not disclosed — contact sales',       scWin: true  },
   { label: 'Pricing transparency', sc: 'Shown openly on our site',           them: 'Hidden behind a sales process',       scWin: true  },
   { label: 'Multi-location view',  sc: 'Core product — day one',             them: 'Possible, not the core focus',        scWin: true  },
   { label: 'Cloud-native',         sc: 'Fully browser-based',                them: 'Desktop roots — partial cloud',       scWin: true  },
@@ -30,7 +30,7 @@ const rows = [
   { label: 'Per-seat fees',        sc: 'Never',                              them: 'Yes — per-user licensing',            scWin: true  },
   { label: 'Modern UI',            sc: 'Built in 2024',                      them: 'Legacy interface, incremental updates', scWin: true },
   { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',              scWin: true  },
-  { label: 'Founding rate lock',   sc: '$125/mo locked forever',             them: 'No equivalent offer',                 scWin: true  },
+  { label: 'Founding rate lock',   sc: '$100/mo locked forever',             them: 'No equivalent offer',                 scWin: true  },
   { label: 'Repair data / times',  sc: 'Coming',                             them: 'Industry-leading — ProDemand',        scWin: false },
   { label: 'Parts integrations',   sc: 'Coming',                             them: 'Extensive — deep supplier network',   scWin: false },
   { label: 'Market presence',      sc: 'Early access — founding stage',      them: '50,000+ shops',                       scWin: false },
@@ -38,7 +38,7 @@ const rows = [
 ]
 
 const TITLE = 'ShopCommand vs. Mitchell1 — Auto Shop Software Comparison'
-const DESC = 'Mitchell1 is the legacy leader in repair data. ShopCommand is built for the owner sitting above their locations — transparent pricing, no per-seat fees, same-day setup. Founding spots at $125/mo.'
+const DESC = 'Mitchell1 is the legacy leader in repair data. ShopCommand is built for the owner sitting above their locations — transparent pricing, no per-seat fees, same-day setup. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/mitchell1'
 
 function setMeta(title, desc, url) {
@@ -136,7 +136,7 @@ export default function VsMitchell1() {
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $125/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor with the pricing to match.',
+                body: 'Founding members get $100/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor with the pricing to match.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
@@ -156,7 +156,7 @@ export default function VsMitchell1() {
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $125/mo locked forever. Price goes to $199 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →

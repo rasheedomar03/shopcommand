@@ -22,14 +22,14 @@ function HexMark({ size = 36 }) {
 }
 
 const rows = [
-  { label: 'Pricing',              sc: '$125/mo founding · $199 standard', them: 'Not disclosed — call required',      scWin: true },
+  { label: 'Pricing',              sc: '$100/mo founding · $175 standard', them: 'Not disclosed — call required',      scWin: true },
   { label: 'Pricing transparency', sc: 'Shown openly on our site',          them: 'Hidden behind a sales call',         scWin: true },
   { label: 'Multi-location view',  sc: 'Core product — day one',            them: 'Separate module / higher tier',      scWin: true },
   { label: 'Setup time',           sc: 'Up and running same day',           them: 'Days of onboarding calls',           scWin: true },
   { label: 'Per-seat fees',        sc: 'Never',                             them: 'Yes',                                scWin: true },
   { label: 'Feature tiers',        sc: 'One plan, everything included',     them: 'Multiple tiers + paid add-ons',      scWin: true },
   { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',            scWin: true },
-  { label: 'Founding rate lock',   sc: '$125/mo locked forever',            them: 'No equivalent offer',                scWin: true },
+  { label: 'Founding rate lock',   sc: '$100/mo locked forever',            them: 'No equivalent offer',                scWin: true },
   { label: 'G2 reviews',           sc: 'Early access — building toward it', them: '600+ reviews, multiple badges',      scWin: false },
   { label: 'Tire Suite',           sc: 'Coming',                            them: 'Yes — fully built out',              scWin: false },
   { label: 'Built-in CRM',         sc: 'Coming',                            them: 'Yes — CRM & Marketing module',       scWin: false },
@@ -44,7 +44,7 @@ function Tick({ win }) {
 }
 
 const TITLE = 'ShopCommand vs. Tekmetric — Auto Shop Software Comparison'
-const DESC = 'Transparent pricing, no per-seat fees, and built for multi-location owners from day one. See how ShopCommand compares to Tekmetric. Founding spots at $125/mo.'
+const DESC = 'Transparent pricing, no per-seat fees, and built for multi-location owners from day one. See how ShopCommand compares to Tekmetric. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/tekmetric'
 function setMeta(title, desc, url) {
   document.title = title
@@ -137,7 +137,7 @@ export default function VsTekmetric() {
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get the product at $125/mo locked forever, direct access to the team, and a say in where the product goes. You\'re not buying software — you\'re shaping it.',
+                body: 'Founding members get the product at $100/mo locked forever, direct access to the team, and a say in where the product goes. You\'re not buying software — you\'re shaping it.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
@@ -157,7 +157,7 @@ export default function VsTekmetric() {
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $125/mo locked forever. Price goes to $199 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →

@@ -22,7 +22,7 @@ function HexMark({ size = 36 }) {
 }
 
 const rows = [
-  { label: 'Pricing',              sc: '$125/mo founding · $199 standard',  them: 'Not disclosed — contact sales',       scWin: true  },
+  { label: 'Pricing',              sc: '$100/mo founding · $175 standard',  them: 'Not disclosed — contact sales',       scWin: true  },
   { label: 'Pricing transparency', sc: 'Shown openly on our site',           them: 'Hidden behind a sales process',       scWin: true  },
   { label: 'Multi-location view',  sc: 'Core product — day one',             them: 'Available, complex to manage',        scWin: true  },
   { label: 'Cloud-native',         sc: 'Fully browser-based',                them: 'Windows desktop — not true cloud',    scWin: true  },
@@ -31,14 +31,14 @@ const rows = [
   { label: 'Mobile access',        sc: 'Fully mobile-friendly',              them: 'Limited mobile support',              scWin: true  },
   { label: 'Modern UI',            sc: 'Built in 2024',                      them: 'Legacy interface',                    scWin: true  },
   { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',              scWin: true  },
-  { label: 'Founding rate lock',   sc: '$125/mo locked forever',             them: 'No equivalent offer',                 scWin: true  },
+  { label: 'Founding rate lock',   sc: '$100/mo locked forever',             them: 'No equivalent offer',                 scWin: true  },
   { label: 'Parts integrations',   sc: 'Coming',                             them: 'Extensive — core strength',           scWin: false },
   { label: 'Labor guide',          sc: 'Coming',                             them: 'Built-in — multiple sources',         scWin: false },
   { label: 'Market presence',      sc: 'Early access — founding stage',      them: 'Established — large install base',    scWin: false },
 ]
 
 const TITLE = 'ShopCommand vs. R.O. Writer — Auto Shop Software Comparison'
-const DESC = 'R.O. Writer is a legacy desktop platform with strong parts integrations. ShopCommand is cloud-native, mobile-friendly, and built for multi-location visibility with transparent pricing. Founding spots at $125/mo.'
+const DESC = 'R.O. Writer is a legacy desktop platform with strong parts integrations. ShopCommand is cloud-native, mobile-friendly, and built for multi-location visibility with transparent pricing. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/ro-writer'
 
 function setMeta(title, desc, url) {
@@ -136,7 +136,7 @@ export default function VsROWriter() {
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $125/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor with the pricing to match.',
+                body: 'Founding members get $100/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor with the pricing to match.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
@@ -156,7 +156,7 @@ export default function VsROWriter() {
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $125/mo locked forever. Price goes to $199 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →
