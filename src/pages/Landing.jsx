@@ -830,7 +830,7 @@ export default function Landing() {
             </h1>
 
             <p className="text-slate-500 text-base md:text-lg max-w-lg mb-6 leading-relaxed">
-              Know exactly where every shop stands before your first call of the day. Repair orders, tech efficiency, and revenue across every bay and every location. Loads in under a second.
+              Know exactly where every shop stands before your first call of the day. Repair orders, tech efficiency, and revenue across every bay and every location. Loads in seconds.
             </p>
 
             <div className="flex flex-wrap gap-2 mb-7">
@@ -1233,7 +1233,7 @@ export default function Landing() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { icon: Shield, title: 'Encrypted everything', desc: 'Your data is encrypted in transit and at rest. We never sell or share your shop data with anyone.' },
-              { icon: Zap, title: 'Fast by default', desc: 'No legacy desktop app, no server in your back office. Pages load in under a second on any connection.' },
+              { icon: Zap, title: 'Fast by default', desc: 'No legacy desktop app, no server in your back office. Pages load in seconds on any connection.' },
               { icon: Smartphone, title: 'Same app everywhere', desc: 'Phone, tablet, desktop. Same layout, same features, same data. No stripped-down mobile version.' },
               { icon: Clock, title: '99.9% uptime', desc: 'Hosted on Vercel with automatic failover. Your dashboard is up when you need it, not down for maintenance.' },
             ].map(({ icon: Icon, title, desc }) => (
