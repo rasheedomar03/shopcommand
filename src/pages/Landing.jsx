@@ -590,9 +590,14 @@ function ROICalculator() {
               </div>
             </div>
             {totalSavings > 0 && (
-              <p className="text-center text-slate-400 text-xs mt-6">
-                Based on {minutesSavedPerDay} fewer minutes on the phone per day and {locations} location{locations > 1 ? 's' : ''} on ShopCommand.
-              </p>
+              <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+                <div className="text-slate-400 text-xs uppercase tracking-widest font-medium mb-2">That's</div>
+                <div className="text-4xl md:text-5xl font-bold text-orange-600 tabular-nums">${(totalSavings * 12).toLocaleString()}</div>
+                <div className="text-slate-500 text-sm mt-1">in value per year</div>
+                <p className="text-slate-400 text-xs mt-4">
+                  Based on {minutesSavedPerDay} fewer minutes on the phone per day and {locations} location{locations > 1 ? 's' : ''} on ShopCommand.
+                </p>
+              </div>
             )}
           </div>
         </div>
