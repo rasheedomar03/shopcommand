@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Wrench, ClipboardList, Gauge, Car, Check, Mail, ChevronDown, Menu, X } from 'lucide-react'
+import { Wrench, ClipboardList, Gauge, Car, Check, Mail, ChevronDown, Menu, X, Shield, Zap, Smartphone, Clock } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 import { sanitizeField, isValidEmail } from '@/lib/utils'
 
@@ -1214,6 +1214,37 @@ export default function Landing() {
               <div className="text-slate-900 text-sm font-semibold">Rasheed Omar</div>
               <div className="text-slate-400 text-xs mt-0.5">Founder, ShopCommand, Houston TX</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust & Security */}
+      <section className="border-t border-slate-200 py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">Built to last</div>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+              Your shop data is safe with us
+            </h2>
+            <p className="text-slate-500 text-sm max-w-xl mx-auto leading-relaxed">
+              No VC investors. No 200-person sales team. No per-seat fees subsidizing enterprise features you will never use. Just a lean product that costs less because it should.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Shield, title: 'Encrypted everything', desc: 'Your data is encrypted in transit and at rest. We never sell or share your shop data with anyone.' },
+              { icon: Zap, title: 'Fast by default', desc: 'No legacy desktop app, no server in your back office. Pages load in under a second on any connection.' },
+              { icon: Smartphone, title: 'Same app everywhere', desc: 'Phone, tablet, desktop. Same layout, same features, same data. No stripped-down mobile version.' },
+              { icon: Clock, title: '99.9% uptime', desc: 'Hosted on Vercel with automatic failover. Your dashboard is up when you need it, not down for maintenance.' },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="text-center px-2">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3">
+                  <Icon size={18} className="text-orange-500" strokeWidth={1.8} />
+                </div>
+                <div className="text-slate-900 text-sm font-semibold mb-1.5">{title}</div>
+                <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
