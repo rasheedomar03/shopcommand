@@ -1312,6 +1312,7 @@ export default function Landing() {
               <Link to="/terms" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Terms</Link>
               <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Privacy</Link>
               <Link to="/dpa" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">DPA</Link>
+              <Link to="/cookies" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Cookies</Link>
             </div>
             <p className="text-slate-500 text-xs">© 2026 ShopCommand. All rights reserved.</p>
           </div>

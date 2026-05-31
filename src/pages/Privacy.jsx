@@ -190,6 +190,7 @@ export default function Privacy() {
         <div className="flex gap-4">
           <Link to="/terms" className="text-white/30 hover:text-white/60 text-xs transition-colors">Terms of Service</Link>
           <Link to="/dpa" className="text-white/30 hover:text-white/60 text-xs transition-colors">DPA</Link>
+          <Link to="/cookies" className="text-white/30 hover:text-white/60 text-xs transition-colors">Cookies</Link>
         </div>
       </footer>
     </div>
