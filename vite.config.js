@@ -12,6 +12,10 @@ export default defineConfig({
   build: {
     sourcemap: false,
     rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' || warning.message?.includes('externalize')) return
+        warn(warning)
+      },
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router')) {
