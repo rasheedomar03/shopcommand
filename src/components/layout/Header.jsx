@@ -166,6 +166,7 @@ export function Header({ onMenuOpen }) {
             <button
               onClick={() => { setQuery(''); setFocused(false) }}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+              aria-label="Clear search"
             >
               <X size={13} />
             </button>

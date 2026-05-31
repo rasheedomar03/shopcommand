@@ -26,7 +26,7 @@ function HexMark({ size = 36 }) {
       .join(' ')
   const R = 28, r = R * 0.56
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
       <polygon points={pts(32, 32.5, r)} fill="#0D0E14" />
     </svg>
@@ -153,13 +153,13 @@ function DashboardPreview() {
     <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
       {/* Keep dashboard dark-themed — it IS the product */}
       <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
-        <span className="text-white/40 text-xs uppercase tracking-wider">Live preview</span>
+        <span className="text-white/60 text-xs uppercase tracking-wider">Live preview</span>
         <span className="text-orange-400/70 text-xs font-medium italic">sample data</span>
       </div>
       <div className="bg-[#0F1018]">
         <div className="grid grid-cols-4 gap-4 px-5 py-2.5 border-b border-white/[0.08]">
           {['Shop', 'Revenue', 'Open ROs', 'Techs'].map((h, i) => (
-            <div key={h} className={`text-white/30 text-xs ${i > 0 ? 'text-right' : ''}`} >{h}</div>
+            <div key={h} className={`text-white/60 text-xs ${i > 0 ? 'text-right' : ''}`} >{h}</div>
           ))}
         </div>
         {shopRows.map(({ name, sub, ros, techs, best }, i) => (
@@ -182,11 +182,11 @@ function DashboardPreview() {
             <div className="text-right">
               <span className="bg-orange-500/15 text-orange-400 text-xs px-2 py-0.5 rounded-md">{ros}</span>
             </div>
-            <div className="text-white/55 text-sm text-right">{techs}</div>
+            <div className="text-white/70 text-sm text-right">{techs}</div>
           </div>
         ))}
         <div className="px-5 py-2.5 border-t border-white/[0.06]">
-          <span className="text-white/25 text-xs">3 of 5 locations shown</span>
+          <span className="text-white/60 text-xs">3 of 5 locations shown</span>
         </div>
       </div>
     </div>
@@ -204,15 +204,15 @@ function ROPreview() {
   return (
     <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
       <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
-        <span className="text-white/40 text-xs uppercase tracking-wider">Repair orders</span>
-        <span className="text-white/25 text-xs">Today</span>
+        <span className="text-white/60 text-xs uppercase tracking-wider">Repair orders</span>
+        <span className="text-white/60 text-xs">Today</span>
       </div>
       <div className="bg-[#0F1018] divide-y divide-white/[0.06]">
         {rows.map(({ id, vehicle, status, color, bg }) => (
           <div key={id} className="flex items-center justify-between px-5 py-3">
             <div>
               <div className="text-white/80 text-sm font-medium">{id}</div>
-              <div className="text-white/35 text-xs mt-0.5">{vehicle}</div>
+              <div className="text-white/60 text-xs mt-0.5">{vehicle}</div>
             </div>
             <span className={`text-xs px-2 py-0.5 rounded-md ${color} ${bg}`}>{status}</span>
           </div>
@@ -231,23 +231,23 @@ function TechPreview() {
   return (
     <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
       <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
-        <span className="text-white/40 text-xs uppercase tracking-wider">Technicians</span>
-        <span className="text-white/25 text-xs">Live</span>
+        <span className="text-white/60 text-xs uppercase tracking-wider">Technicians</span>
+        <span className="text-white/60 text-xs">Live</span>
       </div>
       <div className="bg-[#0F1018]">
         <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-2 border-b border-white/[0.08]">
-          <span className="text-white/25 text-xs">Tech</span>
-          <span className="text-white/25 text-xs text-right">Hours</span>
-          <span className="text-white/25 text-xs text-right w-12">Eff.</span>
+          <span className="text-white/60 text-xs">Tech</span>
+          <span className="text-white/60 text-xs text-right">Hours</span>
+          <span className="text-white/60 text-xs text-right w-12">Eff.</span>
         </div>
         <div className="divide-y divide-white/[0.06]">
           {techs.map(({ name, status, job, hours, efficiency, effColor }) => (
             <div key={name} className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 items-center">
               <div>
                 <div className="text-white/80 text-sm font-medium">{name}</div>
-                <div className="text-white/30 text-xs mt-0.5">{status} · {job}</div>
+                <div className="text-white/60 text-xs mt-0.5">{status} · {job}</div>
               </div>
-              <div className="text-white/50 text-sm text-right tabular-nums">{hours}</div>
+              <div className="text-white/70 text-sm text-right tabular-nums">{hours}</div>
               <div className={`text-sm font-semibold text-right tabular-nums w-12 ${effColor}`}>{efficiency}</div>
             </div>
           ))}
@@ -400,7 +400,7 @@ function FoundingSection() {
               <span className="text-slate-400">{CLAIMED_SPOTS === 0 ? 'Be the first to reserve a spot' : `${CLAIMED_SPOTS} of ${TOTAL_SPOTS} spots claimed`}</span>
               <span className="text-orange-600 font-semibold">{remaining} of {TOTAL_SPOTS} left</span>
             </div>
-            <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+            <div className="h-2 rounded-full bg-slate-200 overflow-hidden" role="progressbar" aria-valuenow={CLAIMED_SPOTS} aria-valuemin={0} aria-valuemax={TOTAL_SPOTS} aria-label={`${CLAIMED_SPOTS} of ${TOTAL_SPOTS} founding spots claimed`}>
               <div
                 className="h-full rounded-full bg-orange-500 motion-safe:transition-all duration-700"
                 style={{ width: `${Math.max(pct, CLAIMED_SPOTS === 0 ? 0 : 4)}%` }}
@@ -445,35 +445,41 @@ function FoundingSection() {
                 />
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Your name</label>
+                    <label htmlFor="founding-name" className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Your name</label>
                     <input
+                      id="founding-name"
                       type="text"
                       placeholder="Marcus Webb"
+                      autoComplete="name"
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                       className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
-                                         />
+                    />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Email</label>
+                    <label htmlFor="founding-email" className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Email</label>
                     <input
+                      id="founding-email"
                       type="email"
                       placeholder="marcus@northhoustonauto.com"
+                      autoComplete="email"
                       value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                       className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
-                                         />
+                    />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Shop name</label>
+                  <label htmlFor="founding-shop" className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Shop name</label>
                   <input
+                    id="founding-shop"
                     type="text"
                     placeholder="North Houston Auto"
+                    autoComplete="organization"
                     value={form.shop}
                     onChange={e => setForm(f => ({ ...f, shop: e.target.value }))}
                     className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
-                                     />
+                  />
                 </div>
                 {error && <p className="text-red-600 text-xs" role="alert">{error}</p>}
                 <button
@@ -527,15 +533,17 @@ function ROICalculator() {
             {/* Locations */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-slate-700 text-sm font-medium">How many locations do you run?</label>
-                <span className="text-orange-600 text-sm font-semibold tabular-nums w-8 text-right">{locations}</span>
+                <label htmlFor="roi-locations" className="text-slate-700 text-sm font-medium">How many locations do you run?</label>
+                <span className="text-orange-600 text-sm font-semibold tabular-nums w-8 text-right" aria-hidden="true">{locations}</span>
               </div>
               <input
+                id="roi-locations"
                 type="range" min={1} max={10} step={1} value={locations}
+                aria-valuenow={locations}
                 onChange={e => setLocations(+e.target.value)}
                 className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-orange-500"
               />
-              <div className="flex justify-between text-xs text-slate-400 mt-1.5">
+              <div className="flex justify-between text-xs text-slate-500 mt-1.5" aria-hidden="true">
                 <span>1</span><span>10</span>
               </div>
             </div>
@@ -543,15 +551,17 @@ function ROICalculator() {
             {/* Manager calls */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-slate-700 text-sm font-medium">Check-in calls per location, per day?</label>
-                <span className="text-orange-600 text-sm font-semibold tabular-nums w-8 text-right">{managerCalls}</span>
+                <label htmlFor="roi-calls" className="text-slate-700 text-sm font-medium">Check-in calls per location, per day?</label>
+                <span className="text-orange-600 text-sm font-semibold tabular-nums w-8 text-right" aria-hidden="true">{managerCalls}</span>
               </div>
               <input
+                id="roi-calls"
                 type="range" min={0} max={10} step={1} value={managerCalls}
+                aria-valuenow={managerCalls}
                 onChange={e => setManagerCalls(+e.target.value)}
                 className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-orange-500"
               />
-              <div className="flex justify-between text-xs text-slate-400 mt-1.5">
+              <div className="flex justify-between text-xs text-slate-500 mt-1.5" aria-hidden="true">
                 <span>0</span><span>10</span>
               </div>
             </div>
@@ -559,15 +569,18 @@ function ROICalculator() {
             {/* Current cost */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-slate-700 text-sm font-medium">Current software cost per location?</label>
-                <span className="text-orange-600 text-sm font-semibold tabular-nums">${currentCost}/mo</span>
+                <label htmlFor="roi-cost" className="text-slate-700 text-sm font-medium">Current software cost per location?</label>
+                <span className="text-orange-600 text-sm font-semibold tabular-nums" aria-hidden="true">${currentCost}/mo</span>
               </div>
               <input
+                id="roi-cost"
                 type="range" min={0} max={800} step={25} value={currentCost}
+                aria-valuenow={currentCost}
+                aria-valuetext={`$${currentCost} per month`}
                 onChange={e => setCurrentCost(+e.target.value)}
                 className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-orange-500"
               />
-              <div className="flex justify-between text-xs text-slate-400 mt-1.5">
+              <div className="flex justify-between text-xs text-slate-500 mt-1.5" aria-hidden="true">
                 <span>$0</span><span>$800</span>
               </div>
             </div>
@@ -669,9 +682,12 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
 
+      {/* Skip navigation */}
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-slate-200/80 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
-        <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
+      <nav aria-label="Main navigation" className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-slate-200/80 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
+        <Link to="/" aria-label="ShopCommand home" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
           <HexMark size={28} />
           <span className="text-base font-semibold tracking-tight">
             <span className="text-slate-900">Shop</span>
@@ -741,11 +757,12 @@ export default function Landing() {
 
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 z-40 bg-black/40" onClick={() => setMobileMenuOpen(false)} />
+        <div className="md:hidden fixed inset-0 top-16 z-40 bg-black/40" onClick={() => setMobileMenuOpen(false)} aria-hidden="true" />
       )}
 
       {/* Mobile menu panel */}
-      <div
+      <nav
+        aria-label="Mobile navigation"
         className="md:hidden fixed inset-x-0 top-16 z-50 bg-white border-b border-slate-200 shadow-xl shadow-slate-900/[0.08]"
         style={{
           transition: 'opacity 200ms ease-out, transform 200ms ease-out',
@@ -808,9 +825,10 @@ export default function Landing() {
             </a>
           </div>
         </div>
-      </div>
+      </nav>
 
       {/* Hero — split layout */}
+      <main id="main-content">
       <section className="relative px-6 pt-16 md:pt-20 pb-16 overflow-hidden">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 md:gap-14 items-center">
           {/* Left: copy */}
@@ -1288,6 +1306,8 @@ export default function Landing() {
             </Link>
           </div>
       </section>
+
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-200 px-6 md:px-12 py-10 bg-slate-50/60">

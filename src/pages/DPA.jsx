@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 export default function DPA() {
   return (
     <div className="min-h-screen bg-[#0A0B12] text-white">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-          <svg width="26" height="26" viewBox="0 0 64 64">
+      <nav aria-label="Page navigation" className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
+        <Link to="/" aria-label="ShopCommand home" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+          <svg width="26" height="26" viewBox="0 0 64 64" role="img" aria-hidden="true">
             <polygon points="32.00,4.00 56.25,18.00 56.25,46.00 32.00,60.00 7.75,46.00 7.75,18.00" fill="#F97316" />
             <polygon points="32.00,16.82 45.58,24.66 45.58,40.34 32.00,48.18 18.42,40.34 18.42,24.66" fill="#0A0B12" />
           </svg>
@@ -19,12 +20,13 @@ export default function DPA() {
         </Link>
       </nav>
 
+      <main id="main-content">
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
           <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Data Processing Agreement</h1>
-          <p className="text-white/40 text-sm">Last updated: May 13, 2026</p>
-          <p className="text-white/40 text-sm mt-1">This DPA is incorporated into and forms part of the ShopCommand <Link to="/terms" className="text-orange-400 hover:underline">Terms of Service</Link>.</p>
+          <p className="text-white/60 text-sm">Last updated: May 13, 2026</p>
+          <p className="text-white/60 text-sm mt-1">This DPA is incorporated into and forms part of the ShopCommand <Link to="/terms" className="text-orange-400 hover:underline">Terms of Service</Link>.</p>
         </div>
 
         <div className="prose prose-invert prose-sm max-w-none space-y-8 text-white/70 leading-relaxed">
@@ -85,21 +87,21 @@ export default function DPA() {
               <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">Twilio Inc.</p>
-                  <p className="text-white/40 text-xs mt-0.5">San Francisco, CA, USA</p>
+                  <p className="text-white/60 text-xs mt-0.5">San Francisco, CA, USA</p>
                   <p className="text-white/55 text-sm mt-1">SMS delivery. Receives end-customer phone numbers and message content to transmit repair order notifications.</p>
                 </div>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">Vercel Inc.</p>
-                  <p className="text-white/40 text-xs mt-0.5">San Francisco, CA, USA</p>
+                  <p className="text-white/60 text-xs mt-0.5">San Francisco, CA, USA</p>
                   <p className="text-white/55 text-sm mt-1">Cloud hosting and infrastructure. Stores and processes all Customer Data on ShopCommand's behalf.</p>
                 </div>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">Stripe Inc.</p>
-                  <p className="text-white/40 text-xs mt-0.5">San Francisco, CA, USA</p>
+                  <p className="text-white/60 text-xs mt-0.5">San Francisco, CA, USA</p>
                   <p className="text-white/55 text-sm mt-1">Payment processing. Handles subscription billing. Processes account holder name, email, and payment card data.</p>
                 </div>
               </div>
@@ -192,15 +194,16 @@ export default function DPA() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
+      <footer aria-label="Page footer" className="border-t border-white/[0.06] px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
         <p className="text-slate-500 text-xs">© 2026 ShopCommand. All rights reserved.</p>
         <div className="flex gap-4">
-          <Link to="/terms" className="text-white/30 hover:text-white/60 text-xs transition-colors">Terms of Service</Link>
-          <Link to="/privacy" className="text-white/30 hover:text-white/60 text-xs transition-colors">Privacy Policy</Link>
-          <Link to="/cookies" className="text-white/30 hover:text-white/60 text-xs transition-colors">Cookies</Link>
-          <Link to="/accessibility" className="text-white/30 hover:text-white/60 text-xs transition-colors">Accessibility</Link>
+          <Link to="/terms" className="text-white/60 hover:text-white/80 text-xs transition-colors">Terms of Service</Link>
+          <Link to="/privacy" className="text-white/60 hover:text-white/80 text-xs transition-colors">Privacy Policy</Link>
+          <Link to="/cookies" className="text-white/60 hover:text-white/80 text-xs transition-colors">Cookies</Link>
+          <Link to="/accessibility" className="text-white/60 hover:text-white/80 text-xs transition-colors">Accessibility</Link>
         </div>
       </footer>
+      </main>
     </div>
   )
 }

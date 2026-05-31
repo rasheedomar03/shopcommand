@@ -14,7 +14,7 @@ function HexMark({ size = 36 }) {
       .join(' ')
   const R = 28, r = R * 0.56
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64">
+    <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-hidden="true">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
       <polygon points={pts(32, 32.5, r)} fill="#0D0E14" />
     </svg>
@@ -57,9 +57,11 @@ export default function VsMitchell1() {
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
 
       <CompareNav />
 
+      <main id="main-content">
       {/* Hero */}
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-slate-100 text-slate-500 text-xs font-medium mb-6">
@@ -168,8 +170,8 @@ export default function VsMitchell1() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 px-6 md:px-12 py-8 flex items-center justify-between flex-wrap gap-4">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+      <footer aria-label="Page footer" className="border-t border-slate-200 px-6 md:px-12 py-8 flex items-center justify-between flex-wrap gap-4">
+        <Link to="/" aria-label="ShopCommand home" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
           <HexMark size={22} />
           <span className="text-slate-400 text-sm">ShopCommand</span>
         </Link>
@@ -184,6 +186,7 @@ export default function VsMitchell1() {
           <Link to="/accessibility" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Accessibility</Link>
         </div>
       </footer>
+      </main>
 
       <CookieBanner />
     </div>

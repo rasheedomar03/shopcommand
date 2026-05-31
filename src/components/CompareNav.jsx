@@ -12,7 +12,7 @@ function HexMark({ size = 36 }) {
       .join(' ')
   const R = 28, r = R * 0.56
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64">
+    <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-hidden="true">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
       <polygon points={pts(32, 32.5, r)} fill="#0D0E14" />
     </svg>
@@ -50,8 +50,8 @@ export function CompareNav() {
 
   return (
     <>
-    <nav className="flex items-center justify-between px-5 md:px-12 h-16 border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
-      <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
+    <nav aria-label="Comparison page navigation" className="flex items-center justify-between px-5 md:px-12 h-16 border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md bg-[#FAFAF8]/90">
+      <Link to="/" aria-label="ShopCommand home" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
         <HexMark size={28} />
         <span className="text-base font-semibold tracking-tight">
           <span className="text-slate-900">Shop</span><span className="text-orange-500">Command</span>
@@ -69,6 +69,8 @@ export function CompareNav() {
         <div className="relative" ref={compareRef}>
           <button
             onClick={() => setCompareOpen(o => !o)}
+            aria-expanded={compareOpen}
+            aria-haspopup="true"
             className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-50"
           >
             Compare
@@ -108,7 +110,7 @@ export function CompareNav() {
 
     {/* Mobile overlay */}
     {mobileOpen && (
-      <div className="md:hidden fixed inset-0 top-16 z-40 bg-black/40" onClick={() => setMobileOpen(false)} />
+      <div className="md:hidden fixed inset-0 top-16 z-40 bg-black/40" onClick={() => setMobileOpen(false)} aria-hidden="true" />
     )}
 
     {/* Mobile menu */}

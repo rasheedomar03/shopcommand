@@ -12,6 +12,7 @@ function Toggle({ checked, onChange, label, description, disabled }) {
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={`Toggle ${label}`}
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={`relative flex-shrink-0 inline-flex h-5 w-9 items-center rounded-full transition-colors ${
@@ -57,10 +58,11 @@ export default function CookiePolicy() {
 
   return (
     <div className="min-h-screen bg-[#0A0B12] text-white">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-          <svg width="26" height="26" viewBox="0 0 64 64">
+      <nav aria-label="Page navigation" className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
+        <Link to="/" aria-label="ShopCommand home" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+          <svg width="26" height="26" viewBox="0 0 64 64" role="img" aria-hidden="true">
             <polygon points="32.00,4.00 56.25,18.00 56.25,46.00 32.00,60.00 7.75,46.00 7.75,18.00" fill="#F97316" />
             <polygon points="32.00,16.82 45.58,24.66 45.58,40.34 32.00,48.18 18.42,40.34 18.42,24.66" fill="#0A0B12" />
           </svg>
@@ -73,11 +75,12 @@ export default function CookiePolicy() {
         </Link>
       </nav>
 
+      <main id="main-content">
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
           <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Cookie Policy</h1>
-          <p className="text-white/40 text-sm">Last updated: May 31, 2026</p>
+          <p className="text-white/60 text-sm">Last updated: May 31, 2026</p>
         </div>
 
         <div className="prose prose-invert prose-sm max-w-none space-y-8 text-white/70 leading-relaxed">
@@ -101,20 +104,20 @@ export default function CookiePolicy() {
                 <p className="text-white/55 text-sm">Required for the application to function. Includes your login session, theme preference, and cookie consent choice. These cannot be disabled.</p>
                 <div className="mt-3 space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40 font-mono">sc_session</span>
-                    <span className="text-white/30">Authentication session</span>
+                    <span className="text-white/60 font-mono">sc_session</span>
+                    <span className="text-white/60">Authentication session</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40 font-mono">sc-theme</span>
-                    <span className="text-white/30">Light/dark theme preference</span>
+                    <span className="text-white/60 font-mono">sc-theme</span>
+                    <span className="text-white/60">Light/dark theme preference</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40 font-mono">sc_cookie_consent</span>
-                    <span className="text-white/30">Your cookie choice</span>
+                    <span className="text-white/60 font-mono">sc_cookie_consent</span>
+                    <span className="text-white/60">Your cookie choice</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40 font-mono">sc_cookie_preferences</span>
-                    <span className="text-white/30">Granular cookie preferences</span>
+                    <span className="text-white/60 font-mono">sc_cookie_preferences</span>
+                    <span className="text-white/60">Granular cookie preferences</span>
                   </div>
                 </div>
               </div>
@@ -124,8 +127,8 @@ export default function CookiePolicy() {
                 <p className="text-white/55 text-sm">Help us understand how users interact with the platform so we can improve it. We use Vercel Analytics, which is cookieless and privacy-friendly. No personal data is collected or shared with third parties.</p>
                 <div className="mt-3 space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40 font-mono">Vercel Analytics</span>
-                    <span className="text-white/30">Cookieless page view tracking</span>
+                    <span className="text-white/60 font-mono">Vercel Analytics</span>
+                    <span className="text-white/60">Cookieless page view tracking</span>
                   </div>
                 </div>
               </div>
@@ -135,16 +138,16 @@ export default function CookiePolicy() {
                 <p className="text-white/55 text-sm">Remember your in-app preferences like selected tabs, sidebar state, and local draft data. These make the app feel more responsive but are not strictly required.</p>
                 <div className="mt-3 space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40 font-mono">sc_tech_tab</span>
-                    <span className="text-white/30">Last viewed technician tab</span>
+                    <span className="text-white/60 font-mono">sc_tech_tab</span>
+                    <span className="text-white/60">Last viewed technician tab</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40 font-mono">sc_start_times</span>
-                    <span className="text-white/30">Job timer start timestamps</span>
+                    <span className="text-white/60 font-mono">sc_start_times</span>
+                    <span className="text-white/60">Job timer start timestamps</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40 font-mono">sc_week_revenue</span>
-                    <span className="text-white/30">Cached revenue calculations</span>
+                    <span className="text-white/60 font-mono">sc_week_revenue</span>
+                    <span className="text-white/60">Cached revenue calculations</span>
                   </div>
                 </div>
               </div>
@@ -219,13 +222,14 @@ export default function CookiePolicy() {
         </div>
 
         {/* Footer links */}
-        <div className="mt-16 pt-8 border-t border-white/[0.06] flex flex-wrap gap-6 text-xs text-white/30">
-          <Link to="/privacy" className="hover:text-white/60 transition-colors">Privacy Policy</Link>
-          <Link to="/terms" className="hover:text-white/60 transition-colors">Terms of Service</Link>
-          <Link to="/dpa" className="hover:text-white/60 transition-colors">DPA</Link>
-          <Link to="/accessibility" className="hover:text-white/60 transition-colors">Accessibility</Link>
-        </div>
+        <footer aria-label="Page footer" className="mt-16 pt-8 border-t border-white/[0.06] flex flex-wrap gap-6 text-xs text-white/60">
+          <Link to="/privacy" className="hover:text-white/80 transition-colors">Privacy Policy</Link>
+          <Link to="/terms" className="hover:text-white/80 transition-colors">Terms of Service</Link>
+          <Link to="/dpa" className="hover:text-white/80 transition-colors">DPA</Link>
+          <Link to="/accessibility" className="hover:text-white/80 transition-colors">Accessibility</Link>
+        </footer>
       </div>
+      </main>
     </div>
   )
 }

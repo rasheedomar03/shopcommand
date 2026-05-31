@@ -35,7 +35,7 @@ function HexMark({ size = 28, bg = '#12131A' }) {
   }
   const R = 28, r = R * 0.56
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
       <polygon points={pts(32, 32.5, r)} fill={bg} />
     </svg>
@@ -94,6 +94,7 @@ export function Sidebar({ open, onClose }) {
         <div
           className="fixed inset-0 z-30 bg-black/60 lg:hidden"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
@@ -126,7 +127,7 @@ export function Sidebar({ open, onClose }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <nav aria-label="Sidebar navigation" className="flex-1 px-3 py-4 overflow-y-auto">
           <div className="space-y-4">
             {navGroups.map(({ label, items }) => {
               const visibleItems = isAdvisor ? items.filter(i => !ADVISOR_HIDDEN.has(i.to)) : items

@@ -16,7 +16,7 @@ function HexMark({ size = 32 }) {
       .join(' ')
   const R = 28, r = R * 0.56
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64">
+    <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-hidden="true">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
       <polygon points={pts(32, 32.5, r)} fill="#0D0E14" />
     </svg>
@@ -50,7 +50,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
 
       {/* Logo */}
       <div className="flex items-center gap-3 mb-10">
@@ -180,11 +180,12 @@ export default function Login() {
         {/* Advisor shop picker */}
         {role === 'advisor' && (
           <div className="mb-5 animate-fade-in">
-            <label className="block text-xs font-medium text-text-muted mb-1.5">
+            <label htmlFor="login-shop" className="block text-xs font-medium text-text-muted mb-1.5">
               Which location are you at?
             </label>
             <div className="relative">
               <select
+                id="login-shop"
                 value={selectedShopId}
                 onChange={e => setSelectedShopId(e.target.value)}
                 className="w-full h-10 rounded-lg border border-border bg-surface pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange/30 appearance-none [&>option]:bg-surface"
@@ -202,11 +203,12 @@ export default function Login() {
         {/* Tech picker (shown when tech role selected) */}
         {role === 'tech' && (
           <div className="mb-5 animate-fade-in">
-            <label className="block text-xs font-medium text-text-muted mb-1.5">
+            <label htmlFor="login-tech" className="block text-xs font-medium text-text-muted mb-1.5">
               Which technician are you?
             </label>
             <div className="relative">
               <select
+                id="login-tech"
                 value={selectedTechId}
                 onChange={e => setSelectedTechId(e.target.value)}
                 className="w-full h-10 rounded-lg border border-border bg-surface pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange/30 appearance-none [&>option]:bg-surface"
@@ -256,6 +258,6 @@ export default function Login() {
           </button>
         )}
       </div>
-    </div>
+    </main>
   )
 }

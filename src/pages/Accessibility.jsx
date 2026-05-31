@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 export default function Accessibility() {
   return (
     <div className="min-h-screen bg-[#0A0B12] text-white">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-          <svg width="26" height="26" viewBox="0 0 64 64">
+      <nav aria-label="Page navigation" className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] sticky top-0 z-50 backdrop-blur-md bg-[#0A0B12]/80">
+        <Link to="/" aria-label="ShopCommand home" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+          <svg width="26" height="26" viewBox="0 0 64 64" role="img" aria-hidden="true">
             <polygon points="32.00,4.00 56.25,18.00 56.25,46.00 32.00,60.00 7.75,46.00 7.75,18.00" fill="#F97316" />
             <polygon points="32.00,16.82 45.58,24.66 45.58,40.34 32.00,48.18 18.42,40.34 18.42,24.66" fill="#0A0B12" />
           </svg>
@@ -19,6 +20,7 @@ export default function Accessibility() {
         </Link>
       </nav>
 
+      <main id="main-content">
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
@@ -113,15 +115,16 @@ export default function Accessibility() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
+      <footer aria-label="Page footer" className="border-t border-white/[0.06] px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
         <p className="text-slate-500 text-xs">© 2026 ShopCommand. All rights reserved.</p>
         <div className="flex gap-4">
-          <Link to="/terms" className="text-white/30 hover:text-white/60 text-xs transition-colors">Terms of Service</Link>
-          <Link to="/privacy" className="text-white/30 hover:text-white/60 text-xs transition-colors">Privacy Policy</Link>
-          <Link to="/dpa" className="text-white/30 hover:text-white/60 text-xs transition-colors">DPA</Link>
-          <Link to="/cookies" className="text-white/30 hover:text-white/60 text-xs transition-colors">Cookies</Link>
+          <Link to="/terms" className="text-white/60 hover:text-white/80 text-xs transition-colors">Terms of Service</Link>
+          <Link to="/privacy" className="text-white/60 hover:text-white/80 text-xs transition-colors">Privacy Policy</Link>
+          <Link to="/dpa" className="text-white/60 hover:text-white/80 text-xs transition-colors">DPA</Link>
+          <Link to="/cookies" className="text-white/60 hover:text-white/80 text-xs transition-colors">Cookies</Link>
         </div>
       </footer>
+      </main>
     </div>
   )
 }
