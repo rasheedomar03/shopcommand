@@ -1121,7 +1121,7 @@ export default function TechBoard() {
       else setClockError(null)
     }
   }
-  const handleLogout = () => { logout(); navigate('/login') }
+  const handleLogout = () => { logout() }
 
   const initials = tech?.name.split(' ').map(n => n[0]).join('') ?? '?'
 

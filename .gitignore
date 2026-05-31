@@ -4,11 +4,22 @@ node_modules/
 # Build output
 dist/
 
-# Environment variables
+# Environment variables — NEVER commit secrets
 .env
 .env.local
 .env.production
+.env.development
+.env.staging
 .env.*.local
+.env.test
+
+# Secrets / credentials
+*.pem
+*.key
+*.cert
+*.p12
+credentials.json
+service-account.json
 
 # IDE / Editor
 .vscode/

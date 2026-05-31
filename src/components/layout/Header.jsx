@@ -131,7 +131,6 @@ export function Header({ onMenuOpen }) {
 
   const handleLogout = () => {
     logout()
-    navigate('/')
   }
 
   return (

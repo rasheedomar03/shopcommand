@@ -88,10 +88,15 @@ export function formatHours(ms) {
 
 // ─── Input sanitization ──────────────────────────────────────────────────────
 
-/** Strip HTML tags and trim whitespace */
+/** Strip HTML tags, script content, and trim whitespace */
 export function sanitize(str) {
   if (typeof str !== 'string') return ''
-  return str.replace(/<[^>]*>/g, '').trim()
+  return str
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .trim()
 }
 
 /** Sanitize and cap length */
@@ -108,6 +113,22 @@ export function isValidEmail(email) {
 export function sanitizeVin(str) {
   if (typeof str !== 'string') return ''
   return str.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 17)
+}
+
+/** Sanitize phone: digits, spaces, dashes, parens, plus only */
+export function sanitizePhone(str) {
+  if (typeof str !== 'string') return ''
+  return str.replace(/[^\d\s\-()+ ]/g, '').slice(0, 20)
+}
+
+/** Sanitize numeric input */
+export function sanitizeNumber(str, { min, max, decimals = 2 } = {}) {
+  const num = parseFloat(str)
+  if (isNaN(num)) return 0
+  let clamped = num
+  if (min !== undefined) clamped = Math.max(min, clamped)
+  if (max !== undefined) clamped = Math.min(max, clamped)
+  return parseFloat(clamped.toFixed(decimals))
 }
 
 export const RO_STAGES = [

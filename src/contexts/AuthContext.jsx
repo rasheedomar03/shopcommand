@@ -1,93 +1,54 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { createContext, useContext, useMemo, useCallback, useEffect } from 'react'
+import { useUser, useClerk } from '@clerk/clerk-react'
 
 const AuthContext = createContext(null)
+const CACHE_KEY = 'sc_auth_cache'
 
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
-const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000  // 2 hours of inactivity
-
-function loadSession() {
+function getCachedSession() {
   try {
-    const raw = localStorage.getItem('sc_session')
-    if (!raw) return null
-    const s = JSON.parse(raw)
-    // Check absolute expiry
-    if (s.expiresAt && Date.now() > s.expiresAt) {
-      localStorage.removeItem('sc_session')
-      return null
-    }
-    // Check idle expiry
-    if (s.lastActiveAt && Date.now() - s.lastActiveAt > IDLE_TIMEOUT_MS) {
-      localStorage.removeItem('sc_session')
-      return null
-    }
-    return s
-  } catch {
-    return null
-  }
+    const raw = sessionStorage.getItem(CACHE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
 }
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(loadSession)
-  const sessionRef = useRef(session)
-  sessionRef.current = session
+  const { user, isLoaded, isSignedIn } = useUser()
+  const { signOut } = useClerk()
 
-  const login = (role, techId = null, name = null, shopId = null) => {
-    const s = {
-      role,
-      techId,
-      name,
-      shopId,
-      expiresAt: Date.now() + SESSION_TTL_MS,
-      lastActiveAt: Date.now(),
+  const session = useMemo(() => {
+    if (!isLoaded) return getCachedSession()
+    if (!isSignedIn || !user) return null
+
+    const meta = user.unsafeMetadata || {}
+    return {
+      clerkId: user.id,
+      role: meta.role || null,
+      onboarded: meta.onboarded || false,
+      name: user.fullName || user.firstName || 'User',
+      email: user.primaryEmailAddress?.emailAddress,
+      shopId: meta.shopId || null,
+      techId: meta.techId || null,
     }
-    setSession(s)
-    localStorage.setItem('sc_session', JSON.stringify(s))
-  }
+  }, [user, isLoaded, isSignedIn])
+
+  useEffect(() => {
+    if (!isLoaded) return
+    if (session) {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(session))
+    } else {
+      sessionStorage.removeItem(CACHE_KEY)
+    }
+  }, [session, isLoaded])
 
   const logout = useCallback(() => {
-    setSession(null)
-    localStorage.removeItem('sc_session')
-  }, [])
+    sessionStorage.removeItem(CACHE_KEY)
+    signOut({ redirectUrl: '/' })
+  }, [signOut])
 
-  // Update lastActiveAt on user interaction (uses ref to avoid stale closure)
-  useEffect(() => {
-    if (!session) return
-    let last = 0
-    const handler = () => {
-      if (Date.now() - last > 60_000) {
-        last = Date.now()
-        const current = sessionRef.current
-        if (!current) return
-        const updated = { ...current, lastActiveAt: Date.now() }
-        setSession(updated)
-        localStorage.setItem('sc_session', JSON.stringify(updated))
-      }
-    }
-    window.addEventListener('click', handler)
-    window.addEventListener('keydown', handler)
-    return () => {
-      window.removeEventListener('click', handler)
-      window.removeEventListener('keydown', handler)
-    }
-  }, [session?.expiresAt]) // re-bind only on new login, not every activity update
-
-  // Periodic check for session expiry (every 60s, uses ref for current session)
-  useEffect(() => {
-    if (!session) return
-    const interval = setInterval(() => {
-      const current = sessionRef.current
-      if (!current) return
-      const now = Date.now()
-      if ((current.expiresAt && now > current.expiresAt) ||
-          (current.lastActiveAt && now - current.lastActiveAt > IDLE_TIMEOUT_MS)) {
-        logout()
-      }
-    }, 60_000)
-    return () => clearInterval(interval)
-  }, [session?.expiresAt, logout])
+  const login = useCallback(() => {}, [])
 
   return (
-    <AuthContext.Provider value={{ session, login, logout }}>
+    <AuthContext.Provider value={{ session, login, logout, isLoaded }}>
       {children}
     </AuthContext.Provider>
   )

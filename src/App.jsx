@@ -9,8 +9,35 @@ function ScrollToTop() {
 
 function PageLoader() {
   return (
-    <div className="flex items-center justify-center h-full min-h-[200px]">
-      <div className="h-6 w-6 rounded-full border-2 border-orange border-t-transparent animate-spin" />
+    <div className="flex h-screen bg-background">
+      <div className="hidden lg:flex flex-col w-60 border-r border-border bg-surface">
+        <div className="h-14 px-4 flex items-center gap-2.5 border-b border-border">
+          <div className="w-7 h-7 rounded-md bg-border animate-pulse" />
+          <div className="h-4 w-28 rounded bg-border animate-pulse" />
+        </div>
+        <div className="flex-1 px-3 py-4 space-y-2">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-9 rounded-md bg-border/50 animate-pulse" style={{ animationDelay: `${i * 50}ms` }} />
+          ))}
+        </div>
+      </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="h-14 border-b border-border flex items-center px-4 gap-3">
+          <div className="h-8 w-64 rounded-md bg-border/50 animate-pulse" />
+          <div className="flex-1" />
+          <div className="h-8 w-8 rounded-md bg-border/50 animate-pulse" />
+          <div className="h-8 w-8 rounded-md bg-border/50 animate-pulse" />
+        </div>
+        <div className="flex-1 p-6 space-y-4">
+          <div className="h-8 w-48 rounded bg-border animate-pulse" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-28 rounded-xl bg-border/40 animate-pulse" style={{ animationDelay: `${i * 75}ms` }} />
+            ))}
+          </div>
+          <div className="h-64 rounded-xl bg-border/30 animate-pulse" style={{ animationDelay: '300ms' }} />
+        </div>
+      </div>
     </div>
   )
 }
@@ -19,9 +46,11 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { useAuth } from '@/contexts/AuthContext'
 
-// Eagerly load landing + login (first paint)
+// Eagerly load landing + auth (first paint)
 import Landing from '@/pages/Landing'
 import Login from '@/pages/Login'
+import SignInPage from '@/pages/SignIn'
+import SignUpPage from '@/pages/SignUp'
 
 // Lazy-load everything behind auth
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
@@ -54,27 +83,42 @@ const VsShopmonkey = lazy(() => import('@/pages/VsShopmonkey'))
 const VsMitchell1 = lazy(() => import('@/pages/VsMitchell1'))
 const VsShopWare = lazy(() => import('@/pages/VsShopWare'))
 const VsROWriter = lazy(() => import('@/pages/VsROWriter'))
+const Onboarding = lazy(() => import('@/pages/Onboarding'))
 
 // ── guards ───────────────────────────────────────────────────────────────────
 
+function RequireAuth({ children }) {
+  const { session, isLoaded } = useAuth()
+  if (!isLoaded) return <PageLoader />
+  if (!session) return <Navigate to="/sign-in" replace />
+  if (!session.onboarded) return <Navigate to="/onboarding" replace />
+  return children
+}
+
 function RequireOwner({ children }) {
-  const { session } = useAuth()
-  if (!session) return <Navigate to="/login" replace />
+  const { session, isLoaded } = useAuth()
+  if (!isLoaded) return <PageLoader />
+  if (!session) return <Navigate to="/sign-in" replace />
+  if (!session.onboarded) return <Navigate to="/onboarding" replace />
   if (session.role === 'tech') return <Navigate to="/tech-board" replace />
   return children
 }
 
 function RequireOwnerOnly({ children }) {
-  const { session } = useAuth()
-  if (!session) return <Navigate to="/login" replace />
+  const { session, isLoaded } = useAuth()
+  if (!isLoaded) return <PageLoader />
+  if (!session) return <Navigate to="/sign-in" replace />
+  if (!session.onboarded) return <Navigate to="/onboarding" replace />
   if (session.role === 'tech') return <Navigate to="/tech-board" replace />
   if (session.role === 'advisor') return <Navigate to="/dashboard" replace />
   return children
 }
 
 function RequireTech({ children }) {
-  const { session } = useAuth()
-  if (!session) return <Navigate to="/login" replace />
+  const { session, isLoaded } = useAuth()
+  if (!isLoaded) return <PageLoader />
+  if (!session) return <Navigate to="/sign-in" replace />
+  if (!session.onboarded) return <Navigate to="/onboarding" replace />
   if (session.role === 'owner' || session.role === 'advisor') return <Navigate to="/dashboard" replace />
   return children
 }
@@ -132,7 +176,10 @@ export default function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/sign-in/*" element={<SignInPage />} />
+        <Route path="/sign-up/*" element={<SignUpPage />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/login" element={<Navigate to="/sign-in" replace />} />
         <Route path="/status/:roId" element={<CustomerStatus />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />

@@ -84,7 +84,6 @@ export function Sidebar({ open, onClose }) {
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
   }
 
   return (
