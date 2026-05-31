@@ -191,6 +191,7 @@ export default function Privacy() {
           <Link to="/terms" className="text-white/30 hover:text-white/60 text-xs transition-colors">Terms of Service</Link>
           <Link to="/dpa" className="text-white/30 hover:text-white/60 text-xs transition-colors">DPA</Link>
           <Link to="/cookies" className="text-white/30 hover:text-white/60 text-xs transition-colors">Cookies</Link>
+          <Link to="/accessibility" className="text-white/30 hover:text-white/60 text-xs transition-colors">Accessibility</Link>
         </div>
       </footer>
     </div>

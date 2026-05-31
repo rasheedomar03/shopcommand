@@ -223,6 +223,7 @@ export default function CookiePolicy() {
           <Link to="/privacy" className="hover:text-white/60 transition-colors">Privacy Policy</Link>
           <Link to="/terms" className="hover:text-white/60 transition-colors">Terms of Service</Link>
           <Link to="/dpa" className="hover:text-white/60 transition-colors">DPA</Link>
+          <Link to="/accessibility" className="hover:text-white/60 transition-colors">Accessibility</Link>
         </div>
       </div>
     </div>
