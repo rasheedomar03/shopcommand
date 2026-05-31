@@ -4,8 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { DataProvider } from './contexts/DataContext'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/react'
+import { ConsentGatedAnalytics } from './components/ConsentGatedAnalytics'
 import { TooltipProvider } from './components/ui/Tooltip'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import App from './App.jsx'
@@ -20,8 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <TooltipProvider>
               <BrowserRouter>
                 <App />
-                <Analytics />
-                <SpeedInsights />
+                <ConsentGatedAnalytics />
               </BrowserRouter>
             </TooltipProvider>
           </AuthProvider>

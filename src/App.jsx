@@ -47,6 +47,7 @@ const Appointments = lazy(() => import('@/pages/Appointments'))
 const Terms = lazy(() => import('@/pages/Terms'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
 const DPA = lazy(() => import('@/pages/DPA'))
+const CookiePolicy = lazy(() => import('@/pages/CookiePolicy'))
 const VsTekmetric = lazy(() => import('@/pages/VsTekmetric'))
 const VsShopmonkey = lazy(() => import('@/pages/VsShopmonkey'))
 const VsMitchell1 = lazy(() => import('@/pages/VsMitchell1'))
@@ -135,6 +136,7 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/dpa" element={<DPA />} />
+        <Route path="/cookies" element={<CookiePolicy />} />
         <Route path="/compare/tekmetric" element={<VsTekmetric />} />
         <Route path="/compare/shopmonkey" element={<VsShopmonkey />} />
         <Route path="/compare/mitchell1" element={<VsMitchell1 />} />
