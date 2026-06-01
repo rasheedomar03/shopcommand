@@ -69,7 +69,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(() => {}, [])
 
   return (
-    <AuthContext.Provider value={{ session, login, logout, demoLogin, isLoaded }}>
+    <AuthContext.Provider value={{ session, login, logout, demoLogin, isLoaded: demoActive || isLoaded }}>
       {children}
     </AuthContext.Provider>
   )
