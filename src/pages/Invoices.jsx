@@ -94,7 +94,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose }) {
+function InvoiceDetail({ invoice, onClose, shops }) {
   if (!invoice) return null
   const shop = shops.find(s => s.id === invoice.shopId)
 
@@ -283,7 +283,7 @@ export default function Invoices() {
         )}
       </div>
 
-      <InvoiceDetail invoice={selected} onClose={() => setSelected(null)} />
+      <InvoiceDetail invoice={selected} onClose={() => setSelected(null)} shops={shops} />
     </div>
   )
 }

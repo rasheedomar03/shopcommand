@@ -53,7 +53,7 @@ const mockConversations = [
   },
 ]
 
-function ConversationList({ conversations, selected, onSelect, search }) {
+function ConversationList({ conversations, selected, onSelect, search, shops }) {
   const filtered = conversations.filter(c => {
     const q = search.toLowerCase()
     return !q || c.customerName.toLowerCase().includes(q) || c.vehicle.toLowerCase().includes(q)
@@ -104,7 +104,7 @@ function ConversationList({ conversations, selected, onSelect, search }) {
   )
 }
 
-function MessageThread({ conversation, onBack }) {
+function MessageThread({ conversation, onBack, shops }) {
   const [draft, setDraft] = useState('')
   const messagesEnd = useRef(null)
 
@@ -238,14 +238,14 @@ export default function Messages() {
             />
           </div>
         </div>
-        <ConversationList conversations={scoped} selected={selected} onSelect={setSelected} search={search} />
+        <ConversationList conversations={scoped} selected={selected} onSelect={setSelected} search={search} shops={shops} />
       </div>
 
       <div className={cn(
         'flex-1 flex flex-col min-w-0',
         !selected ? 'hidden lg:flex' : 'flex'
       )}>
-        <MessageThread conversation={selected} onBack={() => setSelected(null)} />
+        <MessageThread conversation={selected} onBack={() => setSelected(null)} shops={shops} />
       </div>
     </div>
   )

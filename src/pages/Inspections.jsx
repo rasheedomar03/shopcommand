@@ -106,7 +106,7 @@ function ConditionDot({ condition }) {
   )
 }
 
-function InspectionDetail({ inspection, onClose }) {
+function InspectionDetail({ inspection, onClose, shops }) {
   if (!inspection) return null
   const shop = shops.find(s => s.id === inspection.shopId)
   const categories = [...new Set(inspection.items.map(i => i.category))]
@@ -293,7 +293,7 @@ export default function Inspections() {
         <div className="py-12 text-center text-sm text-text-muted">No inspections found</div>
       )}
 
-      <InspectionDetail inspection={selected} onClose={() => setSelected(null)} />
+      <InspectionDetail inspection={selected} onClose={() => setSelected(null)} shops={shops} />
     </div>
   )
 }
