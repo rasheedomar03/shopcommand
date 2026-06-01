@@ -311,7 +311,7 @@ function FoundingSection() {
   const remaining = TOTAL_SPOTS - CLAIMED_SPOTS
   const pct = Math.round((CLAIMED_SPOTS / TOTAL_SPOTS) * 100)
 
-  const [form, setForm] = useState({ name: '', email: '', shop: '' })
+  const [form, setForm] = useState({ name: '', email: '', locations: '' })
   const [honeypot, setHoneypot] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -334,10 +334,10 @@ function FoundingSection() {
     // Sanitize all inputs
     const name  = sanitizeField(form.name, 100)
     const email = sanitizeField(form.email, 150)
-    const shop  = sanitizeField(form.shop, 150)
+    const locations = sanitizeField(form.locations, 20)
 
-    if (!name || !email || !shop) {
-      setError('Please fill in all three fields.')
+    if (!name || !email) {
+      setError('Please fill in your name and email.')
       return
     }
     if (!isValidEmail(email)) {
@@ -362,7 +362,7 @@ function FoundingSection() {
       const res = await fetch('https://formspree.io/f/mwvzeojn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name, email, shop, _gotcha: '' }),
+        body: JSON.stringify({ name, email, locations: locations || 'Not specified', _gotcha: '' }),
       })
       if (!res.ok) throw new Error('Submit failed')
 
@@ -394,6 +394,14 @@ function FoundingSection() {
         </div>
 
         <div>
+          {/* Walkthrough alternative — low friction, shown first */}
+          <p className="text-center text-slate-400 text-base mb-8">
+            Want to see it first?{' '}
+            <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
+              Book a free 15-min walkthrough →
+            </a>
+          </p>
+
           {/* Spot counter */}
           <div className="mb-8">
             <div className="flex justify-between text-xs mb-2">
@@ -407,14 +415,6 @@ function FoundingSection() {
               />
             </div>
           </div>
-
-          {/* Walkthrough alternative */}
-          <p className="text-center text-slate-400 text-base mb-8">
-            Want to see it first?{' '}
-            <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
-              Book a free 15-min walkthrough →
-            </a>
-          </p>
 
           {/* Form / success */}
           <div className="rounded-2xl border border-orange-200 bg-white p-7 shadow-sm">
@@ -470,23 +470,26 @@ function FoundingSection() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="founding-shop" className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">Shop name</label>
-                  <input
-                    id="founding-shop"
-                    type="text"
-                    placeholder="North Houston Auto"
-                    autoComplete="organization"
-                    value={form.shop}
-                    onChange={e => setForm(f => ({ ...f, shop: e.target.value }))}
-                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
-                  />
+                  <label htmlFor="founding-locations" className="block text-xs text-slate-500 font-medium mb-1.5 uppercase tracking-wider">How many locations? <span className="text-slate-400 normal-case tracking-normal">(optional)</span></label>
+                  <select
+                    id="founding-locations"
+                    value={form.locations}
+                    onChange={e => setForm(f => ({ ...f, locations: e.target.value }))}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors appearance-none"
+                  >
+                    <option value="">Select...</option>
+                    <option value="1">1 location</option>
+                    <option value="2-3">2-3 locations</option>
+                    <option value="4-10">4-10 locations</option>
+                    <option value="10+">10+ locations</option>
+                  </select>
                 </div>
                 {error && <p className="text-red-600 text-xs" role="alert">{error}</p>}
                 <button
                   type="submit"
                   disabled={submitting}
                   className="w-full h-12 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm">
-                  {submitting ? 'Reserving your spot…' : 'Reserve my founding spot →'}
+                  {submitting ? 'Locking in your rate…' : 'Lock in $100/mo →'}
                 </button>
                 <p className="text-center text-slate-400 text-xs">No credit card. No commitment. We'll reach out within 24 hours.</p>
               </form>
@@ -506,14 +509,12 @@ function FoundingSection() {
 function ROICalculator() {
   const [locations, setLocations] = useState(2)
   const [managerCalls, setManagerCalls] = useState(4)
-  const [currentCost, setCurrentCost] = useState(300)
 
   // Each call averages ~8 min. Valued at $50/hr for owner time.
   const minutesSavedPerDay = managerCalls * locations * 8
   const hoursSavedPerMonth = Math.round((minutesSavedPerDay * 22) / 60)
   const timeSavingsPerMonth = Math.round(hoursSavedPerMonth * 50)
-  const softwareSavings = Math.max(0, (currentCost * locations) - (locations <= 2 ? 100 : 125) * locations)
-  const totalSavings = timeSavingsPerMonth + softwareSavings
+  const shopCommandCost = (locations <= 2 ? 100 : 125) * locations
 
   return (
     <section className="border-t border-slate-200 py-24 px-6">
@@ -566,49 +567,27 @@ function ROICalculator() {
               </div>
             </div>
 
-            {/* Current cost */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label htmlFor="roi-cost" className="text-slate-700 text-sm font-medium">Current software cost per location?</label>
-                <span className="text-orange-600 text-sm font-semibold tabular-nums" aria-hidden="true">${currentCost}/mo</span>
-              </div>
-              <input
-                id="roi-cost"
-                type="range" min={0} max={800} step={25} value={currentCost}
-                aria-valuenow={currentCost}
-                aria-valuetext={`$${currentCost} per month`}
-                onChange={e => setCurrentCost(+e.target.value)}
-                className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-orange-500"
-              />
-              <div className="flex justify-between text-xs text-slate-500 mt-1.5" aria-hidden="true">
-                <span>$0</span><span>$800</span>
-              </div>
-            </div>
           </div>
 
           {/* Results */}
           <div className="mt-10 pt-8 border-t border-slate-100">
-            <div className="grid sm:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-slate-900 tabular-nums">{hoursSavedPerMonth}<span className="text-lg text-slate-400 font-medium ml-1">hrs</span></div>
                 <div className="text-slate-500 text-xs mt-1">Owner time saved per month</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-slate-900 tabular-nums">${softwareSavings.toLocaleString()}</div>
-                <div className="text-slate-500 text-xs mt-1">Software cost reduction</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-orange-600 tabular-nums">${totalSavings.toLocaleString()}</div>
-                <div className="text-slate-500 text-xs mt-1">Total monthly value</div>
+                <div className="text-3xl font-bold text-orange-600 tabular-nums">${timeSavingsPerMonth.toLocaleString()}</div>
+                <div className="text-slate-500 text-xs mt-1">Value of your time back</div>
               </div>
             </div>
-            {totalSavings > 0 && (
+            {timeSavingsPerMonth > 0 && (
               <div className="mt-8 pt-6 border-t border-slate-100 text-center">
                 <div className="text-slate-400 text-xs uppercase tracking-widest font-medium mb-2">That's</div>
-                <div className="text-4xl md:text-5xl font-bold text-orange-600 tabular-nums">${(totalSavings * 12).toLocaleString()}</div>
-                <div className="text-slate-500 text-sm mt-1">in value per year</div>
+                <div className="text-4xl md:text-5xl font-bold text-orange-600 tabular-nums">${(timeSavingsPerMonth * 12).toLocaleString()}</div>
+                <div className="text-slate-500 text-sm mt-1">in owner time per year</div>
                 <p className="text-slate-400 text-xs mt-4">
-                  Based on {minutesSavedPerDay} fewer minutes on the phone per day and {locations} location{locations > 1 ? 's' : ''} on ShopCommand.
+                  Based on {minutesSavedPerDay} fewer minutes on the phone per day. ShopCommand costs ${shopCommandCost}/mo for {locations} location{locations > 1 ? 's' : ''}.
                 </p>
               </div>
             )}
@@ -617,7 +596,7 @@ function ROICalculator() {
 
         <div className="text-center mt-8">
           <a href="#founding" className="inline-flex px-7 py-3.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
-            Lock in $100/mo before it's gone →
+            Lock in $100/mo →
           </a>
         </div>
       </div>
@@ -737,11 +716,11 @@ export default function Landing() {
         </div>
 
         <div className="flex items-center gap-3 flex-shrink-0">
-          <Link to="/login" className="hidden sm:inline-flex px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
-            See the demo
+          <Link to="/demo" className="hidden sm:inline-flex px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+            Try the demo
           </Link>
           <a href="#founding" className="hidden sm:inline-flex px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors whitespace-nowrap">
-            Reserve your spot
+            Lock in $100/mo
           </a>
           {/* Mobile hamburger */}
           <button
@@ -786,11 +765,11 @@ export default function Landing() {
             </a>
           ))}
           <Link
-            to="/login"
+            to="/demo"
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
           >
-            See the demo
+            Try the demo
           </Link>
 
           {/* Compare section */}
@@ -821,7 +800,7 @@ export default function Landing() {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-center h-12 rounded-xl text-sm font-semibold bg-orange-500 active:bg-orange-600 text-white transition-colors"
             >
-              Reserve your spot →
+              Lock in $100/mo →
             </a>
           </div>
         </div>
@@ -835,16 +814,16 @@ export default function Landing() {
           <div className="animate-fade-up">
             <a href="#founding" className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-300 bg-orange-50 text-orange-700 text-xs font-medium mb-6 hover:border-orange-400 transition-colors">
               <Car size={12} className="text-orange-500" />
-              Auto repair shop management software
+              Early access: auto repair shop management software
             </a>
 
             <h1
               className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 mb-5 leading-[1.1]"
               style={{ letterSpacing: '-0.03em' }}
             >
-              Stop flying blind.
+              Your shops are running right now.
               <br />
-              <span className="text-orange-500">Run your auto shop on data.</span>
+              <span className="text-orange-500">Do you know how they're doing?</span>
             </h1>
 
             <p className="text-slate-500 text-base md:text-lg max-w-lg mb-6 leading-relaxed">
@@ -865,15 +844,18 @@ export default function Landing() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-start gap-3">
-              <Link to="/login" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
-                See the dashboard →
-              </Link>
+              <a href="#founding" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
+                Lock in $100/mo →
+              </a>
               <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 How it works
               </a>
             </div>
             <p className="text-slate-400 text-sm mt-3">
-              Not ready to commit?{' '}
+              <Link to="/demo" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
+                Try the live demo →
+              </Link>
+              <span className="mx-2 text-slate-300">|</span>
               <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
                 Book a free 15-min walkthrough →
               </a>
@@ -927,7 +909,7 @@ export default function Landing() {
       <section className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
-            Everything your shop needs
+            One dashboard. Every location. Every tech. Every RO.
           </h2>
           <p className="text-slate-500 max-w-md mx-auto leading-relaxed">Built specifically for auto repair shops. Fast enough that you never wait on a loading screen.</p>
         </div>
@@ -1154,10 +1136,11 @@ export default function Landing() {
                   <div className="text-orange-600 text-xs uppercase tracking-widest mb-3 font-medium">Founding Member</div>
                   <div className="flex items-end gap-2 mb-1">
                     <span className="text-5xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$100</span>
-                    <div className="mb-2">
-                      <div className="text-slate-400 text-sm line-through leading-none mb-0.5">$175</div>
-                      <div className="text-slate-500 text-xs">/mo forever</div>
-                    </div>
+                    <span className="text-slate-500 text-sm mb-2">/mo</span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg text-slate-400 line-through font-semibold">$175/mo</span>
+                    <span className="text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">Save 43% forever</span>
                   </div>
                   <p className="text-slate-500 text-xs leading-relaxed">Single shop. Locked in for life: price never goes up as long as you stay subscribed.</p>
                 </div>
@@ -1176,7 +1159,7 @@ export default function Landing() {
                 </div>
                 <a href="#founding"
                   className="mt-auto w-full py-3 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors text-center shadow-sm">
-                  Reserve my founding spot →
+                  Lock in $100/mo →
                 </a>
               </div>
 
@@ -1297,12 +1280,12 @@ export default function Landing() {
             <a
               href="#founding"
               className="px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
-              Reserve your founding spot: {TOTAL_SPOTS - CLAIMED_SPOTS} left →
+              Lock in $100/mo: {TOTAL_SPOTS - CLAIMED_SPOTS} spots left →
             </a>
             <Link
-              to="/login"
+              to="/demo"
               className="px-6 py-3.5 rounded-xl text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
-              See the dashboard
+              Try the demo
             </Link>
           </div>
       </section>

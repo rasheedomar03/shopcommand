@@ -46,6 +46,14 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { useAuth } from '@/contexts/AuthContext'
 
+function DemoEntry() {
+  const { demoLogin } = useAuth()
+  const [ready, setReady] = useState(false)
+  useEffect(() => { demoLogin(); setReady(true) }, [demoLogin])
+  if (!ready) return <PageLoader />
+  return <Navigate to="/dashboard" replace />
+}
+
 // Eagerly load landing + auth (first paint)
 import Landing from '@/pages/Landing'
 import Login from '@/pages/Login'
@@ -179,6 +187,7 @@ export default function App() {
         <Route path="/sign-in/*" element={<SignInPage />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/demo" element={<DemoEntry />} />
         <Route path="/login" element={<Navigate to="/sign-in" replace />} />
         <Route path="/status/:roId" element={<CustomerStatus />} />
         <Route path="/terms" element={<Terms />} />
