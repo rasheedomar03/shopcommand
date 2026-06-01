@@ -50,7 +50,9 @@ export default function SignUpPage() {
             formFieldErrorText: 'text-red-400',
             identityPreviewEditButton: 'text-orange',
             alert: 'bg-red-500/10 border-red-500/20 text-red-400',
+            footerPagesLink: 'hidden',
           },
+          layout: { unsafe_disableDevelopmentModeWarnings: true },
         }}
       />
 
