@@ -76,7 +76,7 @@ export function Sidebar({ open, onClose }) {
   const { logout, session } = useAuth()
   const { parts, shops } = useData()
   const navigate = useNavigate()
-  const hexBg = theme === 'light' ? '#FFFFFF' : '#12131A'
+  const hexBg = '#0D0E14'
   const isAdvisor = session?.role === 'advisor'
   const advisorShop = isAdvisor && session?.shopId ? shops.find(s => s.id === session.shopId) : null
   const scopedParts = isAdvisor ? parts.filter(p => p.shopId === session.shopId) : parts

@@ -719,6 +719,9 @@ export default function Landing() {
           <Link to="/demo" className="hidden sm:inline-flex px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
             Try the demo
           </Link>
+          <Link to="/sign-in" className="hidden sm:inline-flex px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+            Sign in
+          </Link>
           <a href="#founding" className="hidden sm:inline-flex px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors whitespace-nowrap">
             Lock in $100/mo
           </a>
@@ -770,6 +773,13 @@ export default function Landing() {
             className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
           >
             Try the demo
+          </Link>
+          <Link
+            to="/sign-in"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+          >
+            Sign in
           </Link>
 
           {/* Compare section */}

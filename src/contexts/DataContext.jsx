@@ -5,6 +5,10 @@ import { api, setTokenProvider } from '@/lib/api'
 import {
   parts as initialParts,
   cannedServices,
+  shops as mockShops,
+  technicians as mockTechnicians,
+  repairOrders as mockRepairOrders,
+  customers as mockCustomers,
 } from '@/data/mock'
 
 const DataContext = createContext(null)
@@ -111,9 +115,28 @@ export function DataProvider({ children }) {
   const [jobTimers, setJobTimers] = useState(() => load('sc_job_timers', {}))
   const [notifications, setNotifications] = useState(() => load('sc_notifications', []))
 
+  // ── Demo mode: load mock data directly, skip API ─────────────────────────
+  useEffect(() => {
+    if (!session?.demo) return
+    const today = new Date()
+    const demoROs = mockRepairOrders.map((ro, i) => {
+      const offset = i % 11
+      const d = new Date(today)
+      d.setDate(d.getDate() - offset)
+      const ymd = d.toISOString().slice(0, 19)
+      return { ...ro, created: ymd, updated: ymd }
+    })
+    setShops(mockShops)
+    setTechnicians(mockTechnicians)
+    setRepairOrders(demoROs)
+    setCustomers(mockCustomers)
+    setClockedInTechs(new Set(mockTechnicians.slice(0, 8).map(t => t.id)))
+    setLoading(false)
+  }, [session?.demo])
+
   // ── Fetch all data from API when session is ready ────────────────────────
   const fetchAll = useCallback(async () => {
-    if (!session?.onboarded) return
+    if (!session?.onboarded || session?.demo) return
     setLoading(true)
     try {
       const [shopsData, techsData, rosData, custData] = await Promise.all([
@@ -138,13 +161,13 @@ export function DataProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }, [session?.onboarded])
+  }, [session?.onboarded, session?.demo])
 
   useEffect(() => {
-    if (tokenInjected.current && session?.onboarded) {
+    if (tokenInjected.current && session?.onboarded && !session?.demo) {
       fetchAll()
     }
-  }, [fetchAll, session?.onboarded])
+  }, [fetchAll, session?.onboarded, session?.demo])
 
   // ── shop CRUD ─────────────────────────────────────────────────────────────
 
