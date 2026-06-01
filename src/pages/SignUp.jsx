@@ -1,8 +1,7 @@
 import { SignUp as ClerkSignUp } from '@clerk/clerk-react'
 import { Link } from 'react-router-dom'
-import { useTheme } from '@/contexts/ThemeContext'
 
-function HexMark({ size = 32, bg = '#12131A' }) {
+function HexMark({ size = 32 }) {
   const pts = (cx, cy, r) =>
     [90, 30, -30, -90, -150, 150]
       .map(deg => {
@@ -14,22 +13,19 @@ function HexMark({ size = 32, bg = '#12131A' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-hidden="true">
       <polygon points={pts(32, 32, R)} fill="#F97316" />
-      <polygon points={pts(32, 32.5, r)} fill={bg} />
+      <polygon points={pts(32, 32.5, r)} fill="#0D0E14" />
     </svg>
   )
 }
 
 export default function SignUpPage() {
-  const { theme } = useTheme()
-  const hexBg = theme === 'light' ? '#FFFFFF' : '#12131A'
-
   return (
     <main className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
-        <HexMark size={32} bg={hexBg} />
+        <HexMark size={32} />
         <span className="text-2xl font-semibold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-          <span className="text-text-primary">Shop</span>
-          <span className="text-orange">Command</span>
+          <span className="text-slate-900">Shop</span>
+          <span className="text-orange-500">Command</span>
         </span>
       </Link>
 
