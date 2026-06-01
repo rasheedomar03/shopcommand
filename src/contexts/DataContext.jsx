@@ -1,40 +1,75 @@
-/**
- * DataContext — mutable in-memory store for technicians and repairOrders.
- * Both are persisted to localStorage so changes survive refresh and are
- * shared between the owner dashboard and the tech board.
- *
- * Everything else (shops, customers, parts, alerts) is still imported
- * directly from mock.js because we're not adding CRUD for those yet.
- */
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { useAuth as useClerkAuth } from '@clerk/clerk-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { api, setTokenProvider } from '@/lib/api'
 import {
-  technicians as initialTechnicians,
-  repairOrders as initialRepairOrders,
   parts as initialParts,
-  shops as initialShops,
-  customers,
+  cannedServices,
 } from '@/data/mock'
 
-// SMS templates fired on stage transitions.
-// PRODUCTION: replace console.log block with → POST /api/sms/send
-const SMS_TEMPLATES = {
-  'Estimate':       (ro, shop) => `Hi! ${shop.name} has received your vehicle and is preparing an estimate for your ${ro.vehicle}. We'll text you shortly with details.`,
-  'EstimateReady':  (ro, shop, total) => `Your estimate for your ${ro.vehicle} is ready — $${Number(total).toFixed(2)}. Reply YES to approve or call us at ${shop.phone}. — ${shop.name}`,
-  'Approved':      (ro, shop) => `Hi! We've approved the estimate for your ${ro.vehicle} — $${ro.total}. Work begins shortly. — ${shop.name}`,
-  'Waiting Parts': (ro, shop) => `Update on your ${ro.vehicle}: parts have been ordered and we'll text you when they arrive. — ${shop.name}`,
-  'In Progress':   (ro, shop) => `Your ${ro.vehicle} is now being worked on. We'll text you when it's ready. — ${shop.name}`,
-  'Complete':      (ro, shop) => `Great news! Your ${ro.vehicle} is ready for pickup at ${shop.name}. See you soon!`,
-  'Invoiced':      (ro, shop) => `Your invoice is ready — $${ro.total} for your ${ro.vehicle}. ${shop.name} will send a payment link shortly.`,
-  'Paid':          (ro, shop) => `Payment received. Thanks for choosing ${shop.name}! Drive safe.`,
-}
-
-function fmt12(time24) {
-  if (!time24) return ''
-  const [h, m] = time24.split(':').map(Number)
-  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`
-}
-
 const DataContext = createContext(null)
+
+// Transform API snake_case → camelCase so all existing pages keep working
+function transformShop(s) {
+  return {
+    ...s,
+    orgId: s.org_id,
+    createdAt: s.created_at,
+    updatedAt: s.updated_at,
+    // UI fields not in DB yet — safe defaults
+    openROs: 0,
+    revenue: { today: 0, mtd: 0, ytd: 0 },
+    avgTicket: 0,
+    efficiency: 0,
+    activeTechs: 0,
+    status: 'open',
+    monthlyTarget: 0,
+  }
+}
+
+function transformTech(t) {
+  return {
+    ...t,
+    shopId: t.shop_id,
+    shopName: t.shop_name,
+    clerkId: t.clerk_id,
+    activeROs: Number(t.active_ros || 0),
+    entriesToday: Number(t.entries_today || 0),
+    clockedInSince: t.clocked_in_since,
+    createdAt: t.created_at,
+  }
+}
+
+function transformRO(ro) {
+  return {
+    ...ro,
+    shopId: ro.shop_id,
+    customerId: ro.customer_id,
+    vehicleId: ro.vehicle_id,
+    techId: ro.tech_id,
+    advisorId: ro.advisor_id,
+    roNumber: ro.ro_number,
+    customerName: ro.customer_name || '',
+    customerEmail: ro.customer_email,
+    customerPhone: ro.customer_phone,
+    vehicle: [ro.vehicle_year, ro.vehicle_make, ro.vehicle_model].filter(Boolean).join(' '),
+    techName: ro.tech_name || 'Unassigned',
+    advisorName: ro.advisor_name,
+    shopName: ro.shop_name,
+    total: Number(ro.total || 0),
+    created: ro.created_at,
+    updated: ro.updated_at,
+  }
+}
+
+function transformCustomer(c) {
+  return {
+    ...c,
+    orgId: c.org_id,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  }
+}
 
 function load(key, fallback) {
   try {
@@ -50,284 +85,290 @@ function save(key, value) {
 }
 
 export function DataProvider({ children }) {
-  const [technicians, setTechnicians] = useState(() =>
-    load('sc_technicians', initialTechnicians)
-  )
-  const [repairOrders, setRepairOrders] = useState(() =>
-    load('sc_ros', initialRepairOrders)
-  )
-  const [clockedInTechs, setClockedInTechs] = useState(() =>
-    new Set(load('sc_clocked_in', []))
-  )
-  const [timeEntries, setTimeEntries] = useState(() =>
-    load('sc_time_entries', [])
-  )
-  const [parts, setParts] = useState(() =>
-    load('sc_parts', initialParts)
-  )
-  const [jobTimers, setJobTimers] = useState(() =>
-    load('sc_job_timers', {})
-  )
-  const [shops, setShops] = useState(() =>
-    load('sc_shops', initialShops)
-  )
-  const [notifications, setNotifications] = useState(() =>
-    load('sc_notifications', [])
-  )
+  const { getToken } = useClerkAuth()
+  const { session } = useAuth()
+  const tokenInjected = useRef(false)
 
-  // ── SMS helpers ───────────────────────────────────────────────────────────
+  // Inject Clerk token provider into api.js once
+  useEffect(() => {
+    if (getToken && !tokenInjected.current) {
+      setTokenProvider(getToken)
+      tokenInjected.current = true
+    }
+  }, [getToken])
 
-  const triggerStageSMS = (ro, newStage) => {
-    const template = SMS_TEMPLATES[newStage]
-    if (!template) return
-    const shop     = shops.find(s => s.id === ro.shopId)
-    const customer = customers.find(c => c.name === ro.customerName)
-    if (!shop || !customer) return
-    // ─── PRODUCTION: swap this block for a real API call ───────────────────
-    // await fetch('/api/sms/send', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ to: customer.phone, from: shop.twilioPhone, body }),
-    // })
-    // ───────────────────────────────────────────────────────────────────────
-    // POST /api/sms/send when backend is ready
-    // { to: customer.phone, from: shop.twilioPhone, body: template(ro, shop) }
-  }
+  // ── API-backed state ─────────────────────────────────────────────────────
+  const [shops, setShops] = useState([])
+  const [technicians, setTechnicians] = useState([])
+  const [repairOrders, setRepairOrders] = useState([])
+  const [customers, setCustomers] = useState([])
+  const [clockedInTechs, setClockedInTechs] = useState(new Set())
+  const [timeEntries, setTimeEntries] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  // ── notifications ─────────────────────────────────────────────────────────
+  // ── localStorage-only state (no API yet) ─────────────────────────────────
+  const [parts, setParts] = useState(() => load('sc_parts', initialParts))
+  const [jobTimers, setJobTimers] = useState(() => load('sc_job_timers', {}))
+  const [notifications, setNotifications] = useState(() => load('sc_notifications', []))
 
-  const addNotification = (notification) => {
+  // ── Fetch all data from API when session is ready ────────────────────────
+  const fetchAll = useCallback(async () => {
+    if (!session?.onboarded) return
+    setLoading(true)
+    try {
+      const [shopsData, techsData, rosData, custData] = await Promise.all([
+        api('/api/shops').catch(() => []),
+        api('/api/technicians').catch(() => []),
+        api('/api/repair-orders').catch(() => []),
+        api('/api/customers').catch(() => []),
+      ])
+      setShops(shopsData.map(transformShop))
+      setTechnicians(techsData.map(transformTech))
+      setRepairOrders(rosData.map(transformRO))
+      setCustomers(custData.map(transformCustomer))
+
+      // Derive clocked-in techs from technician data
+      const clockedIn = new Set()
+      for (const t of techsData) {
+        if (t.clocked_in_since) clockedIn.add(t.id)
+      }
+      setClockedInTechs(clockedIn)
+    } catch {
+      // silent — individual catches above prevent full failure
+    } finally {
+      setLoading(false)
+    }
+  }, [session?.onboarded])
+
+  useEffect(() => {
+    if (tokenInjected.current && session?.onboarded) {
+      fetchAll()
+    }
+  }, [fetchAll, session?.onboarded])
+
+  // ── shop CRUD ─────────────────────────────────────────────────────────────
+
+  const addShop = useCallback(async (shop) => {
+    const row = await api('/api/shops', { method: 'POST', body: shop })
+    const transformed = transformShop(row)
+    setShops(prev => [...prev, transformed])
+    return transformed
+  }, [])
+
+  const updateShop = useCallback(async (id, patch) => {
+    const row = await api('/api/shops', { method: 'PUT', params: { id }, body: patch })
+    const transformed = transformShop(row)
+    setShops(prev => prev.map(s => s.id === id ? transformed : s))
+    return transformed
+  }, [])
+
+  const removeShop = useCallback(async (id) => {
+    await api('/api/shops', { method: 'DELETE', params: { id } })
+    setShops(prev => prev.filter(s => s.id !== id))
+  }, [])
+
+  // ── customer CRUD ────────────────────────────────────────────────────────
+
+  const addCustomer = useCallback(async (cust) => {
+    const row = await api('/api/customers', { method: 'POST', body: cust })
+    const transformed = transformCustomer(row)
+    setCustomers(prev => [transformed, ...prev])
+    return transformed
+  }, [])
+
+  const updateCustomer = useCallback(async (id, patch) => {
+    const row = await api('/api/customers', { method: 'PUT', params: { id }, body: patch })
+    const transformed = transformCustomer(row)
+    setCustomers(prev => prev.map(c => c.id === id ? transformed : c))
+    return transformed
+  }, [])
+
+  const removeCustomer = useCallback(async (id) => {
+    await api('/api/customers', { method: 'DELETE', params: { id } })
+    setCustomers(prev => prev.filter(c => c.id !== id))
+  }, [])
+
+  // ── technician CRUD ──────────────────────────────────────────────────────
+
+  const addTechnician = useCallback(async (tech) => {
+    const row = await api('/api/technicians', { method: 'POST', body: tech })
+    const transformed = transformTech(row)
+    setTechnicians(prev => [...prev, transformed])
+    return transformed
+  }, [])
+
+  const removeTechnician = useCallback(async (techId) => {
+    await api('/api/technicians', { method: 'DELETE', params: { id: techId } })
+    setTechnicians(prev => prev.filter(t => t.id !== techId))
+  }, [])
+
+  // ── repair order CRUD ────────────────────────────────────────────────────
+
+  const addRepairOrder = useCallback(async (ro) => {
+    const row = await api('/api/repair-orders', { method: 'POST', body: ro })
+    const transformed = transformRO(row)
+    setRepairOrders(prev => [transformed, ...prev])
+    return transformed
+  }, [])
+
+  const updateRepairOrder = useCallback(async (id, patch) => {
+    const row = await api('/api/repair-orders', { method: 'PUT', params: { id }, body: patch })
+    const transformed = transformRO(row)
+    setRepairOrders(prev => prev.map(r => r.id === id ? transformed : r))
+    return transformed
+  }, [])
+
+  const sendEstimateReady = useCallback(() => {
+    // placeholder — SMS integration not built yet
+  }, [])
+
+  // ── clock in/out ─────────────────────────────────────────────────────────
+
+  const clockIn = useCallback(async (techId) => {
+    try {
+      await api('/api/time-entries', { method: 'POST', body: { tech_id: techId } })
+      setClockedInTechs(prev => {
+        const next = new Set(prev)
+        next.add(techId)
+        return next
+      })
+    } catch (err) {
+      return { error: err.message }
+    }
+  }, [])
+
+  const clockOut = useCallback(async (techId) => {
+    // Find the open time entry for this tech
+    try {
+      const entries = await api('/api/time-entries', { params: { tech_id: techId } })
+      const open = entries.find(e => !e.clock_out)
+      if (open) {
+        await api('/api/time-entries', { method: 'PUT', params: { id: open.id } })
+      }
+      setClockedInTechs(prev => {
+        const next = new Set(prev)
+        next.delete(techId)
+        return next
+      })
+    } catch (err) {
+      return { error: err.message }
+    }
+  }, [])
+
+  // ── notifications (localStorage only) ────────────────────────────────────
+
+  const addNotification = useCallback((notification) => {
     const n = { id: crypto.randomUUID(), read: false, createdAt: new Date().toISOString(), ...notification }
     setNotifications(prev => {
       const next = [n, ...prev].slice(0, 100)
       save('sc_notifications', next)
       return next
     })
-  }
+  }, [])
 
-  const markNotificationsRead = () => {
+  const markNotificationsRead = useCallback(() => {
     setNotifications(prev => {
       const next = prev.map(n => ({ ...n, read: true }))
       save('sc_notifications', next)
       return next
     })
-  }
+  }, [])
 
-  const clearNotifications = () => {
+  const clearNotifications = useCallback(() => {
     setNotifications([])
     save('sc_notifications', [])
-  }
+  }, [])
 
-  // ── shop CRUD ─────────────────────────────────────────────────────────────
+  // ── parts inventory (localStorage only — no API yet) ─────────────────────
 
-  const updateShop = (id, patch) => {
-    setShops(prev => {
-      const next = prev.map(s => s.id === id ? { ...s, ...patch } : s)
-      save('sc_shops', next)
-      return next
-    })
-  }
-
-  const addShop = (shop) => {
-    const newShop = {
-      ...shop,
-      id: crypto.randomUUID(),
-      openROs: 0,
-      revenue: { today: 0, mtd: 0, ytd: 0 },
-      avgTicket: 0,
-      efficiency: 0,
-      activeTechs: 0,
-      status: 'open',
-      monthlyTarget: shop.monthlyTarget || 0,
-      hours: {
-        mon: { open: '08:00', close: '18:00', closed: false },
-        tue: { open: '08:00', close: '18:00', closed: false },
-        wed: { open: '08:00', close: '18:00', closed: false },
-        thu: { open: '08:00', close: '18:00', closed: false },
-        fri: { open: '08:00', close: '18:00', closed: false },
-        sat: { open: '09:00', close: '14:00', closed: false },
-        sun: { open: '09:00', close: '14:00', closed: true },
-      },
-      clockInBufferMins: 15,
-      maxShiftHours: 12,
-      maxShiftAction: 'alert',
-    }
-    setShops(prev => {
-      const next = [...prev, newShop]
-      save('sc_shops', next)
-      return next
-    })
-    return newShop
-  }
-
-  const removeShop = (id) => {
-    setShops(prev => {
-      const next = prev.filter(s => s.id !== id)
-      save('sc_shops', next)
-      return next
-    })
-  }
-
-  // ── technician CRUD ────────────────────────────────────────────────────────
-
-  const addTechnician = (tech) => {
-    setTechnicians(prev => {
-      const next = [
-        ...prev,
-        { ...tech, id: crypto.randomUUID(), activeROs: 0, completedToday: 0, hoursWorked: 0 },
-      ]
-      save('sc_technicians', next)
-      return next
-    })
-  }
-
-  const removeTechnician = (techId) => {
-    setTechnicians(prev => {
-      const next = prev.filter(t => t.id !== techId)
-      save('sc_technicians', next)
-      return next
-    })
-  }
-
-  // ── repairOrder CRUD ───────────────────────────────────────────────────────
-
-  const addRepairOrder = (ro) => {
-    const newRO = {
-      ...ro,
-      id: `RO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-      created: new Date().toISOString(),
-      updated: new Date().toISOString(),
-      parts: 0,
-      labor: 0,
-      total: 0,
-      payment: null,
-      authorized: false,
-      notes: [],
-      services: ro.services || [],
-      mpi: ro.mpi || null,
-    }
-    setRepairOrders(prev => {
-      const next = [newRO, ...prev]
-      save('sc_ros', next)
-      return next
-    })
-    triggerStageSMS(newRO, 'Estimate')
-    return newRO
-  }
-
-  const sendEstimateReady = (roId, total) => {
-    const ro       = repairOrders.find(r => r.id === roId)
-    const shop     = ro ? shops.find(s => s.id === ro.shopId) : null
-    const customer = ro ? customers.find(c => c.name === ro.customerName) : null
-    if (!ro || !shop || !customer) return
-    const body = SMS_TEMPLATES['EstimateReady'](ro, shop, total)
-    // POST /api/sms/send when backend is ready
-    // { to: customer.phone, from: shop.twilioPhone, body }
-  }
-
-  const updateRepairOrder = (id, patch) => {
-    setRepairOrders(prev => {
-      const existing = prev.find(ro => ro.id === id)
-      if (existing && patch.stage && patch.stage !== existing.stage) {
-        triggerStageSMS(existing, patch.stage)
-      }
-      const next = prev.map(ro => ro.id === id ? { ...ro, ...patch, updated: new Date().toISOString() } : ro)
-      save('sc_ros', next)
-      return next
-    })
-  }
-
-  // ── parts inventory ───────────────────────────────────────────────────────
-
-  const addPart = (part) => {
+  const addPart = useCallback((part) => {
     setParts(prev => {
       const next = [...prev, { ...part, id: crypto.randomUUID(), lastOrdered: null }]
       save('sc_parts', next)
       return next
     })
-  }
+  }, [])
 
-  const updatePart = (id, patch) => {
+  const updatePart = useCallback((id, patch) => {
     setParts(prev => {
       const part = prev.find(p => p.id === id)
       const next = prev.map(p => p.id === id ? { ...p, ...patch } : p)
       save('sc_parts', next)
-      // Notify if a manual qty edit just crossed below minimum
       if (part && 'qty' in patch) {
-        const newQty   = Number(patch.qty)
-        const minQty   = 'minQty' in patch ? Number(patch.minQty) : part.minQty
+        const newQty = Number(patch.qty)
+        const minQty = 'minQty' in patch ? Number(patch.minQty) : part.minQty
         if (newQty <= minQty && part.qty > minQty) {
           setTimeout(() => addNotification({
-            type:     'low_stock',
+            type: 'low_stock',
             partName: part.name,
-            qty:      newQty,
+            qty: newQty,
             minQty,
-            shopId:   part.shopId,
+            shopId: part.shopId,
           }), 0)
         }
       }
       return next
     })
-  }
+  }, [addNotification])
 
-  const deletePart = (id) => {
+  const deletePart = useCallback((id) => {
     setParts(prev => {
       const next = prev.filter(p => p.id !== id)
       save('sc_parts', next)
       return next
     })
-  }
+  }, [])
 
-  const usePart = (partId, qty = 1) => {
+  const usePart = useCallback((partId, qty = 1) => {
     setParts(prev => {
-      const part   = prev.find(p => p.id === partId)
+      const part = prev.find(p => p.id === partId)
       if (!part) return prev
       const newQty = Math.max(0, part.qty - qty)
-      const next   = prev.map(p => p.id === partId ? { ...p, qty: newQty } : p)
+      const next = prev.map(p => p.id === partId ? { ...p, qty: newQty } : p)
       save('sc_parts', next)
       if (newQty <= part.minQty && part.qty > part.minQty) {
         setTimeout(() => addNotification({
-          type:     'low_stock',
+          type: 'low_stock',
           partName: part.name,
-          qty:      newQty,
-          minQty:   part.minQty,
-          shopId:   part.shopId,
+          qty: newQty,
+          minQty: part.minQty,
+          shopId: part.shopId,
         }), 0)
       }
       return next
     })
-  }
+  }, [addNotification])
 
-  const restockPart = (partId, qty = 1) => {
+  const restockPart = useCallback((partId, qty = 1) => {
     setParts(prev => {
       const next = prev.map(p => p.id === partId ? { ...p, qty: p.qty + qty } : p)
       save('sc_parts', next)
       return next
     })
-  }
+  }, [])
 
-  const orderPart = (partId) => {
+  const orderPart = useCallback((partId) => {
     setParts(prev => {
       const next = prev.map(p => p.id === partId ? { ...p, lastOrdered: new Date().toISOString().slice(0, 10) } : p)
       save('sc_parts', next)
       return next
     })
-  }
+  }, [])
 
-  // ── job timers ────────────────────────────────────────────────────────────
+  // ── job timers (localStorage only) ───────────────────────────────────────
 
-  const startJobTimer = (roId, svcIdx) => {
+  const startJobTimer = useCallback((roId, svcIdx) => {
     setJobTimers(prev => {
       const key = `${roId}_${svcIdx}`
       const existing = prev[key] || { totalMs: 0, startedAt: null }
-      if (existing.startedAt) return prev  // already running
+      if (existing.startedAt) return prev
       const next = { ...prev, [key]: { ...existing, startedAt: new Date().toISOString() } }
       save('sc_job_timers', next)
       return next
     })
-  }
+  }, [])
 
-  const stopJobTimer = (roId, svcIdx) => {
+  const stopJobTimer = useCallback((roId, svcIdx) => {
     setJobTimers(prev => {
       const key = `${roId}_${svcIdx}`
       const existing = prev[key]
@@ -337,102 +378,23 @@ export function DataProvider({ children }) {
       save('sc_job_timers', next)
       return next
     })
-  }
-
-  // ── clock in/out ──────────────────────────────────────────────────────────
-
-  const clockIn = (techId) => {
-    // Read current state via refs to avoid stale closures for validation
-    // (technicians/shops are needed for the hours check before mutating)
-    const tech = technicians.find(t => t.id === techId)
-    const shop = shops.find(s => s.id === tech?.shopId)
-
-    if (shop?.hours) {
-      const now  = new Date()
-      const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-      const day  = shop.hours[keys[now.getDay()]]
-
-      if (day?.closed) {
-        return { error: 'Shop is closed today — clock-in is not allowed.' }
-      }
-
-      if (day?.open && day?.close) {
-        const bufferMins = shop.clockInBufferMins ?? 15
-        const [openH, openM]   = day.open.split(':').map(Number)
-        const [closeH, closeM] = day.close.split(':').map(Number)
-
-        const allowedTotalM = openH * 60 + openM - bufferMins
-        const allowedAt = new Date(now)
-        allowedAt.setHours(Math.floor(allowedTotalM / 60), allowedTotalM % 60, 0, 0)
-
-        const closeAt = new Date(now)
-        closeAt.setHours(closeH, closeM, 0, 0)
-
-        if (now < allowedAt) {
-          const allowedStr = fmt12(`${String(Math.floor(allowedTotalM / 60)).padStart(2,'0')}:${String(allowedTotalM % 60).padStart(2,'0')}`)
-          return { error: `Clock-in opens at ${allowedStr} (${bufferMins} min before ${fmt12(day.open)}).` }
-        }
-
-        if (now > closeAt) {
-          return { error: `Shop closed at ${fmt12(day.close)} — clock-in not available.` }
-        }
-      }
-    }
-
-    setClockedInTechs(prev => {
-      const next = new Set(prev)
-      next.add(techId)
-      save('sc_clocked_in', [...next])
-      return next
-    })
-
-    setTimeEntries(prev => {
-      const entry = { id: crypto.randomUUID(), techId, clockInAt: new Date().toISOString(), clockOutAt: null }
-      const next = [...prev, entry]
-      save('sc_time_entries', next)
-      return next
-    })
-  }
-
-  const clockOut = (techId) => {
-    setClockedInTechs(prev => {
-      const next = new Set(prev)
-      next.delete(techId)
-      save('sc_clocked_in', [...next])
-      return next
-    })
-
-    const now = new Date().toISOString()
-    setTimeEntries(prev => {
-      const next = prev.map(e =>
-        e.techId === techId && !e.clockOutAt ? { ...e, clockOutAt: now } : e
-      )
-      save('sc_time_entries', next)
-      return next
-    })
-  }
+  }, [])
 
   // ── reset (dev helper) ────────────────────────────────────────────────────
 
-  const resetData = () => {
-    setTechnicians(initialTechnicians)
-    setRepairOrders(initialRepairOrders)
+  const resetData = useCallback(() => {
     setParts(initialParts)
-    setShops(initialShops)
     setJobTimers({})
-    setClockedInTechs(new Set())
-    localStorage.removeItem('sc_technicians')
-    localStorage.removeItem('sc_ros')
+    setNotifications([])
     localStorage.removeItem('sc_parts')
-    localStorage.removeItem('sc_shops')
     localStorage.removeItem('sc_job_timers')
-    localStorage.removeItem('sc_clocked_in')
-    setTimeEntries([])
-    localStorage.removeItem('sc_time_entries')
-  }
+    localStorage.removeItem('sc_notifications')
+    fetchAll()
+  }, [fetchAll])
 
   return (
     <DataContext.Provider value={{
+      customers, addCustomer, updateCustomer, removeCustomer,
       technicians, addTechnician, removeTechnician,
       repairOrders, addRepairOrder, updateRepairOrder, sendEstimateReady,
       shops, updateShop, addShop, removeShop,
@@ -440,7 +402,8 @@ export function DataProvider({ children }) {
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries,
       notifications, addNotification, markNotificationsRead, clearNotifications,
-      resetData,
+      cannedServices,
+      resetData, loading, fetchAll,
     }}>
       {children}
     </DataContext.Provider>

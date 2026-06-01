@@ -6,7 +6,7 @@ import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { formatCurrency, formatDate, formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { shops } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 
 const INVOICE_STATUS = {
   paid:     { label: 'Paid',     color: 'text-status-green',  bg: 'bg-status-green/10', icon: CheckCircle },
@@ -167,6 +167,7 @@ function InvoiceDetail({ invoice, onClose }) {
 }
 
 export default function Invoices() {
+  const { shops } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')

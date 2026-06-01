@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { ArrowLeft, Phone, MapPin, User, Plus } from 'lucide-react'
-import { shops, repairOrders, technicians } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 import { Button } from '@/components/ui/Button'
 import { StageBadge } from '@/components/ui/Badge'
 import { NewROModal } from '@/components/modals/NewROModal'
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 export default function ShopDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { shops, repairOrders, technicians } = useData()
   const shop = shops.find(s => String(s.id) === id)
   const [newROOpen, setNewROOpen] = useState(false)
   const [selectedRO, setSelectedRO] = useState(null)

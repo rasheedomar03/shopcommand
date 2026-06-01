@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, UserCircle } from 'lucide-react'
-import { customers, shops } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Badge } from '@/components/ui/Badge'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
@@ -17,6 +17,7 @@ const STATUS_CONFIG = {
 
 export default function Customers() {
   const navigate = useNavigate()
+  const { customers, shops } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')

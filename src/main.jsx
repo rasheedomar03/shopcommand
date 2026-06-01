@@ -18,16 +18,16 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <ClerkProvider publishableKey={clerkPubKey}>
         <ThemeProvider>
-          <DataProvider>
-            <AuthProvider>
+          <AuthProvider>
+            <DataProvider>
               <TooltipProvider>
                 <BrowserRouter>
                   <App />
                   <ConsentGatedAnalytics />
                 </BrowserRouter>
               </TooltipProvider>
-            </AuthProvider>
-          </DataProvider>
+            </DataProvider>
+          </AuthProvider>
         </ThemeProvider>
       </ClerkProvider>
     </ErrorBoundary>

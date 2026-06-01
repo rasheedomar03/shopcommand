@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend
 } from 'recharts'
-import { shops, shopRevenueComparison, efficiencyTrend } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 import { formatCurrency } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
 import { cn } from '@/lib/utils'
@@ -31,8 +31,17 @@ const CustomTooltip = ({ active, payload, label }) => {
 const TABS = ['Revenue', 'Efficiency', 'Tickets']
 
 export default function Reports() {
+  const { shops } = useData()
   const [tab, setTab] = useState('Revenue')
   const { theme } = useTheme()
+
+  const shopRevenueComparison = shops.map(s => ({
+    name: (s.name || '').split(' ').slice(0, 2).join(' '),
+    mtd: s.revenue?.mtd || 0,
+    target: Math.round((s.revenue?.mtd || 0) * 1.12),
+  }))
+
+  const efficiencyTrend = []
   const gridColor = theme === 'dark' ? '#1E2028' : '#E2E8F0'
   const tickColor = theme === 'dark' ? '#64748B' : '#94A3B8'
   const barBg = theme === 'dark' ? '#1E2028' : '#E2E8F0'

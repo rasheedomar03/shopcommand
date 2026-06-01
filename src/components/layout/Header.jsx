@@ -1,17 +1,16 @@
 import { Bell, Menu, Search, Sun, Moon, X, Plus, LogOut, Settings } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { customers } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 import { AlertsModal } from '@/components/modals/AlertsModal'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { useTheme } from '@/contexts/ThemeContext'
-import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
 import { cn, sanitizeField } from '@/lib/utils'
 
 function SearchDropdown({ query, onClose }) {
-  const { repairOrders } = useData()
+  const { repairOrders, customers } = useData()
   const navigate = useNavigate()
   const q = query.toLowerCase()
 
@@ -94,7 +93,7 @@ export function Header({ onMenuOpen }) {
   const wrapperRef = useRef(null)
   const avatarRef = useRef(null)
   const { theme, toggleTheme } = useTheme()
-  const { parts, notifications, shops } = useData()
+  const { parts, notifications, shops, customers } = useData()
   const { session, logout } = useAuth()
   const navigate = useNavigate()
   const isAdvisor = session?.role === 'advisor'

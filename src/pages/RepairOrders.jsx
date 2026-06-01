@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Search, Plus, Filter } from 'lucide-react'
-import { shops } from '@/data/mock'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
@@ -12,7 +11,7 @@ import { formatCurrency, formatRelativeTime, RO_STAGES } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 export default function RepairOrders() {
-  const { repairOrders } = useData()
+  const { repairOrders, shops } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [newROOpen, setNewROOpen] = useState(false)

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { shops } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 
 const CONDITION = {
   green:  { label: 'Good',         color: 'text-status-green',  bg: 'bg-status-green/10', ring: 'ring-status-green/30' },
@@ -181,6 +181,7 @@ function InspectionDetail({ inspection, onClose }) {
 }
 
 export default function Inspections() {
+  const { shops } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')

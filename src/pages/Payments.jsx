@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { formatCurrency, formatDate, formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { shops } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 
 const PAYMENT_METHODS = {
   visa:       { label: 'Visa',       icon: '💳' },
@@ -48,6 +48,7 @@ function StatusBadge({ status }) {
 }
 
 export default function Payments() {
+  const { shops } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')

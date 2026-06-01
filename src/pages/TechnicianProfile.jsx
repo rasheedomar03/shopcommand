@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, MapPin, Wrench, Clock, TrendingUp, CheckCircle2, Star, Award } from 'lucide-react'
-import { shops } from '@/data/mock'
 import { useData } from '@/contexts/DataContext'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { RODetailModal } from '@/components/modals/RODetailModal'
@@ -20,7 +19,7 @@ export default function TechnicianProfile() {
   const navigate = useNavigate()
   const [selectedRO, setSelectedRO] = useState(null)
 
-  const { technicians, repairOrders, timeEntries, clockedInTechs } = useData()
+  const { technicians, repairOrders, timeEntries, clockedInTechs, shops } = useData()
   const tech = technicians.find(t => String(t.id) === String(id))
   if (!tech) {
     return (

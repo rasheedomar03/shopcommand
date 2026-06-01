@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Phone, Mail, MapPin, Plus, Star, Clock, TrendingUp, Wrench, Car, Check, Shield } from 'lucide-react'
-import { customers, shops } from '@/data/mock'
 import { useData } from '@/contexts/DataContext'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -48,7 +47,7 @@ export default function CustomerProfile() {
     setTimeout(() => setTextSent(false), 3000)
   }
 
-  const { repairOrders } = useData()
+  const { repairOrders, customers, shops } = useData()
   const customer = customers.find(c => String(c.id) === String(id))
   if (!customer) {
     return (

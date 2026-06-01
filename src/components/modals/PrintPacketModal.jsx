@@ -1,6 +1,6 @@
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import { shops } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 import { formatCurrency } from '@/lib/utils'
 import { Printer } from 'lucide-react'
 
@@ -45,6 +45,7 @@ function chunk(arr, size) {
 }
 
 export function PrintPacketModal({ open, onClose, ro, payment }) {
+  const { shops } = useData()
   if (!ro) return null
 
   const shop = shops.find(s => s.id === ro.shopId) || {}

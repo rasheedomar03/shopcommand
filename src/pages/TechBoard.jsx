@@ -7,9 +7,8 @@ import {
   Truck, ExternalLink, CheckCheck, Camera, DollarSign, ClipboardCheck,
   TrendingUp, Zap,
 } from 'lucide-react'
-import { shops, customers } from '@/data/mock'
-import { useAuth } from '@/contexts/AuthContext'
 import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { StageBadge } from '@/components/ui/Badge'
 import { formatCurrency, formatDate, computeHoursMs, formatHours, startOfToday, startOfWeek } from '@/lib/utils'
@@ -1065,7 +1064,7 @@ function QuickInspectionModal({ ro, onClose }) {
 
 export default function TechBoard() {
   const { session, logout } = useAuth()
-  const { technicians, repairOrders, updateRepairOrder, clockedInTechs, clockIn, clockOut, timeEntries, jobTimers, startJobTimer, stopJobTimer } = useData()
+  const { technicians, repairOrders, updateRepairOrder, clockedInTechs, clockIn, clockOut, timeEntries, jobTimers, startJobTimer, stopJobTimer, shops, customers } = useData()
   const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState(

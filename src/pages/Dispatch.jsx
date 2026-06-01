@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { shops } from '@/data/mock'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
@@ -61,7 +60,7 @@ function DropColumn({ id, header, children, isOver, onDragOver, onDragLeave, onD
 }
 
 export default function Dispatch() {
-  const { repairOrders, technicians, updateRepairOrder, clockedInTechs } = useData()
+  const { repairOrders, technicians, updateRepairOrder, clockedInTechs, shops } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [draggedROId, setDraggedROId] = useState(null)

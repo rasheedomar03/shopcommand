@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { Building2, ChevronRight, MapPin } from 'lucide-react'
-import { shops } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 import { formatCurrency } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 export default function AllShops() {
   const navigate = useNavigate()
+  const { shops } = useData()
 
   const totalRevToday = shops.reduce((s, sh) => s + sh.revenue.today, 0)
   const totalRevMTD = shops.reduce((s, sh) => s + sh.revenue.mtd, 0)

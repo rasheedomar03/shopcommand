@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
-import { shops } from '@/data/mock'
 import { useData } from '@/contexts/DataContext'
 
 const LEVELS = ['Junior', 'Mid', 'Senior', 'Master']
@@ -20,7 +19,7 @@ const SPECIALTIES = [
 const CERTS = ['ASE A1', 'ASE A2', 'ASE A4', 'ASE A5', 'ASE A6', 'ASE A7', 'ASE L1', 'ASE L3', 'ASE Master', 'BMW Certified', 'Ford Certified', 'GM Service', 'Toyota Certified', 'ATRA', 'Hybrid/EV']
 
 export function NewTechModal({ open, onClose }) {
-  const { addTechnician } = useData()
+  const { addTechnician, shops } = useData()
   const [form, setForm] = useState({
     name: '',
     shopId: '',

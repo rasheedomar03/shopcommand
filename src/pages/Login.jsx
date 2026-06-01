@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { Building2, Wrench, ClipboardList, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useData } from '@/contexts/DataContext'
-import { shops } from '@/data/mock'
 import { cn } from '@/lib/utils'
 
 function HexMark({ size = 32 }) {
@@ -25,7 +24,7 @@ function HexMark({ size = 32 }) {
 
 export default function Login() {
   const { login } = useAuth()
-  const { technicians } = useData()
+  const { technicians, shops } = useData()
   const navigate = useNavigate()
   const [role, setRole] = useState(null)          // null | 'owner' | 'advisor' | 'tech'
   const [selectedTechId, setSelectedTechId] = useState('')

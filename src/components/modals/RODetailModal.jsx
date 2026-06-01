@@ -8,7 +8,6 @@ import { NewROModal } from '@/components/modals/NewROModal'
 import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
 import { formatCurrency, RO_STAGES } from '@/lib/utils'
 import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X, Package, Link2, Check, Clock, PlayCircle, Flag, Zap, Square, StopCircle, Shield, Trash2 } from 'lucide-react'
-import { cannedServices } from '@/data/mock'
 import { cn } from '@/lib/utils'
 
 const TAX_RATE = 0.085
@@ -128,7 +127,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const { session } = useAuth()
   const isTech    = session?.role === 'tech'
   const isAdvisor = session?.role === 'advisor'
-  const { updateRepairOrder, sendEstimateReady, technicians, parts: allParts, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification } = useData()
+  const { updateRepairOrder, sendEstimateReady, technicians, parts: allParts, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
   const [services, setServices] = useState(ro?.services || [])
   const [mpiItems, setMpiItems] = useState(

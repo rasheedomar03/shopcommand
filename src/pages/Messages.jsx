@@ -3,7 +3,7 @@ import { Search, Send, Phone, ChevronLeft, Clock } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatRelativeTime, sanitizeField } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { shops } from '@/data/mock'
+import { useData } from '@/contexts/DataContext'
 
 const mockConversations = [
   {
@@ -201,6 +201,7 @@ function MessageThread({ conversation, onBack }) {
 }
 
 export default function Messages() {
+  const { shops } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')

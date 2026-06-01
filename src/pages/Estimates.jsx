@@ -7,7 +7,6 @@ import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { formatCurrency, formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { shops } from '@/data/mock'
 
 const ESTIMATE_STATUS = {
   draft:    { label: 'Draft',    color: 'text-text-muted',    bg: 'bg-border' },
@@ -149,6 +148,7 @@ function EstimateDetail({ estimate, onClose }) {
 }
 
 export default function Estimates() {
+  const { shops } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')

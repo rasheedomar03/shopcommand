@@ -3,7 +3,6 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
-import { customers } from '@/data/mock'
 import { RO_STAGES, sanitizeVin, sanitizeField } from '@/lib/utils'
 import { Search, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,7 +16,7 @@ export function NewROModal({
   preCustomerPhone = '',
   onCreated,
 }) {
-  const { technicians, addRepairOrder, shops } = useData()
+  const { technicians, addRepairOrder, shops, customers } = useData()
 
   const [form, setForm] = useState({
     shopId: preShopId || '',
