@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import { TopLoader } from '@/components/ui/TopLoader'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -189,6 +190,7 @@ function AppShell() {
 export default function App() {
   return (
     <Suspense fallback={<PageLoader />}>
+      <TopLoader />
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Landing />} />
