@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Search, Plus, Camera, Send, Eye, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
+import { Search, Plus, Camera, Send, Eye, CheckCircle, Clock, AlertTriangle, Paperclip } from 'lucide-react'
+import { FileUpload, FileList } from '@/components/ui/FileUpload'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -160,6 +161,19 @@ function InspectionDetail({ inspection, onClose, shops }) {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* MPI Photos */}
+        <div>
+          <div className="flex items-center gap-2 text-xs font-semibold text-text-primary mb-2">
+            <Paperclip size={13} />
+            MPI Photos
+          </div>
+          <FileUpload
+            roId={inspection.roId || inspection.id}
+            category="mpi"
+            onUpload={(files) => {}}
+          />
         </div>
 
         <div className="flex items-center justify-between pt-2">

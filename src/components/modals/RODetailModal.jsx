@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
 import { formatCurrency, RO_STAGES } from '@/lib/utils'
-import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X, Package, Link2, Check, Clock, PlayCircle, Flag, Zap, Square, StopCircle, Shield, Trash2 } from 'lucide-react'
+import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X, Package, Link2, Check, Clock, PlayCircle, Flag, Zap, Square, StopCircle, Shield, Trash2, Paperclip } from 'lucide-react'
+import { FileUpload, FileList } from '@/components/ui/FileUpload'
 import { cn } from '@/lib/utils'
 
 const TAX_RATE = 0.085
@@ -158,6 +159,8 @@ export function RODetailModal({ open, onClose, ro }) {
   const [editingOrderId, setEditingOrderId] = useState(null)
   const [orderDraft, setOrderDraft]         = useState({ supplier: '', eta: '', carrier: '', trackingNumber: '' })
   const [confirmDeletePartId, setConfirmDeletePartId] = useState(null)
+  const [attachments, setAttachments] = useState(ro?.attachments || [])
+  const [attachOpen, setAttachOpen] = useState(false)
 
   if (!ro) return null
 
@@ -1116,6 +1119,31 @@ export function RODetailModal({ open, onClose, ro }) {
           </button>
         </div>
         <p className="text-2xs text-text-muted mt-1">⌘↵ to add</p>
+      </div>
+
+      {/* Attachments */}
+      <div>
+        <button
+          onClick={() => setAttachOpen(o => !o)}
+          className="flex items-center gap-2 text-xs font-semibold text-text-primary mb-2"
+        >
+          <Paperclip size={13} />
+          Attachments {attachments.length > 0 && `(${attachments.length})`}
+          <ChevronDown size={12} className={cn('text-text-muted transition-transform duration-200', attachOpen && 'rotate-180')} />
+        </button>
+        {attachOpen && (
+          <div className="space-y-3">
+            <FileList
+              files={attachments}
+              onDelete={(file) => setAttachments(prev => prev.filter(f => f.url !== file.url))}
+            />
+            <FileUpload
+              roId={ro.id}
+              category="ro-attachment"
+              onUpload={(files) => setAttachments(prev => [...prev, ...files])}
+            />
+          </div>
+        )}
       </div>
 
       {/* Next service due nudge (Paid only) */}
