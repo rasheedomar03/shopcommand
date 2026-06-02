@@ -38,12 +38,6 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  // Already onboarded — skip straight to dashboard
-  if (user?.unsafeMetadata?.onboarded) {
-    navigate('/dashboard', { replace: true })
-    return null
-  }
-
   const handleRoleContinue = async () => {
     if (!selected) return
     setError(null)
