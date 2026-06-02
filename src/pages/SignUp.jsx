@@ -31,10 +31,10 @@ const clerkAppearance = {
     fontSize: '0.875rem',
   },
   elements: {
-    rootBox: 'w-full max-w-sm mx-auto',
+    rootBox: 'w-full',
     card: 'shadow-lg shadow-slate-900/[0.08] border border-slate-200/80',
     footerPagesLink: 'hidden',
-    badge: 'hidden',
+    footer: 'hidden',
   },
   layout: {
     unsafe_disableDevelopmentModeWarnings: true,
