@@ -314,13 +314,15 @@ export function NewROModal({
             rows={3}
           />
 
-          {/* Schedule */}
-          <Input
-            label="Schedule Appointment"
-            type="datetime-local"
-            value={form.scheduledAt}
-            onChange={set('scheduledAt')}
-          />
+          {/* Schedule — only show when opened from Appointments page */}
+          {defaultDate != null && (
+            <Input
+              label="Schedule Appointment"
+              type="datetime-local"
+              value={form.scheduledAt}
+              onChange={set('scheduledAt')}
+            />
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-border bg-background/50">
