@@ -23,9 +23,13 @@ CREATE TABLE organizations (
   name        TEXT NOT NULL,
   owner_clerk_id TEXT NOT NULL UNIQUE,
   plan        TEXT NOT NULL DEFAULT 'founding',
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE INDEX idx_org_stripe_customer ON organizations(stripe_customer_id);
 
 -- ─── Shops ──────────────────────────────────────────────────────────────────
 

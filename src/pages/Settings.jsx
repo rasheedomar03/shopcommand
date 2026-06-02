@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn, sanitizeField } from '@/lib/utils'
+import { startCheckout } from '@/lib/billing'
 
 const SECTIONS = [
   { id: 'profile', label: 'Account', icon: Users },
@@ -152,12 +153,21 @@ export default function Settings() {
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-text-primary">Founding Member</div>
-                    <div className="text-xs text-text-muted mt-0.5">$100/mo · locked forever</div>
+                    <div className="text-xs text-text-muted mt-0.5">$100/mo · locked forever (normally $175/mo)</div>
                   </div>
                 </div>
-                <p className="text-xs text-text-muted leading-relaxed">
-                  Billing begins at public launch. No card needed yet — you'll receive an email before your first charge with instructions to add a payment method.
+                <p className="text-xs text-text-muted leading-relaxed mb-4">
+                  Billing begins at public launch. Lock in your founding rate now and your card will only be charged when we go live. You'll receive an email before your first charge.
                 </p>
+                {!session?.demo && (
+                  <button
+                    onClick={() => startCheckout()}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 transition-colors"
+                  >
+                    <CreditCard size={14} />
+                    Lock in $100/mo rate
+                  </button>
+                )}
               </div>
               <div className="rounded-lg border border-border p-4 flex items-start gap-3">
                 <Info size={13} className="flex-shrink-0 mt-0.5 text-text-muted" />
