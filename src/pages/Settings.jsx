@@ -467,31 +467,7 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
       {/* Shop list */}
       <div className="divide-y divide-border">
         {shops.map(shop => (
-          <div key={shop.id} className="group p-4 relative">
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <div className="text-sm font-semibold text-text-primary">{shop.name}</div>
-                <div className="text-xs text-text-muted mt-0.5">{shop.address}</div>
-                {shop.manager && <div className="text-xs text-text-muted mt-0.5">Manager: {shop.manager}</div>}
-                {shop.bays > 0 && <div className="text-xs text-text-muted mt-0.5">{shop.bays} bays</div>}
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs px-2 py-0.5 rounded-full bg-status-green-subtle text-status-green">Active</span>
-                <button
-                  onClick={() => setConfirmRemove(shop.id)}
-                  className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-status-red hover:bg-status-red/10 transition-all opacity-0 group-hover:opacity-100"
-                  title="Remove location"
-                >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <ShopPhoneField field="phone" icon={Phone} iconClass="text-text-muted" label="Business Phone" shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
-              <ShopPhoneField field="twilioPhone" icon={MessageSquare} iconClass="text-orange" label="SMS Number" shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
-            </div>
-            <ShopTargetField shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
-          </div>
+          <ShopLocationCard key={shop.id} shop={shop} onUpdate={onUpdate} onRemove={() => setConfirmRemove(shop.id)} />
         ))}
       </div>
 
@@ -523,6 +499,105 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
           </div>
         )
       })()}
+    </div>
+  )
+}
+
+function ShopLocationCard({ shop, onUpdate, onRemove }) {
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState({ name: shop.name || '', address: shop.address || '', phone: shop.phone || '' })
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    setSaving(true)
+    await onUpdate(shop.id, {
+      name: sanitizeField(form.name, 100),
+      address: sanitizeField(form.address, 300),
+      phone: sanitizeField(form.phone, 30),
+    })
+    setSaving(false)
+    setEditing(false)
+  }
+
+  return (
+    <div className="group p-4 relative">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex-1 min-w-0">
+          {editing ? (
+            <div className="space-y-2.5">
+              <Input
+                label="Shop Name"
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Shop name"
+              />
+              <Input
+                label="Address"
+                value={form.address}
+                onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                placeholder="123 Main St, City, State ZIP"
+              />
+              <Input
+                label="Phone"
+                type="tel"
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="+1 (555) 000-0000"
+              />
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={handleSave}
+                  disabled={!form.name.trim() || saving}
+                  className="h-7 px-3 rounded-md bg-orange text-white text-xs font-semibold hover:bg-orange/90 disabled:opacity-40 transition-colors"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={() => { setEditing(false); setForm({ name: shop.name || '', address: shop.address || '', phone: shop.phone || '' }) }}
+                  className="h-7 px-3 rounded-md border border-border text-xs text-text-muted hover:text-text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-sm font-semibold text-text-primary">{shop.name}</div>
+              <div className="text-xs text-text-muted mt-0.5">{shop.address || 'No address set'}</div>
+              {shop.phone && <div className="text-xs text-text-muted mt-0.5">{shop.phone}</div>}
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {!editing && (
+            <>
+              <button
+                onClick={() => setEditing(true)}
+                className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-orange hover:bg-orange/10 transition-all opacity-0 group-hover:opacity-100"
+                title="Edit location"
+              >
+                <Pencil size={12} />
+              </button>
+              <button
+                onClick={onRemove}
+                className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-status-red hover:bg-status-red/10 transition-all opacity-0 group-hover:opacity-100"
+                title="Remove location"
+              >
+                <Trash2 size={12} />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      {!editing && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <ShopPhoneField field="phone" icon={Phone} iconClass="text-text-muted" label="Business Phone" shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
+            <ShopPhoneField field="twilioPhone" icon={MessageSquare} iconClass="text-orange" label="SMS Number" shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
+          </div>
+          <ShopTargetField shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
+        </>
+      )}
     </div>
   )
 }
