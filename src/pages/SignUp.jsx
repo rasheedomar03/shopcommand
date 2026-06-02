@@ -54,13 +54,15 @@ export default function SignUpPage() {
         </span>
       </Link>
 
-      <ClerkSignUp
-        routing="path"
-        path="/sign-up"
-        signInUrl="/sign-in"
-        forceRedirectUrl="/onboarding"
-        appearance={clerkAppearance}
-      />
+      <div className="w-full max-w-sm mx-auto">
+        <ClerkSignUp
+          routing="path"
+          path="/sign-up"
+          signInUrl="/sign-in"
+          forceRedirectUrl="/onboarding"
+          appearance={clerkAppearance}
+        />
+      </div>
 
       <p className="mt-6 text-xs text-slate-400">
         Already have an account?{' '}
