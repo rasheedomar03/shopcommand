@@ -48,15 +48,29 @@ function StatusBadge({ status }) {
 }
 
 export default function Payments() {
-  const { shops } = useData()
+  const { shops, payments: realPayments } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
   const [methodFilter, setMethodFilter] = useState('All')
 
+  // Use real data if available, fall back to mock for demo
+  const allPayments = session?.demo ? mockPayments : (realPayments?.length ? realPayments.map(p => ({
+    id: p.id,
+    invoiceId: p.invoice_id || p.ro_number || '',
+    shopId: p.shop_id,
+    customerName: p.customer_name || '',
+    amount: Number(p.amount),
+    method: p.method,
+    last4: p.last4,
+    date: p.created_at,
+    status: p.status,
+    shopName: p.shop_name,
+  })) : mockPayments)
+
   const scoped = isAdvisor
-    ? mockPayments.filter(p => p.shopId === session.shopId)
-    : mockPayments
+    ? allPayments.filter(p => p.shopId === session.shopId)
+    : allPayments
 
   const filtered = scoped.filter(p => {
     const q = search.toLowerCase()

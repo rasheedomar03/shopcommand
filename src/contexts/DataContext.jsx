@@ -110,6 +110,7 @@ export function DataProvider({ children }) {
   const [customers, setCustomers] = useState([])
   const [clockedInTechs, setClockedInTechs] = useState(new Set())
   const [timeEntries, setTimeEntries] = useState([])
+  const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
 
   // ── localStorage-only state (no API yet) ─────────────────────────────────
@@ -141,16 +142,18 @@ export function DataProvider({ children }) {
     if (!session?.onboarded || session?.demo) return
     setLoading(true)
     try {
-      const [shopsData, techsData, rosData, custData] = await Promise.all([
+      const [shopsData, techsData, rosData, custData, paymentsData] = await Promise.all([
         api('/api/shops').catch(() => []),
         api('/api/technicians').catch(() => []),
         api('/api/repair-orders').catch(() => []),
         api('/api/customers').catch(() => []),
+        api('/api/invoices?action=payments').catch(() => []),
       ])
       setShops(shopsData.map(transformShop))
       setTechnicians(techsData.map(transformTech))
       setRepairOrders(rosData.map(transformRO))
       setCustomers(custData.map(transformCustomer))
+      setPayments(paymentsData)
 
       // Derive clocked-in techs from technician data
       const clockedIn = new Set()
@@ -440,7 +443,7 @@ export function DataProvider({ children }) {
       shops, updateShop, addShop, removeShop,
       parts, addPart, updatePart, deletePart, usePart, restockPart, orderPart,
       jobTimers, startJobTimer, stopJobTimer,
-      clockedInTechs, clockIn, clockOut, timeEntries,
+      clockedInTechs, clockIn, clockOut, timeEntries, payments,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,
       resetData, loading, fetchAll,
