@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { useAuth as useClerkAuth } from '@clerk/clerk-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { api, setTokenProvider } from '@/lib/api'
+import { setUploadTokenProvider } from '@/lib/uploads'
 import {
   parts as initialParts,
   cannedServices,
@@ -93,10 +94,11 @@ export function DataProvider({ children }) {
   const { session } = useAuth()
   const tokenInjected = useRef(false)
 
-  // Inject Clerk token provider into api.js once
+  // Inject Clerk token provider into api.js and uploads.js once
   useEffect(() => {
     if (getToken && !tokenInjected.current) {
       setTokenProvider(getToken)
+      setUploadTokenProvider(getToken)
       tokenInjected.current = true
     }
   }, [getToken])
@@ -168,6 +170,21 @@ export function DataProvider({ children }) {
       fetchAll()
     }
   }, [fetchAll, session?.onboarded, session?.demo])
+
+  // ── Auto-refresh every 30s when tab is visible (non-demo) ───────────────
+  useEffect(() => {
+    if (session?.demo || !session?.onboarded) return
+    let interval = null
+    const start = () => { interval = setInterval(fetchAll, 30_000) }
+    const stop = () => { clearInterval(interval); interval = null }
+    const handleVisibility = () => {
+      if (document.hidden) stop()
+      else { fetchAll(); start() }
+    }
+    start()
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => { stop(); document.removeEventListener('visibilitychange', handleVisibility) }
+  }, [fetchAll, session?.demo, session?.onboarded])
 
   // ── shop CRUD ─────────────────────────────────────────────────────────────
 

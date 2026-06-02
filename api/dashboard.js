@@ -1,10 +1,68 @@
 import { createHandler } from './_lib/handler.js'
+import { put, del, list } from '@vercel/blob'
 
 const REVENUE_STAGES = ['Complete', 'Invoiced', 'Paid']
 
 export default createHandler(
-  { methods: ['GET'] },
+  { methods: ['GET', 'POST', 'DELETE'] },
   async ({ req, res, sql, user }) => {
+    const action = req.query?.action
+
+    // ── File upload: POST /api/dashboard?action=upload ─────────────────────
+    if (action === 'upload' && req.method === 'POST') {
+      const { filename, contentType, roId, category } = req.body || {}
+      if (!filename || !contentType) {
+        return res.status(400).json({ error: 'filename and contentType are required' })
+      }
+
+      const path = `${user.orgId}/${roId || 'general'}/${Date.now()}-${filename}`
+      const blob = await put(path, req, {
+        access: 'public',
+        contentType,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      })
+
+      return res.json({
+        url: blob.url,
+        pathname: blob.pathname,
+        filename,
+        category: category || 'document',
+        uploadedAt: new Date().toISOString(),
+      })
+    }
+
+    // ── File delete: DELETE /api/dashboard?action=delete-file ──────────────
+    if (action === 'delete-file' && req.method === 'DELETE') {
+      const { url } = req.body || {}
+      if (!url) return res.status(400).json({ error: 'url is required' })
+
+      try {
+        await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN })
+        return res.json({ deleted: true })
+      } catch {
+        return res.status(500).json({ error: 'Failed to delete file' })
+      }
+    }
+
+    // ── File list: GET /api/dashboard?action=files&prefix=orgId/roId ──────
+    if (action === 'files' && req.method === 'GET') {
+      const prefix = req.query?.prefix || user.orgId
+      try {
+        const { blobs } = await list({
+          prefix,
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+        })
+        return res.json(blobs)
+      } catch {
+        return res.json([])
+      }
+    }
+
+    // ── Dashboard stats: GET /api/dashboard ───────────────────────────────
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: 'Method not allowed' })
+    }
+
     const shopId = req.query?.shop_id || null
     const today = new Date().toISOString().slice(0, 10)
     const monthStart = today.slice(0, 7) + '-01'
