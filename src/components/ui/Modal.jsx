@@ -42,7 +42,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', c
             'rounded-t-2xl sm:rounded-xl',
             'flex flex-col',
             'max-h-[92dvh] sm:max-h-[85vh]',
-            'data-[state=open]:animate-slide-in data-[state=closed]:animate-fade-out',
+            'data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out',
             sizes[size],
             className
           )}

@@ -53,8 +53,8 @@ export default {
       },
       animation: {
         'skeleton-pulse': 'skeleton-pulse 1.5s ease-in-out infinite',
-        'fade-in': 'fade-in 200ms ease-out',
-        'fade-out': 'fade-out 150ms ease-in',
+        'fade-in': 'fade-in 120ms ease-out',
+        'fade-out': 'fade-out 80ms ease-in',
         'slide-in': 'slide-in 250ms cubic-bezier(0.16, 1, 0.3, 1)',
         'fade-up': 'fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
         'glow-pulse': 'glow-pulse 4s ease-in-out infinite',
