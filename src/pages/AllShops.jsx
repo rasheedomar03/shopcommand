@@ -8,9 +8,9 @@ export default function AllShops() {
   const navigate = useNavigate()
   const { shops } = useData()
 
-  const totalRevToday = shops.reduce((s, sh) => s + sh.revenue.today, 0)
-  const totalRevMTD = shops.reduce((s, sh) => s + sh.revenue.mtd, 0)
-  const totalOpenROs = shops.reduce((s, sh) => s + sh.openROs, 0)
+  const totalRevToday = shops.reduce((s, sh) => s + (sh.revenue?.today || 0), 0)
+  const totalRevMTD = shops.reduce((s, sh) => s + (sh.revenue?.mtd || 0), 0)
+  const totalOpenROs = shops.reduce((s, sh) => s + (sh.openROs || 0), 0)
 
   return (
     <div className="p-5 lg:p-6 space-y-6 animate-fade-in">
@@ -66,7 +66,7 @@ function ShopCard({ shop, onClick }) {
               <div className="text-sm font-medium text-text-primary truncate">{shop.name}</div>
               <div className="flex items-center gap-1 mt-0.5">
                 <MapPin size={10} className="text-text-muted flex-shrink-0" />
-                <span className="text-xs text-text-muted truncate">{shop.address.split(',')[1]?.trim()}</span>
+                <span className="text-xs text-text-muted truncate">{shop.address ? shop.address.split(',')[1]?.trim() || shop.address : 'No address'}</span>
               </div>
             </div>
           </div>
@@ -78,23 +78,23 @@ function ShopCard({ shop, onClick }) {
       <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
         <div className="px-5 py-3">
           <div className="text-xs text-text-muted mb-0.5">Today</div>
-          <div className="text-base font-semibold tabular-nums text-text-primary">{formatCurrency(shop.revenue.today)}</div>
+          <div className="text-base font-semibold tabular-nums text-text-primary">{formatCurrency(shop.revenue?.today || 0)}</div>
         </div>
         <div className="px-5 py-3">
           <div className="text-xs text-text-muted mb-0.5">MTD</div>
-          <div className="text-base font-semibold tabular-nums text-text-primary">{formatCurrency(shop.revenue.mtd)}</div>
+          <div className="text-base font-semibold tabular-nums text-text-primary">{formatCurrency(shop.revenue?.mtd || 0)}</div>
         </div>
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between px-5 py-3">
         <div className="flex items-center gap-3 text-xs">
-          <span className="text-text-secondary">{shop.openROs} open ROs</span>
+          <span className="text-text-secondary">{shop.openROs || 0} open ROs</span>
           <span className="text-border">·</span>
-          <span className="text-text-secondary">{shop.activeTechs}/{shop.bays} bays</span>
+          <span className="text-text-secondary">{shop.activeTechs || 0}/{shop.bays || 0} bays</span>
         </div>
         <span className={cn('text-xs font-medium tabular-nums', effColor)}>
-          {shop.efficiency}% eff.
+          {shop.efficiency || 0}% eff.
         </span>
       </div>
     </div>

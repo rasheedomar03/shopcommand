@@ -29,7 +29,8 @@ export default function ShopDetail() {
   const shopROs = repairOrders.filter(ro => ro.shopId === shop.id)
   const shopTechs = technicians.filter(t => t.shopId === shop.id)
 
-  const effColor = shop.efficiency >= 85 ? 'text-status-green' : shop.efficiency >= 75 ? 'text-status-yellow' : 'text-status-red'
+  const eff = shop.efficiency || 0
+  const effColor = eff >= 85 ? 'text-status-green' : eff >= 75 ? 'text-status-yellow' : 'text-status-red'
 
   return (
     <div className="p-5 lg:p-6 space-y-6 animate-fade-in">
@@ -70,10 +71,10 @@ export default function ShopDetail() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'Today', value: formatCurrency(shop.revenue.today) },
-          { label: 'MTD Revenue', value: formatCurrency(shop.revenue.mtd) },
-          { label: 'Open ROs', value: shop.openROs },
-          { label: 'Efficiency', value: <span className={effColor}>{shop.efficiency}%</span> },
+          { label: 'Today', value: formatCurrency(shop.revenue?.today || 0) },
+          { label: 'MTD Revenue', value: formatCurrency(shop.revenue?.mtd || 0) },
+          { label: 'Open ROs', value: shop.openROs || 0 },
+          { label: 'Efficiency', value: <span className={effColor}>{eff}%</span> },
         ].map(s => (
           <div key={s.label} className="bg-surface border border-border rounded-lg px-4 py-3">
             <div className="text-xs text-text-muted uppercase tracking-wider mb-1">{s.label}</div>
