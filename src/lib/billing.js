@@ -6,7 +6,7 @@ import { api } from './api'
  */
 export async function startCheckout() {
   const origin = window.location.origin
-  const { url } = await api('/api/stripe-checkout', {
+  const { url } = await api('/api/stripe?action=checkout', {
     method: 'POST',
     body: {
       successUrl: `${origin}/dashboard?subscribed=1`,
@@ -20,5 +20,5 @@ export async function startCheckout() {
  * Fetch current billing/subscription status.
  */
 export async function getBillingStatus() {
-  return api('/api/billing')
+  return api('/api/stripe?action=billing')
 }
