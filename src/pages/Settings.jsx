@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Building2, Bell, Shield, CreditCard, Users, ChevronRight, Phone, MessageSquare, Pencil, Check, X, Clock, Calendar, Plus, Trash2, Target, Info } from 'lucide-react'
+import { Building2, Bell, Shield, CreditCard, Users, UserPlus, ChevronRight, Phone, MessageSquare, Pencil, Check, X, Clock, Calendar, Plus, Trash2, Target, Info } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
@@ -9,6 +9,7 @@ import { startCheckout } from '@/lib/billing'
 
 const SECTIONS = [
   { id: 'profile', label: 'Account', icon: Users },
+  { id: 'team', label: 'Team Invites', icon: UserPlus },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'locations', label: 'Locations', icon: Building2 },
   { id: 'schedule', label: 'Schedule', icon: Clock },
@@ -100,6 +101,10 @@ export default function Settings() {
             </SettingsPanel>
           )}
 
+          {active === 'team' && (
+            <TeamInvites shops={shops} session={session} />
+          )}
+
           {active === 'notifications' && (
             <SettingsPanel title="Notification Preferences" onSave={handleSave} saving={saved}>
               <div className="space-y-0">
@@ -179,6 +184,106 @@ export default function Settings() {
             </SettingsPanel>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function TeamInvites({ shops, session }) {
+  const [role, setRole] = useState('tech')
+  const [shopId, setShopId] = useState(shops[0]?.id || '')
+  const [generatedCode, setGeneratedCode] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleCreate = async () => {
+    if (!shopId || loading) return
+    setLoading(true)
+    setGeneratedCode(null)
+
+    try {
+      const { api } = await import('@/lib/api')
+      const data = await api('/api/onboard?action=create-invite', {
+        method: 'POST',
+        body: { role, shopId },
+      })
+      setGeneratedCode(data.code)
+    } catch {
+      setGeneratedCode(null)
+    }
+    setLoading(false)
+  }
+
+  const copyCode = () => {
+    if (!generatedCode) return
+    navigator.clipboard.writeText(generatedCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  if (session?.demo) {
+    return (
+      <div className="bg-surface border border-border rounded-lg p-5">
+        <p className="text-xs text-text-muted">Invite management is disabled in demo mode.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-surface border border-border rounded-lg overflow-hidden">
+      <div className="px-5 py-4 border-b border-border">
+        <h2 className="text-sm font-semibold text-text-primary">Invite Team Members</h2>
+      </div>
+      <div className="p-5 space-y-4">
+        <p className="text-xs text-text-muted">Generate an invite code for advisors or technicians to join your shop.</p>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-text-secondary mb-1 block">Role</label>
+            <select
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              className="w-full h-9 rounded-lg border border-border bg-surface px-3 text-sm text-text-primary focus:outline-none focus:border-orange"
+            >
+              <option value="tech">Technician</option>
+              <option value="advisor">Service Advisor</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-text-secondary mb-1 block">Shop</label>
+            <select
+              value={shopId}
+              onChange={e => setShopId(e.target.value)}
+              className="w-full h-9 rounded-lg border border-border bg-surface px-3 text-sm text-text-primary focus:outline-none focus:border-orange"
+            >
+              {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <button
+          onClick={handleCreate}
+          disabled={loading}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Generating...' : 'Generate Invite Code'}
+        </button>
+
+        {generatedCode && (
+          <div className="rounded-xl border border-orange/20 bg-orange/[0.04] p-4">
+            <p className="text-xs text-text-muted mb-2">Share this code with your team member:</p>
+            <div className="flex items-center gap-3">
+              <code className="text-xl font-mono font-bold tracking-widest text-orange">{generatedCode}</code>
+              <button
+                onClick={copyCode}
+                className="text-xs text-text-muted hover:text-orange transition-colors"
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <p className="text-2xs text-text-muted mt-2">Expires in 7 days. One-time use.</p>
+          </div>
+        )}
       </div>
     </div>
   )

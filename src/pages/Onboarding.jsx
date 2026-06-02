@@ -35,6 +35,7 @@ export default function Onboarding() {
   const [selected, setSelected] = useState(null)
   const [step, setStep] = useState('role')
   const [shopName, setShopName] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
@@ -105,6 +106,44 @@ export default function Onboarding() {
         },
       })
       navigate('/dashboard', { replace: true })
+    } catch {
+      setError('Network error. Please try again.')
+      setSaving(false)
+    }
+  }
+
+  const handleInviteSubmit = async () => {
+    if (inviteCode.length < 8 || saving) return
+    setSaving(true)
+    setError(null)
+
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/onboard', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role: selected, inviteCode: inviteCode.trim() }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Invalid invite code')
+        setSaving(false)
+        return
+      }
+
+      await user.update({
+        unsafeMetadata: {
+          role: data.role,
+          onboarded: true,
+          orgId: data.orgId,
+          shopId: data.shopId,
+        },
+      })
+      navigate(data.role === 'tech' ? '/tech-board' : '/dashboard', { replace: true })
     } catch {
       setError('Network error. Please try again.')
       setSaving(false)
@@ -219,22 +258,50 @@ export default function Onboarding() {
         {step === 'invite' && (
           <>
             <button
-              onClick={() => { setStep('role'); setError(null) }}
+              onClick={() => { setStep('role'); setError(null); setInviteCode('') }}
               className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors mb-6"
             >
               <ArrowLeft size={14} />
               Back
             </button>
 
-            <div className="text-center">
+            <div className="text-center mb-6">
               <div className="w-12 h-12 rounded-xl bg-border flex items-center justify-center mx-auto mb-4">
                 {selected === 'advisor' ? <ClipboardList size={20} className="text-text-muted" /> : <Wrench size={20} className="text-text-muted" />}
               </div>
-              <h1 className="text-lg font-semibold text-text-primary mb-2">You'll need an invite</h1>
+              <h1 className="text-lg font-semibold text-text-primary mb-2">Enter your invite code</h1>
               <p className="text-xs text-text-muted leading-relaxed">
-                Ask your shop owner or manager to add you from their ShopCommand dashboard. They'll send you an invite link.
+                Your shop owner should have given you an 8-character code.
               </p>
             </div>
+
+            <input
+              type="text"
+              value={inviteCode}
+              onChange={e => setInviteCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8))}
+              placeholder="e.g. ABCD1234"
+              maxLength={8}
+              className="w-full h-12 rounded-xl border border-border bg-surface px-4 text-center text-lg font-mono tracking-widest text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/20"
+            />
+
+            {error && <p className="text-xs text-red-500 mt-2 text-center">{error}</p>}
+
+            <button
+              onClick={handleInviteSubmit}
+              disabled={inviteCode.length < 8 || saving}
+              className={cn(
+                'w-full mt-4 h-11 rounded-xl text-sm font-semibold transition-all duration-200',
+                inviteCode.length >= 8 && !saving
+                  ? 'bg-orange text-white hover:bg-orange-600'
+                  : 'bg-border text-text-muted cursor-not-allowed'
+              )}
+            >
+              {saving ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Join shop'}
+            </button>
+
+            <p className="text-2xs text-text-muted text-center mt-4">
+              Don't have a code? Ask your shop owner to create one from their Settings page.
+            </p>
           </>
         )}
       </div>
