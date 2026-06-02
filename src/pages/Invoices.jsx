@@ -174,9 +174,10 @@ export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState('All')
   const [selected, setSelected] = useState(null)
 
+  const allInvoices = session?.demo ? mockInvoices : []
   const scoped = isAdvisor
-    ? mockInvoices.filter(inv => inv.shopId === session.shopId)
-    : mockInvoices
+    ? allInvoices.filter(inv => inv.shopId === session.shopId)
+    : allInvoices
 
   const filtered = scoped.filter(inv => {
     const q = search.toLowerCase()

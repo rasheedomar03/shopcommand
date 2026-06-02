@@ -155,9 +155,10 @@ export default function Estimates() {
   const [statusFilter, setStatusFilter] = useState('All')
   const [selected, setSelected] = useState(null)
 
+  const allEstimates = session?.demo ? mockEstimates : []
   const scoped = isAdvisor
-    ? mockEstimates.filter(e => e.shopId === session.shopId)
-    : mockEstimates
+    ? allEstimates.filter(e => e.shopId === session.shopId)
+    : allEstimates
 
   const filtered = scoped.filter(e => {
     const q = search.toLowerCase()

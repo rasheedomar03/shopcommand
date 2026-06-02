@@ -207,9 +207,10 @@ export default function Messages() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
 
+  const allConversations = session?.demo ? mockConversations : []
   const scoped = isAdvisor
-    ? mockConversations.filter(c => c.shopId === session.shopId)
-    : mockConversations
+    ? allConversations.filter(c => c.shopId === session.shopId)
+    : allConversations
 
   const totalUnread = scoped.reduce((sum, c) => sum + c.unread, 0)
 

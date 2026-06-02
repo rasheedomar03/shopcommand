@@ -114,9 +114,32 @@ export function DataProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   // ── localStorage-only state (no API yet) ─────────────────────────────────
-  const [parts, setParts] = useState(() => load('sc_parts', initialParts))
+  // Only load mock parts for demo mode; real users start empty
+  const [parts, setParts] = useState(() => {
+    const stored = load('sc_parts', null)
+    if (stored) return stored
+    return sessionStorage.getItem('sc_demo') === '1' ? initialParts : []
+  })
   const [jobTimers, setJobTimers] = useState(() => load('sc_job_timers', {}))
-  const [notifications, setNotifications] = useState(() => load('sc_notifications', []))
+  const [notifications, setNotifications] = useState(() => {
+    const stored = load('sc_notifications', null)
+    if (stored && stored.length > 0) return stored
+    return []
+  })
+
+  // ── Clear stale mock data for real users ─────────────────────────────────
+  useEffect(() => {
+    if (session && !session.demo && session.onboarded) {
+      // Real user — remove any leftover mock data from localStorage
+      const storedParts = load('sc_parts', null)
+      if (storedParts && storedParts.length > 0 && storedParts[0]?.sku === 'BRK-4411') {
+        localStorage.removeItem('sc_parts')
+        setParts([])
+      }
+      localStorage.removeItem('sc_notifications')
+      setNotifications([])
+    }
+  }, [session])
 
   // ── Demo mode: load mock data directly, skip API ─────────────────────────
   useEffect(() => {

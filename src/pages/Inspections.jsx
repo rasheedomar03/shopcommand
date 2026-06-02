@@ -202,9 +202,10 @@ export default function Inspections() {
   const [statusFilter, setStatusFilter] = useState('All')
   const [selected, setSelected] = useState(null)
 
+  const allInspections = session?.demo ? mockInspections : []
   const scoped = isAdvisor
-    ? mockInspections.filter(i => i.shopId === session.shopId)
-    : mockInspections
+    ? allInspections.filter(i => i.shopId === session.shopId)
+    : allInspections
 
   const filtered = scoped.filter(i => {
     const q = search.toLowerCase()
