@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -133,6 +134,11 @@ function RequireTech({ children }) {
 
 // ── admin shell ──────────────────────────────────────────────────────────────
 
+function PageErrorBoundary({ children }) {
+  const { pathname } = useLocation()
+  return <ErrorBoundary key={pathname}>{children}</ErrorBoundary>
+}
+
 function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -142,6 +148,7 @@ function AppShell() {
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuOpen={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto">
+          <PageErrorBoundary>
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/shops" element={<RequireOwnerOnly><AllShops /></RequireOwnerOnly>} />
@@ -170,6 +177,7 @@ function AppShell() {
               </div>
             } />
           </Routes>
+          </PageErrorBoundary>
         </main>
       </div>
     </div>
