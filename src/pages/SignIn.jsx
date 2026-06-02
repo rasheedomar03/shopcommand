@@ -21,16 +21,15 @@ function HexMark({ size = 32 }) {
 export default function SignInPage() {
   const { user, isSignedIn } = useUser()
 
-  // Already signed in and onboarded — go to dashboard
   if (isSignedIn && user?.unsafeMetadata?.onboarded) {
     return <Navigate to="/dashboard" replace />
   }
 
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-6">
-      <Link to="/" className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
-        <HexMark size={32} />
-        <span className="text-2xl font-semibold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+    <main className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4 py-8">
+      <Link to="/" className="flex items-center gap-2.5 mb-8 hover:opacity-80 transition-opacity">
+        <HexMark size={30} />
+        <span className="text-xl font-semibold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
           <span className="text-slate-900">Shop</span>
           <span className="text-orange-500">Command</span>
         </span>
@@ -43,26 +42,37 @@ export default function SignInPage() {
         forceRedirectUrl="/onboarding"
         appearance={{
           elements: {
-            rootBox: 'w-full max-w-sm mx-auto',
-            card: 'bg-surface border border-border rounded-xl shadow-xl',
-            headerTitle: 'text-text-primary',
-            headerSubtitle: 'text-text-muted',
-            formFieldLabel: 'text-text-secondary text-xs',
-            formFieldInput: 'bg-surface border-border text-text-primary focus:border-orange focus:ring-orange/30',
-            formButtonPrimary: 'bg-orange hover:bg-orange/90 text-white',
-            footerActionLink: 'text-orange hover:text-orange/80',
-            socialButtonsBlockButton: 'border-border text-text-secondary hover:bg-border/40',
-            dividerLine: 'bg-border',
-            dividerText: 'text-text-muted',
-            formFieldErrorText: 'text-red-400',
-            identityPreviewEditButton: 'text-orange',
-            alert: 'bg-red-500/10 border-red-500/20 text-red-400',
+            rootBox: 'w-full max-w-[380px] mx-auto',
+            card: 'bg-white border border-slate-200/80 rounded-2xl shadow-xl shadow-slate-900/[0.06] p-0',
+            cardBox: 'shadow-none',
+            headerTitle: 'text-slate-900 text-lg font-semibold',
+            headerSubtitle: 'text-slate-500 text-sm',
+            formFieldLabel: 'text-slate-600 text-xs font-medium',
+            formFieldInput: 'bg-white border-slate-200 text-slate-900 rounded-lg h-10 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 placeholder:text-slate-400',
+            formButtonPrimary: 'bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg h-10 text-sm transition-colors shadow-none',
+            footerActionLink: 'text-orange-500 hover:text-orange-600 font-medium',
+            footerActionText: 'text-slate-500 text-sm',
+            socialButtonsBlockButton: 'border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg h-10 text-sm font-medium transition-colors',
+            socialButtonsBlockButtonText: 'text-slate-700 font-medium',
+            dividerLine: 'bg-slate-200',
+            dividerText: 'text-slate-400 text-xs',
+            formFieldErrorText: 'text-red-500 text-xs',
+            identityPreviewEditButton: 'text-orange-500',
+            identityPreviewText: 'text-slate-700',
+            alert: 'bg-red-50 border border-red-200 text-red-600 rounded-lg',
+            alertText: 'text-red-600 text-sm',
             footerPagesLink: 'hidden',
+            footer: 'bg-transparent',
+            main: 'gap-6',
           },
           layout: { unsafe_disableDevelopmentModeWarnings: true },
         }}
       />
 
+      <p className="mt-6 text-xs text-slate-400">
+        Don't have an account?{' '}
+        <Link to="/sign-up" className="text-orange-500 hover:text-orange-600 font-medium">Sign up</Link>
+      </p>
     </main>
   )
 }
