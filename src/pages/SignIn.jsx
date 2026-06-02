@@ -27,8 +27,8 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-6">
+      <Link to="/" className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
         <HexMark size={32} />
         <span className="text-2xl font-semibold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
           <span className="text-slate-900">Shop</span>
@@ -43,7 +43,7 @@ export default function SignInPage() {
         forceRedirectUrl="/onboarding"
         appearance={{
           elements: {
-            rootBox: 'w-full max-w-sm',
+            rootBox: 'w-full max-w-sm mx-auto',
             card: 'bg-surface border border-border rounded-xl shadow-xl',
             headerTitle: 'text-text-primary',
             headerSubtitle: 'text-text-muted',
