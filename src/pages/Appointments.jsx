@@ -92,23 +92,25 @@ export default function Appointments() {
   const totalThisWeek = days.reduce((sum, d) => sum + rosForDay(d).length, 0)
 
   return (
-    <div className="p-5 lg:p-6 flex flex-col gap-5 animate-fade-in h-full">
+    <div className="p-4 sm:p-5 lg:p-6 flex flex-col gap-4 sm:gap-5 animate-fade-in h-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Appointments</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-text-primary">Appointments</h1>
           <p className="text-xs text-text-muted mt-0.5">{totalThisWeek} scheduled this week</p>
         </div>
         <button
           onClick={() => { setNewRODate(null); setNewROOpen(true) }}
-          className="flex items-center gap-2 h-9 px-4 rounded-lg bg-orange text-white text-sm font-semibold hover:bg-orange/90 active:scale-[0.98] transition-all duration-150"
+          className="flex items-center gap-1.5 h-8 sm:h-9 px-3 sm:px-4 rounded-lg bg-orange text-white text-xs sm:text-sm font-semibold hover:bg-orange/90 active:scale-[0.98] transition-all duration-150 flex-shrink-0"
         >
-          <Plus size={14} /> New Appointment
+          <Plus size={14} />
+          <span className="hidden sm:inline">New Appointment</span>
+          <span className="sm:hidden">New</span>
         </button>
       </div>
 
       {/* Week nav */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <button
           onClick={goToday}
           className="h-8 px-3 rounded-md border border-border text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
@@ -126,8 +128,8 @@ export default function Appointments() {
         <span className="text-sm font-medium text-text-primary">{weekLabel()}</span>
       </div>
 
-      {/* Calendar grid */}
-      <div className="grid grid-cols-5 gap-3 flex-1 min-h-0">
+      {/* Calendar — vertical list on mobile, 5-col grid on md+ */}
+      <div className="flex flex-col md:grid md:grid-cols-5 gap-3 flex-1 min-h-0">
         {days.map((day, i) => {
           const isToday = sameDay(day, today)
           const isPast  = day < today
@@ -140,31 +142,33 @@ export default function Appointments() {
             )}>
               {/* Day header */}
               <div className="flex items-center justify-between mb-1">
-                <div>
+                <div className="flex items-center gap-2 md:block">
                   <div className={cn('text-xs font-medium uppercase tracking-wider', isToday ? 'text-orange' : 'text-text-muted')}>
                     {DAY_NAMES[day.getDay()]}
                   </div>
                   <div className={cn(
-                    'text-xl font-semibold leading-none mt-0.5',
+                    'text-xl font-semibold leading-none md:mt-0.5',
                     isToday ? 'text-orange' : isPast ? 'text-text-muted' : 'text-text-primary'
                   )}>
                     {day.getDate()}
                   </div>
+                  {ros.length > 0 && (
+                    <span className="md:hidden text-2xs text-text-muted ml-1">{ros.length} appt{ros.length !== 1 ? 's' : ''}</span>
+                  )}
                 </div>
                 <button
                   onClick={() => { setNewRODate(day.toISOString()); setNewROOpen(true) }}
-                  className="w-6 h-6 flex items-center justify-center rounded-md text-text-muted hover:text-orange hover:bg-orange/10 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-orange hover:bg-orange/10 transition-colors"
                   title="Add appointment"
                 >
-                  <Plus size={12} />
+                  <Plus size={13} />
                 </button>
               </div>
 
               {/* RO cards */}
               <div className="flex flex-col gap-1.5 overflow-y-auto">
                 {ros.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-6 text-center">
-                    <Calendar size={16} className="text-border mb-1.5" />
+                  <div className="flex items-center justify-center py-4 md:py-6 text-center">
                     <span className="text-2xs text-text-muted">No appointments</span>
                   </div>
                 ) : (
