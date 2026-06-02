@@ -1,5 +1,5 @@
-import { SignIn as ClerkSignIn } from '@clerk/clerk-react'
-import { Link } from 'react-router-dom'
+import { SignIn as ClerkSignIn, useUser } from '@clerk/clerk-react'
+import { Link, Navigate } from 'react-router-dom'
 
 function HexMark({ size = 32 }) {
   const pts = (cx, cy, r) =>
@@ -19,6 +19,13 @@ function HexMark({ size = 32 }) {
 }
 
 export default function SignInPage() {
+  const { user, isSignedIn } = useUser()
+
+  // Already signed in and onboarded — go to dashboard
+  if (isSignedIn && user?.unsafeMetadata?.onboarded) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   return (
     <main className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
