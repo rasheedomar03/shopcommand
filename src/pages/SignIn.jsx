@@ -36,6 +36,7 @@ const clerkAppearance = {
     footerPagesLink: 'hidden',
     footerAction: 'hidden',
     badge: 'hidden',
+    alternativeMethodsBlockButton__identifier: 'hidden',
   },
   layout: {
     unsafe_disableDevelopmentModeWarnings: true,
