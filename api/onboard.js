@@ -100,6 +100,12 @@ export default async function handler(req, res) {
 
   // ── Owner onboarding ──────────────────────────────────────────────────
   if (role === 'owner') {
+    // Block if this user already exists as a non-owner in any org
+    const [existingUser] = await sql`SELECT id, role FROM users WHERE clerk_id = ${clerkId} LIMIT 1`
+    if (existingUser && existingUser.role !== 'owner') {
+      return res.status(403).json({ error: `You are registered as a ${existingUser.role}. Contact your shop owner to change your role.` })
+    }
+
     if (!shopName || typeof shopName !== 'string' || shopName.trim().length < 2) {
       return res.status(400).json({ error: 'Shop name is required (min 2 characters)' })
     }
