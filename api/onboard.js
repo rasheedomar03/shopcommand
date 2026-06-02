@@ -38,9 +38,18 @@ export default async function handler(req, res) {
     const name = shopName.trim().slice(0, 100)
 
     try {
-      const existing = await sql`SELECT id FROM organizations WHERE owner_clerk_id = ${clerkId}`
+      const existing = await sql`SELECT o.id AS org_id, s.id AS shop_id FROM organizations o LEFT JOIN shops s ON s.org_id = o.id WHERE o.owner_clerk_id = ${clerkId} LIMIT 1`
       if (existing.length > 0) {
-        return res.status(409).json({ error: 'Organization already exists for this account' })
+        // Org exists but Clerk metadata may not have been set — fix it now
+        await clerk.users.updateUser(clerkId, {
+          unsafeMetadata: {
+            role: 'owner',
+            onboarded: true,
+            orgId: existing[0].org_id,
+            shopId: existing[0].shop_id,
+          },
+        })
+        return res.status(200).json({ orgId: existing[0].org_id, shopId: existing[0].shop_id })
       }
 
       const clerkUser = await clerk.users.getUser(clerkId)
