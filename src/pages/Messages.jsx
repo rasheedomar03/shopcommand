@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Send, Phone, ChevronLeft, Clock } from 'lucide-react'
+import { Search, Send, Phone, ChevronLeft, Clock, Plus, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatRelativeTime, sanitizeField } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -200,12 +200,114 @@ function MessageThread({ conversation, onBack, shops }) {
   )
 }
 
+function ComposeModal({ open, onClose, customers, shops, onStartChat }) {
+  const [search, setSearch] = useState('')
+  const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [message, setMessage] = useState('')
+
+  if (!open) return null
+
+  const filtered = customers.filter(c => {
+    const q = search.toLowerCase()
+    return !q || c.name?.toLowerCase().includes(q) || c.phone?.includes(q) || c.email?.toLowerCase().includes(q)
+  }).slice(0, 10)
+
+  const handleSend = () => {
+    if (!selectedCustomer || !message.trim()) return
+    onStartChat(selectedCustomer, message.trim())
+    setSearch('')
+    setSelectedCustomer(null)
+    setMessage('')
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="bg-surface border border-border rounded-xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h3 className="text-sm font-semibold text-text-primary">New Message</h3>
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          {!selectedCustomer ? (
+            <>
+              <div>
+                <label className="text-xs font-medium text-text-secondary mb-1.5 block">To: Customer</label>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search by name, phone, or email..."
+                  className="w-full h-9 px-3 rounded-lg bg-background border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40"
+                  autoFocus
+                />
+              </div>
+              <div className="max-h-48 overflow-y-auto space-y-1">
+                {filtered.length === 0 ? (
+                  <p className="text-xs text-text-muted py-4 text-center">No customers found</p>
+                ) : filtered.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedCustomer(c)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background text-left transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-orange/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-semibold text-orange">{c.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-text-primary">{c.name}</div>
+                      <div className="text-2xs text-text-muted">{c.phone || c.email || 'No contact info'}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-background border border-border">
+                <div className="w-8 h-8 rounded-full bg-orange/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-semibold text-orange">{selectedCustomer.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-text-primary">{selectedCustomer.name}</div>
+                  <div className="text-2xs text-text-muted">{selectedCustomer.phone || selectedCustomer.email}</div>
+                </div>
+                <button onClick={() => setSelectedCustomer(null)} className="text-text-muted hover:text-text-primary">
+                  <X size={14} />
+                </button>
+              </div>
+              <textarea
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                placeholder="Type your message..."
+                rows={3}
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40 resize-none"
+                autoFocus
+              />
+              <button
+                onClick={handleSend}
+                disabled={!message.trim()}
+                className="w-full h-9 rounded-lg bg-orange text-white text-sm font-semibold hover:bg-orange-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                <Send size={14} />
+                Send Message
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Messages() {
-  const { shops } = useData()
+  const { shops, customers } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
+  const [composeOpen, setComposeOpen] = useState(false)
 
   const allConversations = session?.demo ? mockConversations : []
   const scoped = isAdvisor
@@ -228,6 +330,13 @@ export default function Messages() {
                 <p className="text-2xs text-text-muted">{totalUnread} unread</p>
               )}
             </div>
+            <button
+              onClick={() => setComposeOpen(true)}
+              className="w-8 h-8 rounded-lg bg-orange text-white flex items-center justify-center hover:bg-orange-hover transition-colors"
+              title="New message"
+            >
+              <Plus size={15} />
+            </button>
           </div>
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
@@ -248,6 +357,29 @@ export default function Messages() {
       )}>
         <MessageThread conversation={selected} onBack={() => setSelected(null)} shops={shops} />
       </div>
+
+      <ComposeModal
+        open={composeOpen}
+        onClose={() => setComposeOpen(false)}
+        customers={customers || []}
+        shops={shops}
+        onStartChat={(customer, message) => {
+          // Create a new conversation and select it
+          const newConv = {
+            id: `conv-${Date.now()}`,
+            customerId: customer.id,
+            customerName: customer.name,
+            vehicle: '',
+            shopId: isAdvisor ? session.shopId : shops[0]?.id,
+            unread: 0,
+            lastActivity: new Date().toISOString(),
+            messages: [
+              { id: `msg-${Date.now()}`, from: 'shop', text: message, time: new Date().toISOString() },
+            ],
+          }
+          setSelected(newConv)
+        }}
+      />
     </div>
   )
 }

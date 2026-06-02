@@ -130,7 +130,7 @@ export default createHandler(
         return res.status(403).json({ error: 'Technicians cannot create repair orders' })
       }
 
-      const { shop_id, customer_id, vehicle_id, tech_id, advisor_id, notes } = req.body || {}
+      const { shop_id, customer_id, vehicle_id, tech_id, advisor_id, notes, scheduled_at } = req.body || {}
       const errors = []
 
       if (!shop_id || !UUID_RE.test(shop_id)) errors.push('Valid shop_id is required')
@@ -140,6 +140,9 @@ export default createHandler(
       if (advisor_id && !UUID_RE.test(advisor_id)) errors.push('Invalid advisor_id format')
       if (notes && (typeof notes !== 'string' || notes.length > 5000)) {
         errors.push('Notes must be under 5000 characters')
+      }
+      if (scheduled_at && isNaN(new Date(scheduled_at).getTime())) {
+        errors.push('Invalid scheduled_at date')
       }
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
@@ -153,11 +156,11 @@ export default createHandler(
       const roNumber = 'RO-' + today + '-' + String(Number(seq.cnt) + 1).padStart(4, '0')
 
       const [row] = await sql`
-        INSERT INTO repair_orders (org_id, shop_id, customer_id, vehicle_id, tech_id, advisor_id, ro_number, notes)
+        INSERT INTO repair_orders (org_id, shop_id, customer_id, vehicle_id, tech_id, advisor_id, ro_number, notes, scheduled_at)
         VALUES (
           ${user.orgId}, ${shop_id}, ${customer_id},
           ${vehicle_id || null}, ${tech_id || null}, ${advisor_id || null},
-          ${roNumber}, ${notes?.trim() || null}
+          ${roNumber}, ${notes?.trim() || null}, ${scheduled_at ? new Date(scheduled_at).toISOString() : null}
         )
         RETURNING *
       `

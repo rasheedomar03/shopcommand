@@ -14,6 +14,7 @@ export function NewROModal({
   preTechId,
   preCustomerName = '',
   preCustomerPhone = '',
+  defaultDate,
   onCreated,
 }) {
   const { technicians, addRepairOrder, shops, customers } = useData()
@@ -33,6 +34,7 @@ export function NewROModal({
     techId: preTechId || '',
     complaint: '',
     stage: preTechId ? 'In Progress' : 'Estimate',
+    scheduledAt: defaultDate ? new Date(defaultDate).toISOString().slice(0, 16) : '',
   })
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
@@ -110,6 +112,7 @@ export function NewROModal({
         customerId: form.customerId,
         techId: form.techId || null,
         complaint: cleanComplaint,
+        scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
       })
     } catch (err) {
       setErrors({ submit: err.message || 'Failed to create repair order' })
@@ -134,6 +137,7 @@ export function NewROModal({
       techId: preTechId || '',
       complaint: '',
       stage: preTechId ? 'In Progress' : 'Estimate',
+      scheduledAt: '',
     })
     setErrors({})
     setVinState('idle')
@@ -308,6 +312,14 @@ export function NewROModal({
             onChange={set('complaint')}
             error={errors.complaint}
             rows={3}
+          />
+
+          {/* Schedule */}
+          <Input
+            label="Schedule Appointment"
+            type="datetime-local"
+            value={form.scheduledAt}
+            onChange={set('scheduledAt')}
           />
         </div>
 

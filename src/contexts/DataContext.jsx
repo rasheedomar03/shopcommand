@@ -64,6 +64,7 @@ function transformRO(ro) {
     total: Number(ro.total || 0),
     created: ro.created_at,
     updated: ro.updated_at,
+    scheduledAt: ro.scheduled_at || null,
   }
 }
 
@@ -279,6 +280,7 @@ export function DataProvider({ children }) {
       tech_id: ro.techId || ro.tech_id || null,
       advisor_id: ro.advisorId || ro.advisor_id || null,
       notes: ro.complaint || ro.notes || null,
+      scheduled_at: ro.scheduledAt || ro.scheduled_at || null,
     }
     const row = await api('/api/repair-orders', { method: 'POST', body })
     const transformed = transformRO(row)
