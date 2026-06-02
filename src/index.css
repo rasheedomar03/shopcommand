@@ -155,3 +155,14 @@ html.light .focus\:ring-orange\/30:focus   { --tw-ring-color: rgba(249,115,22,0.
 
 /* ── Native <select> dropdown options ── */
 html.light .\[\&\>option\]\:bg-surface > option { background-color: #FFFFFF; color: #0F172A; }
+
+/* ── Print styles ── */
+@media print {
+  body { background: white !important; color: black !important; }
+  nav, header, aside, [role="complementary"],
+  .demo-banner, button, .skip-link { display: none !important; }
+  [data-radix-portal] > div:first-child { display: none !important; }
+  [role="dialog"] { position: static !important; background: white !important; box-shadow: none !important; border: none !important; max-height: none !important; overflow: visible !important; }
+  * { color: black !important; background: white !important; border-color: #ccc !important; }
+  .text-orange { color: #F97316 !important; }
+}

@@ -1,4 +1,5 @@
 import { createHandler } from './_lib/handler.js'
+import { Resend } from 'resend'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const VALID_STAGES = [
@@ -6,9 +7,74 @@ const VALID_STAGES = [
   'Complete', 'Invoiced', 'Paid',
 ]
 
+function getResend() {
+  if (!process.env.RESEND_API_KEY) return null
+  return new Resend(process.env.RESEND_API_KEY)
+}
+
 export default createHandler(
   { methods: ['GET', 'POST', 'PUT'] },
   async ({ req, res, sql, user }) => {
+    const action = req.query?.action
+
+    // ── Send notification email: POST /api/repair-orders?action=notify ─────
+    if (action === 'notify' && req.method === 'POST') {
+      const { ro_id, type } = req.body || {}
+      if (!ro_id || !UUID_RE.test(ro_id)) {
+        return res.status(400).json({ error: 'Valid ro_id is required' })
+      }
+      if (!type || !['estimate_ready', 'invoice_ready', 'status_update'].includes(type)) {
+        return res.status(400).json({ error: 'type must be estimate_ready, invoice_ready, or status_update' })
+      }
+
+      const [ro] = await sql`
+        SELECT ro.*, c.name AS customer_name, c.email AS customer_email,
+          v.year AS vehicle_year, v.make AS vehicle_make, v.model AS vehicle_model,
+          s.name AS shop_name, s.phone AS shop_phone
+        FROM repair_orders ro
+        LEFT JOIN customers c ON c.id = ro.customer_id
+        LEFT JOIN vehicles v ON v.id = ro.vehicle_id
+        LEFT JOIN shops s ON s.id = ro.shop_id
+        WHERE ro.id = ${ro_id}
+      `
+      if (!ro) return res.status(404).json({ error: 'Repair order not found' })
+      if (!ro.customer_email) {
+        return res.status(400).json({ error: 'Customer has no email address on file' })
+      }
+
+      const vehicle = [ro.vehicle_year, ro.vehicle_make, ro.vehicle_model].filter(Boolean).join(' ')
+      const statusUrl = `${req.headers.origin || 'https://www.shopcommand.net'}/status/${ro.id}`
+
+      const subjects = {
+        estimate_ready: `Your estimate is ready — ${vehicle}`,
+        invoice_ready: `Invoice ready for pickup — ${vehicle}`,
+        status_update: `Update on your ${vehicle}`,
+      }
+
+      const bodies = {
+        estimate_ready: `Hi ${ro.customer_name},\n\nYour estimate for your ${vehicle} is ready for review.\n\nTrack your repair status anytime:\n${statusUrl}\n\nQuestions? Call us at ${ro.shop_phone || 'the shop'}.\n\n— ${ro.shop_name}`,
+        invoice_ready: `Hi ${ro.customer_name},\n\nYour ${vehicle} is ready for pickup! Your invoice is available.\n\nView your status:\n${statusUrl}\n\nThank you for choosing ${ro.shop_name}!`,
+        status_update: `Hi ${ro.customer_name},\n\nHere's an update on your ${vehicle}: it's currently "${ro.stage}".\n\nTrack your repair:\n${statusUrl}\n\n— ${ro.shop_name}`,
+      }
+
+      const resend = getResend()
+      if (!resend) {
+        return res.status(503).json({ error: 'Email service not configured. Add RESEND_API_KEY to environment variables.' })
+      }
+
+      try {
+        await resend.emails.send({
+          from: `${ro.shop_name} via ShopCommand <notifications@shopcommand.net>`,
+          to: ro.customer_email,
+          subject: subjects[type],
+          text: bodies[type],
+        })
+        return res.json({ sent: true, to: ro.customer_email, type })
+      } catch (err) {
+        return res.status(500).json({ error: 'Failed to send email' })
+      }
+    }
+
     if (req.method === 'GET') {
       const id = req.query?.id
       const shopId = req.query?.shop_id

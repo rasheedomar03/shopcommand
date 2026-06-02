@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, Download, Send, CheckCircle, Clock, AlertCircle, DollarSign } from 'lucide-react'
+import { Search, Download, Send, CheckCircle, Clock, AlertCircle, DollarSign, Printer } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
@@ -150,6 +150,9 @@ function InvoiceDetail({ invoice, onClose, shops }) {
         <div className="flex items-center justify-between pt-2">
           <div className="text-xs text-text-muted">Created {formatDate(invoice.created)}</div>
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="secondary" onClick={() => window.print()}>
+              <Printer size={13} /> Print
+            </Button>
             {invoice.status === 'draft' && (
               <Button size="sm"><Send size={13} /> Send invoice</Button>
             )}

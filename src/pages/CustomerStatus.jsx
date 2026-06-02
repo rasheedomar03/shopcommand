@@ -1,8 +1,8 @@
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { useData } from '@/contexts/DataContext'
 import { RO_STAGES, formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { MapPin, Phone, Clock, CheckCircle2, Wrench, Package, FileText, DollarSign } from 'lucide-react'
+import { MapPin, Phone, Clock, CheckCircle2, Wrench, Package, FileText, DollarSign, Loader2 } from 'lucide-react'
 
 const STAGE_INFO = {
   'Estimate':       { msg: "We're putting together an estimate for your vehicle. We'll reach out shortly.", icon: FileText },
@@ -33,11 +33,27 @@ function HexMark({ size = 22 }) {
 
 export default function CustomerStatus() {
   const { roId } = useParams()
-  const { repairOrders, shops } = useData()
+  const [ro, setRO] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  const ro = repairOrders.find(r => r.id === roId)
+  useEffect(() => {
+    if (!roId) { setLoading(false); setError(true); return }
+    fetch(`/api/health?action=status&roId=${encodeURIComponent(roId)}`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => { setRO(data); setLoading(false) })
+      .catch(() => { setError(true); setLoading(false) })
+  }, [roId])
 
-  if (!ro) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+        <Loader2 size={24} className="text-orange animate-spin" />
+      </div>
+    )
+  }
+
+  if (error || !ro) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <div className="flex items-center gap-2 mb-8">
@@ -54,7 +70,6 @@ export default function CustomerStatus() {
     )
   }
 
-  const shop = shops.find(s => s.id === ro.shopId)
   const stageIdx = RO_STAGES.indexOf(ro.stage)
   const isPaid = ro.stage === 'Paid'
   const isReady = ['Invoiced', 'Paid'].includes(ro.stage)
@@ -63,7 +78,6 @@ export default function CustomerStatus() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="h-14 border-b border-border flex items-center px-5">
         <div className="flex items-center gap-2">
           <HexMark size={24} />
@@ -76,7 +90,6 @@ export default function CustomerStatus() {
       <main className="flex-1 flex items-start justify-center px-4 py-10">
         <div className="w-full max-w-sm space-y-4">
 
-          {/* Status hero */}
           <div className={cn(
             'rounded-2xl border p-6 text-center',
             isPaid    ? 'bg-status-green/5 border-status-green/25' :
@@ -100,7 +113,6 @@ export default function CustomerStatus() {
             <p className="text-sm text-text-muted leading-relaxed">{info.msg}</p>
           </div>
 
-          {/* Progress bar */}
           <div className="flex gap-1 px-1">
             {RO_STAGES.map((s, i) => (
               <div
@@ -108,9 +120,7 @@ export default function CustomerStatus() {
                 title={s}
                 className={cn(
                   'flex-1 h-1.5 rounded-full transition-colors duration-500',
-                  i < stageIdx  ? (isPaid ? 'bg-status-green' : 'bg-orange') : '',
-                  i === stageIdx ? (isPaid ? 'bg-status-green' : 'bg-orange') : '',
-                  i > stageIdx  ? 'bg-border' : ''
+                  i <= stageIdx ? (isPaid ? 'bg-status-green' : 'bg-orange') : 'bg-border'
                 )}
               />
             ))}
@@ -120,47 +130,40 @@ export default function CustomerStatus() {
             <span>Paid</span>
           </div>
 
-          {/* Vehicle card */}
           <div className="bg-surface border border-border rounded-xl p-5">
             <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-3">Your Vehicle</div>
             <div className="text-lg font-semibold text-text-primary">{ro.vehicle}</div>
             <div className="text-sm text-text-muted mt-0.5">{ro.customerName}</div>
-            {ro.complaint && (
-              <div className="text-xs text-text-muted mt-2 pt-2 border-t border-border leading-relaxed">
-                "{ro.complaint}"
-              </div>
-            )}
             <div className="flex items-center gap-1.5 text-xs text-text-muted mt-3">
               <Clock size={11} />
-              Last updated {formatRelativeTime(ro.updated)}
+              Last updated {formatRelativeTime(ro.updatedAt)}
             </div>
           </div>
 
-          {/* Shop contact */}
-          {shop && (
+          {ro.shopName && (
             <div className="bg-surface border border-border rounded-xl p-5">
               <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-3">Shop Contact</div>
-              <div className="text-sm font-semibold text-text-primary">{shop.name}</div>
-              {shop.address && (
+              <div className="text-sm font-semibold text-text-primary">{ro.shopName}</div>
+              {ro.shopAddress && (
                 <div className="flex items-start gap-1.5 text-xs text-text-muted mt-1.5">
                   <MapPin size={11} className="mt-0.5 flex-shrink-0" />
-                  {shop.address}
+                  {ro.shopAddress}
                 </div>
               )}
-              {shop.phone && (
+              {ro.shopPhone && (
                 <a
-                  href={`tel:${shop.phone}`}
+                  href={`tel:${ro.shopPhone}`}
                   className="flex items-center gap-1.5 text-xs text-orange hover:underline mt-1.5 font-medium"
                 >
                   <Phone size={11} />
-                  {shop.phone}
+                  {ro.shopPhone}
                 </a>
               )}
             </div>
           )}
 
           <div className="text-center text-2xs text-text-muted py-2">
-            Order {ro.id} · Questions? Call the shop above.
+            {ro.roNumber} · Questions? Call the shop above.
           </div>
         </div>
       </main>
