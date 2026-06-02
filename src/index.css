@@ -156,6 +156,9 @@ html.light .focus\:ring-orange\/30:focus   { --tw-ring-color: rgba(249,115,22,0.
 /* ── Native <select> dropdown options ── */
 html.light .\[\&\>option\]\:bg-surface > option { background-color: #FFFFFF; color: #0F172A; }
 
+/* ── Hide Clerk "Last used" badge and alternative methods ── */
+.cl-alternativeMethods { display: none !important; }
+
 /* ── Print styles ── */
 @media print {
   body { background: white !important; color: black !important; }
