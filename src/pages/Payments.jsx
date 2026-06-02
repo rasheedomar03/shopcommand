@@ -54,8 +54,8 @@ export default function Payments() {
   const [search, setSearch] = useState('')
   const [methodFilter, setMethodFilter] = useState('All')
 
-  // Use real data if available, fall back to mock for demo
-  const allPayments = session?.demo ? mockPayments : (realPayments?.length ? realPayments.map(p => ({
+  // Mock data only in demo mode; real users see real data (or empty)
+  const allPayments = session?.demo ? mockPayments : (realPayments || []).map(p => ({
     id: p.id,
     invoiceId: p.invoice_id || p.ro_number || '',
     shopId: p.shop_id,
@@ -66,7 +66,7 @@ export default function Payments() {
     date: p.created_at,
     status: p.status,
     shopName: p.shop_name,
-  })) : mockPayments)
+  }))
 
   const scoped = isAdvisor
     ? allPayments.filter(p => p.shopId === session.shopId)
