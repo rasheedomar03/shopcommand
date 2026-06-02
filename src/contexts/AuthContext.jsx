@@ -28,8 +28,16 @@ export function AuthProvider({ children }) {
   const { signOut } = useClerk()
   const [demoActive, setDemoActive] = useState(() => sessionStorage.getItem(DEMO_KEY) === '1')
 
+  // If a real user signs in while demo is active, exit demo mode
+  useEffect(() => {
+    if (demoActive && isLoaded && isSignedIn && user) {
+      sessionStorage.removeItem(DEMO_KEY)
+      setDemoActive(false)
+    }
+  }, [demoActive, isLoaded, isSignedIn, user])
+
   const session = useMemo(() => {
-    if (demoActive) return DEMO_SESSION
+    if (demoActive && !isSignedIn) return DEMO_SESSION
     if (!isLoaded) return getCachedSession()
     if (!isSignedIn || !user) return null
 
