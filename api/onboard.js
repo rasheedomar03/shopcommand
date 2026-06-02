@@ -1,4 +1,4 @@
-import { createClerkClient } from '@clerk/backend'
+import { verifyToken, createClerkClient } from '@clerk/backend'
 import { neon } from '@neondatabase/serverless'
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
@@ -16,10 +16,12 @@ export default async function handler(req, res) {
 
   let clerkId
   try {
-    const payload = await clerk.verifyToken(token)
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+    })
     clerkId = payload.sub
-  } catch {
-    return res.status(401).json({ error: 'Invalid token' })
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token', detail: err.message })
   }
 
   const { role, shopName } = req.body || {}
