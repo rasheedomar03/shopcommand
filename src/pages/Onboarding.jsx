@@ -72,7 +72,15 @@ export default function Onboarding() {
         return
       }
 
-      await user.reload()
+      // Set metadata on client side to ensure it persists
+      await user.update({
+        unsafeMetadata: {
+          role: 'owner',
+          onboarded: true,
+          orgId: data.orgId,
+          shopId: data.shopId,
+        },
+      })
       navigate('/dashboard', { replace: true })
     } catch {
       setError('Network error. Please try again.')
