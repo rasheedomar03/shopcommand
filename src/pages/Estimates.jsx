@@ -3,6 +3,7 @@ import { Search, Plus, Send, Check, X, Clock, ChevronRight, Phone } from 'lucide
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
+import { NewROModal } from '@/components/modals/NewROModal'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { formatCurrency, formatRelativeTime } from '@/lib/utils'
@@ -154,6 +155,7 @@ export default function Estimates() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [selected, setSelected] = useState(null)
+  const [newOpen, setNewOpen] = useState(false)
 
   const allEstimates = session?.demo ? mockEstimates : []
   const scoped = isAdvisor
@@ -182,7 +184,7 @@ export default function Estimates() {
           <h1 className="text-xl font-semibold text-text-primary">Estimates</h1>
           <p className="text-xs text-text-muted mt-0.5">{scoped.length} total · {scoped.filter(e => e.status === 'sent').length} awaiting response</p>
         </div>
-        <Button>
+        <Button onClick={() => setNewOpen(true)}>
           <Plus size={15} />
           New Estimate
         </Button>
@@ -260,6 +262,7 @@ export default function Estimates() {
       </div>
 
       <EstimateDetail estimate={selected} onClose={() => setSelected(null)} />
+      {newOpen && <NewROModal open={newOpen} onClose={() => setNewOpen(false)} />}
     </div>
   )
 }

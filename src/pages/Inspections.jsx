@@ -3,6 +3,7 @@ import { Search, Plus, Camera, Send, Eye, CheckCircle, Clock, AlertTriangle, Pap
 import { FileUpload, FileList } from '@/components/ui/FileUpload'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
+import { NewROModal } from '@/components/modals/NewROModal'
 import { Modal } from '@/components/ui/Modal'
 import { formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -201,6 +202,7 @@ export default function Inspections() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [selected, setSelected] = useState(null)
+  const [newOpen, setNewOpen] = useState(false)
 
   const allInspections = session?.demo ? mockInspections : []
   const scoped = isAdvisor
@@ -225,7 +227,7 @@ export default function Inspections() {
           <h1 className="text-xl font-semibold text-text-primary">Inspections</h1>
           <p className="text-xs text-text-muted mt-0.5">{scoped.length} total · {scoped.filter(i => i.status === 'draft').length} in progress</p>
         </div>
-        <Button>
+        <Button onClick={() => setNewOpen(true)}>
           <Plus size={15} />
           New Inspection
         </Button>
@@ -309,6 +311,7 @@ export default function Inspections() {
       )}
 
       <InspectionDetail inspection={selected} onClose={() => setSelected(null)} shops={shops} />
+      {newOpen && <NewROModal open={newOpen} onClose={() => setNewOpen(false)} />}
     </div>
   )
 }

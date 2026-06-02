@@ -41,12 +41,17 @@ export default createHandler(
       if (search) {
         const pattern = `%${search}%`
         rows = await sql`
-          SELECT * FROM customers
+          SELECT id, org_id, name, email, phone, address, notes, created_at, updated_at
+          FROM customers
           WHERE (name ILIKE ${pattern} OR email ILIKE ${pattern} OR phone ILIKE ${pattern})
           ORDER BY created_at DESC
+          LIMIT 200
         `
       } else {
-        rows = await sql`SELECT * FROM customers ORDER BY created_at DESC`
+        rows = await sql`
+          SELECT id, org_id, name, email, phone, address, notes, created_at, updated_at
+          FROM customers ORDER BY created_at DESC LIMIT 200
+        `
       }
       return res.json(rows)
     }

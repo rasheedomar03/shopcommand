@@ -104,22 +104,18 @@ export function NewROModal({
     const cleanComplaint = sanitizeField(form.complaint, 1000)
     const vehicle = `${cleanYear} ${cleanMake} ${cleanModel}`.trim()
 
-    const newRO = addRepairOrder({
-      shopId: Number(form.shopId),
-      customerId: form.customerId,
-      customerName: cleanName,
-      customerPhone: cleanPhone,
-      vehicle,
-      techId: form.techId ? Number(form.techId) : null,
-      techName: tech?.name || null,
-      stage: form.stage,
-      complaint: cleanComplaint,
-      odometerIn: form.mileage ? Number(form.mileage.replace(/,/g, '')) : null,
-      odometerOut: null,
-      services: [],
-      vin: form.vin || null,
-      trim: cleanTrim || null,
-    })
+    try {
+      await addRepairOrder({
+        shopId: form.shopId,
+        customerId: form.customerId,
+        techId: form.techId || null,
+        complaint: cleanComplaint,
+      })
+    } catch (err) {
+      setErrors({ submit: err.message || 'Failed to create repair order' })
+      setSubmitting(false)
+      return
+    }
 
     setSubmitting(false)
     onClose()

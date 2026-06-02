@@ -24,7 +24,7 @@ export default createHandler(
   { methods: ['GET', 'POST', 'PUT', 'DELETE'] },
   async ({ req, res, sql, user }) => {
     if (req.method === 'GET') {
-      const rows = await sql`SELECT * FROM shops ORDER BY created_at ASC`
+      const rows = await sql`SELECT id, org_id, name, address, phone, created_at, updated_at FROM shops ORDER BY created_at ASC LIMIT 50`
       return res.json(rows)
     }
 

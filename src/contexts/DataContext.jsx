@@ -271,7 +271,16 @@ export function DataProvider({ children }) {
   // ── repair order CRUD ────────────────────────────────────────────────────
 
   const addRepairOrder = useCallback(async (ro) => {
-    const row = await api('/api/repair-orders', { method: 'POST', body: ro })
+    // Map camelCase frontend fields to snake_case API fields
+    const body = {
+      shop_id: ro.shopId || ro.shop_id,
+      customer_id: ro.customerId || ro.customer_id,
+      vehicle_id: ro.vehicleId || ro.vehicle_id || null,
+      tech_id: ro.techId || ro.tech_id || null,
+      advisor_id: ro.advisorId || ro.advisor_id || null,
+      notes: ro.complaint || ro.notes || null,
+    }
+    const row = await api('/api/repair-orders', { method: 'POST', body })
     const transformed = transformRO(row)
     setRepairOrders(prev => [transformed, ...prev])
     return transformed

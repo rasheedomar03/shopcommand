@@ -210,7 +210,17 @@ export default function Invoices() {
             {scoped.filter(i => i.status === 'paid').length} paid · ${totalOutstanding.toFixed(0)} outstanding
           </p>
         </div>
-        <Button>
+        <Button onClick={() => {
+          const rows = scoped.map(i => [i.id, i.customerName, i.vehicle, i.status, i.total?.toFixed(2), i.created].join(','))
+          const csv = ['Invoice,Customer,Vehicle,Status,Amount,Date', ...rows].join('\n')
+          const blob = new Blob([csv], { type: 'text/csv' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `invoices-${new Date().toISOString().slice(0,10)}.csv`
+          a.click()
+          URL.revokeObjectURL(url)
+        }}>
           <Download size={15} />
           Export
         </Button>
