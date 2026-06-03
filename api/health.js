@@ -4,8 +4,77 @@ import { rateLimit } from './_lib/rate-limit.js'
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export default async function handler(req, res) {
+  // ── Bug report: POST /api/health?action=bug-report ──────────────────────
+  if (req.method === 'POST' && req.query?.action === 'bug-report') {
+    if (!rateLimit(req, res, 'strict')) {
+      return res.status(429).json({ error: 'Too many reports. Try again later.' })
+    }
+
+    const { description, page, url, userAgent, screenWidth, screenHeight } = req.body || {}
+
+    if (!description || typeof description !== 'string' || description.trim().length < 5) {
+      return res.status(400).json({ error: 'Description is required (minimum 5 characters)' })
+    }
+    if (description.length > 2000) {
+      return res.status(400).json({ error: 'Description too long (max 2000 characters)' })
+    }
+
+    try {
+      const sql = neon(process.env.DATABASE_URL)
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS bug_reports (
+          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+          description TEXT NOT NULL,
+          page TEXT,
+          url TEXT,
+          user_agent TEXT,
+          screen_width INTEGER,
+          screen_height INTEGER,
+          reporter_ip TEXT,
+          status TEXT DEFAULT 'new',
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `
+
+      const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown'
+
+      await sql`
+        INSERT INTO bug_reports (description, page, url, user_agent, screen_width, screen_height, reporter_ip)
+        VALUES (${description.trim()}, ${page || null}, ${url || null}, ${userAgent || null}, ${screenWidth || null}, ${screenHeight || null}, ${ip})
+      `
+
+      // Discord notification (non-blocking)
+      const webhookUrl = process.env.DISCORD_BUG_WEBHOOK_URL
+      if (webhookUrl) {
+        const embed = {
+          title: '🐛 New Bug Report',
+          color: 0xF97316,
+          fields: [
+            { name: 'Description', value: description.trim().slice(0, 1024) },
+            { name: 'Page', value: page || 'Unknown', inline: true },
+            { name: 'Screen', value: screenWidth ? `${screenWidth}×${screenHeight}` : 'Unknown', inline: true },
+            { name: 'IP', value: ip, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+          footer: { text: 'ShopCommand Bug Reports' },
+        }
+        fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ embeds: [embed] }),
+        }).catch(() => {})
+      }
+
+      return res.status(201).json({ success: true, message: 'Bug report received' })
+    } catch (err) {
+      console.error('Bug report error:', err)
+      return res.status(500).json({ error: 'Failed to save report' })
+    }
+  }
+
   if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET')
+    res.setHeader('Allow', 'GET, POST')
     return res.status(405).json({ error: 'Method not allowed' })
   }
 

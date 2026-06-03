@@ -24,7 +24,7 @@ export function BugReportButton() {
         timestamp: new Date().toISOString(),
       }
 
-      const res = await fetch('/api/bug-report', {
+      const res = await fetch('/api/health?action=bug-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
