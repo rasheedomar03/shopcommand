@@ -39,6 +39,15 @@ const TITLE = 'ShopCommand vs. Shop-Ware — Auto Shop Software Comparison'
 const DESC = 'Shop-Ware has excellent digital inspections and customer texting. ShopCommand is built for the multi-location owner who needs cross-shop visibility with transparent pricing. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/shop-ware'
 
+const LAST_UPDATED = 'June 2, 2026'
+
+const compareFaqs = [
+  { q: 'How much does Shop-Ware cost per month?', a: 'Shop-Ware doesn\'t publish pricing — you need to book a demo. ShopCommand is $100/mo per location for founding members (locked forever) and $175/mo standard after launch.' },
+  { q: 'Can I switch from Shop-Ware to ShopCommand?', a: 'Yes. ShopCommand is designed for same-day setup with no complex onboarding process. Founding members get direct support from Rasheed during migration.' },
+  { q: 'Is Shop-Ware better than ShopCommand?', a: 'Shop-Ware has excellent digital inspections and customer texting — great for single-location customer communication. ShopCommand is built for the owner managing multiple locations who needs consolidated visibility across all shops without switching between accounts.' },
+  { q: 'Does Shop-Ware support multiple locations?', a: 'Shop-Ware focuses on single-location operations. ShopCommand is built from the ground up for the multi-location owner who needs cross-shop visibility, consolidated reporting, and one dashboard for everything.' },
+]
+
 function setMeta(title, desc, url) {
   document.title = title
   document.querySelector('meta[name="description"]')?.setAttribute('content', desc)
@@ -51,7 +60,16 @@ function setMeta(title, desc, url) {
 }
 
 export default function VsShopWare() {
-  useEffect(() => { setMeta(TITLE, DESC, URL) }, [])
+  useEffect(() => {
+    setMeta(TITLE, DESC, URL)
+    const schema = { '@context': 'https://schema.org', '@type': 'Article', 'headline': TITLE, 'description': DESC, 'url': URL, 'dateModified': '2026-06-02', 'author': { '@type': 'Organization', 'name': 'ShopCommand' } }
+    const s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'sc-compare-schema'; s.text = JSON.stringify(schema)
+    document.head.appendChild(s)
+    const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': compareFaqs.map(({ q, a }) => ({ '@type': 'Question', 'name': q, 'acceptedAnswer': { '@type': 'Answer', 'text': a } })) }
+    const f = document.createElement('script'); f.type = 'application/ld+json'; f.id = 'sc-faq-schema'; f.text = JSON.stringify(faqSchema)
+    document.head.appendChild(f)
+    return () => { document.getElementById('sc-compare-schema')?.remove(); document.getElementById('sc-faq-schema')?.remove() }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
@@ -148,6 +166,24 @@ export default function VsShopWare() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-slate-200 py-20 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+            Frequently asked questions
+          </h2>
+          <div className="space-y-6">
+            {compareFaqs.map(({ q, a }) => (
+              <div key={q}>
+                <h3 className="text-slate-900 text-sm font-semibold mb-2">{q}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-slate-400 text-xs mt-10">Last updated: {LAST_UPDATED}</p>
         </div>
       </section>
 

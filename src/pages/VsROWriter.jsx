@@ -41,6 +41,15 @@ const TITLE = 'ShopCommand vs. R.O. Writer — Auto Shop Software Comparison'
 const DESC = 'R.O. Writer is a legacy desktop platform with strong parts integrations. ShopCommand is cloud-native, mobile-friendly, and built for multi-location visibility with transparent pricing. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/ro-writer'
 
+const LAST_UPDATED = 'June 2, 2026'
+
+const compareFaqs = [
+  { q: 'How much does R.O. Writer cost per month?', a: 'R.O. Writer doesn\'t publish pricing — you need to contact sales. They use per-workstation licensing. ShopCommand is $100/mo per location for founding members (locked forever) and $175/mo standard, with unlimited users included.' },
+  { q: 'Can I switch from R.O. Writer to ShopCommand?', a: 'Yes. ShopCommand is fully cloud-based — no Windows installation, no server required. You can be running the same day. Founding members get direct onboarding support from Rasheed.' },
+  { q: 'Is R.O. Writer better than ShopCommand?', a: 'R.O. Writer has deep parts integrations and a built-in labor guide — strong for high-volume parts ordering shops. ShopCommand is cloud-native, mobile-friendly, and built for owners who need real-time visibility across multiple locations without a desktop application.' },
+  { q: 'Does R.O. Writer work on mobile?', a: 'R.O. Writer is a Windows desktop application with limited mobile support. ShopCommand is fully browser-based and works on any device — phone, tablet, or laptop.' },
+]
+
 function setMeta(title, desc, url) {
   document.title = title
   document.querySelector('meta[name="description"]')?.setAttribute('content', desc)
@@ -53,7 +62,16 @@ function setMeta(title, desc, url) {
 }
 
 export default function VsROWriter() {
-  useEffect(() => { setMeta(TITLE, DESC, URL) }, [])
+  useEffect(() => {
+    setMeta(TITLE, DESC, URL)
+    const schema = { '@context': 'https://schema.org', '@type': 'Article', 'headline': TITLE, 'description': DESC, 'url': URL, 'dateModified': '2026-06-02', 'author': { '@type': 'Organization', 'name': 'ShopCommand' } }
+    const s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'sc-compare-schema'; s.text = JSON.stringify(schema)
+    document.head.appendChild(s)
+    const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': compareFaqs.map(({ q, a }) => ({ '@type': 'Question', 'name': q, 'acceptedAnswer': { '@type': 'Answer', 'text': a } })) }
+    const f = document.createElement('script'); f.type = 'application/ld+json'; f.id = 'sc-faq-schema'; f.text = JSON.stringify(faqSchema)
+    document.head.appendChild(f)
+    return () => { document.getElementById('sc-compare-schema')?.remove(); document.getElementById('sc-faq-schema')?.remove() }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
@@ -150,6 +168,24 @@ export default function VsROWriter() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-slate-200 py-20 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+            Frequently asked questions
+          </h2>
+          <div className="space-y-6">
+            {compareFaqs.map(({ q, a }) => (
+              <div key={q}>
+                <h3 className="text-slate-900 text-sm font-semibold mb-2">{q}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-slate-400 text-xs mt-10">Last updated: {LAST_UPDATED}</p>
         </div>
       </section>
 

@@ -606,7 +606,7 @@ function ROICalculator() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const LANDING_TITLE = 'ShopCommand — Auto Shop Management Software'
-const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member spots at $100/mo.'
+const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member spots at $100/mo, locked forever.'
 const LANDING_URL = 'https://shopcommand.net'
 
 export default function Landing() {

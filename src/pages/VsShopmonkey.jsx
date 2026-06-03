@@ -41,6 +41,15 @@ const SM_TITLE = 'ShopCommand vs. Shopmonkey — Auto Shop Software Comparison'
 const SM_DESC = 'No demo required, no hidden pricing. See how ShopCommand compares to Shopmonkey on price transparency, multi-location focus, and setup time. Founding spots at $100/mo.'
 const SM_URL = 'https://shopcommand.net/compare/shopmonkey'
 
+const LAST_UPDATED = 'June 2, 2026'
+
+const compareFaqs = [
+  { q: 'How much does Shopmonkey cost per month?', a: 'Shopmonkey doesn\'t publish pricing — you need to book a demo. ShopCommand is $100/mo per location for founding members (locked forever) and $175/mo standard after launch.' },
+  { q: 'Can I switch from Shopmonkey to ShopCommand?', a: 'Yes. ShopCommand is designed for same-day setup. We\'re building data import tools to make migration smoother. Founding members get direct support from Rasheed during onboarding.' },
+  { q: 'Is ShopCommand better than Shopmonkey for multiple locations?', a: 'ShopCommand is built specifically for multi-location visibility — seeing all your shops from one dashboard without jumping between logins. Shopmonkey supports multiple locations but isn\'t built around that problem first.' },
+  { q: 'Does Shopmonkey charge per seat?', a: 'Yes, Shopmonkey uses per-seat pricing. ShopCommand charges per location with unlimited users included — no per-seat fees ever.' },
+]
+
 function setMeta(title, desc, url) {
   document.title = title
   document.querySelector('meta[name="description"]')?.setAttribute('content', desc)
@@ -53,7 +62,16 @@ function setMeta(title, desc, url) {
 }
 
 export default function VsShopmonkey() {
-  useEffect(() => { setMeta(SM_TITLE, SM_DESC, SM_URL) }, [])
+  useEffect(() => {
+    setMeta(SM_TITLE, SM_DESC, SM_URL)
+    const schema = { '@context': 'https://schema.org', '@type': 'Article', 'headline': SM_TITLE, 'description': SM_DESC, 'url': SM_URL, 'dateModified': '2026-06-02', 'author': { '@type': 'Organization', 'name': 'ShopCommand' } }
+    const s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'sc-compare-schema'; s.text = JSON.stringify(schema)
+    document.head.appendChild(s)
+    const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': compareFaqs.map(({ q, a }) => ({ '@type': 'Question', 'name': q, 'acceptedAnswer': { '@type': 'Answer', 'text': a } })) }
+    const f = document.createElement('script'); f.type = 'application/ld+json'; f.id = 'sc-faq-schema'; f.text = JSON.stringify(faqSchema)
+    document.head.appendChild(f)
+    return () => { document.getElementById('sc-compare-schema')?.remove(); document.getElementById('sc-faq-schema')?.remove() }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
@@ -150,6 +168,24 @@ export default function VsShopmonkey() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-slate-200 py-20 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+            Frequently asked questions
+          </h2>
+          <div className="space-y-6">
+            {compareFaqs.map(({ q, a }) => (
+              <div key={q}>
+                <h3 className="text-slate-900 text-sm font-semibold mb-2">{q}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-slate-400 text-xs mt-10">Last updated: {LAST_UPDATED}</p>
         </div>
       </section>
 

@@ -14,6 +14,8 @@ Disallow: /shops
 Disallow: /dispatch
 Disallow: /appointments
 Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
 
 User-agent: Bingbot
 Allow: /
@@ -28,42 +30,136 @@ Disallow: /shops
 Disallow: /dispatch
 Disallow: /appointments
 Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
 
-# Block AI scrapers
+# Allow AI search bots (these cite your site in AI answers)
 User-agent: GPTBot
-Disallow: /
+Allow: /
+Disallow: /dashboard
+Disallow: /repair-orders
+Disallow: /technicians
+Disallow: /customers
+Disallow: /parts
+Disallow: /reports
+Disallow: /settings
+Disallow: /shops
+Disallow: /dispatch
+Disallow: /appointments
+Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
 
 User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: Claude-Web
-Disallow: /
+Allow: /
+Disallow: /dashboard
+Disallow: /repair-orders
+Disallow: /technicians
+Disallow: /customers
+Disallow: /parts
+Disallow: /reports
+Disallow: /settings
+Disallow: /shops
+Disallow: /dispatch
+Disallow: /appointments
+Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
 
 User-agent: Google-Extended
+Allow: /
+Disallow: /dashboard
+Disallow: /repair-orders
+Disallow: /technicians
+Disallow: /customers
+Disallow: /parts
+Disallow: /reports
+Disallow: /settings
+Disallow: /shops
+Disallow: /dispatch
+Disallow: /appointments
+Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /dashboard
+Disallow: /repair-orders
+Disallow: /technicians
+Disallow: /customers
+Disallow: /parts
+Disallow: /reports
+Disallow: /settings
+Disallow: /shops
+Disallow: /dispatch
+Disallow: /appointments
+Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /dashboard
+Disallow: /repair-orders
+Disallow: /technicians
+Disallow: /customers
+Disallow: /parts
+Disallow: /reports
+Disallow: /settings
+Disallow: /shops
+Disallow: /dispatch
+Disallow: /appointments
+Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /dashboard
+Disallow: /repair-orders
+Disallow: /technicians
+Disallow: /customers
+Disallow: /parts
+Disallow: /reports
+Disallow: /settings
+Disallow: /shops
+Disallow: /dispatch
+Disallow: /appointments
+Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /dashboard
+Disallow: /repair-orders
+Disallow: /technicians
+Disallow: /customers
+Disallow: /parts
+Disallow: /reports
+Disallow: /settings
+Disallow: /shops
+Disallow: /dispatch
+Disallow: /appointments
+Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
+
+# Block training-only scrapers (these scrape for model training, not search)
+User-agent: CCBot
 Disallow: /
 
 User-agent: Bytespider
 Disallow: /
 
-User-agent: PerplexityBot
+User-agent: cohere-ai
 Disallow: /
 
 User-agent: Amazonbot
 Disallow: /
 
 User-agent: FacebookBot
-Disallow: /
-
-User-agent: Applebot-Extended
-Disallow: /
-
-User-agent: cohere-ai
 Disallow: /
 
 # Block common bad bots
@@ -96,5 +192,7 @@ Disallow: /shops
 Disallow: /dispatch
 Disallow: /appointments
 Disallow: /tech-board
+Disallow: /onboarding
+Disallow: /demo
 
 Sitemap: https://shopcommand.net/sitemap.xml

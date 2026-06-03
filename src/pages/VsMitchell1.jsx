@@ -41,6 +41,15 @@ const TITLE = 'ShopCommand vs. Mitchell1 — Auto Shop Software Comparison'
 const DESC = 'Mitchell1 is the legacy leader in repair data. ShopCommand is built for the owner sitting above their locations — transparent pricing, no per-seat fees, same-day setup. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/mitchell1'
 
+const LAST_UPDATED = 'June 2, 2026'
+
+const compareFaqs = [
+  { q: 'How much does Mitchell1 cost per month?', a: 'Mitchell1 doesn\'t publish pricing — you need to contact sales for a quote. ShopCommand is $100/mo per location for founding members (locked forever) and $175/mo standard after launch.' },
+  { q: 'Can I switch from Mitchell1 to ShopCommand?', a: 'Yes. ShopCommand is cloud-native and sets up in a day — no desktop installation, no Windows server. Founding members get direct onboarding support from Rasheed.' },
+  { q: 'Is Mitchell1 better than ShopCommand?', a: 'Mitchell1 has industry-leading repair data (ProDemand) and 50,000+ shops. If your techs live in repair data and wiring diagrams all day, Mitchell1 is strong. ShopCommand is built for the owner layer — real-time visibility across multiple locations without legacy desktop software.' },
+  { q: 'Does Mitchell1 work on mobile?', a: 'Mitchell1 grew up as a Windows desktop application. Cloud access is an incremental update. ShopCommand is fully browser-based and works on any device from day one.' },
+]
+
 function setMeta(title, desc, url) {
   document.title = title
   document.querySelector('meta[name="description"]')?.setAttribute('content', desc)
@@ -53,7 +62,16 @@ function setMeta(title, desc, url) {
 }
 
 export default function VsMitchell1() {
-  useEffect(() => { setMeta(TITLE, DESC, URL) }, [])
+  useEffect(() => {
+    setMeta(TITLE, DESC, URL)
+    const schema = { '@context': 'https://schema.org', '@type': 'Article', 'headline': TITLE, 'description': DESC, 'url': URL, 'dateModified': '2026-06-02', 'author': { '@type': 'Organization', 'name': 'ShopCommand' } }
+    const s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'sc-compare-schema'; s.text = JSON.stringify(schema)
+    document.head.appendChild(s)
+    const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': compareFaqs.map(({ q, a }) => ({ '@type': 'Question', 'name': q, 'acceptedAnswer': { '@type': 'Answer', 'text': a } })) }
+    const f = document.createElement('script'); f.type = 'application/ld+json'; f.id = 'sc-faq-schema'; f.text = JSON.stringify(faqSchema)
+    document.head.appendChild(f)
+    return () => { document.getElementById('sc-compare-schema')?.remove(); document.getElementById('sc-faq-schema')?.remove() }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
@@ -150,6 +168,24 @@ export default function VsMitchell1() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-slate-200 py-20 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+            Frequently asked questions
+          </h2>
+          <div className="space-y-6">
+            {compareFaqs.map(({ q, a }) => (
+              <div key={q}>
+                <h3 className="text-slate-900 text-sm font-semibold mb-2">{q}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-slate-400 text-xs mt-10">Last updated: {LAST_UPDATED}</p>
         </div>
       </section>
 

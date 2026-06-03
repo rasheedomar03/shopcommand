@@ -46,6 +46,15 @@ function Tick({ win }) {
 const TITLE = 'ShopCommand vs. Tekmetric — Auto Shop Software Comparison'
 const DESC = 'Transparent pricing, no per-seat fees, and built for multi-location owners from day one. See how ShopCommand compares to Tekmetric. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/tekmetric'
+const LAST_UPDATED = 'June 2, 2026'
+
+const compareFaqs = [
+  { q: 'How much does Tekmetric cost per month?', a: 'Tekmetric doesn\'t publish pricing on their website — you need to book a demo and speak to sales to get a quote. ShopCommand is $100/mo per location for founding members (locked forever) and $175/mo at standard launch pricing.' },
+  { q: 'Can I switch from Tekmetric to ShopCommand?', a: 'Yes. ShopCommand is designed for quick setup — you can be running the same day. We\'re building data import tools to make migration smoother. Founding members get direct support from Rasheed during onboarding.' },
+  { q: 'Is ShopCommand better than Tekmetric?', a: 'It depends on your needs. Tekmetric is a mature platform with 600+ G2 reviews, CRM, payments, and tire management — great for single-location day-to-day operations. ShopCommand is built specifically for the owner managing multiple locations who needs cross-shop visibility without jumping between logins.' },
+  { q: 'Does Tekmetric charge per seat?', a: 'Yes, Tekmetric uses per-user pricing. ShopCommand charges per location with unlimited users — whether you have 2 people or 20, same price.' },
+]
+
 function setMeta(title, desc, url) {
   document.title = title
   document.querySelector('meta[name="description"]')?.setAttribute('content', desc)
@@ -58,7 +67,16 @@ function setMeta(title, desc, url) {
 }
 
 export default function VsTekmetric() {
-  useEffect(() => { setMeta(TITLE, DESC, URL) }, [])
+  useEffect(() => {
+    setMeta(TITLE, DESC, URL)
+    const schema = { '@context': 'https://schema.org', '@type': 'Article', 'headline': TITLE, 'description': DESC, 'url': URL, 'dateModified': '2026-06-02', 'author': { '@type': 'Organization', 'name': 'ShopCommand' } }
+    const s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'sc-compare-schema'; s.text = JSON.stringify(schema)
+    document.head.appendChild(s)
+    const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': compareFaqs.map(({ q, a }) => ({ '@type': 'Question', 'name': q, 'acceptedAnswer': { '@type': 'Answer', 'text': a } })) }
+    const f = document.createElement('script'); f.type = 'application/ld+json'; f.id = 'sc-faq-schema'; f.text = JSON.stringify(faqSchema)
+    document.head.appendChild(f)
+    return () => { document.getElementById('sc-compare-schema')?.remove(); document.getElementById('sc-faq-schema')?.remove() }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
@@ -151,6 +169,24 @@ export default function VsTekmetric() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-slate-200 py-20 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+            Frequently asked questions
+          </h2>
+          <div className="space-y-6">
+            {compareFaqs.map(({ q, a }) => (
+              <div key={q}>
+                <h3 className="text-slate-900 text-sm font-semibold mb-2">{q}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-slate-400 text-xs mt-10">Last updated: {LAST_UPDATED}</p>
         </div>
       </section>
 

@@ -33,6 +33,8 @@ const ROUTES = [
   '/terms',
   '/privacy',
   '/dpa',
+  '/cookies',
+  '/accessibility',
 ]
 
 // ── Find a browser to use ───────────────────────────────────────────────────
