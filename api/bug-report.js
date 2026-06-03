@@ -59,6 +59,29 @@ export default async function handler(req, res) {
       )
     `
 
+    // Notify via Discord webhook (non-blocking — don't fail the response if Discord is down)
+    const webhookUrl = process.env.DISCORD_BUG_WEBHOOK_URL
+    if (webhookUrl) {
+      const embed = {
+        title: '🐛 New Bug Report',
+        color: 0xF97316, // orange
+        fields: [
+          { name: 'Description', value: description.trim().slice(0, 1024) },
+          { name: 'Page', value: page || 'Unknown', inline: true },
+          { name: 'Screen', value: screenWidth ? `${screenWidth}×${screenHeight}` : 'Unknown', inline: true },
+          { name: 'IP', value: ip, inline: true },
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: 'ShopCommand Bug Reports' },
+      }
+
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ embeds: [embed] }),
+      }).catch(() => {}) // silently ignore Discord failures
+    }
+
     return res.status(201).json({ success: true, message: 'Bug report received' })
   } catch (err) {
     console.error('Bug report error:', err)
