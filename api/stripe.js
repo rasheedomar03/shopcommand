@@ -52,7 +52,7 @@ async function handleCheckout(req, res, user) {
           currency: 'usd',
           product_data: {
             name: PRODUCT_NAME,
-            description: 'Unlimited locations, unlimited users, all features. Founding rate locked forever.',
+            description: '$100/mo first shop + $50/mo per additional shop. No per-seat fees — unlimited users. All features included. Founding rate locked forever.',
           },
           unit_amount: FOUNDING_PRICE_AMOUNT,
           recurring: { interval: 'month' },
