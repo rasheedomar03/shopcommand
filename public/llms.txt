@@ -9,7 +9,7 @@ ShopCommand gives shop owners real-time visibility into every location without b
 - Founded: 2026
 - Founder: Rasheed Omar (Houston, TX)
 - Target users: Independent auto repair shop owners, service advisors, technicians
-- Pricing: $100/mo per location (founding member rate, locked forever) — $175/mo standard after launch
+- Pricing: $100/mo first shop + $50/mo per additional shop (founding member rate, locked forever) — $175/mo first shop + $100/mo per additional shop (standard after launch)
 - No per-seat fees — unlimited technicians and users included
 - Browser-based — works on any device, nothing to install
 - 14-day free trial included

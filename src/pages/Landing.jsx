@@ -94,7 +94,7 @@ const faqs = [
   },
   {
     q: 'What does the $100/mo founding rate cover?',
-    a: 'One shop location with unlimited technicians, users, and repair orders. The rate locks in forever as long as you stay subscribed. Price goes to $175 at public launch.',
+    a: 'Your first shop with unlimited technicians, users, and repair orders for $100/mo. Each additional shop is just $50/mo. The rate locks in forever as long as you stay subscribed. After launch, pricing goes to $175/mo for your first shop and $100/mo per additional shop.',
   },
   {
     q: 'How is this different from Tekmetric or Shopmonkey?',
@@ -389,7 +389,7 @@ function FoundingSection() {
             Lock in $100/mo forever.
           </h2>
           <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
-            First {TOTAL_SPOTS} shops get founding member pricing, locked for life. Price goes to $175 when we open to everyone.
+            First {TOTAL_SPOTS} shops get founding member pricing, locked for life. After launch, first shop goes to $175/mo and additional shops to $100/mo each.
           </p>
         </div>
 
@@ -606,7 +606,7 @@ function ROICalculator() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const LANDING_TITLE = 'ShopCommand — Auto Shop Management Software'
-const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member spots at $100/mo, locked forever.'
+const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member pricing: $100/mo for your first shop + $50/mo per additional shop, locked forever.'
 const LANDING_URL = 'https://shopcommand.net'
 
 export default function Landing() {
@@ -1037,7 +1037,7 @@ export default function Landing() {
               <span className="text-orange-500"> Ours is built to be neither.</span>
             </h2>
             <p className="text-slate-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base">
-              The big platforms hide pricing, charge per seat, and lock basics behind upgrade tiers. ShopCommand is one price per location, everything included, day one.
+              The big platforms hide pricing, charge per seat, and lock basics behind upgrade tiers. ShopCommand is one simple rate for your first shop, a discounted rate for each additional shop, everything included, day one.
             </p>
           </div>
 
@@ -1152,7 +1152,7 @@ export default function Landing() {
                     <span className="text-lg text-slate-400 line-through font-semibold">$175/mo</span>
                     <span className="text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">Save 43% forever</span>
                   </div>
-                  <p className="text-slate-500 text-xs leading-relaxed">Single shop. Locked in for life: price never goes up as long as you stay subscribed.</p>
+                  <p className="text-slate-500 text-xs leading-relaxed">First shop. +$50/mo each additional shop. Locked in for life: price never goes up as long as you stay subscribed.</p>
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[
@@ -1181,7 +1181,7 @@ export default function Landing() {
                     <span className="text-5xl font-bold text-slate-400" style={{ letterSpacing: '-0.03em' }}>$175</span>
                     <span className="text-slate-400 text-sm mb-2">/mo</span>
                   </div>
-                  <p className="text-slate-400 text-xs leading-relaxed">Single shop. $125/location for 3+ shops. Cancel anytime.</p>
+                  <p className="text-slate-400 text-xs leading-relaxed">First shop. +$100/mo each additional shop. Cancel anytime.</p>
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[

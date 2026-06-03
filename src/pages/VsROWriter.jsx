@@ -22,7 +22,7 @@ function HexMark({ size = 36 }) {
 }
 
 const rows = [
-  { label: 'Pricing',              sc: '$100/mo founding · $175 standard',  them: 'Not disclosed — contact sales',       scWin: true  },
+  { label: 'Pricing',              sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed — contact sales',       scWin: true  },
   { label: 'Pricing transparency', sc: 'Shown openly on our site',           them: 'Hidden behind a sales process',       scWin: true  },
   { label: 'Multi-location view',  sc: 'Core product — day one',             them: 'Available, complex to manage',        scWin: true  },
   { label: 'Cloud-native',         sc: 'Fully browser-based',                them: 'Windows desktop — not true cloud',    scWin: true  },
@@ -31,7 +31,7 @@ const rows = [
   { label: 'Mobile access',        sc: 'Fully mobile-friendly',              them: 'Limited mobile support',              scWin: true  },
   { label: 'Modern UI',            sc: 'Built in 2024',                      them: 'Legacy interface',                    scWin: true  },
   { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',              scWin: true  },
-  { label: 'Founding rate lock',   sc: '$100/mo locked forever',             them: 'No equivalent offer',                 scWin: true  },
+  { label: 'Founding rate lock',   sc: '$100/mo + $50/shop locked forever',  them: 'No equivalent offer',                 scWin: true  },
   { label: 'Parts integrations',   sc: 'Coming',                             them: 'Extensive — core strength',           scWin: false },
   { label: 'Labor guide',          sc: 'Coming',                             them: 'Built-in — multiple sources',         scWin: false },
   { label: 'Market presence',      sc: 'Early access — founding stage',      them: 'Established — large install base',    scWin: false },
@@ -44,7 +44,7 @@ const URL = 'https://shopcommand.net/compare/ro-writer'
 const LAST_UPDATED = 'June 2, 2026'
 
 const compareFaqs = [
-  { q: 'How much does R.O. Writer cost per month?', a: 'R.O. Writer doesn\'t publish pricing — you need to contact sales. They use per-workstation licensing. ShopCommand is $100/mo per location for founding members (locked forever) and $175/mo standard, with unlimited users included.' },
+  { q: 'How much does R.O. Writer cost per month?', a: 'R.O. Writer doesn\'t publish pricing — you need to contact sales. They use per-workstation licensing. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing, with unlimited users included.' },
   { q: 'Can I switch from R.O. Writer to ShopCommand?', a: 'Yes. ShopCommand is fully cloud-based — no Windows installation, no server required. You can be running the same day. Founding members get direct onboarding support from Rasheed.' },
   { q: 'Is R.O. Writer better than ShopCommand?', a: 'R.O. Writer has deep parts integrations and a built-in labor guide — strong for high-volume parts ordering shops. ShopCommand is cloud-native, mobile-friendly, and built for owners who need real-time visibility across multiple locations without a desktop application.' },
   { q: 'Does R.O. Writer work on mobile?', a: 'R.O. Writer is a Windows desktop application with limited mobile support. ShopCommand is fully browser-based and works on any device — phone, tablet, or laptop.' },
@@ -152,11 +152,11 @@ export default function VsROWriter() {
               },
               {
                 heading: 'Per-workstation licensing adds up fast.',
-                body: 'Pricing based on the number of workstations or users means your costs scale with your headcount. A shop with 10 techs and 3 service advisors is paying for 13 seats. ShopCommand is per location, never per seat — whether you have 2 people or 20.',
+                body: 'Pricing based on the number of workstations or users means your costs scale with your headcount. A shop with 10 techs and 3 service advisors is paying for 13 seats. ShopCommand uses tiered per-shop pricing — $100/mo for the first shop plus $50/mo for each additional location, never per seat — whether you have 2 people or 20 at each location.',
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $100/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor with the pricing to match.',
+                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor with the pricing to match.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
@@ -194,7 +194,7 @@ export default function VsROWriter() {
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $100/mo locked forever. Price goes to $175 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots starting at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →

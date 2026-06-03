@@ -63,7 +63,7 @@ export default function Terms() {
           <section>
             <h2 className="text-white text-base font-semibold mb-2">4. Subscription and Payment</h2>
             <p>
-              Access to ShopCommand requires a paid subscription. Current pricing is <strong className="text-white">$175 per month</strong> for a single location, or <strong className="text-white">$125 per location per month</strong> for accounts with multiple locations. An annual subscription option is available and provides savings equivalent to two months of service at no additional charge.
+              Access to ShopCommand requires a paid subscription. Current pricing is <strong className="text-white">$175 per month</strong> for your first location and <strong className="text-white">$100 per month</strong> for each additional location. An annual subscription option is available and provides savings equivalent to two months of service at no additional charge.
             </p>
             <p className="mt-3">
               Subscription fees are billed monthly in advance on the date you subscribe. All fees are non-refundable, including for partial months. If you cancel your subscription mid-billing cycle, you will retain access to the Service through the end of the current billing period, but no prorated refund will be issued.

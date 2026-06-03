@@ -7,7 +7,8 @@ import { logger } from './_lib/logger.js'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
 
-const FOUNDING_PRICE_AMOUNT = 10000 // $100 in cents
+const FOUNDING_PRICE_AMOUNT = 10000 // $100 in cents (first shop — additional shops are $50/mo = 5000 cents each)
+const FOUNDING_ADDITIONAL_SHOP = 5000 // $50 in cents per additional shop
 const PRODUCT_NAME = 'ShopCommand Founding Member'
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

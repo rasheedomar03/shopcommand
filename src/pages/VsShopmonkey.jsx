@@ -22,14 +22,14 @@ function HexMark({ size = 36 }) {
 }
 
 const rows = [
-  { label: 'Pricing',              sc: '$100/mo founding · $175 standard',   them: 'Not disclosed — demo required',     scWin: true  },
+  { label: 'Pricing',              sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed — demo required',     scWin: true  },
   { label: 'Pricing transparency', sc: 'Shown openly on our site',            them: 'Hidden behind a sales call',        scWin: true  },
   { label: 'Multi-location view',  sc: 'Core product — day one',              them: 'Available, but not the core focus', scWin: true  },
   { label: 'Setup time',           sc: 'Up and running same day',             them: 'Enterprise onboarding process',     scWin: true  },
   { label: 'Per-seat fees',        sc: 'Never',                               them: 'Yes',                               scWin: true  },
   { label: 'Feature tiers',        sc: 'One plan, everything included',       them: 'Multiple tiers — basics gated',     scWin: true  },
   { label: 'Founder access',       sc: 'Direct line, every founding member',  them: 'Standard support team',             scWin: true  },
-  { label: 'Founding rate lock',   sc: '$100/mo locked forever',              them: 'No equivalent offer',               scWin: true  },
+  { label: 'Founding rate lock',   sc: '$100/mo + $50/shop locked forever',   them: 'No equivalent offer',               scWin: true  },
   { label: 'Shops using it',       sc: 'Early access — founding stage',       them: '8,000+ shops',                      scWin: false },
   { label: 'Two-way texting',      sc: 'Coming',                              them: 'Yes — all plans',                   scWin: false },
   { label: 'Buy Now Pay Later',    sc: 'Coming',                              them: 'Yes — integrated',                  scWin: false },
@@ -44,10 +44,10 @@ const SM_URL = 'https://shopcommand.net/compare/shopmonkey'
 const LAST_UPDATED = 'June 2, 2026'
 
 const compareFaqs = [
-  { q: 'How much does Shopmonkey cost per month?', a: 'Shopmonkey doesn\'t publish pricing — you need to book a demo. ShopCommand is $100/mo per location for founding members (locked forever) and $175/mo standard after launch.' },
+  { q: 'How much does Shopmonkey cost per month?', a: 'Shopmonkey doesn\'t publish pricing — you need to book a demo. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
   { q: 'Can I switch from Shopmonkey to ShopCommand?', a: 'Yes. ShopCommand is designed for same-day setup. We\'re building data import tools to make migration smoother. Founding members get direct support from Rasheed during onboarding.' },
   { q: 'Is ShopCommand better than Shopmonkey for multiple locations?', a: 'ShopCommand is built specifically for multi-location visibility — seeing all your shops from one dashboard without jumping between logins. Shopmonkey supports multiple locations but isn\'t built around that problem first.' },
-  { q: 'Does Shopmonkey charge per seat?', a: 'Yes, Shopmonkey uses per-seat pricing. ShopCommand charges per location with unlimited users included — no per-seat fees ever.' },
+  { q: 'Does Shopmonkey charge per seat?', a: 'Yes, Shopmonkey uses per-seat pricing. ShopCommand charges per shop with unlimited users included — $100/mo for the first shop plus $50/mo for each additional location. No per-seat fees ever.' },
 ]
 
 function setMeta(title, desc, url) {
@@ -148,7 +148,7 @@ export default function VsShopmonkey() {
               },
               {
                 heading: 'The pricing model is a real difference.',
-                body: 'Shopmonkey doesn\'t publish pricing. You book a demo, talk to sales, and get a quote. ShopCommand shows you $100/mo founding and $175 standard, right on the page. Per-seat fees vs. per-location — for a shop with 8 techs, that difference adds up fast.',
+                body: 'Shopmonkey doesn\'t publish pricing. You book a demo, talk to sales, and get a quote. ShopCommand shows you $100/mo + $50/shop founding and $175 + $100/shop standard, right on the page. Per-seat fees vs. per-shop tiered pricing — for an owner with 8 techs across multiple locations, that difference adds up fast.',
               },
               {
                 heading: 'ShopCommand is built for the multi-location owner first.',
@@ -156,7 +156,7 @@ export default function VsShopmonkey() {
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $100/mo locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor.',
+                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
@@ -194,7 +194,7 @@ export default function VsShopmonkey() {
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $100/mo locked forever. Price goes to $175 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots starting at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →

@@ -158,7 +158,7 @@ export default function Settings() {
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-text-primary">Founding Member</div>
-                    <div className="text-xs text-text-muted mt-0.5">$100/mo · locked forever (normally $175/mo)</div>
+                    <div className="text-xs text-text-muted mt-0.5">$100/mo + $50/shop · locked forever (normally $175 + $100/shop)</div>
                   </div>
                 </div>
                 <p className="text-xs text-text-muted leading-relaxed mb-4">

@@ -22,14 +22,14 @@ function HexMark({ size = 36 }) {
 }
 
 const rows = [
-  { label: 'Pricing',              sc: '$100/mo founding · $175 standard', them: 'Not disclosed — call required',      scWin: true },
+  { label: 'Pricing',              sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed — call required',      scWin: true },
   { label: 'Pricing transparency', sc: 'Shown openly on our site',          them: 'Hidden behind a sales call',         scWin: true },
   { label: 'Multi-location view',  sc: 'Core product — day one',            them: 'Separate module / higher tier',      scWin: true },
   { label: 'Setup time',           sc: 'Up and running same day',           them: 'Days of onboarding calls',           scWin: true },
   { label: 'Per-seat fees',        sc: 'Never',                             them: 'Yes',                                scWin: true },
   { label: 'Feature tiers',        sc: 'One plan, everything included',     them: 'Multiple tiers + paid add-ons',      scWin: true },
   { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',            scWin: true },
-  { label: 'Founding rate lock',   sc: '$100/mo locked forever',            them: 'No equivalent offer',                scWin: true },
+  { label: 'Founding rate lock',   sc: '$100/mo + $50/shop locked forever', them: 'No equivalent offer',                scWin: true },
   { label: 'G2 reviews',           sc: 'Early access — building toward it', them: '600+ reviews, multiple badges',      scWin: false },
   { label: 'Tire Suite',           sc: 'Coming',                            them: 'Yes — fully built out',              scWin: false },
   { label: 'Built-in CRM',         sc: 'Coming',                            them: 'Yes — CRM & Marketing module',       scWin: false },
@@ -49,10 +49,10 @@ const URL = 'https://shopcommand.net/compare/tekmetric'
 const LAST_UPDATED = 'June 2, 2026'
 
 const compareFaqs = [
-  { q: 'How much does Tekmetric cost per month?', a: 'Tekmetric doesn\'t publish pricing on their website — you need to book a demo and speak to sales to get a quote. ShopCommand is $100/mo per location for founding members (locked forever) and $175/mo at standard launch pricing.' },
+  { q: 'How much does Tekmetric cost per month?', a: 'Tekmetric doesn\'t publish pricing on their website — you need to book a demo and speak to sales to get a quote. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
   { q: 'Can I switch from Tekmetric to ShopCommand?', a: 'Yes. ShopCommand is designed for quick setup — you can be running the same day. We\'re building data import tools to make migration smoother. Founding members get direct support from Rasheed during onboarding.' },
   { q: 'Is ShopCommand better than Tekmetric?', a: 'It depends on your needs. Tekmetric is a mature platform with 600+ G2 reviews, CRM, payments, and tire management — great for single-location day-to-day operations. ShopCommand is built specifically for the owner managing multiple locations who needs cross-shop visibility without jumping between logins.' },
-  { q: 'Does Tekmetric charge per seat?', a: 'Yes, Tekmetric uses per-user pricing. ShopCommand charges per location with unlimited users — whether you have 2 people or 20, same price.' },
+  { q: 'Does Tekmetric charge per seat?', a: 'Yes, Tekmetric uses per-user pricing. ShopCommand charges per shop with unlimited users — $100/mo for the first shop plus $50/mo for each additional location, whether you have 2 people or 20 at each.' },
 ]
 
 function setMeta(title, desc, url) {
@@ -157,7 +157,7 @@ export default function VsTekmetric() {
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get the product at $100/mo locked forever, direct access to the team, and a say in where the product goes. You\'re not buying software — you\'re shaping it.',
+                body: 'Founding members get the product at $100/mo + $50/shop locked forever, direct access to the team, and a say in where the product goes. You\'re not buying software — you\'re shaping it.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">
@@ -195,7 +195,7 @@ export default function VsTekmetric() {
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
           Ready to see it for yourself?
         </h2>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots at $100/mo locked forever. Price goes to $175 at public launch.</p>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots starting at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →
