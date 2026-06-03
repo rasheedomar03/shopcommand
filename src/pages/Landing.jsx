@@ -1156,6 +1156,7 @@ export default function Landing() {
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[
+                    'No per-seat fees — unlimited users',
                     'Everything in the standard plan',
                     'Founding member pricing locked forever',
                     'Direct line to the founding team',
@@ -1185,7 +1186,7 @@ export default function Landing() {
                 </div>
                 <div className="space-y-2.5 mb-7">
                   {[
-                    'Unlimited technicians and users',
+                    'No per-seat fees — unlimited users',
                     'All locations in one dashboard',
                     'Repair order tracking',
                     'Real-time revenue and efficiency data',
