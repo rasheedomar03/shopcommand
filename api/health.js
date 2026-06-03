@@ -44,7 +44,7 @@ export default async function handler(req, res) {
         VALUES (${description.trim()}, ${page || null}, ${url || null}, ${userAgent || null}, ${screenWidth || null}, ${screenHeight || null}, ${ip})
       `
 
-      // Discord notification (non-blocking)
+      // Discord notification — must await or Vercel kills the function before it sends
       const webhookUrl = process.env.DISCORD_BUG_WEBHOOK_URL
       if (webhookUrl) {
         const embed = {
@@ -59,11 +59,13 @@ export default async function handler(req, res) {
           timestamp: new Date().toISOString(),
           footer: { text: 'ShopCommand Bug Reports' },
         }
-        fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ embeds: [embed] }),
-        }).catch(() => {})
+        try {
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds: [embed] }),
+          })
+        } catch (_) { /* Discord down — don't fail the user */ }
       }
 
       return res.status(201).json({ success: true, message: 'Bug report received' })
