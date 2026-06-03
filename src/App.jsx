@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { TopLoader } from '@/components/ui/TopLoader'
+import { BugReportButton } from '@/components/BugReportButton'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -192,6 +193,7 @@ export default function App() {
     <Suspense fallback={<PageLoader />}>
       <TopLoader />
       <ScrollToTop />
+      <BugReportButton />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/sign-in/*" element={<SignInPage />} />
