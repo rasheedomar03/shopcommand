@@ -22,7 +22,7 @@ export default createHandler(
         LEFT JOIN invoices i ON i.id = p.invoice_id
         LEFT JOIN repair_orders ro ON ro.id = i.ro_id
         LEFT JOIN shops s ON s.id = p.shop_id
-        WHERE 1=1 ${shopFilter}
+        WHERE p.org_id = ${user.orgId} ${shopFilter}
         ORDER BY p.created_at DESC
         LIMIT 200
       `
@@ -49,7 +49,7 @@ export default createHandler(
         FROM invoices i
         LEFT JOIN repair_orders ro ON ro.id = i.ro_id
         LEFT JOIN customers c ON c.id = ro.customer_id
-        WHERE i.id = ${invoice_id}
+        WHERE i.id = ${invoice_id} AND i.org_id = ${user.orgId}
       `
       if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
       if (invoice.status === 'paid') return res.status(409).json({ error: 'Invoice already paid' })
@@ -63,8 +63,8 @@ export default createHandler(
       `
 
       // Mark invoice as paid and RO as Paid
-      await sql`UPDATE invoices SET status = 'paid', paid_at = now() WHERE id = ${invoice_id}`
-      await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id}`
+      await sql`UPDATE invoices SET status = 'paid', paid_at = now() WHERE id = ${invoice_id} AND org_id = ${user.orgId}`
+      await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
 
       return res.status(201).json(payment)
     }
@@ -83,7 +83,7 @@ export default createHandler(
       }
 
       const [row] = await sql`
-        UPDATE payments SET status = ${status} WHERE id = ${id} RETURNING *
+        UPDATE payments SET status = ${status} WHERE id = ${id} AND org_id = ${user.orgId} RETURNING *
       `
       if (!row) return res.status(404).json({ error: 'Payment not found' })
       return res.json(row)
@@ -100,7 +100,7 @@ export default createHandler(
           FROM invoices i
           LEFT JOIN repair_orders ro ON ro.id = i.ro_id
           LEFT JOIN customers c ON c.id = ro.customer_id
-          WHERE i.id = ${id}
+          WHERE i.id = ${id} AND i.org_id = ${user.orgId}
         `
         if (!row) return res.status(404).json({ error: 'Invoice not found' })
         return res.json(row)
@@ -111,7 +111,7 @@ export default createHandler(
           SELECT i.*, ro.ro_number
           FROM invoices i
           LEFT JOIN repair_orders ro ON ro.id = i.ro_id
-          WHERE i.ro_id = ${roId}
+          WHERE i.ro_id = ${roId} AND i.org_id = ${user.orgId}
           ORDER BY i.created_at DESC
         `
         return res.json(rows)
@@ -124,6 +124,7 @@ export default createHandler(
         FROM invoices i
         LEFT JOIN repair_orders ro ON ro.id = i.ro_id
         LEFT JOIN customers c ON c.id = ro.customer_id
+        WHERE i.org_id = ${user.orgId}
         ORDER BY i.created_at DESC
         LIMIT 200
       `
@@ -142,7 +143,7 @@ export default createHandler(
       }
 
       // Get the RO and verify it exists
-      const [ro] = await sql`SELECT * FROM repair_orders WHERE id = ${ro_id}`
+      const [ro] = await sql`SELECT * FROM repair_orders WHERE id = ${ro_id} AND org_id = ${user.orgId}`
       if (!ro) return res.status(404).json({ error: 'Repair order not found' })
 
       // RO must be Complete to invoice
@@ -152,7 +153,7 @@ export default createHandler(
 
       // Check for existing unpaid invoice
       const [existing] = await sql`
-        SELECT id FROM invoices WHERE ro_id = ${ro_id} AND status = 'unpaid'
+        SELECT id FROM invoices WHERE ro_id = ${ro_id} AND org_id = ${user.orgId} AND status = 'unpaid'
       `
       if (existing) {
         return res.status(409).json({ error: 'An unpaid invoice already exists for this repair order' })
@@ -165,7 +166,7 @@ export default createHandler(
       `
 
       // Move RO to Invoiced stage
-      await sql`UPDATE repair_orders SET stage = 'Invoiced' WHERE id = ${ro_id}`
+      await sql`UPDATE repair_orders SET stage = 'Invoiced' WHERE id = ${ro_id} AND org_id = ${user.orgId}`
 
       return res.status(201).json(row)
     }
@@ -184,7 +185,7 @@ export default createHandler(
         return res.status(400).json({ error: 'Status must be "paid" or "void"' })
       }
 
-      const [invoice] = await sql`SELECT * FROM invoices WHERE id = ${id}`
+      const [invoice] = await sql`SELECT * FROM invoices WHERE id = ${id} AND org_id = ${user.orgId}`
       if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
 
       if (invoice.status !== 'unpaid') {
@@ -194,12 +195,12 @@ export default createHandler(
       if (status === 'paid') {
         const [row] = await sql`
           UPDATE invoices SET status = 'paid', paid_at = now()
-          WHERE id = ${id}
+          WHERE id = ${id} AND org_id = ${user.orgId}
           RETURNING *
         `
 
         // Move RO to Paid stage
-        await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id}`
+        await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
 
         return res.json(row)
       }
@@ -207,12 +208,12 @@ export default createHandler(
       if (status === 'void') {
         const [row] = await sql`
           UPDATE invoices SET status = 'void'
-          WHERE id = ${id}
+          WHERE id = ${id} AND org_id = ${user.orgId}
           RETURNING *
         `
 
         // Move RO back to Complete
-        await sql`UPDATE repair_orders SET stage = 'Complete' WHERE id = ${invoice.ro_id}`
+        await sql`UPDATE repair_orders SET stage = 'Complete' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
 
         return res.json(row)
       }

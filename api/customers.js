@@ -43,14 +43,14 @@ export default createHandler(
         rows = await sql`
           SELECT id, org_id, name, email, phone, address, notes, created_at, updated_at
           FROM customers
-          WHERE (name ILIKE ${pattern} OR email ILIKE ${pattern} OR phone ILIKE ${pattern})
+          WHERE org_id = ${user.orgId} AND (name ILIKE ${pattern} OR email ILIKE ${pattern} OR phone ILIKE ${pattern})
           ORDER BY created_at DESC
           LIMIT 200
         `
       } else {
         rows = await sql`
           SELECT id, org_id, name, email, phone, address, notes, created_at, updated_at
-          FROM customers ORDER BY created_at DESC LIMIT 200
+          FROM customers WHERE org_id = ${user.orgId} ORDER BY created_at DESC LIMIT 200
         `
       }
       return res.json(rows)
@@ -84,7 +84,7 @@ export default createHandler(
           phone = COALESCE(${phone?.trim() || null}, phone),
           address = COALESCE(${address?.trim() || null}, address),
           notes = COALESCE(${notes?.trim() || null}, notes)
-        WHERE id = ${id}
+        WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `
       if (!row) return res.status(404).json({ error: 'Customer not found' })
@@ -97,7 +97,7 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const [row] = await sql`DELETE FROM customers WHERE id = ${id} RETURNING id`
+      const [row] = await sql`DELETE FROM customers WHERE id = ${id} AND org_id = ${user.orgId} RETURNING id`
       if (!row) return res.status(404).json({ error: 'Customer not found' })
       return res.json({ deleted: row.id })
     }

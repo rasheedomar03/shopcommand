@@ -22,7 +22,7 @@ export default createHandler(
       if (!UUID_RE.test(roId)) return res.status(400).json({ error: 'Invalid ro_id format' })
 
       const rows = await sql`
-        SELECT * FROM line_items WHERE ro_id = ${roId} ORDER BY created_at ASC
+        SELECT * FROM line_items WHERE ro_id = ${roId} AND org_id = ${user.orgId} ORDER BY created_at ASC
       `
       return res.json(rows)
     }
@@ -53,7 +53,7 @@ export default createHandler(
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
       // Verify RO exists (RLS handles org scoping)
-      const [ro] = await sql`SELECT id FROM repair_orders WHERE id = ${ro_id}`
+      const [ro] = await sql`SELECT id FROM repair_orders WHERE id = ${ro_id} AND org_id = ${user.orgId}`
       if (!ro) return res.status(404).json({ error: 'Repair order not found' })
 
       const [row] = await sql`
@@ -100,7 +100,7 @@ export default createHandler(
       }
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
-      const [existing] = await sql`SELECT * FROM line_items WHERE id = ${id}`
+      const [existing] = await sql`SELECT * FROM line_items WHERE id = ${id} AND org_id = ${user.orgId}`
       if (!existing) return res.status(404).json({ error: 'Line item not found' })
 
       const [row] = await sql`
@@ -109,7 +109,7 @@ export default createHandler(
           description = COALESCE(${description?.trim() || null}, description),
           qty = COALESCE(${qty != null ? Number(qty) : null}, qty),
           unit_price = COALESCE(${unit_price != null ? Number(unit_price) : null}, unit_price)
-        WHERE id = ${id}
+        WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `
 
@@ -125,10 +125,10 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const [existing] = await sql`SELECT * FROM line_items WHERE id = ${id}`
+      const [existing] = await sql`SELECT * FROM line_items WHERE id = ${id} AND org_id = ${user.orgId}`
       if (!existing) return res.status(404).json({ error: 'Line item not found' })
 
-      await sql`DELETE FROM line_items WHERE id = ${id}`
+      await sql`DELETE FROM line_items WHERE id = ${id} AND org_id = ${user.orgId}`
       await recalculateRoTotal(sql, existing.ro_id)
 
       return res.json({ deleted: id })

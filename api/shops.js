@@ -24,7 +24,7 @@ export default createHandler(
   { methods: ['GET', 'POST', 'PUT', 'DELETE'] },
   async ({ req, res, sql, user }) => {
     if (req.method === 'GET') {
-      const rows = await sql`SELECT id, org_id, name, address, phone, created_at, updated_at FROM shops ORDER BY created_at ASC LIMIT 50`
+      const rows = await sql`SELECT id, org_id, name, address, phone, created_at, updated_at FROM shops WHERE org_id = ${user.orgId} ORDER BY created_at ASC LIMIT 50`
       return res.json(rows)
     }
 
@@ -58,7 +58,7 @@ export default createHandler(
           name = COALESCE(${name?.trim() || null}, name),
           address = COALESCE(${address?.trim() || null}, address),
           phone = COALESCE(${phone?.trim() || null}, phone)
-        WHERE id = ${id}
+        WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `
       if (!row) return res.status(404).json({ error: 'Shop not found' })
@@ -71,7 +71,7 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const [row] = await sql`DELETE FROM shops WHERE id = ${id} RETURNING id`
+      const [row] = await sql`DELETE FROM shops WHERE id = ${id} AND org_id = ${user.orgId} RETURNING id`
       if (!row) return res.status(404).json({ error: 'Shop not found' })
       return res.json({ deleted: row.id })
     }

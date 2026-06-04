@@ -23,7 +23,7 @@ export default createHandler(
           ) AS clocked_in_since
         FROM users u
         LEFT JOIN shops s ON s.id = u.shop_id
-        WHERE u.role = 'tech'
+        WHERE u.org_id = ${user.orgId} AND u.role = 'tech'
         ORDER BY u.name ASC
       `
       return res.json(rows)
@@ -84,7 +84,7 @@ export default createHandler(
           email = COALESCE(${email?.trim() || null}, email),
           shop_id = COALESCE(${shop_id || null}, shop_id),
           role = COALESCE(${role || null}, role)
-        WHERE id = ${id} AND role = 'tech'
+        WHERE id = ${id} AND org_id = ${user.orgId} AND role = 'tech'
         RETURNING id, name, email, role, shop_id
       `
       if (!row) return res.status(404).json({ error: 'Technician not found' })
@@ -97,7 +97,7 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const [row] = await sql`DELETE FROM users WHERE id = ${id} AND role = 'tech' RETURNING id`
+      const [row] = await sql`DELETE FROM users WHERE id = ${id} AND org_id = ${user.orgId} AND role = 'tech' RETURNING id`
       if (!row) return res.status(404).json({ error: 'Technician not found' })
       return res.json({ deleted: row.id })
     }

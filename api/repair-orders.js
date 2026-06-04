@@ -35,7 +35,7 @@ export default createHandler(
         LEFT JOIN customers c ON c.id = ro.customer_id
         LEFT JOIN vehicles v ON v.id = ro.vehicle_id
         LEFT JOIN shops s ON s.id = ro.shop_id
-        WHERE ro.id = ${ro_id}
+        WHERE ro.id = ${ro_id} AND ro.org_id = ${user.orgId}
       `
       if (!ro) return res.status(404).json({ error: 'Repair order not found' })
       if (!ro.customer_email) {
@@ -96,7 +96,7 @@ export default createHandler(
           LEFT JOIN users tech ON tech.id = ro.tech_id
           LEFT JOIN users adv ON adv.id = ro.advisor_id
           LEFT JOIN shops s ON s.id = ro.shop_id
-          WHERE ro.id = ${id}
+          WHERE ro.id = ${id} AND ro.org_id = ${user.orgId}
         `
         if (!row) return res.status(404).json({ error: 'Repair order not found' })
         return res.json(row)
@@ -118,7 +118,7 @@ export default createHandler(
         LEFT JOIN users tech ON tech.id = ro.tech_id
         LEFT JOIN users adv ON adv.id = ro.advisor_id
         LEFT JOIN shops s ON s.id = ro.shop_id
-        WHERE 1=1 ${shopFilter} ${stageFilter} ${customerFilter}
+        WHERE ro.org_id = ${user.orgId} ${shopFilter} ${stageFilter} ${customerFilter}
         ORDER BY ro.created_at DESC
         LIMIT 200
       `
@@ -200,7 +200,7 @@ export default createHandler(
           advisor_id = COALESCE(${advisor_id || null}, advisor_id),
           vehicle_id = COALESCE(${vehicle_id || null}, vehicle_id),
           notes = COALESCE(${notes?.trim() || null}, notes)
-        WHERE id = ${id}
+        WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `
       if (!row) return res.status(404).json({ error: 'Repair order not found' })

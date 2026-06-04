@@ -24,7 +24,7 @@ export default createHandler(
         SELECT te.*, u.name AS tech_name
         FROM time_entries te
         LEFT JOIN users u ON u.id = te.tech_id
-        WHERE 1=1 ${techFilter} ${dateFilter}
+        WHERE te.org_id = ${user.orgId} ${techFilter} ${dateFilter}
         ORDER BY te.clock_in DESC
         LIMIT 200
       `
@@ -42,7 +42,7 @@ export default createHandler(
       }
 
       const openEntry = await sql`
-        SELECT id FROM time_entries WHERE tech_id = ${tech_id} AND clock_out IS NULL
+        SELECT id FROM time_entries WHERE tech_id = ${tech_id} AND org_id = ${user.orgId} AND clock_out IS NULL
       `
       if (openEntry.length) {
         return res.status(409).json({ error: 'Technician already clocked in' })
@@ -60,7 +60,7 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const [entry] = await sql`SELECT * FROM time_entries WHERE id = ${id}`
+      const [entry] = await sql`SELECT * FROM time_entries WHERE id = ${id} AND org_id = ${user.orgId}`
       if (!entry) return res.status(404).json({ error: 'Time entry not found' })
       if (entry.clock_out) return res.status(409).json({ error: 'Already clocked out' })
 
@@ -70,7 +70,7 @@ export default createHandler(
 
       const [row] = await sql`
         UPDATE time_entries SET clock_out = now()
-        WHERE id = ${id} AND clock_out IS NULL
+        WHERE id = ${id} AND org_id = ${user.orgId} AND clock_out IS NULL
         RETURNING *
       `
       return res.json(row)

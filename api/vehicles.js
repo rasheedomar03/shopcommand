@@ -47,7 +47,7 @@ export default createHandler(
       if (!customerId) return res.status(400).json({ error: 'Missing ?customer_id= parameter' })
 
       const rows = await sql`
-        SELECT * FROM vehicles WHERE customer_id = ${customerId} ORDER BY created_at DESC
+        SELECT * FROM vehicles WHERE customer_id = ${customerId} AND org_id = ${user.orgId} ORDER BY created_at DESC
       `
       return res.json(rows)
     }
@@ -88,7 +88,7 @@ export default createHandler(
           model = COALESCE(${model?.trim() || null}, model),
           vin = COALESCE(${vin?.trim().toUpperCase() || null}, vin),
           license = COALESCE(${license?.trim() || null}, license)
-        WHERE id = ${id}
+        WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `
       if (!row) return res.status(404).json({ error: 'Vehicle not found' })
@@ -99,7 +99,7 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const [row] = await sql`DELETE FROM vehicles WHERE id = ${id} RETURNING id`
+      const [row] = await sql`DELETE FROM vehicles WHERE id = ${id} AND org_id = ${user.orgId} RETURNING id`
       if (!row) return res.status(404).json({ error: 'Vehicle not found' })
       return res.json({ deleted: row.id })
     }
