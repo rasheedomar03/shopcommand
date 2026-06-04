@@ -464,7 +464,7 @@ function StoreDashboard({ shop, repairOrders }) {
   )
 }
 
-function StoreCustomers({ shopId, repairOrders, onOpenRO }) {
+function StoreCustomers({ shopId, repairOrders, onOpenRO, customers = [] }) {
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState(null)
 
@@ -948,7 +948,7 @@ function PayTab({ techROs, tech, timeEntries, now }) {
 
 // ── inspection quick-start modal ─────────────────────────────────────────────
 
-function QuickInspectionModal({ ro, onClose }) {
+function QuickInspectionModal({ ro, onClose, onSave }) {
   const [items, setItems] = useState([
     { category: 'Tires', label: 'Front Left', condition: null, note: '' },
     { category: 'Tires', label: 'Front Right', condition: null, note: '' },
@@ -1051,7 +1051,10 @@ function QuickInspectionModal({ ro, onClose }) {
           <button onClick={onClose} className="h-9 px-4 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
             Cancel
           </button>
-          <button className="h-9 px-5 rounded-lg bg-orange text-white text-sm font-semibold hover:bg-orange/90 transition-colors">
+          <button
+            onClick={() => { onSave?.(ro.id, items); onClose() }}
+            className="h-9 px-5 rounded-lg bg-orange text-white text-sm font-semibold hover:bg-orange/90 transition-colors"
+          >
             Save Inspection
           </button>
         </div>
@@ -1363,7 +1366,7 @@ export default function TechBoard() {
               {activeTab === 'customers' && (
                 <>
                   <h2 className="text-lg font-semibold text-text-primary mb-5">Customers</h2>
-                  <StoreCustomers shopId={tech?.shopId} repairOrders={repairOrders} onOpenRO={setSelectedRO} />
+                  <StoreCustomers shopId={tech?.shopId} repairOrders={repairOrders} onOpenRO={setSelectedRO} customers={customers} />
                 </>
               )}
 
@@ -1382,7 +1385,7 @@ export default function TechBoard() {
       </div>
 
       {inspectRO && (
-        <QuickInspectionModal ro={inspectRO} onClose={() => setInspectRO(null)} />
+        <QuickInspectionModal ro={inspectRO} onClose={() => setInspectRO(null)} onSave={(roId, items) => updateRepairOrder(roId, { mpi: { items } })} />
       )}
 
       {selectedRO && (

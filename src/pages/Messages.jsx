@@ -104,9 +104,16 @@ function ConversationList({ conversations, selected, onSelect, search, shops }) 
   )
 }
 
-function MessageThread({ conversation, onBack, shops }) {
+function MessageThread({ conversation, onBack, shops, onSend }) {
   const [draft, setDraft] = useState('')
   const messagesEnd = useRef(null)
+
+  const sendMessage = () => {
+    if (!draft.trim()) return
+    const clean = sanitizeField(draft, 1000)
+    onSend?.(conversation.id, clean)
+    setDraft('')
+  }
 
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: 'smooth' })
@@ -181,9 +188,10 @@ function MessageThread({ conversation, onBack, shops }) {
             onChange={e => setDraft(e.target.value)}
             placeholder="Type a message..."
             className="flex-1 h-10 px-4 rounded-full bg-background border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40 transition-shadow"
-            onKeyDown={e => { if (e.key === 'Enter' && draft.trim()) { sanitizeField(draft, 1000); setDraft('') } }}
+            onKeyDown={e => { if (e.key === 'Enter') sendMessage() }}
           />
           <button
+            onClick={sendMessage}
             disabled={!draft.trim()}
             className={cn(
               'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-150',
@@ -309,12 +317,20 @@ export default function Messages() {
   const [selected, setSelected] = useState(null)
   const [composeOpen, setComposeOpen] = useState(false)
 
-  const allConversations = session?.demo ? mockConversations : []
+  const [conversations, setConversations] = useState(() => session?.demo ? mockConversations : [])
   const scoped = isAdvisor
-    ? allConversations.filter(c => c.shopId === session.shopId)
-    : allConversations
+    ? conversations.filter(c => c.shopId === session.shopId)
+    : conversations
 
   const totalUnread = scoped.reduce((sum, c) => sum + c.unread, 0)
+
+  const handleSend = (convId, text) => {
+    setConversations(prev => prev.map(c => {
+      if (c.id !== convId) return c
+      const msg = { id: Date.now(), from: 'shop', text, time: new Date().toISOString() }
+      return { ...c, messages: [...c.messages, msg], lastActivity: msg.time }
+    }))
+  }
 
   return (
     <div className="h-full flex animate-fade-in">
@@ -355,7 +371,7 @@ export default function Messages() {
         'flex-1 flex flex-col min-w-0',
         !selected ? 'hidden lg:flex' : 'flex'
       )}>
-        <MessageThread conversation={selected} onBack={() => setSelected(null)} shops={shops} />
+        <MessageThread conversation={selected} onBack={() => setSelected(null)} shops={shops} onSend={handleSend} />
       </div>
 
       <ComposeModal
