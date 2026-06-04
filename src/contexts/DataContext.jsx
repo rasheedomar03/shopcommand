@@ -94,6 +94,7 @@ export function DataProvider({ children }) {
   const { getToken } = useClerkAuth()
   const { session } = useAuth()
   const tokenInjected = useRef(false)
+  const lastClerkId = useRef(null)
 
   // Inject Clerk token provider into api.js and uploads.js once
   useEffect(() => {
@@ -127,6 +128,25 @@ export function DataProvider({ children }) {
     if (stored && stored.length > 0) return stored
     return []
   })
+
+  // ── Clear all data when user identity changes (prevents cross-account bleed)
+  useEffect(() => {
+    const currentId = session?.clerkId || (session?.demo ? '__demo__' : null)
+    if (currentId && lastClerkId.current && currentId !== lastClerkId.current) {
+      // Different user logged in — wipe previous user's data
+      setShops([])
+      setTechnicians([])
+      setRepairOrders([])
+      setCustomers([])
+      setClockedInTechs(new Set())
+      setTimeEntries([])
+      setPayments([])
+      setParts([])
+      setNotifications([])
+      setLoading(true)
+    }
+    if (currentId) lastClerkId.current = currentId
+  }, [session?.clerkId, session?.demo])
 
   // ── Clear stale mock data for real users ─────────────────────────────────
   useEffect(() => {
@@ -190,13 +210,13 @@ export function DataProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }, [session?.onboarded, session?.demo])
+  }, [session?.onboarded, session?.demo, session?.clerkId])
 
   useEffect(() => {
     if (tokenInjected.current && session?.onboarded && !session?.demo) {
       fetchAll()
     }
-  }, [fetchAll, session?.onboarded, session?.demo])
+  }, [fetchAll, session?.onboarded, session?.demo, session?.clerkId])
 
   // ── Auto-refresh every 30s when tab is visible (non-demo) ───────────────
   useEffect(() => {
