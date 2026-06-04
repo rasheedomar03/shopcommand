@@ -66,6 +66,36 @@ export default async function handler(req, res) {
     return res.json(invites)
   }
 
+  // ── Check if already onboarded: GET /api/onboard?action=check ───────────
+  if (action === 'check' && req.method === 'GET') {
+    if (!rateLimit(req, res, 'auth')) return res.status(429).json({ error: 'Too many requests' })
+
+    const token = req.headers.authorization?.split(' ')[1]
+    if (!token) return res.status(401).json({ error: 'Missing token' })
+
+    let clerkId
+    try {
+      const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY })
+      clerkId = payload.sub
+    } catch {
+      return res.status(401).json({ error: 'Invalid token' })
+    }
+
+    const sql = neon(process.env.DATABASE_URL)
+    const existing = await sql`
+      SELECT o.id AS org_id, s.id AS shop_id
+      FROM organizations o
+      LEFT JOIN shops s ON s.org_id = o.id
+      WHERE o.owner_clerk_id = ${clerkId}
+      LIMIT 1
+    `
+
+    if (existing.length > 0) {
+      return res.json({ exists: true, orgId: existing[0].org_id, shopId: existing[0].shop_id })
+    }
+    return res.json({ exists: false })
+  }
+
   // ── Onboard (sign up flow) ──────────────────────────────────────────────
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })

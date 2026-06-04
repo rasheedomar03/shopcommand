@@ -48,17 +48,11 @@ export default function Onboarding() {
       setSaving(true)
       try {
         const token = await getToken()
-        const res = await fetch('/api/onboard', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ role: 'owner', shopName: '__check__' }),
+        const res = await fetch('/api/onboard?action=check', {
+          headers: { Authorization: `Bearer ${token}` },
         })
         const data = await res.json()
-        if (res.ok && data.orgId) {
-          // Org already exists — set metadata and go to dashboard
+        if (res.ok && data.exists && data.orgId) {
           await user.update({
             unsafeMetadata: { role: 'owner', onboarded: true, orgId: data.orgId, shopId: data.shopId },
           })
