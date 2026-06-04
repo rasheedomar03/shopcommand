@@ -166,8 +166,8 @@ export default function Settings() {
                 </p>
                 {!session?.demo && (
                   <button
-                    onClick={() => startCheckout()}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 transition-colors"
+                    onClick={async (e) => { e.currentTarget.disabled = true; e.currentTarget.textContent = 'Redirecting to Stripe…'; await startCheckout() }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
                     <CreditCard size={14} />
                     Lock in $100/mo rate
