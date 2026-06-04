@@ -246,8 +246,8 @@ subscriptions
   org_id          uuid FK → organizations
   stripe_subscription_id  text
   status          enum('active','past_due','canceled')
-  is_founding     boolean DEFAULT false  -- locked at $125/mo
-  price_cents     int NOT NULL           -- 12500 for founding members
+  is_founding     boolean DEFAULT false  -- locked at $100/mo first shop + $50/mo additional
+  price_cents     int NOT NULL           -- 10000 for founding (first shop), 5000 per additional
   current_period_start  timestamptz
   current_period_end    timestamptz
   message_limit   int DEFAULT 500
@@ -507,7 +507,7 @@ vin_cache
 
 ## Pricing
 
-**Founding Member Plan — $125/mo per shop** (first 25 customers, locked in)
+**Founding Member Plan — $100/mo first shop + $50/mo per additional shop** (first 25 customers, locked in)
 
 Everything included, no tiers, no feature gates:
 - Unlimited users (owners, advisors, techs)
