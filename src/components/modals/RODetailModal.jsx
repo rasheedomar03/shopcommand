@@ -129,6 +129,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const isTech    = session?.role === 'tech'
   const isAdvisor = session?.role === 'advisor'
   const { updateRepairOrder, sendEstimateReady, technicians, parts: allParts, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
+  const [apiError, setApiError] = useState(null)
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
   const [services, setServices] = useState(ro?.services || [])
   const [mpiItems, setMpiItems] = useState(
@@ -429,20 +430,26 @@ export function RODetailModal({ open, onClose, ro }) {
     if (currentStageIdx >= RO_STAGES.length - 1) return
     if (isTech && currentStageIdx >= completeIdx) return
     setSaving(true)
+    setApiError(null)
     await new Promise(r => setTimeout(r, 400))
     const nextStage = RO_STAGES[currentStageIdx + 1]
-    setStage(nextStage)
-    updateRepairOrder(ro.id, {
-      stage: nextStage,
-      services,
-      partsUsed,
-      mpi: { ...(ro.mpi || {}), items: mpiItems },
-    })
+    try {
+      await updateRepairOrder(ro.id, {
+        stage: nextStage,
+        services,
+        partsUsed,
+        mpi: { ...(ro.mpi || {}), items: mpiItems },
+      })
+      setStage(nextStage)
+    } catch (err) {
+      setApiError(err.message || 'Failed to update stage')
+    }
     setSaving(false)
   }
 
   const revertToStage = async (targetStage) => {
     setSaving(true)
+    setApiError(null)
     await new Promise(r => setTimeout(r, 300))
     const patch = { stage: targetStage, services, partsUsed, mpi: { ...(ro.mpi || {}), items: mpiItems } }
     if (targetStage === 'Estimate') {
@@ -450,8 +457,12 @@ export function RODetailModal({ open, onClose, ro }) {
       patch.authorizedAt  = null
       patch.authorizedVia = null
     }
-    setStage(targetStage)
-    updateRepairOrder(ro.id, patch)
+    try {
+      await updateRepairOrder(ro.id, patch)
+      setStage(targetStage)
+    } catch (err) {
+      setApiError(err.message || 'Failed to revert stage')
+    }
     setSaving(false)
   }
 
@@ -1725,6 +1736,12 @@ export function RODetailModal({ open, onClose, ro }) {
         subtitle={`${ro.vehicle} · ${ro.customerName}`}
         size="xl"
       >
+        {apiError && (
+          <div className="mx-5 mt-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between">
+            <span>{apiError}</span>
+            <button onClick={() => setApiError(null)} className="text-red-400 hover:text-red-600 ml-2">✕</button>
+          </div>
+        )}
         {stageBar}
         <div className="flex flex-col md:grid md:grid-cols-[3fr_2fr]">
           <div className="p-5 overflow-y-auto md:max-h-[60vh]">
