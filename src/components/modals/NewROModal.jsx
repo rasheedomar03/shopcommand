@@ -3,6 +3,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
+import { api } from '@/lib/api'
 import { RO_STAGES, sanitizeVin, sanitizeField } from '@/lib/utils'
 import { Search, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,7 +18,7 @@ export function NewROModal({
   defaultDate,
   onCreated,
 }) {
-  const { technicians, addRepairOrder, shops, customers } = useData()
+  const { technicians, addRepairOrder, addCustomer, shops, customers } = useData()
 
   const [form, setForm] = useState({
     shopId: preShopId || '',
@@ -94,55 +95,83 @@ export function NewROModal({
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
     setSubmitting(true)
-    await new Promise(r => setTimeout(r, 600))
 
-    const tech = technicians.find(t => String(t.id) === String(form.techId))
     const cleanName  = sanitizeField(form.customerName, 100)
     const cleanPhone = sanitizeField(form.customerPhone, 30)
     const cleanYear  = sanitizeField(form.year, 4)
     const cleanMake  = sanitizeField(form.make, 50)
     const cleanModel = sanitizeField(form.model, 50)
     const cleanTrim  = sanitizeField(form.trim, 50)
+    const cleanVin   = form.vin ? sanitizeVin(form.vin) : null
     const cleanComplaint = sanitizeField(form.complaint, 1000)
-    const vehicle = `${cleanYear} ${cleanMake} ${cleanModel}`.trim()
 
     try {
-      await addRepairOrder({
+      // 1. Create or reuse customer
+      let customerId = form.customerId
+      if (!customerId) {
+        const cust = await addCustomer({
+          name: cleanName,
+          phone: cleanPhone || null,
+          shop_id: form.shopId,
+        })
+        customerId = cust.id
+      }
+
+      // 2. Create vehicle if we have year/make/model
+      let vehicleId = null
+      if (cleanYear && cleanMake && cleanModel) {
+        const veh = await api('/api/vehicles', {
+          method: 'POST',
+          body: {
+            customer_id: customerId,
+            year: Number(cleanYear),
+            make: cleanMake,
+            model: cleanModel,
+            trim: cleanTrim || null,
+            vin: cleanVin,
+            mileage: form.mileage ? Number(form.mileage.replace(/,/g, '')) : null,
+          },
+        })
+        vehicleId = veh.id
+      }
+
+      // 3. Create the repair order
+      const newRO = await addRepairOrder({
         shopId: form.shopId,
-        customerId: form.customerId,
+        customerId,
+        vehicleId,
         techId: form.techId || null,
         complaint: cleanComplaint,
         scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
       })
+
+      setSubmitting(false)
+      onClose()
+      setForm({
+        shopId: preShopId || '',
+        customerId: null,
+        customerName: preCustomerName,
+        customerPhone: preCustomerPhone,
+        vin: '',
+        vehicle: '',
+        year: '',
+        make: '',
+        model: '',
+        trim: '',
+        mileage: '',
+        techId: preTechId || '',
+        complaint: '',
+        stage: preTechId ? 'In Progress' : 'Estimate',
+        scheduledAt: '',
+      })
+      setErrors({})
+      setVinState('idle')
+      setVinError('')
+      onCreated?.(newRO)
     } catch (err) {
       setErrors({ submit: err.message || 'Failed to create repair order' })
       setSubmitting(false)
-      return
     }
-
-    setSubmitting(false)
-    onClose()
-    setForm({
-      shopId: preShopId || '',
-      customerId: null,
-      customerName: preCustomerName,
-      customerPhone: preCustomerPhone,
-      vin: '',
-      vehicle: '',
-      year: '',
-      make: '',
-      model: '',
-      trim: '',
-      mileage: '',
-      techId: preTechId || '',
-      complaint: '',
-      stage: preTechId ? 'In Progress' : 'Estimate',
-      scheduledAt: '',
-    })
-    setErrors({})
-    setVinState('idle')
-    setVinError('')
-    onCreated?.(newRO)
   }
 
   const set = (field) => (e) => {
