@@ -111,6 +111,22 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Shop name is required (min 2 characters)' })
     }
 
+    // Block owner signup if this user's email has a pending invite
+    const clerkUser = await clerk.users.getUser(clerkId)
+    const userEmail = clerkUser.emailAddresses?.[0]?.emailAddress || ''
+    if (userEmail) {
+      const [pendingInvite] = await sql`
+        SELECT id, role FROM invites
+        WHERE email = ${userEmail} AND used_by IS NULL AND expires_at > NOW()
+        LIMIT 1
+      `
+      if (pendingInvite) {
+        return res.status(403).json({
+          error: `Your email has a pending invite as a ${pendingInvite.role}. Please select "${pendingInvite.role}" instead and enter your invite code. If you believe this is a mistake, contact your shop owner.`
+        })
+      }
+    }
+
     const name = shopName.trim().slice(0, 100)
 
     try {
