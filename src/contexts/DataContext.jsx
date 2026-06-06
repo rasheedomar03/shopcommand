@@ -46,8 +46,11 @@ function transformTech(t) {
 }
 
 function transformRO(ro) {
+  // Merge JSONB data column back into the RO object
+  const data = ro.data || {}
   return {
     ...ro,
+    ...data,
     shopId: ro.shop_id,
     customerId: ro.customer_id,
     vehicleId: ro.vehicle_id,

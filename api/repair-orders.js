@@ -171,7 +171,9 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const { stage, tech_id, advisor_id, vehicle_id, notes } = req.body || {}
+      const { stage, tech_id, advisor_id, vehicle_id, notes, total,
+              services, partsRequests, partsUsed, mpi, payment, attachments,
+              authorized, authorizedAt, authorizedVia } = req.body || {}
       const errors = []
 
       if (stage && !VALID_STAGES.includes(stage)) {
@@ -180,10 +182,10 @@ export default createHandler(
       if (tech_id && !UUID_RE.test(tech_id)) errors.push('Invalid tech_id format')
       if (advisor_id && !UUID_RE.test(advisor_id)) errors.push('Invalid advisor_id format')
       if (vehicle_id && !UUID_RE.test(vehicle_id)) errors.push('Invalid vehicle_id format')
-      if (notes !== undefined && notes !== null && typeof notes !== 'string') {
-        errors.push('Notes must be a string')
+      if (notes !== undefined && notes !== null && typeof notes !== 'string' && !Array.isArray(notes)) {
+        errors.push('Notes must be a string or array')
       }
-      if (notes && notes.length > 5000) errors.push('Notes must be under 5000 characters')
+      if (typeof notes === 'string' && notes.length > 5000) errors.push('Notes must be under 5000 characters')
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
       // Techs can only update stage to In Progress or Complete
@@ -193,13 +195,35 @@ export default createHandler(
         }
       }
 
+      // Build the extended data JSONB object (merge with existing)
+      const dataFields = {}
+      if (services !== undefined) dataFields.services = services
+      if (partsRequests !== undefined) dataFields.partsRequests = partsRequests
+      if (partsUsed !== undefined) dataFields.partsUsed = partsUsed
+      if (mpi !== undefined) dataFields.mpi = mpi
+      if (payment !== undefined) dataFields.payment = payment
+      if (attachments !== undefined) dataFields.attachments = attachments
+      if (authorized !== undefined) dataFields.authorized = authorized
+      if (authorizedAt !== undefined) dataFields.authorizedAt = authorizedAt
+      if (authorizedVia !== undefined) dataFields.authorizedVia = authorizedVia
+      if (Array.isArray(notes)) dataFields.notes = notes
+
+      const hasData = Object.keys(dataFields).length > 0
+      const notesStr = typeof notes === 'string' ? notes.trim() : null
+
       const [row] = await sql`
         UPDATE repair_orders SET
           stage = COALESCE(${stage || null}, stage),
           tech_id = COALESCE(${tech_id || null}, tech_id),
           advisor_id = COALESCE(${advisor_id || null}, advisor_id),
           vehicle_id = COALESCE(${vehicle_id || null}, vehicle_id),
-          notes = COALESCE(${notes?.trim() || null}, notes)
+          notes = COALESCE(${notesStr}, notes),
+          total = COALESCE(${total != null ? total : null}, total),
+          data = CASE
+            WHEN ${hasData} THEN COALESCE(data, '{}') || ${hasData ? JSON.stringify(dataFields) : '{}'}::jsonb
+            ELSE data
+          END,
+          updated_at = now()
         WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `
