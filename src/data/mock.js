@@ -184,6 +184,10 @@ export const repairOrders = [
       { name: 'Engine tune-up',             price: 160, bookTimeMin: 30 },
     ],
     parts: 342, labor: 380, total: 722, payment: null, authorized: true,
+    partsRequests: [
+      { id: 'pr-1', name: 'Coil Pack Set (8pc)', partNumber: 'DG-508', qty: 1, status: 'shipped', requestedAt: new Date(Date.now() - 2 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', carrier: 'UPS', trackingNumber: '1Z999AA10123456784', eta: 'Tomorrow 2pm' },
+      { id: 'pr-2', name: 'Spark Plug Set (8pc)', partNumber: 'SP-515', qty: 1, status: 'arrived', requestedAt: new Date(Date.now() - 3 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', eta: '' },
+    ],
     notes: [
       { id: 1, text: 'Customer called at 9am, confirmed diagnosis', type: 'advisor', author: 'Service Advisor', createdAt: '2026-05-12T09:00:00' },
       { id: 2, text: 'Parts ordered from NAPA - arriving 2pm', type: 'advisor', author: 'Service Advisor', createdAt: '2026-05-12T10:30:00' },
@@ -230,6 +234,11 @@ export const repairOrders = [
       { name: 'Solenoid inspection',      price: 140, bookTimeMin: 45 },
     ],
     parts: 185, labor: 290, total: 475, payment: null, authorized: true,
+    partsRequests: [
+      { id: 'pr-3', name: 'Solenoid Pack Assembly', partNumber: 'A760E-SOL', qty: 1, status: 'ordered', requestedAt: new Date(Date.now() - 5 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'WorldPac', carrier: '', trackingNumber: '', eta: 'Backordered' },
+      { id: 'pr-4', name: 'Trans Filter Kit', partNumber: 'TF-2847', qty: 1, status: 'ordered', requestedAt: new Date(Date.now() - 4 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'AutoZone Commercial', carrier: '', trackingNumber: '', eta: '' },
+      { id: 'pr-5', name: 'ATF Fluid (6qt)', partNumber: 'WS-ATF', qty: 1, status: 'arrived', requestedAt: new Date(Date.now() - 3 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', eta: '' },
+    ],
     notes: [
       { id: 1, text: 'Solenoid pack backordered - ETA tomorrow morning', type: 'advisor', author: 'Service Advisor', createdAt: '2026-05-12T08:15:00' },
     ],
@@ -415,6 +424,9 @@ export const repairOrders = [
       { name: 'Coolant flush & refill', price: 100, bookTimeMin: 24 },
     ],
     parts: 180, labor: 310, total: 490, payment: null, authorized: true,
+    partsRequests: [
+      { id: 'pr-6', name: 'Water Pump Assembly', partNumber: 'AW5097', qty: 1, status: 'shipped', requestedAt: new Date(Date.now() - 1 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'O\'Reilly', carrier: 'FedEx', trackingNumber: '794644790200', eta: 'Today' },
+    ],
     notes: [
       { id: 1, text: 'Radiator cap also replaced at no charge', type: 'tech', author: 'Lamar Osei', createdAt: '2026-05-12T14:00:00' },
     ],
