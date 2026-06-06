@@ -312,11 +312,16 @@ export function DataProvider({ children }) {
   }, [])
 
   const updateRepairOrder = useCallback(async (id, patch) => {
+    if (session?.demo) {
+      // Demo mode: update local state only, no API call
+      setRepairOrders(prev => prev.map(r => r.id === id ? { ...r, ...patch, updated: new Date().toISOString() } : r))
+      return { id, ...patch }
+    }
     const row = await api('/api/repair-orders', { method: 'PUT', params: { id }, body: patch })
     const transformed = transformRO(row)
     setRepairOrders(prev => prev.map(r => r.id === id ? transformed : r))
     return transformed
-  }, [])
+  }, [session?.demo])
 
   const sendEstimateReady = useCallback(() => {
     // placeholder — SMS integration not built yet
