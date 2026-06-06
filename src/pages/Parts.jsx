@@ -17,6 +17,28 @@ const PART_STATUS = {
 const STATUS_NEXT = { requested: null, ordered: 'shipped', shipped: 'arrived', arrived: 'ready', ready: null }
 const STATUS_NEXT_LABEL = { ordered: 'Mark Shipped', shipped: 'Mark Arrived', arrived: 'Mark Ready' }
 
+function daysAgo(dateStr) {
+  if (!dateStr) return null
+  const diff = (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24)
+  return Math.floor(diff)
+}
+
+function getAgeLabel(days) {
+  if (days === null) return null
+  if (days === 0) return 'Today'
+  if (days === 1) return '1 day ago'
+  return `${days} days ago`
+}
+
+function getAgeSeverity(days, status) {
+  if (days === null || status === 'ready' || status === 'arrived') return 'normal'
+  if (status === 'ordered' && days >= 5) return 'overdue'
+  if (status === 'ordered' && days >= 3) return 'warning'
+  if (status === 'shipped' && days >= 5) return 'overdue'
+  if (status === 'shipped' && days >= 3) return 'warning'
+  return 'normal'
+}
+
 function getTrackingUrl(carrier, trackingNumber) {
   if (!trackingNumber) return null
   const map = {
@@ -338,6 +360,10 @@ export default function Parts() {
 
   const lowStockCount = scopedParts.filter(p => p.qty <= p.minQty).length
   const outCount      = scopedParts.filter(p => p.qty === 0).length
+  const overdueCount  = allOrders.filter(o => {
+    const days = daysAgo(o.requestedAt)
+    return days !== null && days >= 3 && (o.status === 'ordered' || o.status === 'shipped')
+  }).length
 
   const getStockStatus = (p) => {
     if (p.qty === 0) return { label: 'Out of Stock', dot: 'bg-status-red',    text: 'text-status-red'    }
@@ -365,7 +391,7 @@ export default function Parts() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-surface border border-border rounded-lg px-4 py-3">
           <div className="text-xs text-text-muted uppercase tracking-wider mb-1">Total SKUs</div>
           <div className="text-xl font-semibold text-text-primary tabular-nums">{scopedParts.length}</div>
@@ -383,6 +409,13 @@ export default function Parts() {
             Out of Stock
           </div>
           <div className={cn('text-xl font-semibold tabular-nums', outCount > 0 ? 'text-status-red' : 'text-text-primary')}>{outCount}</div>
+        </div>
+        <div className={cn('bg-surface border rounded-lg px-4 py-3', overdueCount > 0 ? 'border-status-red/40' : 'border-border')}>
+          <div className="text-xs text-text-muted uppercase tracking-wider mb-1 flex items-center gap-1">
+            {overdueCount > 0 && <Truck size={11} className="text-status-red" />}
+            Parts Overdue
+          </div>
+          <div className={cn('text-xl font-semibold tabular-nums', overdueCount > 0 ? 'text-status-red' : 'text-text-primary')}>{overdueCount}</div>
         </div>
       </div>
 
@@ -479,6 +512,17 @@ export default function Parts() {
                               {req.supplier}{req.eta && ` · ETA ${req.eta}`}
                             </div>
                           )}
+                          {(() => {
+                            const days = daysAgo(req.requestedAt)
+                            const severity = getAgeSeverity(days, req.status)
+                            const label = getAgeLabel(days)
+                            if (!label || req.status === 'ready') return null
+                            return (
+                              <div className={cn('text-2xs mt-0.5', severity === 'overdue' ? 'text-status-red font-medium' : severity === 'warning' ? 'text-status-yellow' : 'text-text-muted')}>
+                                {severity === 'overdue' ? '⚠ Overdue — ' : ''}{req.status === 'ordered' ? 'Ordered' : req.status === 'shipped' ? 'Shipped' : 'Requested'} {label}
+                              </div>
+                            )
+                          })()}
                           {/* Tracking */}
                           {isEditingTracking ? (
                             <div className="mt-2 space-y-1.5">

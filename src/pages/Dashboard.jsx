@@ -159,8 +159,27 @@ export default function Dashboard() {
   const activeROs = repairOrders
     .filter(ro => !REVENUE_STAGES.has(ro.stage) && (!isAdvisor || ro.shopId === session?.shopId))
     .slice(0, 5)
+  // Parts order tracking
+  const allPartsOrders = scopedROs
+    .flatMap(ro => (ro.partsRequests || []).map(req => ({ ...req, ro })))
+  const activePartsOrders = allPartsOrders.filter(o => o.status !== 'ready')
+  const overduePartsOrders = allPartsOrders.filter(o => {
+    if (o.status !== 'ordered' && o.status !== 'shipped') return false
+    const diff = (Date.now() - new Date(o.requestedAt).getTime()) / (1000 * 60 * 60 * 24)
+    return diff >= 3
+  })
+
   const scopedParts = isAdvisor ? parts.filter(p => p.shopId === session?.shopId) : parts
-  const liveAlerts = scopedParts
+  const partsAlerts = overduePartsOrders.map(o => ({
+    id: `parts-order-${o.id}`,
+    type: 'warning',
+    shopId: o.ro?.shopId,
+    shopName: shops.find(s => s.id === o.ro?.shopId)?.name || '',
+    message: `${o.name} for ${o.ro?.vehicle || 'unknown vehicle'} (${o.ro?.customerName}) has been ${o.status} for ${Math.floor((Date.now() - new Date(o.requestedAt).getTime()) / (1000 * 60 * 60 * 24))} days`,
+    time: 'overdue',
+    read: false,
+  }))
+  const liveAlerts = [...partsAlerts, ...scopedParts
     .filter(p => p.qty <= p.minQty)
     .map(p => {
       const shop = shops.find(s => s.id === p.shopId)
@@ -175,7 +194,7 @@ export default function Dashboard() {
         time: 'now',
         read: false,
       }
-    })
+    })]
   const allVisibleAlerts = liveAlerts.filter(a => !dismissedAlerts.has(a.id))
   const ALERT_PREVIEW = 3
   const visibleAlerts = showAllAlerts ? allVisibleAlerts : allVisibleAlerts.slice(0, ALERT_PREVIEW)
@@ -237,6 +256,30 @@ export default function Dashboard() {
             </button>
           )}
         </div>
+      )}
+
+      {/* Parts tracking summary */}
+      {activePartsOrders.length > 0 && (
+        <button
+          onClick={() => navigate('/parts')}
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-lg border border-border bg-surface hover:border-orange/40 transition-colors text-left"
+        >
+          <div className="w-8 h-8 rounded-lg bg-orange/10 flex items-center justify-center flex-shrink-0">
+            <TrendingUp size={15} className="text-orange" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-medium text-text-primary">
+              {activePartsOrders.length} part{activePartsOrders.length !== 1 ? 's' : ''} on order
+              {overduePartsOrders.length > 0 && (
+                <span className="text-status-red ml-2">· {overduePartsOrders.length} overdue</span>
+              )}
+            </div>
+            <div className="text-2xs text-text-muted mt-0.5">
+              {allPartsOrders.filter(o => o.status === 'ordered').length} ordered · {allPartsOrders.filter(o => o.status === 'shipped').length} in transit · {allPartsOrders.filter(o => o.status === 'arrived').length} arrived
+            </div>
+          </div>
+          <ChevronRight size={14} className="text-text-muted flex-shrink-0" />
+        </button>
       )}
 
       {/* Stats */}
