@@ -44,3 +44,11 @@ yarn-error.log*
 
 # Coverage
 coverage/
+
+# Build artifacts
+dist.zip
+
+# Development state
+.superpowers/
+.claude/launch.json
+*.log
