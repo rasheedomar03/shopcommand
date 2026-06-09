@@ -7,19 +7,21 @@ import { useAuth } from '@/contexts/AuthContext'
 import { cn, sanitizeField } from '@/lib/utils'
 import { startCheckout } from '@/lib/billing'
 
-const SECTIONS = [
+const ALL_SECTIONS = [
   { id: 'profile', label: 'Account', icon: Users },
-  { id: 'team', label: 'Team Invites', icon: UserPlus },
+  { id: 'team', label: 'Team Invites', icon: UserPlus, ownerOnly: true },
   { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'locations', label: 'Locations', icon: Building2 },
+  { id: 'locations', label: 'Locations', icon: Building2, ownerOnly: true },
   { id: 'schedule', label: 'Schedule', icon: Clock },
   { id: 'security', label: 'Security', icon: Shield },
-  { id: 'billing', label: 'Billing', icon: CreditCard },
+  { id: 'billing', label: 'Billing', icon: CreditCard, ownerOnly: true },
 ]
 
 export default function Settings() {
   const { shops, updateShop, addShop, removeShop } = useData()
   const { session } = useAuth()
+  const isOwner = session?.role === 'owner'
+  const SECTIONS = ALL_SECTIONS.filter(s => !s.ownerOnly || isOwner)
   const [active, setActive] = useState('profile')
   const [saved, setSaved] = useState(false)
 

@@ -24,6 +24,10 @@ async function buffer(readable) {
 // ── Checkout: POST /api/stripe?action=checkout ──────────────────────────────
 
 async function handleCheckout(req, res, user) {
+  if (user.role !== 'owner') {
+    return res.status(403).json({ error: 'Only shop owners can manage billing' })
+  }
+
   const { successUrl, cancelUrl } = req.body || {}
   if (!successUrl || !cancelUrl) {
     return res.status(400).json({ error: 'successUrl and cancelUrl are required' })
@@ -79,6 +83,10 @@ async function handleCheckout(req, res, user) {
 // ── Billing status: GET /api/stripe?action=billing ──────────────────────────
 
 async function handleBilling(req, res, user) {
+  if (user.role !== 'owner') {
+    return res.status(403).json({ error: 'Only shop owners can view billing' })
+  }
+
   const sql = neon(process.env.DATABASE_URL)
   await setRlsContext(sql, user)
 
