@@ -151,7 +151,7 @@ function PartModal({ part, shops, onSave, onClose }) {
       minQty: Number(form.minQty) || 0,
       cost:   Number(form.cost)   || 0,
       price:  Number(form.price)  || 0,
-      shopId: Number(form.shopId),
+      shopId: form.shopId,
     })
   }
 
