@@ -118,11 +118,8 @@ export function DataProvider({ children }) {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // ── localStorage-only state (no API yet) ─────────────────────────────────
-  // Only load mock parts for demo mode; real users start empty
+  // ── Parts state (API for real users, localStorage for demo) ──────────────
   const [parts, setParts] = useState(() => {
-    const stored = load('sc_parts', null)
-    if (stored) return stored
     return sessionStorage.getItem('sc_demo') === '1' ? initialParts : []
   })
   const [jobTimers, setJobTimers] = useState(() => load('sc_job_timers', {}))
@@ -189,18 +186,23 @@ export function DataProvider({ children }) {
     if (!session?.onboarded || session?.demo) return
     setLoading(true)
     try {
-      const [shopsData, techsData, rosData, custData, paymentsData] = await Promise.all([
+      const [shopsData, techsData, rosData, custData, paymentsData, partsData] = await Promise.all([
         api('/api/shops').catch(() => []),
         api('/api/technicians').catch(() => []),
         api('/api/repair-orders').catch(() => []),
         api('/api/customers').catch(() => []),
         api('/api/invoices?action=payments').catch(() => []),
+        api('/api/health?action=parts').catch(() => []),
       ])
       setShops(shopsData.map(transformShop))
       setTechnicians(techsData.map(transformTech))
       setRepairOrders(rosData.map(transformRO))
       setCustomers(custData.map(transformCustomer))
       setPayments(paymentsData)
+      setParts(Array.isArray(partsData) ? partsData.map(p => ({
+        ...p, shopId: p.shop_id, minQty: p.min_qty, lastOrdered: p.last_ordered,
+        cost: Number(p.cost || 0), price: Number(p.price || 0), qty: Number(p.qty || 0),
+      })) : [])
 
       // Derive clocked-in techs from technician data
       const clockedIn = new Set()
@@ -384,45 +386,65 @@ export function DataProvider({ children }) {
     save('sc_notifications', [])
   }, [])
 
-  // ── parts inventory (localStorage only — no API yet) ─────────────────────
+  // ── parts inventory ──────────────────────────────────────────────────────
 
-  const addPart = useCallback((part) => {
-    setParts(prev => {
-      const next = [...prev, { ...part, id: crypto.randomUUID(), lastOrdered: null }]
-      save('sc_parts', next)
-      return next
+  const addPart = useCallback(async (part) => {
+    if (session?.demo) {
+      setParts(prev => {
+        const next = [...prev, { ...part, id: crypto.randomUUID(), lastOrdered: null }]
+        save('sc_parts', next)
+        return next
+      })
+      return
+    }
+    const row = await api('/api/health?action=add-part', {
+      method: 'POST',
+      body: { shop_id: part.shopId, name: part.name, sku: part.sku, category: part.category, vendor: part.vendor, qty: part.qty, min_qty: part.minQty, cost: part.cost, price: part.price },
     })
-  }, [])
+    const transformed = { ...row, shopId: row.shop_id, minQty: row.min_qty, lastOrdered: row.last_ordered, cost: Number(row.cost || 0), price: Number(row.price || 0), qty: Number(row.qty || 0) }
+    setParts(prev => [...prev, transformed])
+  }, [session?.demo])
 
-  const updatePart = useCallback((id, patch) => {
-    setParts(prev => {
-      const part = prev.find(p => p.id === id)
-      const next = prev.map(p => p.id === id ? { ...p, ...patch } : p)
-      save('sc_parts', next)
-      if (part && 'qty' in patch) {
-        const newQty = Number(patch.qty)
-        const minQty = 'minQty' in patch ? Number(patch.minQty) : part.minQty
-        if (newQty <= minQty && part.qty > minQty) {
-          setTimeout(() => addNotification({
-            type: 'low_stock',
-            partName: part.name,
-            qty: newQty,
-            minQty,
-            shopId: part.shopId,
-          }), 0)
-        }
+  const updatePart = useCallback(async (id, patch) => {
+    if (session?.demo) {
+      setParts(prev => {
+        const next = prev.map(p => p.id === id ? { ...p, ...patch } : p)
+        save('sc_parts', next)
+        return next
+      })
+      return
+    }
+    const row = await api('/api/health?action=update-part', {
+      method: 'PUT',
+      params: { id },
+      body: { name: patch.name, sku: patch.sku, category: patch.category, vendor: patch.vendor, qty: patch.qty, min_qty: patch.minQty, cost: patch.cost, price: patch.price },
+    })
+    const transformed = { ...row, shopId: row.shop_id, minQty: row.min_qty, lastOrdered: row.last_ordered, cost: Number(row.cost || 0), price: Number(row.price || 0), qty: Number(row.qty || 0) }
+    setParts(prev => prev.map(p => p.id === id ? transformed : p))
+
+    // Low stock notification
+    const oldPart = parts.find(p => p.id === id)
+    if (oldPart && 'qty' in patch) {
+      const newQty = Number(patch.qty)
+      const minQty = 'minQty' in patch ? Number(patch.minQty) : oldPart.minQty
+      if (newQty <= minQty && oldPart.qty > minQty) {
+        addNotification({ type: 'low_stock', partName: oldPart.name, qty: newQty, minQty, shopId: oldPart.shopId })
       }
-      return next
-    })
-  }, [addNotification])
+    }
+  }, [session?.demo, parts, addNotification])
 
-  const deletePart = useCallback((id) => {
-    setParts(prev => {
-      const next = prev.filter(p => p.id !== id)
-      save('sc_parts', next)
-      return next
-    })
-  }, [])
+  const deletePart = useCallback(async (id) => {
+    if (session?.demo) {
+      setParts(prev => {
+        const next = prev.filter(p => p.id !== id)
+        save('sc_parts', next)
+        return next
+      })
+      return
+    }
+    await api('/api/health?action=delete-part', { method: 'DELETE', params: { id } })
+    setParts(prev => prev.filter(p => p.id !== id))
+  }, [session?.demo])
 
   const usePart = useCallback((partId, qty = 1) => {
     setParts(prev => {

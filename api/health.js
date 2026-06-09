@@ -1,9 +1,91 @@
 import { neon } from '@neondatabase/serverless'
 import { rateLimit } from './_lib/rate-limit.js'
+import { authenticate } from './_lib/auth.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export default async function handler(req, res) {
+  const action = req.query?.action
+
+  // ── Parts CRUD (authenticated) ──────────────────────────────────────────
+  if (action === 'parts' || action === 'add-part' || action === 'update-part' || action === 'delete-part') {
+    if (!rateLimit(req, res)) return res.status(429).json({ error: 'Too many requests' })
+
+    const user = await authenticate(req)
+    if (!user) return res.status(401).json({ error: 'Unauthorized' })
+    if (user.role === 'tech') return res.status(403).json({ error: 'Technicians cannot manage parts inventory' })
+
+    const sql = neon(process.env.DATABASE_URL)
+
+    // GET — list parts
+    if (action === 'parts' && req.method === 'GET') {
+      const rows = await sql`
+        SELECT * FROM parts WHERE org_id = ${user.orgId} ORDER BY name ASC LIMIT 500
+      `
+      return res.json(rows)
+    }
+
+    // POST — add part
+    if (action === 'add-part' && req.method === 'POST') {
+      const { shop_id, name, sku, category, vendor, qty, min_qty, cost, price } = req.body || {}
+      if (!name || typeof name !== 'string' || name.trim().length < 1) {
+        return res.status(400).json({ error: 'Part name is required' })
+      }
+      if (!shop_id || !UUID_RE.test(shop_id)) {
+        return res.status(400).json({ error: 'Valid shop_id is required' })
+      }
+
+      const [row] = await sql`
+        INSERT INTO parts (org_id, shop_id, name, sku, category, vendor, qty, min_qty, cost, price)
+        VALUES (
+          ${user.orgId}, ${shop_id}, ${name.trim()},
+          ${(sku || '').trim()}, ${category || 'Other'}, ${(vendor || '').trim()},
+          ${Number(qty) || 0}, ${Number(min_qty) || 2},
+          ${Number(cost) || 0}, ${Number(price) || 0}
+        )
+        RETURNING *
+      `
+      return res.status(201).json(row)
+    }
+
+    // PUT — update part
+    if (action === 'update-part' && req.method === 'PUT') {
+      const id = req.query?.id
+      if (!id || !UUID_RE.test(id)) return res.status(400).json({ error: 'Valid part id is required' })
+
+      const { name, sku, category, vendor, qty, min_qty, cost, price } = req.body || {}
+
+      const [row] = await sql`
+        UPDATE parts SET
+          name = COALESCE(${name?.trim() || null}, name),
+          sku = COALESCE(${sku?.trim() || null}, sku),
+          category = COALESCE(${category || null}, category),
+          vendor = COALESCE(${vendor?.trim() || null}, vendor),
+          qty = COALESCE(${qty != null ? Number(qty) : null}, qty),
+          min_qty = COALESCE(${min_qty != null ? Number(min_qty) : null}, min_qty),
+          cost = COALESCE(${cost != null ? Number(cost) : null}, cost),
+          price = COALESCE(${price != null ? Number(price) : null}, price),
+          updated_at = now()
+        WHERE id = ${id} AND org_id = ${user.orgId}
+        RETURNING *
+      `
+      if (!row) return res.status(404).json({ error: 'Part not found' })
+      return res.json(row)
+    }
+
+    // DELETE — delete part
+    if (action === 'delete-part' && req.method === 'DELETE') {
+      const id = req.query?.id
+      if (!id || !UUID_RE.test(id)) return res.status(400).json({ error: 'Valid part id is required' })
+
+      const [row] = await sql`DELETE FROM parts WHERE id = ${id} AND org_id = ${user.orgId} RETURNING id`
+      if (!row) return res.status(404).json({ error: 'Part not found' })
+      return res.json({ deleted: row.id })
+    }
+
+    return res.status(400).json({ error: 'Invalid parts action' })
+  }
+
   // ── Bug report: POST /api/health?action=bug-report ──────────────────────
   if (req.method === 'POST' && req.query?.action === 'bug-report') {
     if (!rateLimit(req, res, 'strict')) {
@@ -76,15 +158,13 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET, POST')
+    res.setHeader('Allow', 'GET, POST, PUT, DELETE')
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   if (!rateLimit(req, res)) {
     return res.status(429).json({ error: 'Too many requests' })
   }
-
-  const action = req.query?.action
 
   // ── Public RO status lookup: GET /api/health?action=status&roId=xxx ─────
   if (action === 'status') {
