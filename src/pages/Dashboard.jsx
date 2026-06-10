@@ -162,7 +162,7 @@ export default function Dashboard() {
   // Parts order tracking
   const allPartsOrders = scopedROs
     .flatMap(ro => (ro.partsRequests || []).map(req => ({ ...req, ro })))
-  const activePartsOrders = allPartsOrders.filter(o => o.status !== 'ready')
+  const activePartsOrders = allPartsOrders.filter(o => !['arrived', 'returned', 'credited'].includes(o.status))
   const overduePartsOrders = allPartsOrders.filter(o => {
     if (o.status !== 'ordered' && o.status !== 'shipped') return false
     const diff = (Date.now() - new Date(o.requestedAt).getTime()) / (1000 * 60 * 60 * 24)

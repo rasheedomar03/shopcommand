@@ -453,6 +453,9 @@ export function DataProvider({ children }) {
       const newQty = Math.max(0, part.qty - qty)
       const next = prev.map(p => p.id === partId ? { ...p, qty: newQty } : p)
       save('sc_parts', next)
+      if (!session?.demo) {
+        api('/api/health?action=update-part', { method: 'PUT', params: { id: partId }, body: { qty: newQty } }).catch(() => {})
+      }
       if (newQty <= part.minQty && part.qty > part.minQty) {
         setTimeout(() => addNotification({
           type: 'low_stock',
@@ -464,15 +467,21 @@ export function DataProvider({ children }) {
       }
       return next
     })
-  }, [addNotification])
+  }, [addNotification, session?.demo])
 
   const restockPart = useCallback((partId, qty = 1) => {
     setParts(prev => {
-      const next = prev.map(p => p.id === partId ? { ...p, qty: p.qty + qty } : p)
+      const part = prev.find(p => p.id === partId)
+      if (!part) return prev
+      const newQty = part.qty + qty
+      const next = prev.map(p => p.id === partId ? { ...p, qty: newQty } : p)
       save('sc_parts', next)
+      if (!session?.demo) {
+        api('/api/health?action=update-part', { method: 'PUT', params: { id: partId }, body: { qty: newQty } }).catch(() => {})
+      }
       return next
     })
-  }, [])
+  }, [session?.demo])
 
   const orderPart = useCallback((partId) => {
     setParts(prev => {

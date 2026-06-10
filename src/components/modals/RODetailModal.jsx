@@ -14,20 +14,18 @@ import { cn } from '@/lib/utils'
 const TAX_RATE = 0.085
 
 const PART_STATUS_CFG = {
-  requested: { label: 'Requested',  color: 'text-text-muted',    bg: 'bg-border/60'           },
-  ordered:   { label: 'Ordered',    color: 'text-orange',        bg: 'bg-orange/10'           },
-  shipped:   { label: 'In Transit', color: 'text-blue-400',      bg: 'bg-blue-500/10'         },
-  arrived:   { label: 'Arrived',    color: 'text-status-yellow', bg: 'bg-status-yellow/10'    },
-  ready:     { label: 'Ready ✓',    color: 'text-status-green',  bg: 'bg-status-green/10'     },
-  returned:  { label: 'Returned',   color: 'text-purple-400',    bg: 'bg-purple-500/10'       },
-  credited:  { label: 'Credited',   color: 'text-teal-400',      bg: 'bg-teal-500/10'         },
+  requested: { label: 'Requested',   color: 'text-text-muted',    bg: 'bg-border/60'           },
+  ordered:   { label: 'Ordered',     color: 'text-orange',        bg: 'bg-orange/10'           },
+  shipped:   { label: 'In Transit',  color: 'text-blue-400',      bg: 'bg-blue-500/10'         },
+  arrived:   { label: 'Arrived ✓',   color: 'text-status-green',  bg: 'bg-status-green/10'     },
+  returned:  { label: 'Returned',    color: 'text-purple-400',    bg: 'bg-purple-500/10'       },
+  credited:  { label: 'Credited',    color: 'text-teal-400',      bg: 'bg-teal-500/10'         },
 }
 const PART_STATUS_DOTS = {
   requested: 'bg-text-muted',
   ordered:   'bg-orange',
   shipped:   'bg-blue-400',
-  arrived:   'bg-status-yellow',
-  ready:     'bg-status-green',
+  arrived:   'bg-status-green',
   returned:  'bg-purple-400',
   credited:  'bg-teal-400',
 }
@@ -294,20 +292,33 @@ export function RODetailModal({ open, onClose, ro }) {
 
   const advancePartStatus = (id, newStatus) => {
     const req = partsRequests.find(r => r.id === id)
+    if (!req) return
+    const oldStatus = req.status
     const updated = partsRequests.map(r => r.id === id ? { ...r, status: newStatus } : r)
     setPartsRequests(updated)
     updateRepairOrder(ro.id, { partsRequests: updated })
-    if (req) {
-      addNotification({
-        type: 'part_status',
-        status: newStatus,
-        partName: req.name,
-        roId: ro.id,
-        vehicle: ro.vehicle,
-        customerName: ro.customerName,
-        shopId: ro.shopId,
-      })
+    const catalogMatch = allParts.find(p =>
+      p.shopId === ro.shopId && (
+        (req.partNumber && p.sku && p.sku.toLowerCase() === req.partNumber.toLowerCase()) ||
+        p.name.toLowerCase() === req.name.toLowerCase()
+      )
+    )
+    if (catalogMatch) {
+      const qty = req.qty || 1
+      if (newStatus === 'arrived' && oldStatus !== 'arrived') restockPart(catalogMatch.id, qty)
+      else if (newStatus === 'returned' && oldStatus !== 'returned') usePart(catalogMatch.id, qty)
+      else if (oldStatus === 'arrived' && newStatus !== 'arrived') usePart(catalogMatch.id, qty)
+      else if (oldStatus === 'returned' && newStatus !== 'returned') restockPart(catalogMatch.id, qty)
     }
+    addNotification({
+      type: 'part_status',
+      status: newStatus,
+      partName: req.name,
+      roId: ro.id,
+      vehicle: ro.vehicle,
+      customerName: ro.customerName,
+      shopId: ro.shopId,
+    })
   }
 
   const deletePartRequest = (id) => {
@@ -905,7 +916,7 @@ export function RODetailModal({ open, onClose, ro }) {
                   </div>
 
                   {/* Advisor: order details */}
-                  {!isTech && !['ready', 'credited'].includes(req.status) && (
+                  {!isTech && req.status !== 'credited' && (
                     editingOrderId === req.id ? (
                       <div className="mt-2 space-y-1.5">
                         <input
@@ -993,11 +1004,6 @@ export function RODetailModal({ open, onClose, ro }) {
                           <div className="text-2xs text-text-muted font-mono"># {req.trackingNumber}</div>
                         )
                       })()}
-                      {req.status === 'arrived' && (
-                        <button onClick={() => advancePartStatus(req.id, 'ready')} className="text-2xs text-status-green hover:text-status-green/80 transition-colors mt-1 block">
-                          ✓ Got it — mark ready
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>

@@ -7,17 +7,16 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 const PART_STATUS = {
-  requested: { label: 'Requested',  color: 'text-text-muted',    bg: 'bg-border' },
-  ordered:   { label: 'Ordered',    color: 'text-orange',        bg: 'bg-orange/10' },
-  shipped:   { label: 'In Transit', color: 'text-blue-400',      bg: 'bg-blue-500/10' },
-  arrived:   { label: 'Arrived',    color: 'text-status-yellow', bg: 'bg-status-yellow/10' },
-  ready:     { label: 'Ready ✓',    color: 'text-status-green',  bg: 'bg-status-green/10' },
-  returned:  { label: 'Returned',   color: 'text-purple-400',    bg: 'bg-purple-500/10' },
-  credited:  { label: 'Credited',   color: 'text-teal-400',      bg: 'bg-teal-500/10' },
+  requested: { label: 'Requested',   color: 'text-text-muted',    bg: 'bg-border' },
+  ordered:   { label: 'Ordered',     color: 'text-orange',        bg: 'bg-orange/10' },
+  shipped:   { label: 'In Transit',  color: 'text-blue-400',      bg: 'bg-blue-500/10' },
+  arrived:   { label: 'Arrived ✓',   color: 'text-status-green',  bg: 'bg-status-green/10' },
+  returned:  { label: 'Returned',    color: 'text-purple-400',    bg: 'bg-purple-500/10' },
+  credited:  { label: 'Credited',    color: 'text-teal-400',      bg: 'bg-teal-500/10' },
 }
 
-const STATUS_NEXT = { requested: null, ordered: 'shipped', shipped: 'arrived', arrived: 'ready', ready: null, returned: 'credited', credited: null }
-const STATUS_NEXT_LABEL = { ordered: 'Mark Shipped', shipped: 'Mark Arrived', arrived: 'Mark Ready', returned: 'Mark Credited' }
+const STATUS_NEXT = { requested: null, ordered: 'shipped', shipped: 'arrived', arrived: null, returned: 'credited', credited: null }
+const STATUS_NEXT_LABEL = { ordered: 'Mark Shipped', shipped: 'Mark Arrived', returned: 'Mark Credited' }
 
 function daysAgo(dateStr) {
   if (!dateStr) return null
@@ -33,7 +32,7 @@ function getAgeLabel(days) {
 }
 
 function getAgeSeverity(days, status) {
-  if (days === null || ['ready', 'arrived', 'returned', 'credited'].includes(status)) return 'normal'
+  if (days === null || ['arrived', 'returned', 'credited'].includes(status)) return 'normal'
   if (status === 'ordered' && days >= 5) return 'overdue'
   if (status === 'ordered' && days >= 3) return 'warning'
   if (status === 'shipped' && days >= 5) return 'overdue'
@@ -55,8 +54,7 @@ const STATUS_DOTS = {
   requested: 'bg-text-muted',
   ordered:   'bg-orange',
   shipped:   'bg-blue-400',
-  arrived:   'bg-status-yellow',
-  ready:     'bg-status-green',
+  arrived:   'bg-status-green',
   returned:  'bg-purple-400',
   credited:  'bg-teal-400',
 }
@@ -285,23 +283,45 @@ export default function Parts() {
   const allOrders = scopedROs
     .flatMap(ro => (ro.partsRequests || []).map(req => ({ ...req, ro })))
     .sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))
-  const activeOrders = allOrders.filter(o => !['ready', 'returned', 'credited'].includes(o.status))
+  const activeOrders = allOrders.filter(o => !['arrived', 'returned', 'credited'].includes(o.status))
   const displayedOrders = orderStatusFilter === 'active'
     ? activeOrders
     : orderStatusFilter === 'all'
       ? allOrders
       : allOrders.filter(o => o.status === orderStatusFilter)
-  const orderCounts = ['requested','ordered','shipped','arrived','ready','returned','credited'].reduce((acc, s) => {
+  const orderCounts = ['requested','ordered','shipped','arrived','returned','credited'].reduce((acc, s) => {
     acc[s] = allOrders.filter(o => o.status === s).length; return acc
   }, {})
 
   const [statusError, setStatusError] = useState(null)
 
+  const adjustInventory = (req, ro, newStatus, oldStatus) => {
+    const match = scopedParts.find(p =>
+      p.shopId === ro.shopId && (
+        (req.partNumber && p.sku && p.sku.toLowerCase() === req.partNumber.toLowerCase()) ||
+        p.name.toLowerCase() === req.name.toLowerCase()
+      )
+    )
+    if (!match) return
+    const qty = req.qty || 1
+    if (newStatus === 'arrived' && oldStatus !== 'arrived') {
+      updatePart(match.id, { qty: match.qty + qty })
+    } else if (newStatus === 'returned' && oldStatus !== 'returned') {
+      updatePart(match.id, { qty: Math.max(0, match.qty - qty) })
+    } else if (oldStatus === 'arrived' && newStatus !== 'arrived') {
+      updatePart(match.id, { qty: Math.max(0, match.qty - qty) })
+    } else if (oldStatus === 'returned' && newStatus !== 'returned') {
+      updatePart(match.id, { qty: match.qty + qty })
+    }
+  }
+
   const advanceOrder = async (req, ro, newStatus) => {
     setStatusError(null)
+    const oldStatus = req.status
     const updated = (ro.partsRequests || []).map(r => r.id === req.id ? { ...r, status: newStatus } : r)
     try {
       await updateRepairOrder(ro.id, { partsRequests: updated })
+      adjustInventory(req, ro, newStatus, oldStatus)
       addNotification({
         type: 'part_status',
         status: newStatus,
@@ -548,7 +568,7 @@ export default function Parts() {
                             const days = daysAgo(req.requestedAt)
                             const severity = getAgeSeverity(days, req.status)
                             const label = getAgeLabel(days)
-                            if (!label || ['ready', 'returned', 'credited'].includes(req.status)) return null
+                            if (!label || ['arrived', 'returned', 'credited'].includes(req.status)) return null
                             return (
                               <div className={cn('text-2xs mt-0.5', severity === 'overdue' ? 'text-status-red font-medium' : severity === 'warning' ? 'text-status-yellow' : 'text-text-muted')}>
                                 {severity === 'overdue' ? '⚠ Overdue — ' : ''}{req.status === 'ordered' ? 'Ordered' : req.status === 'shipped' ? 'Shipped' : 'Requested'} {label}
