@@ -183,7 +183,7 @@ function PartModal({ part, shops, onSave, onClose }) {
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             {field('Part Name *', 'name', { placeholder: 'NGK Iridium Spark Plug' })}
-            {field('SKU / VIN', 'sku', { placeholder: 'NGK-IZFR6K11 or VIN', className: 'font-mono' })}
+            {field('SKU / VIN', 'sku', { placeholder: 'NGK-IZFR6K11 or VIN' })}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
