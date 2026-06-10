@@ -7,15 +7,17 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 const PART_STATUS = {
-  requested: { label: 'Requested', color: 'text-text-muted',    bg: 'bg-border' },
-  ordered:   { label: 'Ordered',   color: 'text-orange',        bg: 'bg-orange/10' },
-  shipped:   { label: 'In Transit',color: 'text-blue-400',      bg: 'bg-blue-500/10' },
-  arrived:   { label: 'Arrived',   color: 'text-status-yellow', bg: 'bg-status-yellow/10' },
-  ready:     { label: 'Ready ✓',   color: 'text-status-green',  bg: 'bg-status-green/10' },
+  requested: { label: 'Requested',  color: 'text-text-muted',    bg: 'bg-border' },
+  ordered:   { label: 'Ordered',    color: 'text-orange',        bg: 'bg-orange/10' },
+  shipped:   { label: 'In Transit', color: 'text-blue-400',      bg: 'bg-blue-500/10' },
+  arrived:   { label: 'Arrived',    color: 'text-status-yellow', bg: 'bg-status-yellow/10' },
+  ready:     { label: 'Ready ✓',    color: 'text-status-green',  bg: 'bg-status-green/10' },
+  returned:  { label: 'Returned',   color: 'text-purple-400',    bg: 'bg-purple-500/10' },
+  credited:  { label: 'Credited',   color: 'text-teal-400',      bg: 'bg-teal-500/10' },
 }
 
-const STATUS_NEXT = { requested: null, ordered: 'shipped', shipped: 'arrived', arrived: 'ready', ready: null }
-const STATUS_NEXT_LABEL = { ordered: 'Mark Shipped', shipped: 'Mark Arrived', arrived: 'Mark Ready' }
+const STATUS_NEXT = { requested: null, ordered: 'shipped', shipped: 'arrived', arrived: 'ready', ready: null, returned: 'credited', credited: null }
+const STATUS_NEXT_LABEL = { ordered: 'Mark Shipped', shipped: 'Mark Arrived', arrived: 'Mark Ready', returned: 'Mark Credited' }
 
 function daysAgo(dateStr) {
   if (!dateStr) return null
@@ -31,7 +33,7 @@ function getAgeLabel(days) {
 }
 
 function getAgeSeverity(days, status) {
-  if (days === null || status === 'ready' || status === 'arrived') return 'normal'
+  if (days === null || ['ready', 'arrived', 'returned', 'credited'].includes(status)) return 'normal'
   if (status === 'ordered' && days >= 5) return 'overdue'
   if (status === 'ordered' && days >= 3) return 'warning'
   if (status === 'shipped' && days >= 5) return 'overdue'
@@ -55,6 +57,8 @@ const STATUS_DOTS = {
   shipped:   'bg-blue-400',
   arrived:   'bg-status-yellow',
   ready:     'bg-status-green',
+  returned:  'bg-purple-400',
+  credited:  'bg-teal-400',
 }
 
 function StatusDropdown({ value, onChange }) {
@@ -135,7 +139,6 @@ function PartModal({ part, shops, onSave, onClose }) {
   const validate = () => {
     const e = {}
     if (!form.name.trim())  e.name  = 'Required'
-    if (!form.sku.trim())   e.sku   = 'Required'
     if (!form.shopId)       e.shopId = 'Select a shop'
     if (form.price === '' || isNaN(Number(form.price))) e.price = 'Enter a number'
     return e
@@ -182,7 +185,7 @@ function PartModal({ part, shops, onSave, onClose }) {
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             {field('Part Name *', 'name', { placeholder: 'NGK Iridium Spark Plug' })}
-            {field('SKU *', 'sku', { placeholder: 'NGK-IZFR6K11', className: 'font-mono' })}
+            {field('SKU / VIN', 'sku', { placeholder: 'NGK-IZFR6K11 or VIN', className: 'font-mono' })}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -282,30 +285,42 @@ export default function Parts() {
   const allOrders = scopedROs
     .flatMap(ro => (ro.partsRequests || []).map(req => ({ ...req, ro })))
     .sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))
-  const activeOrders = allOrders.filter(o => o.status !== 'ready')
+  const activeOrders = allOrders.filter(o => !['ready', 'returned', 'credited'].includes(o.status))
   const displayedOrders = orderStatusFilter === 'active'
     ? activeOrders
     : orderStatusFilter === 'all'
       ? allOrders
       : allOrders.filter(o => o.status === orderStatusFilter)
-  const orderCounts = ['requested','ordered','shipped','arrived','ready'].reduce((acc, s) => {
+  const orderCounts = ['requested','ordered','shipped','arrived','ready','returned','credited'].reduce((acc, s) => {
     acc[s] = allOrders.filter(o => o.status === s).length; return acc
   }, {})
 
-  const advanceOrder = (req, ro, newStatus) => {
+  const [statusError, setStatusError] = useState(null)
+
+  const advanceOrder = async (req, ro, newStatus) => {
+    setStatusError(null)
     const updated = (ro.partsRequests || []).map(r => r.id === req.id ? { ...r, status: newStatus } : r)
-    updateRepairOrder(ro.id, { partsRequests: updated })
-    addNotification({
-      type: 'part_status',
-      status: newStatus,
-      partName: req.name,
-      roId: ro.id,
-      vehicle: ro.vehicle,
-      customerName: ro.customerName,
-      shopId: ro.shopId,
-    })
+    try {
+      await updateRepairOrder(ro.id, { partsRequests: updated })
+      addNotification({
+        type: 'part_status',
+        status: newStatus,
+        partName: req.name,
+        roId: ro.id,
+        vehicle: ro.vehicle,
+        customerName: ro.customerName,
+        shopId: ro.shopId,
+      })
+      if (newStatus === 'ordered') {
+        setOrderStatusFilter('ordered')
+        setOrdersExpanded(true)
+      }
+    } catch (err) {
+      setStatusError(`Failed to update ${req.name}: ${err.message || 'Unknown error'}`)
+    }
   }
-  const saveTracking = (req, ro) => {
+  const saveTracking = async (req, ro) => {
+    setStatusError(null)
     const isFirstOrder = req.status === 'requested' && trackingDraft.supplier.trim()
     const updated = (ro.partsRequests || []).map(r =>
       r.id === req.id ? {
@@ -317,19 +332,25 @@ export default function Parts() {
         status: isFirstOrder ? 'ordered' : r.status,
       } : r
     )
-    updateRepairOrder(ro.id, { partsRequests: updated })
-    if (isFirstOrder) {
-      addNotification({
-        type: 'part_status',
-        status: 'ordered',
-        partName: req.name,
-        roId: ro.id,
-        vehicle: ro.vehicle,
-        customerName: ro.customerName,
-        shopId: ro.shopId,
-      })
+    try {
+      await updateRepairOrder(ro.id, { partsRequests: updated })
+      if (isFirstOrder) {
+        addNotification({
+          type: 'part_status',
+          status: 'ordered',
+          partName: req.name,
+          roId: ro.id,
+          vehicle: ro.vehicle,
+          customerName: ro.customerName,
+          shopId: ro.shopId,
+        })
+        setOrderStatusFilter('ordered')
+        setOrdersExpanded(true)
+      }
+      setEditingTrackingId(null)
+    } catch (err) {
+      setStatusError(`Failed to save tracking for ${req.name}: ${err.message || 'Unknown error'}`)
     }
-    setEditingTrackingId(null)
   }
 
   const handleOrder = (partId) => {
@@ -445,6 +466,12 @@ export default function Parts() {
 
         {ordersExpanded && (
           <div className="border-t border-border">
+            {statusError && (
+              <div className="mx-5 mt-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center justify-between">
+                <span>{statusError}</span>
+                <button onClick={() => setStatusError(null)} className="ml-2 text-red-400 hover:text-red-300"><X size={12} /></button>
+              </div>
+            )}
             {/* Status filter pills */}
             {allOrders.length > 0 && (
               <div className="flex flex-wrap gap-2 px-5 py-3 border-b border-border">
@@ -491,7 +518,12 @@ export default function Parts() {
                   const nextStatus = STATUS_NEXT[req.status]
                   const isEditingTracking = editingTrackingId === `${ro.id}_${req.id}`
                   return (
-                    <div key={`${req.id}-${idx}`} className={cn('px-5 py-4', req.status === 'arrived' && 'bg-status-yellow/5')}>
+                    <div key={`${req.id}-${idx}`} className={cn(
+                      'px-5 py-4',
+                      req.status === 'arrived'  && 'bg-status-yellow/5',
+                      req.status === 'returned' && 'bg-purple-500/5',
+                      req.status === 'credited' && 'bg-teal-500/5'
+                    )}>
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -516,7 +548,7 @@ export default function Parts() {
                             const days = daysAgo(req.requestedAt)
                             const severity = getAgeSeverity(days, req.status)
                             const label = getAgeLabel(days)
-                            if (!label || req.status === 'ready') return null
+                            if (!label || ['ready', 'returned', 'credited'].includes(req.status)) return null
                             return (
                               <div className={cn('text-2xs mt-0.5', severity === 'overdue' ? 'text-status-red font-medium' : severity === 'warning' ? 'text-status-yellow' : 'text-text-muted')}>
                                 {severity === 'overdue' ? '⚠ Overdue — ' : ''}{req.status === 'ordered' ? 'Ordered' : req.status === 'shipped' ? 'Shipped' : 'Requested'} {label}
@@ -574,7 +606,7 @@ export default function Parts() {
                             </div>
                           ) : req.trackingNumber ? (
                             <div className="text-2xs text-text-muted font-mono mt-1">{req.carrier && `${req.carrier} · `}#{req.trackingNumber}</div>
-                          ) : req.status === 'ordered' || req.status === 'shipped' ? (
+                          ) : ['ordered', 'shipped', 'returned'].includes(req.status) ? (
                             <button
                               onClick={() => { setEditingTrackingId(`${ro.id}_${req.id}`); setTrackingDraft({ supplier: req.supplier || '', eta: req.eta || '', carrier: '', trackingNumber: '' }) }}
                               className="mt-2 flex items-center gap-1.5 h-7 px-3 rounded-md border border-orange/30 bg-orange/5 text-xs font-medium text-orange hover:bg-orange/10 transition-colors"
@@ -615,7 +647,7 @@ export default function Parts() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search SKU, part name, category…"
+            placeholder="Search SKU, VIN, part name, category…"
             className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange/30 transition-colors"
           />
         </div>
@@ -719,7 +751,7 @@ export default function Parts() {
           <Table>
             <Thead>
               <tr>
-                <Th>SKU</Th>
+                <Th>SKU / VIN</Th>
                 <Th>Part Name</Th>
                 <Th>Category</Th>
                 <Th>Status</Th>

@@ -18,7 +18,9 @@ const PART_STATUS_CFG = {
   ordered:   { label: 'Ordered',    color: 'text-orange',        bg: 'bg-orange/10'           },
   shipped:   { label: 'In Transit', color: 'text-blue-400',      bg: 'bg-blue-500/10'         },
   arrived:   { label: 'Arrived',    color: 'text-status-yellow', bg: 'bg-status-yellow/10'    },
-  ready:     { label: 'Ready ✓',   color: 'text-status-green',  bg: 'bg-status-green/10'     },
+  ready:     { label: 'Ready ✓',    color: 'text-status-green',  bg: 'bg-status-green/10'     },
+  returned:  { label: 'Returned',   color: 'text-purple-400',    bg: 'bg-purple-500/10'       },
+  credited:  { label: 'Credited',   color: 'text-teal-400',      bg: 'bg-teal-500/10'         },
 }
 const PART_STATUS_DOTS = {
   requested: 'bg-text-muted',
@@ -26,6 +28,8 @@ const PART_STATUS_DOTS = {
   shipped:   'bg-blue-400',
   arrived:   'bg-status-yellow',
   ready:     'bg-status-green',
+  returned:  'bg-purple-400',
+  credited:  'bg-teal-400',
 }
 
 function PartStatusDropdown({ value, onChange }) {
@@ -862,8 +866,10 @@ export function RODetailModal({ open, onClose, ro }) {
                   key={req.id}
                   className={cn(
                     'rounded-lg border p-3',
-                    req.status === 'arrived' ? 'border-status-green/30 bg-status-green/5' :
-                    req.status === 'ordered' ? 'border-orange/20 bg-orange/5' :
+                    req.status === 'arrived'  ? 'border-status-green/30 bg-status-green/5' :
+                    req.status === 'ordered'  ? 'border-orange/20 bg-orange/5' :
+                    req.status === 'returned' ? 'border-purple-500/20 bg-purple-500/5' :
+                    req.status === 'credited' ? 'border-teal-500/20 bg-teal-500/5' :
                     'border-border bg-background'
                   )}
                 >
@@ -882,13 +888,10 @@ export function RODetailModal({ open, onClose, ro }) {
                       ) : (
                         <span className={cn(
                           'text-2xs px-1.5 py-0.5 rounded-full font-medium',
-                          req.status === 'ready'   ? 'bg-status-green/10 text-status-green' :
-                          req.status === 'arrived' ? 'bg-status-yellow/10 text-status-yellow' :
-                          req.status === 'shipped' ? 'bg-blue-500/10 text-blue-400' :
-                          req.status === 'ordered' ? 'bg-orange/10 text-orange' :
-                          'bg-border text-text-muted'
+                          PART_STATUS_CFG[req.status]?.bg || 'bg-border',
+                          PART_STATUS_CFG[req.status]?.color || 'text-text-muted'
                         )}>
-                          {req.status === 'ready' ? 'Ready' : req.status === 'arrived' ? 'Arrived' : req.status === 'shipped' ? 'Shipped' : req.status === 'ordered' ? 'Ordered' : 'Requested'}
+                          {PART_STATUS_CFG[req.status]?.label || 'Requested'}
                         </span>
                       )}
                       <button
@@ -902,7 +905,7 @@ export function RODetailModal({ open, onClose, ro }) {
                   </div>
 
                   {/* Advisor: order details */}
-                  {!isTech && req.status !== 'ready' && (
+                  {!isTech && !['ready', 'credited'].includes(req.status) && (
                     editingOrderId === req.id ? (
                       <div className="mt-2 space-y-1.5">
                         <input
