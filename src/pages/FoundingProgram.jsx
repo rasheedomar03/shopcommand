@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Check, Mail, Clock, Wrench, BarChart3, Package, Users, ArrowRight } from 'lucide-react'
 
 const TOTAL_SPOTS = 25
-const CLAIMED_SPOTS = 0
+const CLAIMED_SPOTS = 1
 const CALENDLY_URL = 'https://calendly.com/rasheed-omar/30min'
 const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
 
