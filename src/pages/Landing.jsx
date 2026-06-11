@@ -36,16 +36,20 @@ function HexMark({ size = 36 }) {
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const steps = [
   {
-    title: 'Connect your shop',
-    desc: "Add your location in under five minutes. No IT guy, no hardware, no three-week onboarding. You'll have your first dashboard open before lunch.",
+    title: 'Intake the vehicle',
+    desc: "Customer drops off or calls ahead — you capture the complaint, VIN, and contact info in one screen. The repair order is open before the keys hit the hook.",
   },
   {
-    title: 'Stop calling your managers',
-    desc: "Revenue, open ROs, tech hours, and who clocked in late. All live. You don't need to call the shop at 4pm to find out how the day went.",
+    title: 'Assign & track the work',
+    desc: "Route the job to the right tech, clock them in, and watch hours accumulate in real time. No clipboard. No whiteboard. Everyone knows what they're on.",
   },
   {
-    title: 'Catch problems on Tuesday, not Friday',
-    desc: "See which tech is falling behind, which location missed target, and where your money is going. Before it becomes an expensive surprise.",
+    title: 'Parts, labor & approvals',
+    desc: "Add labor lines, pull parts from inventory (or order them), and send digital approvals to the customer. Inventory updates automatically.",
+  },
+  {
+    title: 'Invoice & collect payment',
+    desc: "One click turns the RO into an invoice. Customer pays in-shop or online. The job closes, revenue posts, and your books stay clean.",
   },
 ]
 
@@ -56,6 +60,11 @@ const features = [
     desc: 'Stop guessing how your shop is doing. Revenue, open ROs, and technician status live, the moment you open your laptop. Running multiple locations? See them all at once.',
   },
   {
+    icon: Clock,
+    title: 'Time clock built right in',
+    desc: "Techs clock in and out from their phone or the shop terminal. You see who's on the floor, track billable hours against actual hours, and catch overtime before it happens.",
+  },
+  {
     icon: ClipboardList,
     title: 'Every job, accounted for',
     desc: "No more calling the manager to find out where a job stands. Every RO moves through stages digitally, with full history and accountability from the moment it's written.",
@@ -63,7 +72,7 @@ const features = [
   {
     icon: Wrench,
     title: 'Know your team without the check-in calls',
-    desc: "Who's clocked in, who's behind, who's carrying the day. Without being there. Efficiency scores, clock-ins, and performance data at your fingertips.",
+    desc: "Who's behind, who's carrying the day, and who hit their hours target. Efficiency scores, shift logs, and performance data — without being there.",
   },
 ]
 
@@ -90,7 +99,7 @@ const faqs = [
   },
   {
     q: 'How does the Founding Shop Program work?',
-    a: 'You apply, we schedule a setup call, and you run ShopCommand against your real workflow for 30 days with weekly check-ins. If the fit is proven, you convert to the $100/mo founding rate — locked for life.',
+    a: 'You apply, we schedule a setup call, and you run ShopCommand against your real workflow for 14 days with weekly check-ins. If the fit is proven, you convert to the $100/mo founding rate — locked for life.',
   },
   {
     q: 'What does the $100/mo founding rate cover?',
@@ -387,7 +396,7 @@ function FoundingSection() {
         <div className="text-center mb-12">
           <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Founding Shop Program</div>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
-            A guided 30-day pilot before you commit.
+            A guided 14-day pilot before you commit.
           </h2>
           <p className="text-slate-500 leading-relaxed max-w-lg mx-auto">
             Prove that ShopCommand fits your workflow — repair orders, technician time, parts handoff, and invoice readiness — against your real day-to-day before choosing a paid plan.
@@ -400,7 +409,7 @@ function FoundingSection() {
             <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">What the pilot includes</h3>
             <ul className="space-y-3">
               {[
-                '30-day guided pilot mapped to your current service, parts, and invoice workflow.',
+                '14-day guided pilot mapped to your current service, parts, and invoice workflow.',
                 'Setup call to import or seed your customers, vehicles, technicians, and open ROs.',
                 'Weekly 20-minute check-in focused on invoice readiness, parts visibility, and labor capture.',
                 'Direct access to Rasheed — real answers, no support portal, no ticket queue.',
@@ -642,7 +651,7 @@ function ROICalculator() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const LANDING_TITLE = 'ShopCommand — Auto Shop Management Software'
-const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Apply for the Founding Shop Program: 30-day guided pilot, then $100/mo locked forever.'
+const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Apply for the Founding Shop Program: 14-day guided pilot, then $100/mo locked forever.'
 const LANDING_URL = 'https://shopcommand.net'
 
 export default function Landing() {
@@ -981,11 +990,11 @@ export default function Landing() {
           </div>
           <div className="order-1 md:order-2">
             <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
-              <Wrench size={18} className="text-orange-500" strokeWidth={1.8} />
+              <Clock size={18} className="text-orange-500" strokeWidth={1.8} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Know who showed up and who's producing</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Time clock and technician tracking, built in</h3>
             <p className="text-slate-500 text-sm leading-relaxed mb-4">
-              It's 7:15am. You open the app. Mike clocked in at 6:58, Carlos is on a brake job in bay 1, Andre hasn't shown up yet. You didn't call anyone. You just know.
+              It's 7:15am. You open the app. Mike clocked in at 6:58, Carlos is on a brake job in bay 1, Andre hasn't shown up yet. You didn't call anyone. You see billable hours against actual hours, catch overtime before it costs you, and track efficiency per tech — all without a separate time-tracking tool.
             </p>
           </div>
         </div>
