@@ -1359,34 +1359,71 @@ export default function Landing() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 px-6 md:px-12 py-10 bg-slate-50/60">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity flex-shrink-0">
-            <HexMark size={22} />
-            <span className="text-slate-400 text-sm">ShopCommand</span>
-          </Link>
+      <footer className="border-t border-slate-200 bg-slate-50/60">
+        <div className="max-w-5xl mx-auto px-6 md:px-12 py-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+            {/* Brand */}
+            <div className="col-span-2 md:col-span-1">
+              <Link to="/" className="inline-flex items-center gap-2 hover:opacity-70 transition-opacity mb-3">
+                <HexMark size={22} />
+                <span className="text-slate-900 text-sm font-semibold" style={{ letterSpacing: '-0.02em' }}>
+                  Shop<span className="text-orange-500">Command</span>
+                </span>
+              </Link>
+              <p className="text-slate-400 text-xs leading-relaxed mb-4">
+                Auto repair shop management software for owners who want to know how every location is running — without the phone calls.
+              </p>
+              <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-600 text-xs transition-colors">
+                <Mail size={12} className="flex-shrink-0" />
+                {CONTACT_EMAIL}
+              </a>
+            </div>
 
-          {/* Contact */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-            <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 text-slate-400 hover:text-slate-600 text-sm transition-colors">
-              <Mail size={13} className="flex-shrink-0" />
-              {CONTACT_EMAIL}
-            </a>
+            {/* Product */}
+            <div>
+              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">Product</h4>
+              <ul className="space-y-2">
+                <li><a href="#how-it-works" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">How it works</a></li>
+                <li><a href="#pricing" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Pricing</a></li>
+                <li><Link to="/demo" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Live demo</Link></li>
+                <li><Link to="/founding-program" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Founding Program</Link></li>
+              </ul>
+            </div>
+
+            {/* Compare */}
+            <div>
+              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">Compare</h4>
+              <ul className="space-y-2">
+                <li><Link to="/compare/tekmetric" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">vs. Tekmetric</Link></li>
+                <li><Link to="/compare/shopmonkey" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">vs. Shopmonkey</Link></li>
+                <li><Link to="/compare/mitchell1" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">vs. Mitchell1</Link></li>
+                <li><Link to="/compare/shop-ware" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">vs. Shop-Ware</Link></li>
+                <li><Link to="/compare/ro-writer" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">vs. R.O. Writer</Link></li>
+              </ul>
+            </div>
+
+            {/* Resources & Legal */}
+            <div>
+              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">Resources</h4>
+              <ul className="space-y-2">
+                <li><Link to="/resources" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Blog</Link></li>
+                <li><a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Book a walkthrough</a></li>
+              </ul>
+              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3 mt-6">Legal</h4>
+              <ul className="space-y-2">
+                <li><Link to="/terms" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Terms</Link></li>
+                <li><Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Privacy</Link></li>
+                <li><Link to="/dpa" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">DPA</Link></li>
+                <li><Link to="/cookies" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Cookies</Link></li>
+                <li><Link to="/accessibility" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Accessibility</Link></li>
+              </ul>
+            </div>
           </div>
 
-          {/* Links + copyright */}
-          <div className="flex flex-col items-center md:items-end gap-2.5">
-            <div className="flex gap-5">
-              <Link to="/founding-program" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Founding Program</Link>
-              <Link to="/resources" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Resources</Link>
-              <Link to="/terms" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Terms</Link>
-              <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Privacy</Link>
-              <Link to="/dpa" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">DPA</Link>
-              <Link to="/cookies" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Cookies</Link>
-              <Link to="/accessibility" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Accessibility</Link>
-            </div>
-            <p className="text-slate-500 text-xs">© 2026 ShopCommand. All rights reserved.</p>
+          {/* Bottom bar */}
+          <div className="mt-10 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-slate-400 text-xs">© 2026 ShopCommand. All rights reserved.</p>
+            <p className="text-slate-300 text-xs">Built in Tulsa, OK</p>
           </div>
         </div>
       </footer>
