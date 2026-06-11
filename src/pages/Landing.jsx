@@ -105,9 +105,9 @@ const faqs = [
 
 // ─── Dashboard preview data ───────────────────────────────────────────────────
 const shopRows = [
-  { name: 'Tulsa Main',   sub: '8 techs clocked in',    revenue: 8240,  ros: 21, techs: '8 / 10',  best: false },
-  { name: 'Broken Arrow', sub: '6 techs clocked in',    revenue: 6180,  ros: 17, techs: '6 / 8',   best: false },
-  { name: 'Owasso',       sub: '↑ Best day this month', revenue: 11450, ros: 35, techs: '10 / 10', best: true  },
+  { name: 'Houston Main', sub: '8 techs clocked in',    revenue: 8240,  ros: 21, techs: '8 / 10',  best: false },
+  { name: 'Cypress',      sub: '6 techs clocked in',    revenue: 6180,  ros: 17, techs: '6 / 8',   best: false },
+  { name: 'Katy',         sub: '↑ Best day this month', revenue: 11450, ros: 35, techs: '10 / 10', best: true  },
 ]
 
 function DashboardPreview() {
@@ -1323,7 +1323,7 @@ export default function Landing() {
           {/* Bottom bar */}
           <div className="mt-10 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-slate-400 text-xs">© 2026 ShopCommand. All rights reserved.</p>
-            <p className="text-slate-300 text-xs">Built in Tulsa, OK</p>
+            <p className="text-slate-300 text-xs">Built in Houston, TX</p>
           </div>
         </div>
       </footer>
