@@ -98,14 +98,6 @@ const faqs = [
     a: 'Your data stays yours. You can export everything before you go. We don\'t hold it hostage.',
   },
   {
-    q: 'How does the Founding Shop Program work?',
-    a: 'You apply, we schedule a setup call, and you run ShopCommand against your real workflow for 14 days with weekly check-ins. If the fit is proven, you convert to the $100/mo founding rate — locked for life.',
-  },
-  {
-    q: 'What does the $100/mo founding rate cover?',
-    a: 'Your first shop with unlimited technicians, users, and repair orders for $100/mo. Each additional shop is just $50/mo. The rate locks in forever as long as you stay subscribed. After launch, pricing goes to $175/mo for your first shop and $100/mo per additional shop.',
-  },
-  {
     q: 'How is this different from Tekmetric or Shopmonkey?',
     a: 'Those are full shop management platforms, great at day-to-day operations for a single location. ShopCommand is built for the owner sitting above all their locations who needs real-time visibility across every shop without jumping between logins. Different problem, different tool.',
   },
@@ -403,44 +395,11 @@ function FoundingSection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {/* What the pilot includes */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">What the pilot includes</h3>
-            <ul className="space-y-3">
-              {[
-                '14-day guided pilot mapped to your current service, parts, and invoice workflow.',
-                'Setup call to import or seed your customers, vehicles, technicians, and open ROs.',
-                'Weekly 20-minute check-in focused on invoice readiness, parts visibility, and labor capture.',
-                'Direct access to Rasheed — real answers, no support portal, no ticket queue.',
-                'Conversion to $100/mo founding rate (locked for life) when the workflow fit is proven.',
-              ].map((item, i) => (
-                <li key={i} className="flex gap-3 text-sm text-slate-600 leading-relaxed">
-                  <Check size={16} className="text-orange-500 mt-0.5 shrink-0" strokeWidth={2.5} />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Who should apply */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Who should apply</h3>
-            <ul className="space-y-3">
-              {[
-                'Independent or multi-location auto repair, fleet, or parts-heavy operation.',
-                'Enough service and parts volume to feel workflow friction today.',
-                'Owner or service manager who can name the current handoff, billing, or visibility problem.',
-                'Team can commit one manager plus one tech or parts user during the pilot.',
-              ].map((item, i) => (
-                <li key={i} className="flex gap-3 text-sm text-slate-600 leading-relaxed">
-                  <span className="w-4 h-4 rounded-full border-2 border-orange-300 mt-0.5 shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <p className="text-center text-slate-500 text-sm mb-10">
+          <Link to="/founding-program" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
+            See full program details →
+          </Link>
+        </p>
 
         <div>
           {/* Walkthrough alternative */}
@@ -993,90 +952,31 @@ export default function Landing() {
           <ROPreview />
         </div>
 
-        {/* Feature 2: Tech board — preview left, text right */}
-        <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
-          <div className="order-2 md:order-1">
-            <TechPreview />
-          </div>
-          <div className="order-1 md:order-2">
-            <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
-              <Clock size={18} className="text-orange-500" strokeWidth={1.8} />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Time clock and technician tracking, built in</h3>
-            <p className="text-slate-500 text-sm leading-relaxed mb-4">
-              It's 7:15am. You open the app. Mike clocked in at 6:58, Carlos is on a brake job in bay 1, Andre hasn't shown up yet. You didn't call anyone. You see billable hours against actual hours, catch overtime before it costs you, and track efficiency per tech — all without a separate time-tracking tool.
-            </p>
-          </div>
-        </div>
       </section>
 
       {/* Who it's built for */}
       <section
-        className="border-t border-slate-200 py-24 px-6"
+        className="border-t border-slate-200 py-20 px-6"
         style={{ backgroundColor: '#F0EDEA' }}
       >
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-[1.2fr_1fr] gap-10 md:gap-14 items-start">
-            {/* Left: Owner (primary user, gets emphasis) */}
-            <div>
-              <div className="text-orange-600 text-xs uppercase tracking-widest font-semibold mb-3">For the owner</div>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.02em' }}>
-                Stop driving across town to check on your shop
-              </h2>
-              <p className="text-slate-500 text-sm md:text-base leading-relaxed mb-6">
-                You shouldn't need to be physically present to know if today was a $4k day or a $12k day. Revenue, open ROs, and who's on the clock, all in one tab, before your first coffee.
-              </p>
-              <a href="#founding" className="inline-flex px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
-                See the dashboard →
-              </a>
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">Built for every role</div>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-10" style={{ letterSpacing: '-0.02em' }}>
+            One platform, three views
+          </h2>
+          <div className="grid sm:grid-cols-3 gap-6 text-left">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="text-orange-600 text-xs uppercase tracking-widest font-semibold mb-2">Owner</div>
+              <p className="text-slate-600 text-sm leading-relaxed">Revenue, open ROs, and who's on the clock — all locations, one tab.</p>
             </div>
-
-            {/* Right: Advisor + Tech stacked */}
-            <div className="space-y-8">
-              <div>
-                <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Service Advisor</div>
-                <h3 className="text-base font-semibold text-slate-900 mb-1.5">Run your board without the chaos</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                  Write and track ROs from estimate to payment. Pull full vehicle history instantly before writing a line. No loading spinners, no waiting on your software.
-                </p>
-              </div>
-              <div className="border-t border-slate-200 pt-8">
-                <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Technician</div>
-                <h3 className="text-base font-semibold text-slate-900 mb-1.5">Clock in and know exactly where to start</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                  See your assigned jobs the moment you log in. No clipboard, no whiteboard. Everything loads instantly on your phone. Update job status between lifts.
-                </p>
-              </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Service Advisor</div>
+              <p className="text-slate-600 text-sm leading-relaxed">Write and track ROs from estimate to payment with instant vehicle history.</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* What's included */}
-      <section className="border-t border-slate-200 py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.02em' }}>
-              Everything's included. No tiers, no add-ons.
-            </h2>
-            <p className="text-slate-400 text-sm">One plan. One price. Every feature on day one.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-x-10 gap-y-3.5">
-            {[
-              'Real-time cross-location dashboard',
-              'Unlimited technicians and users',
-              'Repair order tracking, every stage',
-              'Tech efficiency scores and clock-ins',
-              'Per-shop monthly revenue targets',
-              'Mobile board for technicians',
-              'Role-based access: owner, advisor, tech',
-              'No per-seat fees. Ever.',
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3 py-1">
-                <Check size={14} className="text-orange-500 flex-shrink-0" strokeWidth={2} />
-                <span className="text-slate-600 text-sm">{item}</span>
-              </div>
-            ))}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Technician</div>
+              <p className="text-slate-600 text-sm leading-relaxed">Clock in, see assigned jobs, update status — all from your phone.</p>
+            </div>
           </div>
         </div>
       </section>
