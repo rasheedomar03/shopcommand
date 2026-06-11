@@ -727,6 +727,9 @@ export default function Landing() {
           <a href="#pricing" className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-100">
             Pricing
           </a>
+          <Link to="/resources" className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-100">
+            Resources
+          </Link>
           <div className="relative" ref={compareRef}>
             <button
               onClick={() => setCompareOpen(o => !o)}
@@ -812,6 +815,13 @@ export default function Landing() {
               {label}
             </a>
           ))}
+          <Link
+            to="/resources"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+          >
+            Resources
+          </Link>
           <Link
             to="/demo"
             onClick={() => setMobileMenuOpen(false)}
@@ -1368,6 +1378,8 @@ export default function Landing() {
           {/* Links + copyright */}
           <div className="flex flex-col items-center md:items-end gap-2.5">
             <div className="flex gap-5">
+              <Link to="/founding-program" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Founding Program</Link>
+              <Link to="/resources" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Resources</Link>
               <Link to="/terms" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Terms</Link>
               <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Privacy</Link>
               <Link to="/dpa" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">DPA</Link>
