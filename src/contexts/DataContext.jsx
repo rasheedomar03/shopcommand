@@ -128,6 +128,7 @@ export function DataProvider({ children }) {
     if (stored && stored.length > 0) return stored
     return []
   })
+  const [partsOrders, setPartsOrders] = useState(() => load('sc_parts_orders', []))
 
   // ── Clear all data when user identity changes (prevents cross-account bleed)
   useEffect(() => {
@@ -143,6 +144,7 @@ export function DataProvider({ children }) {
       setPayments([])
       setParts([])
       setNotifications([])
+      setPartsOrders([])
       setLoading(true)
     }
     if (currentId) lastClerkId.current = currentId
@@ -509,6 +511,32 @@ export function DataProvider({ children }) {
     })
   }, [session?.demo])
 
+  const addPartsOrder = useCallback((order) => {
+    const entry = { id: crypto.randomUUID(), status: 'ordered', requestedAt: new Date().toISOString(), supplier: '', eta: '', carrier: '', trackingNumber: '', ...order }
+    setPartsOrders(prev => {
+      const next = [entry, ...prev]
+      save('sc_parts_orders', next)
+      return next
+    })
+    return entry
+  }, [])
+
+  const updatePartsOrder = useCallback((id, patch) => {
+    setPartsOrders(prev => {
+      const next = prev.map(o => o.id === id ? { ...o, ...patch } : o)
+      save('sc_parts_orders', next)
+      return next
+    })
+  }, [])
+
+  const deletePartsOrder = useCallback((id) => {
+    setPartsOrders(prev => {
+      const next = prev.filter(o => o.id !== id)
+      save('sc_parts_orders', next)
+      return next
+    })
+  }, [])
+
   // ── job timers ────────────────────────────────────────────────────────────
 
   const persistTimers = useCallback((roId, timersForRO) => {
@@ -565,6 +593,7 @@ export function DataProvider({ children }) {
       repairOrders, addRepairOrder, updateRepairOrder, sendEstimateReady,
       shops, updateShop, addShop, removeShop,
       parts, addPart, updatePart, deletePart, usePart, restockPart, orderPart,
+      partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
       notifications, addNotification, markNotificationsRead, clearNotifications,

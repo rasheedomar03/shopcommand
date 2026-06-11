@@ -329,7 +329,7 @@ function QRLabelModal({ part, shopName, onClose }) {
 }
 
 export default function Parts() {
-  const { parts, shops, addPart, updatePart, deletePart, orderPart, repairOrders, updateRepairOrder, addNotification } = useData()
+  const { parts, shops, addPart, updatePart, deletePart, orderPart, repairOrders, updateRepairOrder, addNotification, partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [searchParams] = useSearchParams()
@@ -347,12 +347,16 @@ export default function Parts() {
   const [confirmDeleteOrderId, setConfirmDeleteOrderId] = useState(null)
   const [qrPart, setQrPart] = useState(null)
 
-  // Aggregate all parts requests from scoped ROs
+  // Aggregate all parts requests from scoped ROs + standalone parts orders
   const scopedROs = isAdvisor
     ? repairOrders.filter(ro => ro.shopId === session.shopId)
     : repairOrders
-  const allOrders = scopedROs
-    .flatMap(ro => (ro.partsRequests || []).map(req => ({ ...req, ro })))
+  const roOrders = scopedROs
+    .flatMap(ro => (ro.partsRequests || []).map(req => ({ ...req, ro, _source: 'ro' })))
+  const scopedPartsOrders = (partsOrders || [])
+    .filter(o => !isAdvisor || o.shopId === session.shopId)
+    .map(o => ({ ...o, _source: 'standalone' }))
+  const allOrders = [...roOrders, ...scopedPartsOrders]
     .sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))
   const activeOrders = allOrders.filter(o => !['arrived', 'returned', 'credited'].includes(o.status))
   const displayedOrders = orderStatusFilter === 'active'
@@ -394,6 +398,16 @@ export default function Parts() {
   const advanceOrder = async (req, ro, newStatus) => {
     setStatusError(null)
     const oldStatus = req.status
+    if (req._source === 'standalone') {
+      updatePartsOrder(req.id, { status: newStatus })
+      addNotification({ type: 'part_status', status: newStatus, partName: req.name, shopId: req.shopId })
+      if (newStatus === 'arrived' && req.partId) {
+        const match = scopedParts.find(p => p.id === req.partId)
+        if (match) updatePart(match.id, { qty: match.qty + (req.qty || 1) })
+      }
+      if (newStatus === 'ordered') { setOrderStatusFilter('ordered'); setOrdersExpanded(true) }
+      return
+    }
     const updated = (ro.partsRequests || []).map(r => r.id === req.id ? { ...r, status: newStatus } : r)
     try {
       await updateRepairOrder(ro.id, { partsRequests: updated })
@@ -417,6 +431,16 @@ export default function Parts() {
   }
   const saveTracking = async (req, ro) => {
     setStatusError(null)
+    if (req._source === 'standalone') {
+      updatePartsOrder(req.id, {
+        supplier: trackingDraft.supplier,
+        eta: trackingDraft.eta,
+        carrier: trackingDraft.carrier,
+        trackingNumber: trackingDraft.trackingNumber,
+      })
+      setEditingTrackingId(null)
+      return
+    }
     const isFirstOrder = req.status === 'requested' && trackingDraft.supplier.trim()
     const updated = (ro.partsRequests || []).map(r =>
       r.id === req.id ? {
@@ -450,8 +474,27 @@ export default function Parts() {
   }
 
   const handleOrder = (partId) => {
+    const part = scopedParts.find(p => p.id === partId)
+    if (!part) return
     orderPart(partId)
+    const shop = shops.find(s => s.id === part.shopId)
+    addPartsOrder({
+      name: part.name,
+      partNumber: part.sku || '',
+      qty: part.qty <= part.minQty ? Math.max(1, part.minQty - part.qty + part.minQty) : 1,
+      shopId: part.shopId,
+      shopName: shop?.name || '',
+      partId: part.id,
+    })
+    addNotification({
+      type: 'part_status',
+      status: 'ordered',
+      partName: part.name,
+      shopId: part.shopId,
+    })
     setOrderedIds(prev => new Set(prev).add(partId))
+    setOrderStatusFilter('ordered')
+    setOrdersExpanded(true)
     setTimeout(() => setOrderedIds(prev => { const next = new Set(prev); next.delete(partId); return next }), 3000)
   }
 
@@ -608,11 +651,13 @@ export default function Parts() {
             ) : (
               <div className="divide-y divide-border">
                 {displayedOrders.map((item, idx) => {
-                  const { ro, ...req } = item
+                  const { ro, _source, ...req } = item
+                  const isStandalone = _source === 'standalone'
                   const cfg = PART_STATUS[req.status] || PART_STATUS.requested
                   const trackUrl = getTrackingUrl(req.carrier, req.trackingNumber)
                   const nextStatus = STATUS_NEXT[req.status]
-                  const isEditingTracking = editingTrackingId === `${ro.id}_${req.id}`
+                  const trackingKey = isStandalone ? `standalone_${req.id}` : `${ro.id}_${req.id}`
+                  const isEditingTracking = editingTrackingId === trackingKey
                   return (
                     <div key={`${req.id}-${idx}`} className={cn(
                       'px-5 py-4',
@@ -628,12 +673,21 @@ export default function Parts() {
                             {req.partNumber && <span className="text-2xs font-mono text-text-muted">#{req.partNumber}</span>}
                           </div>
                           <div className="flex items-center gap-2 text-2xs text-text-muted mb-1.5 flex-wrap">
-                            <span className="font-mono text-orange">{ro.id}</span>
-                            <span>·</span>
-                            <span>{ro.vehicle}</span>
-                            <span>·</span>
-                            <span>{ro.customerName}</span>
-                            {req.requestedBy && <><span>·</span><span>by {req.requestedBy}</span></>}
+                            {isStandalone ? (
+                              <>
+                                <span className="px-1.5 py-0.5 rounded bg-orange/10 text-orange font-medium">Inventory Order</span>
+                                {req.shopName && <><span>·</span><span>{req.shopName}</span></>}
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-mono text-orange">{ro.id}</span>
+                                <span>·</span>
+                                <span>{ro.vehicle}</span>
+                                <span>·</span>
+                                <span>{ro.customerName}</span>
+                                {req.requestedBy && <><span>·</span><span>by {req.requestedBy}</span></>}
+                              </>
+                            )}
                           </div>
                           {(req.supplier || req.eta) && (
                             <div className="text-2xs text-text-muted">
@@ -687,7 +741,7 @@ export default function Parts() {
                                 />
                               </div>
                               <div className="flex gap-2">
-                                <button onClick={() => saveTracking(req, ro)} className="h-7 px-2.5 rounded bg-orange text-white text-xs font-medium hover:bg-orange/90 transition-colors">Save</button>
+                                <button onClick={() => saveTracking({ ...req, _source }, ro)} className="h-7 px-2.5 rounded bg-orange text-white text-xs font-medium hover:bg-orange/90 transition-colors">Save</button>
                                 <button onClick={() => setEditingTrackingId(null)} className="h-7 px-2 rounded border border-border text-xs text-text-muted hover:text-text-primary transition-colors">Cancel</button>
                               </div>
                             </div>
@@ -696,7 +750,7 @@ export default function Parts() {
                               <a href={trackUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-2xs text-blue-400 hover:underline">
                                 <ExternalLink size={9} /> Track with {req.carrier}
                               </a>
-                              <button onClick={() => { setEditingTrackingId(`${ro.id}_${req.id}`); setTrackingDraft({ supplier: req.supplier || '', eta: req.eta || '', carrier: req.carrier || '', trackingNumber: req.trackingNumber || '' }) }} className="text-2xs text-text-muted hover:text-orange transition-colors">
+                              <button onClick={() => { setEditingTrackingId(trackingKey); setTrackingDraft({ supplier: req.supplier || '', eta: req.eta || '', carrier: req.carrier || '', trackingNumber: req.trackingNumber || '' }) }} className="text-2xs text-text-muted hover:text-orange transition-colors">
                                 Edit
                               </button>
                             </div>
@@ -704,7 +758,7 @@ export default function Parts() {
                             <div className="text-2xs text-text-muted font-mono mt-1">{req.carrier && `${req.carrier} · `}#{req.trackingNumber}</div>
                           ) : ['ordered', 'shipped', 'returned'].includes(req.status) ? (
                             <button
-                              onClick={() => { setEditingTrackingId(`${ro.id}_${req.id}`); setTrackingDraft({ supplier: req.supplier || '', eta: req.eta || '', carrier: '', trackingNumber: '' }) }}
+                              onClick={() => { setEditingTrackingId(trackingKey); setTrackingDraft({ supplier: req.supplier || '', eta: req.eta || '', carrier: '', trackingNumber: '' }) }}
                               className="mt-2 flex items-center gap-1.5 h-7 px-3 rounded-md border border-orange/30 bg-orange/5 text-xs font-medium text-orange hover:bg-orange/10 transition-colors"
                             >
                               + Add order details
@@ -716,10 +770,10 @@ export default function Parts() {
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <StatusDropdown
                             value={req.status}
-                            onChange={newStatus => advanceOrder(req, ro, newStatus)}
+                            onChange={newStatus => advanceOrder({ ...req, _source }, ro, newStatus)}
                           />
                           <button
-                            onClick={() => setConfirmDeleteOrderId(`${ro.id}_${req.id}`)}
+                            onClick={() => setConfirmDeleteOrderId(isStandalone ? `standalone_${req.id}` : `${ro.id}_${req.id}`)}
                             title="Remove order"
                             className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-red-400 transition-colors"
                           >
@@ -947,22 +1001,28 @@ export default function Parts() {
 
       {/* Delete order confirmation */}
       {confirmDeleteOrderId && (() => {
-        const [roId, reqId] = confirmDeleteOrderId.split('_')
-        const targetRo  = scopedROs.find(r => r.id === roId)
+        const isStandaloneDelete = confirmDeleteOrderId.startsWith('standalone_')
+        const deleteId = isStandaloneDelete ? confirmDeleteOrderId.replace('standalone_', '') : null
+        const standaloneOrder = isStandaloneDelete ? (partsOrders || []).find(o => o.id === deleteId) : null
+        const [roId, reqId] = isStandaloneDelete ? [null, null] : confirmDeleteOrderId.split('_')
+        const targetRo  = roId ? scopedROs.find(r => r.id === roId) : null
         const targetReq = targetRo?.partsRequests?.find(r => String(r.id) === reqId)
+        const orderName = isStandaloneDelete ? standaloneOrder?.name : targetReq?.name
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60" onClick={() => setConfirmDeleteOrderId(null)} />
             <div className="relative bg-surface border border-border rounded-xl shadow-2xl w-full max-w-sm p-6">
               <h3 className="text-sm font-semibold text-text-primary mb-1">Remove part order?</h3>
               <p className="text-sm text-text-muted mb-5">
-                <span className="font-medium text-text-primary">{targetReq?.name}</span> will be removed from <span className="font-mono text-orange">{roId}</span>.
+                <span className="font-medium text-text-primary">{orderName}</span> will be removed{!isStandaloneDelete && roId && <> from <span className="font-mono text-orange">{roId}</span></>}.
               </p>
               <div className="flex gap-3">
                 <button onClick={() => setConfirmDeleteOrderId(null)} className="flex-1 h-10 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors">Cancel</button>
                 <button
                   onClick={() => {
-                    if (targetRo) {
+                    if (isStandaloneDelete) {
+                      deletePartsOrder(deleteId)
+                    } else if (targetRo) {
                       const updated = (targetRo.partsRequests || []).filter(r => String(r.id) !== reqId)
                       updateRepairOrder(targetRo.id, { partsRequests: updated })
                     }
