@@ -130,7 +130,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const { session } = useAuth()
   const isTech    = session?.role === 'tech'
   const isAdvisor = session?.role === 'advisor'
-  const { updateRepairOrder, sendEstimateReady, technicians, parts: allParts, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
+  const { updateRepairOrder, sendEstimateReady, technicians, parts: allParts, addPart: addPartToInventory, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
   const [apiError, setApiError] = useState(null)
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
   const [services, setServices] = useState(ro?.services || [])
@@ -303,12 +303,14 @@ export function RODetailModal({ open, onClose, ro }) {
         p.name.toLowerCase() === req.name.toLowerCase()
       )
     )
+    const qty = req.qty || 1
     if (catalogMatch) {
-      const qty = req.qty || 1
       if (newStatus === 'arrived' && oldStatus !== 'arrived') restockPart(catalogMatch.id, qty)
       else if (newStatus === 'returned' && oldStatus !== 'returned') usePart(catalogMatch.id, qty)
       else if (oldStatus === 'arrived' && newStatus !== 'arrived') usePart(catalogMatch.id, qty)
       else if (oldStatus === 'returned' && newStatus !== 'returned') restockPart(catalogMatch.id, qty)
+    } else if (newStatus === 'arrived' && oldStatus !== 'arrived') {
+      addPartToInventory({ shopId: ro.shopId, name: req.name, sku: req.partNumber || '', category: 'Other', vendor: req.supplier || '', qty, minQty: 2, cost: 0, price: 0 })
     }
     addNotification({
       type: 'part_status',

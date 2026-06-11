@@ -89,8 +89,8 @@ const faqs = [
     a: 'Your data stays yours. You can export everything before you go. We don\'t hold it hostage.',
   },
   {
-    q: 'When will the backend be ready for founding members?',
-    a: 'We\'re onboarding our first shops now. Founding members get direct access to us during setup. You\'re not going through a ticket queue.',
+    q: 'How does the Founding Shop Program work?',
+    a: 'You apply, we schedule a setup call, and you run ShopCommand against your real workflow for 30 days with weekly check-ins. If the fit is proven, you convert to the $100/mo founding rate — locked for life.',
   },
   {
     q: 'What does the $100/mo founding rate cover?',
@@ -306,7 +306,7 @@ function FAQItem({ q, a, delay, id }) {
   )
 }
 
-// ─── Founding Member section ──────────────────────────────────────────────────
+// ─── Founding Shop Program ───────────────────────────────────────────────────
 function FoundingSection() {
   const remaining = TOTAL_SPOTS - CLAIMED_SPOTS
   const pct = Math.round((CLAIMED_SPOTS / TOTAL_SPOTS) * 100)
@@ -383,18 +383,58 @@ function FoundingSection() {
 
   return (
     <section id="founding" className="border-t border-slate-200 py-24 px-6 bg-orange-50/40">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-10">
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Founding Shop Program</div>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
-            Lock in $100/mo forever.
+            A guided 30-day pilot before you commit.
           </h2>
-          <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
-            First {TOTAL_SPOTS} shops get founding member pricing, locked for life. After launch, first shop goes to $175/mo and additional shops to $100/mo each.
+          <p className="text-slate-500 leading-relaxed max-w-lg mx-auto">
+            Prove that ShopCommand fits your workflow — repair orders, technician time, parts handoff, and invoice readiness — against your real day-to-day before choosing a paid plan.
           </p>
         </div>
 
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* What the pilot includes */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">What the pilot includes</h3>
+            <ul className="space-y-3">
+              {[
+                '30-day guided pilot mapped to your current service, parts, and invoice workflow.',
+                'Setup call to import or seed your customers, vehicles, technicians, and open ROs.',
+                'Weekly 20-minute check-in focused on invoice readiness, parts visibility, and labor capture.',
+                'Direct access to Rasheed — real answers, no support portal, no ticket queue.',
+                'Conversion to $100/mo founding rate (locked for life) when the workflow fit is proven.',
+              ].map((item, i) => (
+                <li key={i} className="flex gap-3 text-sm text-slate-600 leading-relaxed">
+                  <Check size={16} className="text-orange-500 mt-0.5 shrink-0" strokeWidth={2.5} />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Who should apply */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Who should apply</h3>
+            <ul className="space-y-3">
+              {[
+                'Independent or multi-location auto repair, fleet, or parts-heavy operation.',
+                'Enough service and parts volume to feel workflow friction today.',
+                'Owner or service manager who can name the current handoff, billing, or visibility problem.',
+                'Team can commit one manager plus one tech or parts user during the pilot.',
+              ].map((item, i) => (
+                <li key={i} className="flex gap-3 text-sm text-slate-600 leading-relaxed">
+                  <span className="w-4 h-4 rounded-full border-2 border-orange-300 mt-0.5 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
         <div>
-          {/* Walkthrough alternative — low friction, shown first */}
+          {/* Walkthrough alternative */}
           <p className="text-center text-slate-400 text-base mb-8">
             Want to see it first?{' '}
             <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300 transition-colors">
@@ -403,7 +443,7 @@ function FoundingSection() {
           </p>
 
           {/* Spot counter */}
-          <div className="mb-8">
+          <div className="mb-8 max-w-2xl mx-auto">
             <div className="flex justify-between text-xs mb-2">
               <span className="text-slate-400">{CLAIMED_SPOTS === 0 ? 'Be the first to reserve a spot' : `${CLAIMED_SPOTS} of ${TOTAL_SPOTS} spots claimed`}</span>
               <span className="text-orange-600 font-semibold">{remaining} of {TOTAL_SPOTS} left</span>
@@ -417,17 +457,17 @@ function FoundingSection() {
           </div>
 
           {/* Form / success */}
-          <div className="rounded-2xl border border-orange-200 bg-white p-7 shadow-sm">
+          <div className="rounded-2xl border border-orange-200 bg-white p-7 shadow-sm max-w-2xl mx-auto">
             {submitted ? (
               <div className="text-center py-6">
                 <div className="w-14 h-14 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center mx-auto mb-5">
                   <Check size={24} className="text-orange-600" strokeWidth={2} />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                  You're on the list.
+                  You're in the program.
                 </h3>
                 <p className="text-slate-500 text-sm leading-relaxed max-w-xs mx-auto">
-                  We'll reach out to {form.email} within 24 hours with next steps. Welcome to the founding crew.
+                  We'll reach out to {form.email} within 24 hours to schedule your setup call.
                 </p>
               </div>
             ) : (
@@ -489,16 +529,12 @@ function FoundingSection() {
                   type="submit"
                   disabled={submitting}
                   className="w-full h-12 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm">
-                  {submitting ? 'Locking in your rate…' : 'Lock in $100/mo →'}
+                  {submitting ? 'Reserving your spot…' : 'Apply for the Founding Program →'}
                 </button>
-                <p className="text-center text-slate-400 text-xs">No credit card. No commitment. We'll reach out within 24 hours.</p>
+                <p className="text-center text-slate-400 text-xs">No credit card. No commitment. We'll schedule your setup call within 24 hours.</p>
               </form>
             )}
           </div>
-
-          <p className="text-center text-slate-400 text-sm mt-6 leading-relaxed">
-            You won't get a ticket queue. Every founding member gets direct access to Rasheed: real answers, no support portal, no waiting.
-          </p>
         </div>
       </div>
     </section>
@@ -596,7 +632,7 @@ function ROICalculator() {
 
         <div className="text-center mt-8">
           <a href="#founding" className="inline-flex px-7 py-3.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
-            Lock in $100/mo →
+            Apply for the Founding Program →
           </a>
         </div>
       </div>
@@ -606,7 +642,7 @@ function ROICalculator() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const LANDING_TITLE = 'ShopCommand — Auto Shop Management Software'
-const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Founding member pricing: $100/mo for your first shop + $50/mo per additional shop, locked forever.'
+const LANDING_DESC = 'Auto repair shop management software. Track repair orders, technician efficiency, and revenue across every location in real time. Apply for the Founding Shop Program: 30-day guided pilot, then $100/mo locked forever.'
 const LANDING_URL = 'https://shopcommand.net'
 
 export default function Landing() {
@@ -723,7 +759,7 @@ export default function Landing() {
             Sign in
           </Link>
           <a href="#founding" className="hidden sm:inline-flex px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors whitespace-nowrap">
-            Lock in $100/mo
+            Join the Founding Program
           </a>
           {/* Mobile hamburger */}
           <button
@@ -810,7 +846,7 @@ export default function Landing() {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-center h-12 rounded-xl text-sm font-semibold bg-orange-500 active:bg-orange-600 text-white transition-colors"
             >
-              Lock in $100/mo →
+              Join the Founding Program →
             </a>
           </div>
         </div>
@@ -855,7 +891,7 @@ export default function Landing() {
 
             <div className="flex flex-col sm:flex-row items-start gap-3">
               <a href="#founding" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
-                Lock in $100/mo →
+                Apply for the Founding Program →
               </a>
               <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 How it works
@@ -1143,7 +1179,7 @@ export default function Landing() {
                   </span>
                 </div>
                 <div className="mb-5 pt-2">
-                  <div className="text-orange-600 text-xs uppercase tracking-widest mb-3 font-medium">Founding Member</div>
+                  <div className="text-orange-600 text-xs uppercase tracking-widest mb-3 font-medium">Founding Shop Program</div>
                   <div className="flex items-end gap-2 mb-1">
                     <span className="text-5xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$100</span>
                     <span className="text-slate-500 text-sm mb-2">/mo</span>
@@ -1158,8 +1194,8 @@ export default function Landing() {
                   {[
                     'No per-seat fees — unlimited users',
                     'Everything in the standard plan',
-                    'Founding member pricing locked forever',
-                    'Direct line to the founding team',
+                    'Founding rate locked forever',
+                    'Direct access to the founding team',
                     'Shape the product roadmap',
                   ].map(item => (
                     <div key={item} className="flex items-center gap-2.5">
@@ -1170,7 +1206,7 @@ export default function Landing() {
                 </div>
                 <a href="#founding"
                   className="mt-auto w-full py-3 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors text-center shadow-sm">
-                  Lock in $100/mo →
+                  Apply for the Founding Program →
                 </a>
               </div>
 
@@ -1275,7 +1311,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Founding Member signup */}
+      {/* Founding Shop Program */}
       <FoundingSection />
 
       {/* CTA */}
@@ -1291,7 +1327,7 @@ export default function Landing() {
             <a
               href="#founding"
               className="px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
-              Lock in $100/mo: {TOTAL_SPOTS - CLAIMED_SPOTS} spots left →
+              Apply for the Founding Program: {TOTAL_SPOTS - CLAIMED_SPOTS} spots left →
             </a>
             <Link
               to="/demo"

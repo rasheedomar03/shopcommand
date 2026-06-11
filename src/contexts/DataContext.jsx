@@ -196,13 +196,27 @@ export function DataProvider({ children }) {
       ])
       setShops(shopsData.map(transformShop))
       setTechnicians(techsData.map(transformTech))
-      setRepairOrders(rosData.map(transformRO))
+      const transformedROs = rosData.map(transformRO)
+      setRepairOrders(transformedROs)
       setCustomers(custData.map(transformCustomer))
       setPayments(paymentsData)
       setParts(Array.isArray(partsData) ? partsData.map(p => ({
         ...p, shopId: p.shop_id, minQty: p.min_qty, lastOrdered: p.last_ordered,
         cost: Number(p.cost || 0), price: Number(p.price || 0), qty: Number(p.qty || 0),
       })) : [])
+
+      // Hydrate job timers from RO JSONB data (merge with localStorage, API wins)
+      const apiTimers = {}
+      for (const ro of transformedROs) {
+        if (ro.jobTimers) Object.assign(apiTimers, ro.jobTimers)
+      }
+      if (Object.keys(apiTimers).length) {
+        setJobTimers(prev => {
+          const merged = { ...prev, ...apiTimers }
+          save('sc_job_timers', merged)
+          return merged
+        })
+      }
 
       // Derive clocked-in techs from technician data
       const clockedIn = new Set()
@@ -484,25 +498,38 @@ export function DataProvider({ children }) {
   }, [session?.demo])
 
   const orderPart = useCallback((partId) => {
+    const today = new Date().toISOString().slice(0, 10)
     setParts(prev => {
-      const next = prev.map(p => p.id === partId ? { ...p, lastOrdered: new Date().toISOString().slice(0, 10) } : p)
+      const next = prev.map(p => p.id === partId ? { ...p, lastOrdered: today } : p)
       save('sc_parts', next)
+      if (!session?.demo) {
+        api('/api/health?action=update-part', { method: 'PUT', params: { id: partId }, body: { last_ordered: today } }).catch(() => {})
+      }
       return next
     })
-  }, [])
+  }, [session?.demo])
 
-  // ── job timers (localStorage only) ───────────────────────────────────────
+  // ── job timers ────────────────────────────────────────────────────────────
+
+  const persistTimers = useCallback((roId, timersForRO) => {
+    if (!session?.demo) {
+      api('/api/repair-orders', { method: 'PUT', params: { id: roId }, body: { jobTimers: timersForRO } }).catch(() => {})
+    }
+  }, [session?.demo])
 
   const startJobTimer = useCallback((roId, svcIdx) => {
     setJobTimers(prev => {
       const key = `${roId}_${svcIdx}`
       const existing = prev[key] || { totalMs: 0, startedAt: null }
       if (existing.startedAt) return prev
-      const next = { ...prev, [key]: { ...existing, startedAt: new Date().toISOString() } }
+      const updated = { ...existing, startedAt: new Date().toISOString() }
+      const next = { ...prev, [key]: updated }
       save('sc_job_timers', next)
+      const roTimers = Object.fromEntries(Object.entries(next).filter(([k]) => k.startsWith(roId)))
+      persistTimers(roId, roTimers)
       return next
     })
-  }, [])
+  }, [persistTimers])
 
   const stopJobTimer = useCallback((roId, svcIdx) => {
     setJobTimers(prev => {
@@ -510,11 +537,14 @@ export function DataProvider({ children }) {
       const existing = prev[key]
       if (!existing?.startedAt) return prev
       const elapsed = Date.now() - new Date(existing.startedAt).getTime()
-      const next = { ...prev, [key]: { totalMs: existing.totalMs + elapsed, startedAt: null } }
+      const updated = { totalMs: existing.totalMs + elapsed, startedAt: null }
+      const next = { ...prev, [key]: updated }
       save('sc_job_timers', next)
+      const roTimers = Object.fromEntries(Object.entries(next).filter(([k]) => k.startsWith(roId)))
+      persistTimers(roId, roTimers)
       return next
     })
-  }, [])
+  }, [persistTimers])
 
   // ── reset (dev helper) ────────────────────────────────────────────────────
 

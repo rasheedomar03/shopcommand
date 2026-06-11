@@ -173,7 +173,7 @@ export default createHandler(
 
       const { stage, tech_id, advisor_id, vehicle_id, notes, total,
               services, partsRequests, partsUsed, mpi, payment, attachments,
-              authorized, authorizedAt, authorizedVia } = req.body || {}
+              authorized, authorizedAt, authorizedVia, jobTimers } = req.body || {}
       const errors = []
 
       if (stage && !VALID_STAGES.includes(stage)) {
@@ -207,6 +207,7 @@ export default createHandler(
       if (authorizedAt !== undefined) dataFields.authorizedAt = authorizedAt
       if (authorizedVia !== undefined) dataFields.authorizedVia = authorizedVia
       if (Array.isArray(notes)) dataFields.notes = notes
+      if (jobTimers !== undefined) dataFields.jobTimers = jobTimers
 
       const hasData = Object.keys(dataFields).length > 0
       const notesStr = typeof notes === 'string' ? notes.trim() : null

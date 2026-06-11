@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { TopLoader } from '@/components/ui/TopLoader'
 import { BugReportButton } from '@/components/BugReportButton'
@@ -55,6 +55,17 @@ function DemoEntry() {
   useEffect(() => { demoLogin(); setReady(true) }, [demoLogin])
   if (!ready) return <PageLoader />
   return <Navigate to="/dashboard" replace />
+}
+
+function PartScanRedirect() {
+  const { sku } = useParams()
+  const { session } = useAuth()
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (session) navigate(`/parts?q=${encodeURIComponent(sku)}`, { replace: true })
+    else navigate(`/sign-in?redirect_url=${encodeURIComponent(`/parts/scan/${sku}`)}`, { replace: true })
+  }, [session, sku, navigate])
+  return <PageLoader />
 }
 
 // Eagerly load landing + auth (first paint)
@@ -201,6 +212,7 @@ export default function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/demo" element={<DemoEntry />} />
         <Route path="/login" element={<Navigate to="/sign-in" replace />} />
+        <Route path="/parts/scan/:sku" element={<PartScanRedirect />} />
         <Route path="/status/:roId" element={<CustomerStatus />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />

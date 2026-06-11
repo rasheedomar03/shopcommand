@@ -1,5 +1,7 @@
-import { useState, useRef } from 'react'
-import { Search, AlertTriangle, Package, ShoppingCart, Check, Plus, Pencil, Trash2, X, Truck, ExternalLink, ChevronDown } from 'lucide-react'
+import { useState, useRef, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Search, AlertTriangle, Package, ShoppingCart, Check, Plus, Pencil, Trash2, X, Truck, ExternalLink, ChevronDown, QrCode, Printer } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
@@ -259,12 +261,80 @@ function QtyCell({ part, onUpdate }) {
   )
 }
 
+function QRLabelModal({ part, shopName, onClose }) {
+  const printRef = useRef(null)
+  const baseUrl = window.location.origin
+  const scanUrl = `${baseUrl}/parts/scan/${encodeURIComponent(part.sku || part.id)}`
+
+  const handlePrint = useCallback(() => {
+    const el = printRef.current
+    if (!el) return
+    const win = window.open('', '_blank', 'width=400,height=600')
+    win.document.write(`<!DOCTYPE html><html><head><title>Part Label — ${part.sku || part.name}</title><style>
+      @page { size: 2.25in 1.25in; margin: 0; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, system-ui, sans-serif; }
+      .label { width: 2.25in; height: 1.25in; padding: 0.08in 0.12in; display: flex; gap: 0.1in; align-items: center; }
+      .qr { flex-shrink: 0; }
+      .info { flex: 1; min-width: 0; overflow: hidden; }
+      .sku { font-size: 9pt; font-weight: 700; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .name { font-size: 7pt; color: #444; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .shop { font-size: 6pt; color: #888; margin-top: 2px; }
+      .qty { font-size: 6pt; color: #888; }
+    </style></head><body>${el.innerHTML}</body></html>`)
+    win.document.close()
+    win.focus()
+    setTimeout(() => { win.print(); win.close() }, 300)
+  }, [part])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-surface border border-border rounded-xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2"><QrCode size={14} /> QR Label</h2>
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors"><X size={16} /></button>
+        </div>
+        <div className="p-6">
+          <div className="flex justify-center mb-4">
+            <div ref={printRef}>
+              <div className="label" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="qr">
+                  <QRCodeSVG value={scanUrl} size={80} level="M" />
+                </div>
+                <div className="info" style={{ minWidth: 0 }}>
+                  <div className="sku" style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'monospace' }}>{part.sku || '—'}</div>
+                  <div className="name" style={{ fontSize: '11px', color: '#444', marginTop: '2px' }}>{part.name}</div>
+                  <div className="shop" style={{ fontSize: '10px', color: '#888', marginTop: '2px' }}>{shopName}</div>
+                  <div className="qty" style={{ fontSize: '10px', color: '#888' }}>Min: {part.minQty}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-background rounded-lg p-3 mb-4">
+            <div className="text-2xs text-text-muted mb-1">Scan URL</div>
+            <div className="text-xs font-mono text-text-secondary break-all select-all">{scanUrl}</div>
+          </div>
+          <p className="text-2xs text-text-muted mb-4">Scanning this QR code opens the part in ShopCommand. Print on any label maker (Dymo, Brother) or regular paper.</p>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="flex-1 h-10 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors">Close</button>
+            <button onClick={handlePrint} className="flex-1 h-10 rounded-lg bg-orange text-white text-sm font-semibold hover:bg-orange/90 transition-colors flex items-center justify-center gap-2">
+              <Printer size={14} /> Print Label
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Parts() {
   const { parts, shops, addPart, updatePart, deletePart, orderPart, repairOrders, updateRepairOrder, addNotification } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
+  const [searchParams] = useSearchParams()
 
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => searchParams.get('q') || '')
   const [shopFilter, setShopFilter] = useState('All')
   const [stockFilter, setStockFilter] = useState('All')
   const [orderedIds, setOrderedIds] = useState(new Set())
@@ -275,6 +345,7 @@ export default function Parts() {
   const [editingTrackingId, setEditingTrackingId] = useState(null)
   const [trackingDraft, setTrackingDraft] = useState({ supplier: '', eta: '', carrier: '', trackingNumber: '' })
   const [confirmDeleteOrderId, setConfirmDeleteOrderId] = useState(null)
+  const [qrPart, setQrPart] = useState(null)
 
   // Aggregate all parts requests from scoped ROs
   const scopedROs = isAdvisor
@@ -302,8 +373,13 @@ export default function Parts() {
         p.name.toLowerCase() === req.name.toLowerCase()
       )
     )
-    if (!match) return
     const qty = req.qty || 1
+    if (!match) {
+      if (newStatus === 'arrived' && oldStatus !== 'arrived') {
+        addPart({ shopId: ro.shopId, name: req.name, sku: req.partNumber || '', category: 'Other', vendor: req.supplier || '', qty, minQty: 2, cost: 0, price: 0 })
+      }
+      return
+    }
     if (newStatus === 'arrived' && oldStatus !== 'arrived') {
       updatePart(match.id, { qty: match.qty + qty })
     } else if (newStatus === 'returned' && oldStatus !== 'returned') {
@@ -742,6 +818,9 @@ export default function Parts() {
                 >
                   {orderedIds.has(part.id) ? '✓ Ordered' : 'Order'}
                 </button>
+                <button onClick={() => setQrPart(part)} className="h-8 w-10 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-blue-400" title="QR label">
+                  <QrCode size={13} />
+                </button>
                 <button onClick={() => setModalPart(part)} className="h-8 w-10 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-orange">
                   <Pencil size={13} />
                 </button>
@@ -826,6 +905,13 @@ export default function Parts() {
                           {orderedIds.has(part.id) ? <><Check size={11} /> Ordered</> : <><ShoppingCart size={11} /> Order</>}
                         </button>
                         <button
+                          onClick={() => setQrPart(part)}
+                          className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-blue-400 hover:border-blue-400/40 transition-all"
+                          title="QR label"
+                        >
+                          <QrCode size={11} />
+                        </button>
+                        <button
                           onClick={() => setModalPart(part)}
                           className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-orange hover:border-orange/40 transition-all"
                           title="Edit part"
@@ -891,6 +977,15 @@ export default function Parts() {
           </div>
         )
       })()}
+
+      {/* QR Label modal */}
+      {qrPart && (
+        <QRLabelModal
+          part={qrPart}
+          shopName={shops.find(s => s.id === qrPart.shopId)?.name || ''}
+          onClose={() => setQrPart(null)}
+        />
+      )}
 
       {/* Delete part confirmation */}
       {confirmDelete && (

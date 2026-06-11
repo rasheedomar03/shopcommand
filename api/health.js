@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       const id = req.query?.id
       if (!id || !UUID_RE.test(id)) return res.status(400).json({ error: 'Valid part id is required' })
 
-      const { name, sku, category, vendor, qty, min_qty, cost, price } = req.body || {}
+      const { name, sku, category, vendor, qty, min_qty, cost, price, last_ordered } = req.body || {}
 
       const [row] = await sql`
         UPDATE parts SET
@@ -65,6 +65,7 @@ export default async function handler(req, res) {
           min_qty = COALESCE(${min_qty != null ? Number(min_qty) : null}, min_qty),
           cost = COALESCE(${cost != null ? Number(cost) : null}, cost),
           price = COALESCE(${price != null ? Number(price) : null}, price),
+          last_ordered = COALESCE(${last_ordered || null}, last_ordered),
           updated_at = now()
         WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *

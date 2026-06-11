@@ -185,8 +185,8 @@ export const repairOrders = [
     ],
     parts: 342, labor: 380, total: 722, payment: null, authorized: true,
     partsRequests: [
-      { id: 'pr-1', name: 'Coil Pack Set (8pc)', partNumber: 'DG-508', qty: 1, status: 'shipped', requestedAt: new Date(Date.now() - 2 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', carrier: 'UPS', trackingNumber: '1Z999AA10123456784', eta: 'Tomorrow 2pm' },
-      { id: 'pr-2', name: 'Spark Plug Set (8pc)', partNumber: 'SP-515', qty: 1, status: 'arrived', requestedAt: new Date(Date.now() - 3 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', eta: '' },
+      { id: 'pr-1', name: 'Bosch QuietCast Brake Pads (Front)', partNumber: 'BRK-4411', qty: 2, status: 'shipped', requestedAt: new Date(Date.now() - 2 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', carrier: 'UPS', trackingNumber: '1Z999AA10123456784', eta: 'Tomorrow 2pm' },
+      { id: 'pr-2', name: 'NGK Iridium Spark Plugs', partNumber: 'SPN-NGK-4', qty: 8, status: 'arrived', requestedAt: new Date(Date.now() - 3 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', eta: '' },
     ],
     notes: [
       { id: 1, text: 'Customer called at 9am, confirmed diagnosis', type: 'advisor', author: 'Service Advisor', createdAt: '2026-05-12T09:00:00' },
@@ -235,9 +235,9 @@ export const repairOrders = [
     ],
     parts: 185, labor: 290, total: 475, payment: null, authorized: true,
     partsRequests: [
-      { id: 'pr-3', name: 'Solenoid Pack Assembly', partNumber: 'A760E-SOL', qty: 1, status: 'ordered', requestedAt: new Date(Date.now() - 5 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'WorldPac', carrier: '', trackingNumber: '', eta: 'Backordered' },
-      { id: 'pr-4', name: 'Trans Filter Kit', partNumber: 'TF-2847', qty: 1, status: 'ordered', requestedAt: new Date(Date.now() - 4 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'AutoZone Commercial', carrier: '', trackingNumber: '', eta: '' },
-      { id: 'pr-5', name: 'ATF Fluid (6qt)', partNumber: 'WS-ATF', qty: 1, status: 'arrived', requestedAt: new Date(Date.now() - 3 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', eta: '' },
+      { id: 'pr-3', name: 'Mobil 1 Full Synthetic 5W-30 (5qt)', partNumber: 'OIL-5W30-5Q', qty: 2, status: 'ordered', requestedAt: new Date(Date.now() - 5 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'WorldPac', carrier: '', trackingNumber: '', eta: 'Backordered' },
+      { id: 'pr-4', name: 'NGK Iridium Spark Plugs', partNumber: 'SPN-NGK-4', qty: 4, status: 'ordered', requestedAt: new Date(Date.now() - 4 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'AutoZone Commercial', carrier: '', trackingNumber: '', eta: '' },
+      { id: 'pr-5', name: 'Mobil 1 Full Synthetic 5W-30 (5qt)', partNumber: 'OIL-5W30-5Q', qty: 1, status: 'arrived', requestedAt: new Date(Date.now() - 3 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', eta: '' },
     ],
     notes: [
       { id: 1, text: 'Solenoid pack backordered - ETA tomorrow morning', type: 'advisor', author: 'Service Advisor', createdAt: '2026-05-12T08:15:00' },
@@ -425,7 +425,7 @@ export const repairOrders = [
     ],
     parts: 180, labor: 310, total: 490, payment: null, authorized: true,
     partsRequests: [
-      { id: 'pr-6', name: 'Water Pump Assembly', partNumber: 'AW5097', qty: 1, status: 'shipped', requestedAt: new Date(Date.now() - 1 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'O\'Reilly', carrier: 'FedEx', trackingNumber: '794644790200', eta: 'Today' },
+      { id: 'pr-6', name: 'Mopar ATF+4 Transmission Fluid', partNumber: 'TRS-MER-ATF4', qty: 3, status: 'shipped', requestedAt: new Date(Date.now() - 1 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'O\'Reilly', carrier: 'FedEx', trackingNumber: '794644790200', eta: 'Today' },
     ],
     notes: [
       { id: 1, text: 'Radiator cap also replaced at no charge', type: 'tech', author: 'Lamar Osei', createdAt: '2026-05-12T14:00:00' },
@@ -774,7 +774,7 @@ export const alerts = [
   { id: 2, type: 'info', shopId: 5, shopName: 'The Woodlands Garage', message: 'RO-8849 (Brent Okwu) authorized — tech can begin', time: '31 min ago', read: false },
   { id: 3, type: 'success', shopId: 4, shopName: 'Clear Lake Auto Clinic', message: 'RO-8847 paid — $133.00 collected', time: '2h ago', read: false },
   { id: 4, type: 'warning', shopId: 5, shopName: 'The Woodlands Garage', message: 'Michelin 225/45R17 out of stock — 0 units', time: '3h ago', read: true },
-  { id: 5, type: 'info', shopId: 2, shopName: 'Katy Road Service', message: 'Solenoid pack for RO-8842 arriving 8am tomorrow', time: '4h ago', read: true },
+  { id: 5, type: 'info', shopId: 2, shopName: 'Katy Road Service', message: 'Mopar ATF+4 for RO-8846 arriving 8am tomorrow', time: '4h ago', read: true },
   { id: 6, type: 'error', shopId: 3, shopName: 'Southwest Tire & Auto', message: 'Sandra Montoya estimate unanswered for 4+ hours', time: '4h ago', read: true },
 ]
 
