@@ -68,6 +68,9 @@ function transformRO(ro) {
     created: ro.created_at,
     updated: ro.updated_at,
     scheduledAt: ro.scheduled_at || null,
+    // DB 'notes' column is the complaint string; JSONB 'data.notes' is the notes array — resolve the collision
+    complaint: typeof ro.notes === 'string' ? ro.notes : (data.complaint || ''),
+    notes: Array.isArray(data.notes) ? data.notes : [],
   }
 }
 

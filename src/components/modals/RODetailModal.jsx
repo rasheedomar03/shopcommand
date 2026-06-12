@@ -154,7 +154,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const [warrantyOpen, setWarrantyOpen] = useState(null)
 
   const [assignedTechId, setAssignedTechId] = useState(ro?.techId ? String(ro.techId) : '')
-  const [notes, setNotes]           = useState(ro?.notes || [])
+  const [notes, setNotes]           = useState(Array.isArray(ro?.notes) ? ro.notes : [])
   const [newNoteText, setNewNoteText] = useState('')
   const [partsRequests, setPartsRequests]   = useState(ro?.partsRequests || [])
   const [partsNeedForm, setPartsNeedForm]   = useState(false)
