@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { StageBadge } from '@/components/ui/Badge'
 import { formatCurrency, formatDate, computeHoursMs, formatHours, startOfToday, startOfWeek } from '@/lib/utils'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
 // ── parts order config ────────────────────────────────────────────────────────
@@ -182,14 +183,15 @@ function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now
                     </span>
                   )}
                   {!isDone && (
-                    <button
-                      disabled={!clockedIn}
-                      onClick={e => { e.stopPropagation(); running ? stopJobTimer(ro.id, i) : startJobTimer(ro.id, i) }}
-                      className={cn('flex-shrink-0 transition-colors', !clockedIn ? 'text-text-muted/40 cursor-not-allowed' : running ? 'text-orange hover:text-orange/70' : 'text-text-muted hover:text-orange')}
-                      title={!clockedIn ? 'Clock in to use timers' : running ? 'Stop' : 'Start timer'}
-                    >
-                      {running ? <Square size={9} fill="currentColor" /> : <PlayCircle size={12} />}
-                    </button>
+                    <Tooltip content={!clockedIn ? 'Clock in to use timers' : running ? 'Stop timer' : 'Start timer'}>
+                      <button
+                        disabled={!clockedIn}
+                        onClick={e => { e.stopPropagation(); running ? stopJobTimer(ro.id, i) : startJobTimer(ro.id, i) }}
+                        className={cn('flex-shrink-0 transition-colors', !clockedIn ? 'text-text-muted/40 cursor-not-allowed' : running ? 'text-orange hover:text-orange/70' : 'text-text-muted hover:text-orange')}
+                      >
+                        {running ? <Square size={9} fill="currentColor" /> : <PlayCircle size={12} />}
+                      </button>
+                    </Tooltip>
                   )}
                 </div>
               </div>
@@ -217,25 +219,27 @@ function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now
           )}
           {!isDone && (
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={e => { e.stopPropagation(); onPhoto?.(ro) }}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-text-muted hover:text-orange hover:bg-orange/10 transition-colors relative"
-                title="Add photo"
-              >
-                <Camera size={13} />
-                {(photoCount?.[ro.id] || 0) > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-orange text-white text-[8px] font-bold flex items-center justify-center">
-                    {photoCount[ro.id]}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={e => { e.stopPropagation(); onInspect?.(ro) }}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-text-muted hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
-                title="Run inspection"
-              >
-                <ClipboardCheck size={13} />
-              </button>
+              <Tooltip content="Add photo">
+                <button
+                  onClick={e => { e.stopPropagation(); onPhoto?.(ro) }}
+                  className="w-7 h-7 rounded-md flex items-center justify-center text-text-muted hover:text-orange hover:bg-orange/10 transition-colors relative"
+                >
+                  <Camera size={13} />
+                  {(photoCount?.[ro.id] || 0) > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-orange text-white text-[8px] font-bold flex items-center justify-center">
+                      {photoCount[ro.id]}
+                    </span>
+                  )}
+                </button>
+              </Tooltip>
+              <Tooltip content="Run inspection">
+                <button
+                  onClick={e => { e.stopPropagation(); onInspect?.(ro) }}
+                  className="w-7 h-7 rounded-md flex items-center justify-center text-text-muted hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                >
+                  <ClipboardCheck size={13} />
+                </button>
+              </Tooltip>
             </div>
           )}
         </div>
@@ -1186,13 +1190,14 @@ export default function TechBoard() {
           </button>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="h-8 w-8 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-border transition-colors duration-150"
-          title="Sign out"
-        >
-          <LogOut size={14} />
-        </button>
+        <Tooltip content="Sign out">
+          <button
+            onClick={handleLogout}
+            className="h-8 w-8 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-border transition-colors duration-150"
+          >
+            <LogOut size={14} />
+          </button>
+        </Tooltip>
       </header>
 
       <div className="flex flex-1 overflow-hidden">

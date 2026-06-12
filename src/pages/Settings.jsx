@@ -6,6 +6,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn, sanitizeField } from '@/lib/utils'
 import { startCheckout } from '@/lib/billing'
+import { Tooltip } from '@/components/ui/Tooltip'
 
 const ALL_SECTIONS = [
   { id: 'profile', label: 'Account', icon: Users },
@@ -573,20 +574,22 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
         <div className="flex items-center gap-2 flex-shrink-0">
           {!editing && (
             <>
-              <button
-                onClick={() => setEditing(true)}
-                className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-orange hover:bg-orange/10 transition-all opacity-0 group-hover:opacity-100"
-                title="Edit location"
-              >
-                <Pencil size={12} />
-              </button>
-              <button
-                onClick={onRemove}
-                className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-status-red hover:bg-status-red/10 transition-all opacity-0 group-hover:opacity-100"
-                title="Remove location"
-              >
-                <Trash2 size={12} />
-              </button>
+              <Tooltip content="Edit location">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-orange hover:bg-orange/10 transition-all opacity-0 group-hover:opacity-100"
+                >
+                  <Pencil size={12} />
+                </button>
+              </Tooltip>
+              <Tooltip content="Remove location">
+                <button
+                  onClick={onRemove}
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-status-red hover:bg-status-red/10 transition-all opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </Tooltip>
             </>
           )}
         </div>

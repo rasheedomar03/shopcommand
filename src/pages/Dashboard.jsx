@@ -11,6 +11,7 @@ import { RODetailModal } from '@/components/modals/RODetailModal'
 import { useData } from '@/contexts/DataContext'
 import { formatCurrency } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
+import { Tooltip as AppTooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
 const REVENUE_STAGES = new Set(['Paid', 'Invoiced', 'Complete'])
@@ -285,51 +286,79 @@ export default function Dashboard() {
       {/* Stats */}
       {isAdvisor ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <StatCard
-            label="Revenue Today"
-            value={formatCurrency(revToday)}
-            sub={`MTD: ${formatCurrency(revMTD)}`}
-            icon={DollarSign}
-          />
-          <StatCard
-            label="Open ROs"
-            value={openROs}
-            sub={advisorShop?.name || 'Your shop'}
-            icon={ClipboardList}
-          />
-          <StatCard
-            label="Active Techs"
-            value={activeTechs}
-            sub="Clocked in now"
-            icon={Users}
-          />
+          <AppTooltip content="Total from Paid, Invoiced, and Complete ROs updated today" side="bottom">
+            <div>
+              <StatCard
+                label="Revenue Today"
+                value={formatCurrency(revToday)}
+                sub={`MTD: ${formatCurrency(revMTD)}`}
+                icon={DollarSign}
+              />
+            </div>
+          </AppTooltip>
+          <AppTooltip content="Repair orders not yet in Paid, Invoiced, or Complete stage" side="bottom">
+            <div>
+              <StatCard
+                label="Open ROs"
+                value={openROs}
+                sub={advisorShop?.name || 'Your shop'}
+                icon={ClipboardList}
+              />
+            </div>
+          </AppTooltip>
+          <AppTooltip content="Technicians currently clocked in at your shop" side="bottom">
+            <div>
+              <StatCard
+                label="Active Techs"
+                value={activeTechs}
+                sub="Clocked in now"
+                icon={Users}
+              />
+            </div>
+          </AppTooltip>
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard
-            label="Revenue Today"
-            value={formatCurrency(revToday)}
-            sub={`MTD: ${formatCurrency(revMTD)}`}
-            icon={DollarSign}
-          />
-          <StatCard
-            label="Open ROs"
-            value={openROs}
-            sub="Across all shops"
-            icon={ClipboardList}
-          />
-          <StatCard
-            label="Active Techs"
-            value={activeTechs}
-            sub="Clocked in now"
-            icon={Users}
-          />
-          <StatCard
-            label="Avg Efficiency"
-            value={`${avgEff}%`}
-            sub="This week"
-            icon={TrendingUp}
-          />
+          <AppTooltip content="Total from Paid, Invoiced, and Complete ROs updated today" side="bottom">
+            <div>
+              <StatCard
+                label="Revenue Today"
+                value={formatCurrency(revToday)}
+                sub={`MTD: ${formatCurrency(revMTD)}`}
+                icon={DollarSign}
+              />
+            </div>
+          </AppTooltip>
+          <AppTooltip content="Repair orders not yet in Paid, Invoiced, or Complete stage" side="bottom">
+            <div>
+              <StatCard
+                label="Open ROs"
+                value={openROs}
+                sub="Across all shops"
+                icon={ClipboardList}
+              />
+            </div>
+          </AppTooltip>
+          <AppTooltip content="Technicians currently clocked in across all shops" side="bottom">
+            <div>
+              <StatCard
+                label="Active Techs"
+                value={activeTechs}
+                sub="Clocked in now"
+                icon={Users}
+              />
+            </div>
+          </AppTooltip>
+          <AppTooltip content="Average shop efficiency score for the current week" side="bottom">
+            <div>
+              <StatCard
+                label="Avg Efficiency"
+                value={`${avgEff}%`}
+                sub="This week"
+                icon={TrendingUp}
+              />
+            </div>
+          </AppTooltip>
         </div>
       )}
 

@@ -6,6 +6,7 @@ import { StageBadge } from '@/components/ui/Badge'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { cn } from '@/lib/utils'
+import { Tooltip } from '@/components/ui/Tooltip'
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -156,13 +157,14 @@ export default function Appointments() {
                     <span className="md:hidden text-2xs text-text-muted ml-1">{ros.length} appt{ros.length !== 1 ? 's' : ''}</span>
                   )}
                 </div>
-                <button
-                  onClick={() => { setNewRODate(day.toISOString()); setNewROOpen(true) }}
-                  className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-orange hover:bg-orange/10 transition-colors"
-                  title="Add appointment"
-                >
-                  <Plus size={13} />
-                </button>
+                <Tooltip content="Add appointment">
+                  <button
+                    onClick={() => { setNewRODate(day.toISOString()); setNewROOpen(true) }}
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-orange hover:bg-orange/10 transition-colors"
+                  >
+                    <Plus size={13} />
+                  </button>
+                </Tooltip>
               </div>
 
               {/* RO cards */}

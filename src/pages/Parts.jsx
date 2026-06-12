@@ -6,6 +6,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
 const PART_STATUS = {
@@ -772,13 +773,14 @@ export default function Parts() {
                             value={req.status}
                             onChange={newStatus => advanceOrder({ ...req, _source }, ro, newStatus)}
                           />
-                          <button
-                            onClick={() => setConfirmDeleteOrderId(isStandalone ? `standalone_${req.id}` : `${ro.id}_${req.id}`)}
-                            title="Remove order"
-                            className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-red-400 transition-colors"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          <Tooltip content="Remove order">
+                            <button
+                              onClick={() => setConfirmDeleteOrderId(isStandalone ? `standalone_${req.id}` : `${ro.id}_${req.id}`)}
+                              className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </Tooltip>
                         </div>
                       </div>
                     </div>
@@ -872,15 +874,21 @@ export default function Parts() {
                 >
                   {orderedIds.has(part.id) ? '✓ Ordered' : 'Order'}
                 </button>
-                <button onClick={() => setQrPart(part)} className="h-8 w-10 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-blue-400" title="QR label">
-                  <QrCode size={13} />
-                </button>
-                <button onClick={() => setModalPart(part)} className="h-8 w-10 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-orange">
-                  <Pencil size={13} />
-                </button>
-                <button onClick={() => setConfirmDelete(part)} className="h-8 w-10 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-red-400">
-                  <Trash2 size={13} />
-                </button>
+                <Tooltip content="Print QR label">
+                  <button onClick={() => setQrPart(part)} className="h-8 w-10 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-blue-400">
+                    <QrCode size={13} />
+                  </button>
+                </Tooltip>
+                <Tooltip content="Edit part">
+                  <button onClick={() => setModalPart(part)} className="h-8 w-10 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-orange">
+                    <Pencil size={13} />
+                  </button>
+                </Tooltip>
+                <Tooltip content="Delete part">
+                  <button onClick={() => setConfirmDelete(part)} className="h-8 w-10 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-red-400">
+                    <Trash2 size={13} />
+                  </button>
+                </Tooltip>
               </div>
             </div>
           )
@@ -958,27 +966,30 @@ export default function Parts() {
                         >
                           {orderedIds.has(part.id) ? <><Check size={11} /> Ordered</> : <><ShoppingCart size={11} /> Order</>}
                         </button>
-                        <button
-                          onClick={() => setQrPart(part)}
-                          className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-blue-400 hover:border-blue-400/40 transition-all"
-                          title="QR label"
-                        >
-                          <QrCode size={11} />
-                        </button>
-                        <button
-                          onClick={() => setModalPart(part)}
-                          className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-orange hover:border-orange/40 transition-all"
-                          title="Edit part"
-                        >
-                          <Pencil size={11} />
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(part)}
-                          className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-red-400 hover:border-red-400/40 transition-all"
-                          title="Remove part"
-                        >
-                          <Trash2 size={11} />
-                        </button>
+                        <Tooltip content="Print QR label">
+                          <button
+                            onClick={() => setQrPart(part)}
+                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-blue-400 hover:border-blue-400/40 transition-all"
+                          >
+                            <QrCode size={11} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Edit part">
+                          <button
+                            onClick={() => setModalPart(part)}
+                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-orange hover:border-orange/40 transition-all"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Delete part">
+                          <button
+                            onClick={() => setConfirmDelete(part)}
+                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-red-400 hover:border-red-400/40 transition-all"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </Tooltip>
                       </div>
                     </Td>
                   </Tr>

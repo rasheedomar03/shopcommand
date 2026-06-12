@@ -7,6 +7,7 @@ import { NewROModal } from '@/components/modals/NewROModal'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn, sanitizeField } from '@/lib/utils'
 
 function SearchDropdown({ query, onClose }) {
@@ -206,26 +207,29 @@ export function Header({ onMenuOpen }) {
         )}
 
         {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          className="w-9 h-9 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-surface transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
+        <Tooltip content={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+          <button
+            onClick={toggleTheme}
+            className="w-9 h-9 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-surface transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
+        </Tooltip>
 
         {/* Alerts */}
-        <button
-          onClick={() => setAlertsOpen(true)}
-          className="relative w-9 h-9 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-surface transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
-          aria-label={`${unreadCount} unread alerts`}
-        >
-          <Bell size={17} />
-          {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange" />
-          )}
-        </button>
+        <Tooltip content={unreadCount > 0 ? `${unreadCount} unread alert${unreadCount === 1 ? '' : 's'}` : 'Alerts'}>
+          <button
+            onClick={() => setAlertsOpen(true)}
+            className="relative w-9 h-9 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-surface transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
+            aria-label={`${unreadCount} unread alerts`}
+          >
+            <Bell size={17} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange" />
+            )}
+          </button>
+        </Tooltip>
 
         {/* Avatar */}
         <div className="relative" ref={avatarRef}>

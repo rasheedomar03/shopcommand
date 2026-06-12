@@ -5,6 +5,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { NewTechModal } from '@/components/modals/NewTechModal'
 import { cn, computeHoursMs, formatHours, startOfToday, startOfWeek } from '@/lib/utils'
+import { Tooltip } from '@/components/ui/Tooltip'
 
 export default function Technicians() {
   const navigate = useNavigate()
@@ -324,13 +325,14 @@ function TechCard({ tech, isIn, timeEntries, onClick, onDelete, shops }) {
         : 'border-border hover:border-orange/40 hover:shadow-[0_0_12px_rgba(249,115,22,0.08)]'
     )}>
       {/* Delete button */}
-      <button
-        onClick={(e) => { e.stopPropagation(); onDelete() }}
-        className="absolute top-3 right-3 w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all duration-150 opacity-0 group-hover:opacity-100"
-        title="Remove technician"
-      >
-        <Trash2 size={12} />
-      </button>
+      <Tooltip content="Remove technician">
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete() }}
+          className="absolute top-3 right-3 w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all duration-150 opacity-0 group-hover:opacity-100"
+        >
+          <Trash2 size={12} />
+        </button>
+      </Tooltip>
 
       {/* Card body — clickable */}
       <div onClick={onClick} className="cursor-pointer">

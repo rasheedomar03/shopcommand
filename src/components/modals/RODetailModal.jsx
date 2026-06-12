@@ -9,6 +9,7 @@ import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
 import { formatCurrency, RO_STAGES } from '@/lib/utils'
 import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X, Package, Link2, Check, Clock, PlayCircle, Flag, Zap, Square, StopCircle, Shield, Trash2, Paperclip } from 'lucide-react'
 import { FileUpload, FileList } from '@/components/ui/FileUpload'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
 const TAX_RATE = 0.085
@@ -550,11 +551,10 @@ export function RODetailModal({ open, onClose, ro }) {
           const isCurrent         = i === visibleStageIdx
           const isCompleteForTech = isTech && s === 'Complete' && currentStageIdx >= RO_STAGES.indexOf('Complete')
           const clickable         = canClickBack(s, i)
-          return (
+          const segment = (
             <div
               key={s}
               onClick={clickable ? () => revertToStage(s) : undefined}
-              title={clickable ? `Go back to ${s}` : undefined}
               className={cn(
                 'flex-1 text-center py-1.5 text-xs transition-all duration-300',
                 active && (isPaidSegment || isCompleteForTech) ? 'bg-status-green text-white font-semibold' : '',
@@ -567,27 +567,33 @@ export function RODetailModal({ open, onClose, ro }) {
               {isCompleteForTech ? '✓ ' : ''}{s}
             </div>
           )
+          return clickable
+            ? <Tooltip key={s} content={`Move back to ${s}`}>{segment}</Tooltip>
+            : segment
         })}
       </div>
     </div>
   )
 
   // ── MPI dot ──────────────────────────────────────────────────────────────
-  const StatusDot = ({ status, onClick, size = 'md' }) => (
-    <button
-      onClick={onClick}
-      title={onClick ? 'Click to cycle: good → monitor → urgent' : undefined}
-      className={cn(
-        'rounded-full flex-shrink-0 transition-all duration-150',
-        size === 'sm' ? 'w-2 h-2' : 'w-3 h-3',
-        onClick ? 'hover:scale-125 active:scale-95 cursor-pointer' : 'cursor-default',
-        status === 'green'     ? 'bg-green-500' :
-        status === 'yellow'    ? 'bg-yellow-400' :
-        status === 'red'       ? 'bg-red-500' :
-        'bg-transparent border-2 border-slate-300'
-      )}
-    />
-  )
+  const STATUS_LABELS = { green: 'Good', yellow: 'Monitor', red: 'Urgent', unchecked: 'Not inspected' }
+  const StatusDot = ({ status, onClick, size = 'md' }) => {
+    const dot = (
+      <button
+        onClick={onClick}
+        className={cn(
+          'rounded-full flex-shrink-0 transition-all duration-150',
+          size === 'sm' ? 'w-2 h-2' : 'w-3 h-3',
+          onClick ? 'hover:scale-125 active:scale-95 cursor-pointer' : 'cursor-default',
+          status === 'green'     ? 'bg-green-500' :
+          status === 'yellow'    ? 'bg-yellow-400' :
+          status === 'red'       ? 'bg-red-500' :
+          'bg-transparent border-2 border-slate-300'
+        )}
+      />
+    )
+    return onClick ? <Tooltip content={`${STATUS_LABELS[status] || 'Not inspected'} — click to cycle`}>{dot}</Tooltip> : dot
+  }
 
   // ── Job timer helpers ─────────────────────────────────────────────────────
   const [now, setNow] = useState(Date.now())
@@ -713,31 +719,33 @@ export function RODetailModal({ open, onClose, ro }) {
                         </span>
                       )}
                       {stage === 'In Progress' && (
+                        <Tooltip content={running ? 'Stop labor timer' : 'Start labor timer'}>
+                          <button
+                            onClick={() => running ? stopJobTimer(ro.id, i) : startJobTimer(ro.id, i)}
+                            className={cn(
+                              'w-5 h-5 flex items-center justify-center rounded transition-colors',
+                              running
+                                ? 'text-orange hover:text-orange/70'
+                                : 'text-text-muted hover:text-orange'
+                            )}
+                          >
+                            {running ? <Square size={10} fill="currentColor" /> : <PlayCircle size={13} />}
+                          </button>
+                        </Tooltip>
+                      )}
+                      <Tooltip content={wActive ? `Warranty active — expires ${exp?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : svc.warrantyMonths ? 'Warranty expired' : 'Add warranty to this service'}>
                         <button
-                          onClick={() => running ? stopJobTimer(ro.id, i) : startJobTimer(ro.id, i)}
+                          onClick={() => setWarrantyOpen(warrantyOpen === i ? null : i)}
                           className={cn(
                             'w-5 h-5 flex items-center justify-center rounded transition-colors',
-                            running
-                              ? 'text-orange hover:text-orange/70'
-                              : 'text-text-muted hover:text-orange'
+                            wActive ? 'text-status-green' :
+                            svc.warrantyMonths ? 'text-text-muted' :
+                            'text-text-muted hover:text-orange'
                           )}
-                          title={running ? 'Stop timer' : 'Start timer'}
                         >
-                          {running ? <Square size={10} fill="currentColor" /> : <PlayCircle size={13} />}
+                          <Shield size={12} />
                         </button>
-                      )}
-                      <button
-                        onClick={() => setWarrantyOpen(warrantyOpen === i ? null : i)}
-                        title={wActive ? `Warranty active · expires ${exp?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : svc.warrantyMonths ? 'Warranty expired' : 'Add warranty'}
-                        className={cn(
-                          'w-5 h-5 flex items-center justify-center rounded transition-colors',
-                          wActive ? 'text-status-green' :
-                          svc.warrantyMonths ? 'text-text-muted' :
-                          'text-text-muted hover:text-orange'
-                        )}
-                      >
-                        <Shield size={12} />
-                      </button>
+                      </Tooltip>
                       {Number(svc.price) > 0 && (
                         <span className="text-text-secondary font-medium tabular-nums text-xs">
                           {formatCurrency(Number(svc.price))}
@@ -907,13 +915,14 @@ export function RODetailModal({ open, onClose, ro }) {
                           {PART_STATUS_CFG[req.status]?.label || 'Requested'}
                         </span>
                       )}
-                      <button
-                        onClick={() => setConfirmDeletePartId(req.id)}
-                        title="Remove part request"
-                        className="w-5 h-5 flex items-center justify-center rounded text-text-muted hover:text-red-400 transition-colors flex-shrink-0"
-                      >
-                        <Trash2 size={11} />
-                      </button>
+                      <Tooltip content="Remove part request">
+                        <button
+                          onClick={() => setConfirmDeletePartId(req.id)}
+                          className="w-5 h-5 flex items-center justify-center rounded text-text-muted hover:text-red-400 transition-colors flex-shrink-0"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
 

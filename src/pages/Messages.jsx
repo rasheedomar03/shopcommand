@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { formatRelativeTime, sanitizeField } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
+import { Tooltip } from '@/components/ui/Tooltip'
 
 const mockConversations = [
   {
@@ -346,13 +347,14 @@ export default function Messages() {
                 <p className="text-2xs text-text-muted">{totalUnread} unread</p>
               )}
             </div>
-            <button
-              onClick={() => setComposeOpen(true)}
-              className="w-8 h-8 rounded-lg bg-orange text-white flex items-center justify-center hover:bg-orange-hover transition-colors"
-              title="New message"
-            >
-              <Plus size={15} />
-            </button>
+            <Tooltip content="New message">
+              <button
+                onClick={() => setComposeOpen(true)}
+                className="w-8 h-8 rounded-lg bg-orange text-white flex items-center justify-center hover:bg-orange-hover transition-colors"
+              >
+                <Plus size={15} />
+              </button>
+            </Tooltip>
           </div>
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />

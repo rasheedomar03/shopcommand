@@ -19,6 +19,7 @@ import {
   CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useData } from '@/contexts/DataContext'
@@ -213,13 +214,14 @@ export function Sidebar({ open, onClose }) {
                   }
                 </div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
-                title="Sign out"
-              >
-                <LogOut size={13} />
-              </button>
+              <Tooltip content="Sign out" side="right">
+                <button
+                  onClick={handleLogout}
+                  className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+                >
+                  <LogOut size={13} />
+                </button>
+              </Tooltip>
             </div>
           </div>
         </div>
