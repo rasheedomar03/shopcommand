@@ -83,7 +83,7 @@ function StatusDropdown({ value, onChange }) {
         ref={btnRef}
         onClick={handleOpen}
         className={cn(
-          'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-semibold border transition-all duration-150 hover:brightness-110',
+          'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-semibold border transition-colors duration-150 hover:brightness-110',
           cfg.bg, cfg.color, 'border-current/20'
         )}
       >
@@ -824,7 +824,7 @@ export default function Parts() {
               key={s.key}
               onClick={() => setStockFilter(s.key)}
               className={cn(
-                'h-8 px-3 rounded-md text-xs font-medium transition-all duration-150',
+                'h-8 px-3 rounded-md text-xs font-medium transition-colors duration-150',
                 stockFilter === s.key
                   ? 'bg-orange-subtle text-orange'
                   : 'text-text-muted hover:text-text-primary hover:bg-surface border border-border'
@@ -864,7 +864,7 @@ export default function Parts() {
                 <button
                   onClick={() => handleOrder(part.id)}
                   className={cn(
-                    'flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium flex-1 justify-center transition-all',
+                    'flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium flex-1 justify-center transition-colors',
                     orderedIds.has(part.id)
                       ? 'bg-green-500/10 text-green-400 border border-green-500/30'
                       : part.qty <= part.minQty
@@ -956,7 +956,7 @@ export default function Parts() {
                         <button
                           onClick={() => handleOrder(part.id)}
                           className={cn(
-                            'flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-all duration-150 whitespace-nowrap',
+                            'flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-colors duration-150 whitespace-nowrap',
                             orderedIds.has(part.id)
                               ? 'bg-green-500/10 text-green-400 border border-green-500/30'
                               : part.qty <= part.minQty
@@ -969,7 +969,7 @@ export default function Parts() {
                         <Tooltip content="Print QR label">
                           <button
                             onClick={() => setQrPart(part)}
-                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-blue-400 hover:border-blue-400/40 transition-all"
+                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-blue-400 hover:border-blue-400/40 transition-[color,border-color,opacity]"
                           >
                             <QrCode size={11} />
                           </button>
@@ -977,7 +977,7 @@ export default function Parts() {
                         <Tooltip content="Edit part">
                           <button
                             onClick={() => setModalPart(part)}
-                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-orange hover:border-orange/40 transition-all"
+                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-orange hover:border-orange/40 transition-[color,border-color,opacity]"
                           >
                             <Pencil size={11} />
                           </button>
@@ -985,7 +985,7 @@ export default function Parts() {
                         <Tooltip content="Delete part">
                           <button
                             onClick={() => setConfirmDelete(part)}
-                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-red-400 hover:border-red-400/40 transition-all"
+                            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md border border-border text-text-muted hover:text-red-400 hover:border-red-400/40 transition-[color,border-color,opacity]"
                           >
                             <Trash2 size={11} />
                           </button>

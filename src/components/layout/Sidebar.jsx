@@ -147,7 +147,7 @@ export function Sidebar({ open, onClose }) {
                       className={({ isActive }) =>
                         cn(
                           'flex items-center gap-2.5 h-9 rounded-md text-sm font-medium border-l-2',
-                          'transition-all duration-150 ease-out-quart',
+                          'transition-colors duration-150 ease-out-quart',
                           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-1',
                           isActive
                             ? 'bg-orange-subtle text-orange border-orange pl-[10px] pr-3'
@@ -183,7 +183,7 @@ export function Sidebar({ open, onClose }) {
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-2.5 h-9 rounded-md text-sm font-medium border-l-2',
-                'transition-all duration-150 ease-out-quart',
+                'transition-colors duration-150 ease-out-quart',
                 isActive
                   ? 'bg-orange-subtle text-orange border-orange pl-[10px] pr-3'
                   : 'text-text-secondary hover:text-text-primary hover:bg-border/60 border-transparent px-3'

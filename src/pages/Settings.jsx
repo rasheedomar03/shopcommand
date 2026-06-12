@@ -71,7 +71,7 @@ export default function Settings() {
                 onClick={() => setActive(id)}
                 className={cn(
                   'w-full flex items-center gap-2.5 h-9 px-3 rounded-md text-sm font-medium text-left',
-                  'transition-all duration-150',
+                  'transition-colors duration-150',
                   active === id
                     ? 'bg-orange-subtle text-orange'
                     : 'text-text-secondary hover:text-text-primary hover:bg-surface'
@@ -380,7 +380,7 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
         <button
           onClick={() => { setAdding(v => !v); setDraft(EMPTY_SHOP) }}
           className={cn(
-            'flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold transition-all duration-150',
+            'flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold transition-colors duration-150',
             adding ? 'bg-border text-text-muted' : 'bg-orange text-white hover:bg-orange/90'
           )}
         >
@@ -577,7 +577,7 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
               <Tooltip content="Edit location">
                 <button
                   onClick={() => setEditing(true)}
-                  className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-orange hover:bg-orange/10 transition-all opacity-0 group-hover:opacity-100"
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-orange hover:bg-orange/10 transition-[color,background-color,opacity] opacity-0 group-hover:opacity-100"
                 >
                   <Pencil size={12} />
                 </button>
@@ -585,7 +585,7 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
               <Tooltip content="Remove location">
                 <button
                   onClick={onRemove}
-                  className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-status-red hover:bg-status-red/10 transition-all opacity-0 group-hover:opacity-100"
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-status-red hover:bg-status-red/10 transition-[color,background-color,opacity] opacity-0 group-hover:opacity-100"
                 >
                   <Trash2 size={12} />
                 </button>
@@ -770,7 +770,7 @@ function SchedulePanel({ shops, onSave }) {
               key={s.id}
               onClick={() => switchShop(s.id)}
               className={cn(
-                'h-7 px-3 rounded-md text-xs font-medium transition-all duration-150',
+                'h-7 px-3 rounded-md text-xs font-medium transition-colors duration-150',
                 activeShop === s.id
                   ? 'bg-orange-subtle text-orange'
                   : 'text-text-muted hover:text-text-primary hover:bg-background border border-border'
@@ -934,7 +934,7 @@ function SchedulePanel({ shops, onSave }) {
           onClick={handleSave}
           disabled={saved}
           className={cn(
-            'h-8 px-4 rounded-md text-xs font-semibold transition-all duration-150',
+            'h-8 px-4 rounded-md text-xs font-semibold transition-colors duration-150',
             saved
               ? 'bg-status-green/10 border border-status-green/30 text-status-green'
               : 'bg-orange text-white hover:bg-orange/90'

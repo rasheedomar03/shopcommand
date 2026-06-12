@@ -99,7 +99,7 @@ export default function Technicians() {
               key={s}
               onClick={() => setStatusFilter(s)}
               className={cn(
-                'h-8 px-3 rounded-md text-xs font-medium transition-all duration-150',
+                'h-8 px-3 rounded-md text-xs font-medium transition-colors duration-150',
                 statusFilter === s
                   ? 'bg-orange-subtle text-orange'
                   : 'text-text-muted hover:text-text-primary hover:bg-surface border border-border'
@@ -173,7 +173,7 @@ export default function Technicians() {
               key={tab}
               onClick={() => setTimeLogTab(tab)}
               className={cn(
-                'flex items-center gap-1.5 h-11 px-3 text-xs font-medium border-b-2 transition-all duration-150',
+                'flex items-center gap-1.5 h-11 px-3 text-xs font-medium border-b-2 transition-colors duration-150',
                 timeLogTab === tab
                   ? 'text-text-primary border-orange'
                   : 'text-text-muted border-transparent hover:text-text-primary'
@@ -328,7 +328,7 @@ function TechCard({ tech, isIn, timeEntries, onClick, onDelete, shops }) {
       <Tooltip content="Remove technician">
         <button
           onClick={(e) => { e.stopPropagation(); onDelete() }}
-          className="absolute top-3 right-3 w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all duration-150 opacity-0 group-hover:opacity-100"
+          className="absolute top-3 right-3 w-6 h-6 rounded-md flex items-center justify-center text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors duration-150 opacity-0 group-hover:opacity-100"
         >
           <Trash2 size={12} />
         </button>
@@ -365,7 +365,7 @@ function TechCard({ tech, isIn, timeEntries, onClick, onDelete, shops }) {
             <span className={cn('font-medium tabular-nums', effColor)}>{tech.efficiency}%</span>
           </div>
           <div className="h-1 bg-border rounded-full overflow-hidden">
-            <div className={cn('h-full rounded-full transition-all duration-500', effBg)} style={{ width: `${tech.efficiency}%` }} />
+            <div className={cn('h-full rounded-full transition-[width] duration-500', effBg)} style={{ width: `${tech.efficiency}%` }} />
           </div>
         </div>
 

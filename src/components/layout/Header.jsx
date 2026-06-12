@@ -145,7 +145,7 @@ export function Header({ onMenuOpen }) {
           </Link>
         </div>
       )}
-      <header className={cn("h-14 flex items-center gap-3 px-4 border-b border-border bg-background/95 backdrop-blur-sm sticky z-20 flex-shrink-0", isDemo ? 'top-9' : 'top-0')}>
+      <header className={cn("h-14 flex items-center gap-3 px-4 border-b border-border bg-background sticky z-20 flex-shrink-0", isDemo ? 'top-9' : 'top-0')}>
         <button
           onClick={onMenuOpen}
           className="lg:hidden w-9 h-9 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-surface transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"

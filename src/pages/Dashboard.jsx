@@ -547,7 +547,7 @@ export default function Dashboard() {
                         <div className="h-1 rounded-full bg-border overflow-hidden">
                           <div
                             className={cn(
-                              'h-full rounded-full transition-all duration-500',
+                              'h-full rounded-full transition-[width] duration-500',
                               monthlyPct >= 100 ? 'bg-status-green' : monthlyPct >= 60 ? 'bg-orange' : 'bg-status-yellow'
                             )}
                             style={{ width: `${monthlyPct}%` }}

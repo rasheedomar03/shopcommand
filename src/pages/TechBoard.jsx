@@ -79,7 +79,7 @@ function NavItem({ icon: Icon, label, active, onClick, badge }) {
     <button
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-2.5 h-9 rounded-md text-sm font-medium border-l-2 px-3 transition-all duration-150',
+        'w-full flex items-center gap-2.5 h-9 rounded-md text-sm font-medium border-l-2 px-3 transition-colors duration-150',
         active
           ? 'bg-orange-subtle text-orange border-orange pl-[10px] pr-3'
           : 'text-text-secondary hover:text-text-primary hover:bg-border/60 border-transparent'
@@ -130,7 +130,7 @@ function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now
     <div
       onClick={onOpen}
       className={cn(
-        'rounded-xl border p-4 transition-all duration-200 cursor-pointer',
+        'rounded-xl border p-4 transition-[border-color,box-shadow] duration-200 cursor-pointer',
         isActive  ? 'bg-orange/5 border-orange/30 shadow-[0_0_16px_rgba(249,115,22,0.08)] hover:border-orange/50' :
         isWaiting ? 'bg-status-yellow/5 border-status-yellow/30 hover:border-status-yellow/50' :
         isDone    ? 'bg-surface border-border opacity-60 hover:opacity-80' :
@@ -208,7 +208,7 @@ function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now
               <Zap size={10} className={cn(effPct >= 100 ? 'text-status-green' : effPct >= 80 ? 'text-status-yellow' : 'text-status-red')} />
               <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
                 <div
-                  className={cn('h-full rounded-full transition-all', effPct >= 100 ? 'bg-status-green' : effPct >= 80 ? 'bg-status-yellow' : 'bg-status-red')}
+                  className={cn('h-full rounded-full transition-[width] duration-300', effPct >= 100 ? 'bg-status-green' : effPct >= 80 ? 'bg-status-yellow' : 'bg-status-red')}
                   style={{ width: `${Math.min(effPct, 150)}%` }}
                 />
               </div>
@@ -1009,7 +1009,7 @@ function QuickInspectionModal({ ro, onClose, onSave }) {
           <div className="text-right">
             <div className="text-xs text-text-muted">{completed}/{items.length} checked</div>
             <div className="w-20 h-1.5 rounded-full bg-border mt-1 overflow-hidden">
-              <div className="h-full rounded-full bg-orange transition-all" style={{ width: `${(completed / items.length) * 100}%` }} />
+              <div className="h-full rounded-full bg-orange transition-[width] duration-300" style={{ width: `${(completed / items.length) * 100}%` }} />
             </div>
           </div>
         </div>
@@ -1032,7 +1032,7 @@ function QuickInspectionModal({ ro, onClose, onSave }) {
                             key={c}
                             onClick={() => setCondition(idx, c)}
                             className={cn(
-                              'w-7 h-7 rounded-md border text-2xs font-bold flex items-center justify-center transition-all',
+                              'w-7 h-7 rounded-md border text-2xs font-bold flex items-center justify-center transition-colors',
                               item.condition === c ? COND_COLORS[c] : COND_OUTLINE[c]
                             )}
                           >
@@ -1177,7 +1177,7 @@ export default function TechBoard() {
             onClick={handleToggleClock}
             title={clockError || undefined}
             className={cn(
-              'h-8 px-3 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all duration-150',
+              'h-8 px-3 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors duration-150',
               clockedIn
                 ? 'bg-status-green/10 text-status-green hover:bg-status-green/20'
                 : clockError
