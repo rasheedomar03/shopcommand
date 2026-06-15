@@ -1,6 +1,7 @@
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { Mail, ArrowLeft } from 'lucide-react'
 import articles from '@/data/articles'
+import { PublicNav } from '@/components/PublicNav'
 
 const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
 
@@ -60,23 +61,7 @@ export default function Article() {
         Skip to main content
       </a>
 
-      {/* Nav */}
-      <nav aria-label="Page navigation" className="flex items-center justify-between px-6 md:px-12 h-16 border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md bg-white/80">
-        <Link to="/" aria-label="ShopCommand home" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-          <HexMark size={26} />
-          <span style={{ letterSpacing: '-0.02em' }} className="text-sm font-semibold text-slate-900">
-            Shop<span className="text-orange-500">Command</span>
-          </span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link to="/resources" className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-100">
-            All Resources
-          </Link>
-          <Link to="/founding-program" className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
-            Join the Founding Program
-          </Link>
-        </div>
-      </nav>
+      <PublicNav />
 
       <main id="main-content">
         <article className="px-6 py-16">
