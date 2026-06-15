@@ -5,16 +5,18 @@ import articles from '@/data/articles'
 const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
 
 function HexMark({ size = 28 }) {
-  const R = size / 2, r = R * 0.55
-  const pts = (cx, cy, radius) =>
-    [0, 1, 2, 3, 4, 5].map(i => {
-      const a = (Math.PI / 3) * i - Math.PI / 2
-      return `${cx + radius * Math.cos(a)},${cy + radius * Math.sin(a)}`
-    }).join(' ')
+  const pts = (cx, cy, r) =>
+    [90, 30, -30, -90, -150, 150]
+      .map(deg => {
+        const a = (deg * Math.PI) / 180
+        return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy - r * Math.sin(a)).toFixed(2)}`
+      })
+      .join(' ')
+  const R = 28, r = R * 0.56
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-hidden="true">
-      <polygon points={pts(R, R, R)} fill="#F97316" />
-      <polygon points={pts(R, R + 0.5, r)} fill="white" />
+    <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+      <polygon points={pts(32, 32, R)} fill="#F97316" />
+      <polygon points={pts(32, 32.5, r)} fill="#0D0E14" />
     </svg>
   )
 }
