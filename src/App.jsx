@@ -48,6 +48,7 @@ function PageLoader() {
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { useAuth } from '@/contexts/AuthContext'
+import { useData } from '@/contexts/DataContext'
 
 function DemoEntry() {
   const { demoLogin } = useAuth()
@@ -155,6 +156,25 @@ function PageErrorBoundary({ children }) {
   return <ErrorBoundary key={pathname}>{children}</ErrorBoundary>
 }
 
+function FetchErrorBanner() {
+  const { fetchError, fetchAll, loading } = useData()
+  if (!fetchError) return null
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-status-red/10 border-b border-status-red/20">
+      <span className="text-sm text-status-red">
+        Couldn't reach your shops — the numbers below may be out of date.
+      </span>
+      <button
+        onClick={() => fetchAll()}
+        disabled={loading}
+        className="text-sm font-medium text-status-red underline underline-offset-2 hover:opacity-80 disabled:opacity-50 whitespace-nowrap px-2 py-1"
+      >
+        {loading ? 'Retrying…' : 'Retry'}
+      </button>
+    </div>
+  )
+}
+
 function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -163,6 +183,7 @@ function AppShell() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuOpen={() => setSidebarOpen(true)} />
+        <FetchErrorBanner />
         <main className="flex-1 overflow-y-auto will-change-scroll">
           <PageErrorBoundary>
           <Routes>

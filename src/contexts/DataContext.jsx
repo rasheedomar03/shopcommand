@@ -21,12 +21,15 @@ function transformShop(s) {
     orgId: s.org_id,
     createdAt: s.created_at,
     updatedAt: s.updated_at,
-    // UI fields not in DB yet — safe defaults
-    openROs: 0,
-    revenue: { today: 0, mtd: 0, ytd: 0 },
-    avgTicket: 0,
-    efficiency: 0,
-    activeTechs: 0,
+    openROs: Number(s.open_ros || 0),
+    revenue: {
+      today: Number(s.revenue_today || 0),
+      mtd: Number(s.revenue_mtd || 0),
+      ytd: Number(s.revenue_ytd || 0),
+    },
+    avgTicket: Number(s.avg_ticket || 0),
+    efficiency: Number(s.efficiency || 0),
+    activeTechs: Number(s.active_techs || 0),
     status: 'open',
     monthlyTarget: 0,
   }
@@ -42,6 +45,12 @@ function transformTech(t) {
     entriesToday: Number(t.entries_today || 0),
     clockedInSince: t.clocked_in_since,
     createdAt: t.created_at,
+    // Safe defaults so list/profile pages never crash on missing fields
+    efficiency: Number(t.efficiency || 0),
+    specialty: t.specialty || 'General',
+    level: t.level || 'Technician',
+    certifications: Array.isArray(t.certifications) ? t.certifications : [],
+    hoursWeek: Number(t.hours_week || 0),
   }
 }
 
@@ -75,11 +84,18 @@ function transformRO(ro) {
 }
 
 function transformCustomer(c) {
+  const totalSpent = Number(c.total_spent || 0)
+  const roCount = Number(c.ro_count || 0)
   return {
     ...c,
     orgId: c.org_id,
     createdAt: c.created_at,
     updatedAt: c.updated_at,
+    totalSpent,
+    roCount,
+    lastVisit: c.last_visit || null,
+    vehicles: Number(c.vehicle_count || c.vehicles || 0),
+    status: c.status || (totalSpent >= 5000 ? 'vip' : roCount <= 1 ? 'new' : 'regular'),
   }
 }
 
@@ -120,6 +136,7 @@ export function DataProvider({ children }) {
   const [timeEntries, setTimeEntries] = useState([])
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
 
   // ── Parts state (API for real users, localStorage for demo) ──────────────
   const [parts, setParts] = useState(() => {
@@ -181,7 +198,12 @@ export function DataProvider({ children }) {
     setShops(mockShops)
     setTechnicians(mockTechnicians)
     setRepairOrders(demoROs)
-    setCustomers(mockCustomers)
+    // Re-base stale lastVisit dates so demo customers look recently active
+    setCustomers(mockCustomers.map((c, i) => {
+      const d = new Date(today)
+      d.setDate(d.getDate() - ((i * 7) % 45) - 1)
+      return { ...c, lastVisit: d.toISOString().slice(0, 10) }
+    }))
     setClockedInTechs(new Set(mockTechnicians.slice(0, 8).map(t => t.id)))
     setLoading(false)
   }, [session?.demo])
@@ -191,28 +213,36 @@ export function DataProvider({ children }) {
     if (!session?.onboarded || session?.demo) return
     setLoading(true)
     try {
+      // Track failures so the UI can distinguish "no data" from "couldn't load".
+      // Failed fetches return null (not []) so we keep previously loaded data
+      // instead of wiping it — never show $0 because of a network blip.
+      let coreFailures = 0
+      const guard = (p) => p.catch(() => { coreFailures++; return null })
       const [shopsData, techsData, rosData, custData, paymentsData, partsData] = await Promise.all([
-        api('/api/shops').catch(() => []),
-        api('/api/technicians').catch(() => []),
-        api('/api/repair-orders').catch(() => []),
-        api('/api/customers').catch(() => []),
+        guard(api('/api/shops')),
+        guard(api('/api/technicians')),
+        guard(api('/api/repair-orders')),
+        guard(api('/api/customers')),
         api('/api/invoices?action=payments').catch(() => []),
-        api('/api/health?action=parts').catch(() => []),
+        api('/api/health?action=parts').catch(() => null),
       ])
-      setShops(shopsData.map(transformShop))
-      setTechnicians(techsData.map(transformTech))
-      const transformedROs = rosData.map(transformRO)
-      setRepairOrders(transformedROs)
-      setCustomers(custData.map(transformCustomer))
+      setFetchError(coreFailures > 0)
+      if (shopsData) setShops(shopsData.map(transformShop))
+      if (techsData) setTechnicians(techsData.map(transformTech))
+      const transformedROs = rosData ? rosData.map(transformRO) : null
+      if (transformedROs) setRepairOrders(transformedROs)
+      if (custData) setCustomers(custData.map(transformCustomer))
       setPayments(paymentsData)
-      setParts(Array.isArray(partsData) ? partsData.map(p => ({
-        ...p, shopId: p.shop_id, minQty: p.min_qty, lastOrdered: p.last_ordered,
-        cost: Number(p.cost || 0), price: Number(p.price || 0), qty: Number(p.qty || 0),
-      })) : [])
+      if (Array.isArray(partsData)) {
+        setParts(partsData.map(p => ({
+          ...p, shopId: p.shop_id, minQty: p.min_qty, lastOrdered: p.last_ordered,
+          cost: Number(p.cost || 0), price: Number(p.price || 0), qty: Number(p.qty || 0),
+        })))
+      }
 
       // Hydrate job timers from RO JSONB data (merge with localStorage, API wins)
       const apiTimers = {}
-      for (const ro of transformedROs) {
+      for (const ro of transformedROs || []) {
         if (ro.jobTimers) Object.assign(apiTimers, ro.jobTimers)
       }
       if (Object.keys(apiTimers).length) {
@@ -224,13 +254,15 @@ export function DataProvider({ children }) {
       }
 
       // Derive clocked-in techs from technician data
-      const clockedIn = new Set()
-      for (const t of techsData) {
-        if (t.clocked_in_since) clockedIn.add(t.id)
+      if (techsData) {
+        const clockedIn = new Set()
+        for (const t of techsData) {
+          if (t.clocked_in_since) clockedIn.add(t.id)
+        }
+        setClockedInTechs(clockedIn)
       }
-      setClockedInTechs(clockedIn)
     } catch {
-      // silent — individual catches above prevent full failure
+      setFetchError(true)
     } finally {
       setLoading(false)
     }
@@ -281,11 +313,27 @@ export function DataProvider({ children }) {
   // ── customer CRUD ────────────────────────────────────────────────────────
 
   const addCustomer = useCallback(async (cust) => {
+    if (session?.demo) {
+      const demoCust = {
+        id: crypto.randomUUID(),
+        name: cust.name,
+        phone: cust.phone || null,
+        email: cust.email || null,
+        shopId: cust.shop_id || cust.shopId || null,
+        vehicles: 0,
+        totalSpent: 0,
+        roCount: 0,
+        lastVisit: new Date().toISOString().slice(0, 10),
+        status: 'new',
+      }
+      setCustomers(prev => [demoCust, ...prev])
+      return demoCust
+    }
     const row = await api('/api/customers', { method: 'POST', body: cust })
     const transformed = transformCustomer(row)
     setCustomers(prev => [transformed, ...prev])
     return transformed
-  }, [])
+  }, [session?.demo])
 
   const updateCustomer = useCallback(async (id, patch) => {
     const row = await api('/api/customers', { method: 'PUT', params: { id }, body: patch })
@@ -315,7 +363,46 @@ export function DataProvider({ children }) {
 
   // ── repair order CRUD ────────────────────────────────────────────────────
 
+  // Demo mode: create vehicles locally so New RO flow works without the API
+  const addVehicle = useCallback(async (vehicle) => {
+    if (session?.demo) {
+      return { id: crypto.randomUUID(), ...vehicle }
+    }
+    return api('/api/vehicles', { method: 'POST', body: vehicle })
+  }, [session?.demo])
+
   const addRepairOrder = useCallback(async (ro) => {
+    if (session?.demo) {
+      const shopId = ro.shopId || ro.shop_id
+      const shop = shops.find(s => String(s.id) === String(shopId))
+      const cust = customers.find(c => String(c.id) === String(ro.customerId || ro.customer_id))
+      const tech = technicians.find(t => String(t.id) === String(ro.techId || ro.tech_id))
+      const now = new Date().toISOString()
+      const nextNum = 8900 + repairOrders.length
+      const demoRO = {
+        id: `RO-${nextNum}`,
+        roNumber: `RO-${nextNum}`,
+        shopId,
+        shopName: shop?.name || '',
+        customerId: cust?.id || null,
+        customerName: cust?.name || ro.customerName || '',
+        customerPhone: cust?.phone || '',
+        vehicleId: ro.vehicleId || null,
+        vehicle: ro.vehicle || '',
+        techId: tech?.id || null,
+        techName: tech?.name || 'Unassigned',
+        stage: 'Estimate',
+        complaint: ro.complaint || '',
+        scheduledAt: ro.scheduledAt || null,
+        services: [],
+        parts: 0, labor: 0, total: 0,
+        payment: null, authorized: false,
+        notes: [],
+        created: now, updated: now,
+      }
+      setRepairOrders(prev => [demoRO, ...prev])
+      return demoRO
+    }
     // Map camelCase frontend fields to snake_case API fields
     const body = {
       shop_id: ro.shopId || ro.shop_id,
@@ -330,7 +417,7 @@ export function DataProvider({ children }) {
     const transformed = transformRO(row)
     setRepairOrders(prev => [transformed, ...prev])
     return transformed
-  }, [])
+  }, [session?.demo, shops, customers, technicians, repairOrders.length])
 
   const updateRepairOrder = useCallback(async (id, patch) => {
     if (session?.demo) {
@@ -593,7 +680,7 @@ export function DataProvider({ children }) {
     <DataContext.Provider value={{
       customers, addCustomer, updateCustomer, removeCustomer,
       technicians, addTechnician, removeTechnician,
-      repairOrders, addRepairOrder, updateRepairOrder, sendEstimateReady,
+      repairOrders, addRepairOrder, updateRepairOrder, sendEstimateReady, addVehicle,
       shops, updateShop, addShop, removeShop,
       parts, addPart, updatePart, deletePart, usePart, restockPart, orderPart,
       partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
@@ -601,7 +688,7 @@ export function DataProvider({ children }) {
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,
-      resetData, loading, fetchAll,
+      resetData, loading, fetchAll, fetchError,
     }}>
       {children}
     </DataContext.Provider>

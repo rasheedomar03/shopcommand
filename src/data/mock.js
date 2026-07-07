@@ -184,6 +184,10 @@ export const repairOrders = [
       { name: 'Engine tune-up',             price: 160, bookTimeMin: 30 },
     ],
     parts: 342, labor: 380, total: 722, payment: null, authorized: true,
+    declinedServices: [
+      { name: 'Front brake pads & rotors', price: 489, declinedAt: null },
+      { name: 'Cabin air filter', price: 42, declinedAt: null },
+    ],
     partsRequests: [
       { id: 'pr-1', name: 'Bosch QuietCast Brake Pads (Front)', partNumber: 'BRK-4411', qty: 2, status: 'shipped', requestedAt: new Date(Date.now() - 2 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', carrier: 'UPS', trackingNumber: '1Z999AA10123456784', eta: 'Tomorrow 2pm' },
       { id: 'pr-2', name: 'NGK Iridium Spark Plugs', partNumber: 'SPN-NGK-4', qty: 8, status: 'arrived', requestedAt: new Date(Date.now() - 3 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'NAPA', eta: '' },
@@ -234,6 +238,9 @@ export const repairOrders = [
       { name: 'Solenoid inspection',      price: 140, bookTimeMin: 45 },
     ],
     parts: 185, labor: 290, total: 475, payment: null, authorized: true,
+    declinedServices: [
+      { name: 'Transmission fluid exchange', price: 289, declinedAt: null },
+    ],
     partsRequests: [
       { id: 'pr-3', name: 'Mobil 1 Full Synthetic 5W-30 (5qt)', partNumber: 'OIL-5W30-5Q', qty: 2, status: 'ordered', requestedAt: new Date(Date.now() - 5 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'WorldPac', carrier: '', trackingNumber: '', eta: 'Backordered' },
       { id: 'pr-4', name: 'NGK Iridium Spark Plugs', partNumber: 'SPN-NGK-4', qty: 4, status: 'ordered', requestedAt: new Date(Date.now() - 4 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'AutoZone Commercial', carrier: '', trackingNumber: '', eta: '' },
@@ -378,6 +385,10 @@ export const repairOrders = [
       { name: 'Rear brake pads & rotors',   price: 200, bookTimeMin: 54 },
     ],
     parts: 640, labor: 420, total: 1060, payment: null, authorized: true,
+    declinedServices: [
+      { name: 'Four-wheel alignment', price: 129, declinedAt: null },
+      { name: 'Rear shocks replacement', price: 546, declinedAt: null },
+    ],
     notes: [
       { id: 1, text: 'Authorized full estimate $1,060', type: 'advisor', author: 'Service Advisor', createdAt: '2026-05-12T08:30:00' },
       { id: 2, text: 'Parts in stock, tech starting after lunch', type: 'tech', author: 'Faith Cooper', createdAt: '2026-05-12T12:05:00' },
@@ -424,6 +435,10 @@ export const repairOrders = [
       { name: 'Coolant flush & refill', price: 100, bookTimeMin: 24 },
     ],
     parts: 180, labor: 310, total: 490, payment: null, authorized: true,
+    declinedServices: [
+      { name: 'Serpentine belt replacement', price: 168, declinedAt: null },
+      { name: 'Coolant flush', price: 149, declinedAt: null },
+    ],
     partsRequests: [
       { id: 'pr-6', name: 'Mopar ATF+4 Transmission Fluid', partNumber: 'TRS-MER-ATF4', qty: 3, status: 'shipped', requestedAt: new Date(Date.now() - 1 * 86400000).toISOString(), requestedBy: 'Service Advisor', supplier: 'O\'Reilly', carrier: 'FedEx', trackingNumber: '794644790200', eta: 'Today' },
     ],
@@ -472,6 +487,9 @@ export const repairOrders = [
       { name: 'Wiper blade replacement', price: 18, bookTimeMin: 10 },
     ],
     parts: 48, labor: 85, total: 133, payment: null, authorized: true,
+    declinedServices: [
+      { name: 'Battery replacement', price: 219, declinedAt: null },
+    ],
     notes: [
       { id: 1, text: 'Ready for payment', type: 'advisor', author: 'Service Advisor', createdAt: '2026-05-12T15:30:00' },
     ],
@@ -564,6 +582,9 @@ export const repairOrders = [
       { name: 'Wheel alignment',       price: 105, bookTimeMin: 36 },
     ],
     parts: 245, labor: 180, total: 425, payment: null, authorized: true,
+    declinedServices: [
+      { name: 'Tire replacement (set of 4)', price: 812, declinedAt: null },
+    ],
     notes: [
       { id: 1, text: 'EV certified bay used', type: 'advisor', author: 'Service Advisor', createdAt: '2026-05-12T09:00:00' },
       { id: 2, text: 'Tesla diagnostic run - no fault codes', type: 'tech', author: 'Chris Nakamura', createdAt: '2026-05-12T10:45:00' },

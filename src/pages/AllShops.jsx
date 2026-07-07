@@ -20,7 +20,7 @@ export default function AllShops() {
       </div>
 
       {/* Summary bar */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
           { label: 'Today Revenue', value: formatCurrency(totalRevToday) },
           { label: 'MTD Revenue', value: formatCurrency(totalRevMTD) },

@@ -52,7 +52,7 @@ export default createHandler(
       }
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
-      // Verify RO exists (RLS handles org scoping)
+      // Verify RO exists and belongs to this org (explicit org_id filter is the tenancy layer)
       const [ro] = await sql`SELECT id FROM repair_orders WHERE id = ${ro_id} AND org_id = ${user.orgId}`
       if (!ro) return res.status(404).json({ error: 'Repair order not found' })
 

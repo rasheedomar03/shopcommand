@@ -518,7 +518,8 @@ function ROICalculator() {
   const minutesSavedPerDay = managerCalls * locations * 8
   const hoursSavedPerMonth = Math.round((minutesSavedPerDay * 22) / 60)
   const timeSavingsPerMonth = Math.round(hoursSavedPerMonth * 50)
-  const shopCommandCost = (locations <= 2 ? 100 : 125) * locations
+  // Founding pricing: $100/mo first shop + $50/mo each additional
+  const shopCommandCost = 100 + (locations - 1) * 50
 
   return (
     <section className="border-t border-slate-200 py-24 px-6">

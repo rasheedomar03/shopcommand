@@ -47,6 +47,14 @@ async function handleCheckout(req, res, user) {
       customerId = customer.id
     }
 
+    // Price by shop count: $100/mo first shop + $50/mo each additional
+    const sql = neon(process.env.DATABASE_URL)
+    const [{ count: shopCount }] = await sql`
+      SELECT GREATEST(COUNT(*), 1)::int AS count FROM shops WHERE org_id = ${user.orgId}
+    `
+    const monthlyAmount = FOUNDING_PRICE_AMOUNT + (shopCount - 1) * FOUNDING_ADDITIONAL_SHOP
+    const shopLabel = shopCount === 1 ? '1 shop' : `${shopCount} shops`
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -56,9 +64,9 @@ async function handleCheckout(req, res, user) {
           currency: 'usd',
           product_data: {
             name: PRODUCT_NAME,
-            description: '$100/mo first shop + $50/mo per additional shop. No per-seat fees — unlimited users. All features included. Founding rate locked forever.',
+            description: `${shopLabel} · $100/mo first shop + $50/mo per additional shop. No per-seat fees — unlimited users. All features included. Founding rate locked forever.`,
           },
-          unit_amount: FOUNDING_PRICE_AMOUNT,
+          unit_amount: monthlyAmount,
           recurring: { interval: 'month' },
         },
         quantity: 1,
@@ -125,11 +133,16 @@ async function handleWebhook(req, res) {
   const buf = await buffer(req)
   const sig = req.headers['stripe-signature']
 
+  // Hard-fail if the webhook secret isn't configured — never accept unsigned
+  // events, or anyone could forge subscription changes for any org.
+  if (!endpointSecret) {
+    logger.error('STRIPE_WEBHOOK_SECRET is not set — rejecting webhook')
+    return res.status(500).json({ error: 'Webhook not configured' })
+  }
+
   let event
   try {
-    event = endpointSecret
-      ? stripe.webhooks.constructEvent(buf, sig, endpointSecret)
-      : JSON.parse(buf.toString())
+    event = stripe.webhooks.constructEvent(buf, sig, endpointSecret)
   } catch (err) {
     logger.warn('Stripe webhook signature failed', { error: err.message })
     return res.status(400).json({ error: 'Invalid signature' })

@@ -1,9 +1,30 @@
 // In-memory rate limiter for Vercel serverless functions.
-// Each function instance has its own map — this is sufficient for
-// per-instance throttling. For distributed rate limiting at scale,
-// swap this for Redis (Vercel KV) later.
+//
+// SECURITY NOTE: this is per-instance and therefore nearly decorative on
+// serverless — Vercel spins up many concurrent instances, each with its own
+// empty map, and instances are recycled frequently. An attacker spreading
+// requests across instances effectively multiplies the limit. Treat this as
+// best-effort throttling of a single hot instance, NOT as real abuse
+// protection. Real rate limiting requires an external shared store
+// (Upstash Redis / Vercel KV) — swap this module's internals for that when
+// abuse protection matters.
 
 const windows = new Map()
+
+// Lazy cleanup: purge stale windows on access instead of a module-level
+// setInterval. A setInterval in serverless keeps the event loop pinned /
+// leaks a timer per warm instance and never fires on frozen instances.
+const CLEANUP_INTERVAL_MS = 60_000
+const STALE_AFTER_MS = 30 * 60_000
+let lastCleanup = 0
+
+function cleanupStale(now) {
+  if (now - lastCleanup < CLEANUP_INTERVAL_MS) return
+  lastCleanup = now
+  for (const [key, record] of windows) {
+    if (now - record.start > STALE_AFTER_MS) windows.delete(key)
+  }
+}
 
 const DEFAULTS = {
   general: { max: 100, windowMs: 60_000 },
@@ -24,6 +45,8 @@ export function rateLimit(req, res, tier = 'general') {
   const ip = getClientIp(req)
   const key = `${tier}:${ip}`
   const now = Date.now()
+
+  cleanupStale(now)
 
   let record = windows.get(key)
   if (!record || now - record.start > config.windowMs) {
@@ -46,11 +69,3 @@ export function rateLimit(req, res, tier = 'general') {
 
   return true
 }
-
-// Periodic cleanup to prevent memory leaks
-setInterval(() => {
-  const now = Date.now()
-  for (const [key, record] of windows) {
-    if (now - record.start > 30 * 60_000) windows.delete(key)
-  }
-}, 60_000)

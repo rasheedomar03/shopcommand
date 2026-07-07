@@ -93,7 +93,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
-  const { repairOrders, clockedInTechs, parts, shops } = useData()
+  const { repairOrders, clockedInTechs, parts, shops, loading } = useData()
   const [newROOpen, setNewROOpen] = useState(false)
   const [selectedRO, setSelectedRO] = useState(null)
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set())
@@ -170,6 +170,19 @@ export default function Dashboard() {
     return diff >= 3
   })
 
+  // Declined work: services customers said no to — money that walked out the door
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
+  const declinedWork = scopedROs.flatMap(ro =>
+    (ro.declinedServices || [])
+      .filter(s => {
+        const when = s.declinedAt || ro.updated || ro.created
+        return when && (Date.now() - new Date(when).getTime()) <= THIRTY_DAYS
+      })
+      .map(s => ({ ...s, ro }))
+  )
+  const declinedTotal = declinedWork.reduce((sum, s) => sum + (s.price || 0), 0)
+  const declinedVehicles = new Set(declinedWork.map(s => s.ro.id)).size
+
   const scopedParts = isAdvisor ? parts.filter(p => p.shopId === session?.shopId) : parts
   const partsAlerts = overduePartsOrders.map(o => ({
     id: `parts-order-${o.id}`,
@@ -207,7 +220,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-text-primary">Dashboard</h1>
-          <p className="text-xs text-text-muted mt-0.5">{dynamicDate()}{isAdvisor ? ` · ${advisorShop?.name}` : ' · All 5 locations'}</p>
+          <p className="text-xs text-text-muted mt-0.5">{dynamicDate()}{isAdvisor ? ` · ${advisorShop?.name}` : shops.length > 0 ? ` · ${shops.length === 1 ? '1 location' : `All ${shops.length} locations`}` : ''}</p>
         </div>
         <Button onClick={() => setNewROOpen(true)}>
           <Plus size={15} />
@@ -232,7 +245,8 @@ export default function Dashboard() {
                   <span className="text-2xs text-text-muted">{alert.time}</span>
                   <button
                     onClick={() => setDismissedAlerts(s => new Set([...s, alert.id]))}
-                    className="text-text-muted hover:text-text-primary transition-colors"
+                    className="p-3.5 -m-3.5 rounded-md text-text-muted hover:text-text-primary transition-colors"
+                    aria-label="Dismiss notification"
                   >
                     <X size={12} />
                   </button>
@@ -283,6 +297,28 @@ export default function Dashboard() {
         </button>
       )}
 
+      {/* Declined work — revenue that walked out the door */}
+      {declinedTotal > 0 && (
+        <button
+          onClick={() => navigate('/customers')}
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-lg border border-status-red/25 bg-status-red/5 hover:border-status-red/50 transition-colors text-left"
+        >
+          <div className="w-8 h-8 rounded-lg bg-status-red/10 flex items-center justify-center flex-shrink-0">
+            <DollarSign size={15} className="text-status-red" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-medium text-text-primary">
+              {formatCurrency(declinedTotal)} in declined work
+              <span className="text-text-muted font-normal ml-2">last 30 days</span>
+            </div>
+            <div className="text-2xs text-text-muted mt-0.5">
+              {declinedWork.length} service{declinedWork.length !== 1 ? 's' : ''} declined across {declinedVehicles} vehicle{declinedVehicles !== 1 ? 's' : ''} — follow up before they book elsewhere
+            </div>
+          </div>
+          <ChevronRight size={14} className="text-text-muted flex-shrink-0" />
+        </button>
+      )}
+
       {/* Stats */}
       {isAdvisor ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -293,6 +329,7 @@ export default function Dashboard() {
                 value={formatCurrency(revToday)}
                 sub={`MTD: ${formatCurrency(revMTD)}`}
                 icon={DollarSign}
+                loading={loading}
               />
             </div>
           </AppTooltip>
@@ -303,6 +340,7 @@ export default function Dashboard() {
                 value={openROs}
                 sub={advisorShop?.name || 'Your shop'}
                 icon={ClipboardList}
+                loading={loading}
               />
             </div>
           </AppTooltip>
@@ -313,6 +351,7 @@ export default function Dashboard() {
                 value={activeTechs}
                 sub="Clocked in now"
                 icon={Users}
+                loading={loading}
               />
             </div>
           </AppTooltip>
@@ -326,6 +365,7 @@ export default function Dashboard() {
                 value={formatCurrency(revToday)}
                 sub={`MTD: ${formatCurrency(revMTD)}`}
                 icon={DollarSign}
+                loading={loading}
               />
             </div>
           </AppTooltip>
@@ -336,6 +376,7 @@ export default function Dashboard() {
                 value={openROs}
                 sub="Across all shops"
                 icon={ClipboardList}
+                loading={loading}
               />
             </div>
           </AppTooltip>
@@ -346,6 +387,7 @@ export default function Dashboard() {
                 value={activeTechs}
                 sub="Clocked in now"
                 icon={Users}
+                loading={loading}
               />
             </div>
           </AppTooltip>
@@ -356,6 +398,7 @@ export default function Dashboard() {
                 value={`${avgEff}%`}
                 sub="This week"
                 icon={TrendingUp}
+                loading={loading}
               />
             </div>
           </AppTooltip>
@@ -437,7 +480,28 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="divide-y divide-border/60">
-            {activeROs.map(ro => (
+            {loading && Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="px-5 py-3 space-y-2">
+                <div className="skeleton h-3 w-24" />
+                <div className="skeleton h-4 w-48" />
+                <div className="skeleton h-3 w-32" />
+              </div>
+            ))}
+            {!loading && activeROs.length === 0 && (
+              <div className="py-12 text-center">
+                <div className="w-12 h-12 rounded-xl bg-border mx-auto mb-3 flex items-center justify-center">
+                  <ClipboardList size={20} className="text-text-muted" />
+                </div>
+                <p className="text-sm text-text-muted">No active repair orders.</p>
+                <button
+                  onClick={() => setNewROOpen(true)}
+                  className="mt-2 text-xs text-orange hover:underline"
+                >
+                  Create your first RO
+                </button>
+              </div>
+            )}
+            {!loading && activeROs.map(ro => (
               <div
                 key={ro.id}
                 className="flex items-center gap-3 px-5 py-3 hover:bg-border/30 cursor-pointer transition-colors duration-100"
@@ -502,7 +566,21 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="divide-y divide-border/60">
-              {shops.slice(0, 5).map(shop => {
+              {loading && Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="px-5 py-3 space-y-2">
+                  <div className="skeleton h-4 w-32" />
+                  <div className="skeleton h-3 w-40" />
+                </div>
+              ))}
+              {!loading && shops.length === 0 && (
+                <div className="py-12 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-border mx-auto mb-3 flex items-center justify-center">
+                    <TrendingUp size={20} className="text-text-muted" />
+                  </div>
+                  <p className="text-sm text-text-muted">No shops yet.</p>
+                </div>
+              )}
+              {!loading && shops.slice(0, 5).map(shop => {
                 const mtd = mtdByShop[shop.id] || 0
                 const thisWeek = weekByShop[shop.id] || 0
                 const lastWeek = lastWeekByShop[shop.id] ?? null

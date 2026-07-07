@@ -41,16 +41,35 @@ export default createHandler(
       if (search) {
         const pattern = `%${search}%`
         rows = await sql`
-          SELECT id, org_id, name, email, phone, address, notes, created_at, updated_at
-          FROM customers
-          WHERE org_id = ${user.orgId} AND (name ILIKE ${pattern} OR email ILIKE ${pattern} OR phone ILIKE ${pattern})
-          ORDER BY created_at DESC
+          SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.created_at, c.updated_at,
+            COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
+              WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId} AND ro.stage = 'Paid'
+            ), 0)::float8 AS total_spent,
+            (SELECT COUNT(*) FROM repair_orders ro
+              WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}
+            )::int AS ro_count,
+            (SELECT MAX(ro.created_at) FROM repair_orders ro
+              WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}
+            ) AS last_visit
+          FROM customers c
+          WHERE c.org_id = ${user.orgId} AND (c.name ILIKE ${pattern} OR c.email ILIKE ${pattern} OR c.phone ILIKE ${pattern})
+          ORDER BY c.created_at DESC
           LIMIT 200
         `
       } else {
         rows = await sql`
-          SELECT id, org_id, name, email, phone, address, notes, created_at, updated_at
-          FROM customers WHERE org_id = ${user.orgId} ORDER BY created_at DESC LIMIT 200
+          SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.created_at, c.updated_at,
+            COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
+              WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId} AND ro.stage = 'Paid'
+            ), 0)::float8 AS total_spent,
+            (SELECT COUNT(*) FROM repair_orders ro
+              WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}
+            )::int AS ro_count,
+            (SELECT MAX(ro.created_at) FROM repair_orders ro
+              WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}
+            ) AS last_visit
+          FROM customers c
+          WHERE c.org_id = ${user.orgId} ORDER BY c.created_at DESC LIMIT 200
         `
       }
       return res.json(rows)

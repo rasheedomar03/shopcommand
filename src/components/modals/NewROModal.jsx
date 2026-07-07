@@ -3,7 +3,6 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
-import { api } from '@/lib/api'
 import { RO_STAGES, sanitizeVin, sanitizeField } from '@/lib/utils'
 import { Search, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,7 +17,7 @@ export function NewROModal({
   defaultDate,
   onCreated,
 }) {
-  const { technicians, addRepairOrder, addCustomer, shops, customers } = useData()
+  const { technicians, addRepairOrder, addCustomer, addVehicle, shops, customers } = useData()
 
   const [form, setForm] = useState({
     shopId: preShopId || '',
@@ -120,17 +119,14 @@ export function NewROModal({
       // 2. Create vehicle if we have year/make/model
       let vehicleId = null
       if (cleanYear && cleanMake && cleanModel) {
-        const veh = await api('/api/vehicles', {
-          method: 'POST',
-          body: {
-            customer_id: customerId,
-            year: Number(cleanYear),
-            make: cleanMake,
-            model: cleanModel,
-            trim: cleanTrim || null,
-            vin: cleanVin,
-            mileage: form.mileage ? Number(form.mileage.replace(/,/g, '')) : null,
-          },
+        const veh = await addVehicle({
+          customer_id: customerId,
+          year: Number(cleanYear),
+          make: cleanMake,
+          model: cleanModel,
+          trim: cleanTrim || null,
+          vin: cleanVin,
+          mileage: form.mileage ? Number(form.mileage.replace(/,/g, '')) : null,
         })
         vehicleId = veh.id
       }
@@ -140,6 +136,7 @@ export function NewROModal({
         shopId: form.shopId,
         customerId,
         vehicleId,
+        vehicle: [cleanYear, cleanMake, cleanModel].filter(Boolean).join(' '),
         techId: form.techId || null,
         complaint: cleanComplaint,
         scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
@@ -355,6 +352,11 @@ export function NewROModal({
         </div>
 
         <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-border bg-background/50">
+          {errors.submit && (
+            <p className="text-xs text-red-500 flex items-center gap-1 mr-auto">
+              <AlertCircle size={11} /> {errors.submit}
+            </p>
+          )}
           <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
           <Button type="submit" loading={submitting}>Create RO</Button>
         </div>

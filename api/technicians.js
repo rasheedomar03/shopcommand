@@ -20,7 +20,25 @@ export default createHandler(
           ) AS entries_today,
           (SELECT MAX(te.clock_in) FROM time_entries te
            WHERE te.tech_id = u.id AND te.clock_out IS NULL
-          ) AS clocked_in_since
+          ) AS clocked_in_since,
+          'General'::text AS specialty,
+          'Technician'::text AS level,
+          '[]'::jsonb AS certifications,
+          COALESCE(ROUND(
+            (SELECT COALESCE(SUM(li.qty), 0) FROM line_items li
+             JOIN repair_orders ro2 ON ro2.id = li.ro_id
+             WHERE li.org_id = ${user.orgId} AND li.type = 'labor'
+               AND ro2.tech_id = u.id AND ro2.org_id = ${user.orgId}
+               AND ro2.stage IN ('Complete', 'Invoiced', 'Paid')
+               AND ro2.updated_at >= CURRENT_DATE - INTERVAL '30 days'
+            ) / NULLIF((
+              SELECT SUM(EXTRACT(EPOCH FROM (te2.clock_out - te2.clock_in)) / 3600.0)
+              FROM time_entries te2
+              WHERE te2.tech_id = u.id AND te2.org_id = ${user.orgId}
+                AND te2.clock_out IS NOT NULL
+                AND te2.clock_in >= CURRENT_DATE - INTERVAL '30 days'
+            ), 0) * 100
+          ), 0)::int AS efficiency
         FROM users u
         LEFT JOIN shops s ON s.id = u.shop_id
         WHERE u.org_id = ${user.orgId} AND u.role = 'tech'

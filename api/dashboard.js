@@ -15,7 +15,9 @@ export default createHandler(
         return res.status(400).json({ error: 'filename and contentType are required' })
       }
 
-      const path = `${user.orgId}/${roId || 'general'}/${Date.now()}-${filename}`
+      // Sanitize filename: strip path separators and control chars
+      const safeName = String(filename).replace(/[/\\<>:"|?*\x00-\x1f]/g, '_').slice(0, 200)
+      const path = `${user.orgId}/${roId || 'general'}/${Date.now()}-${safeName}`
       const blob = await put(path, req, {
         access: 'public',
         contentType,
@@ -25,7 +27,7 @@ export default createHandler(
       return res.json({
         url: blob.url,
         pathname: blob.pathname,
-        filename,
+        filename: safeName,
         category: category || 'document',
         uploadedAt: new Date().toISOString(),
       })
@@ -37,6 +39,11 @@ export default createHandler(
       if (!url) return res.status(400).json({ error: 'url is required' })
 
       try {
+        // Ownership check: only allow deleting blobs under this org's prefix
+        const pathname = new URL(url).pathname.replace(/^\//, '')
+        if (!pathname.startsWith(`${user.orgId}/`)) {
+          return res.status(403).json({ error: 'Not allowed' })
+        }
         await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN })
         return res.json({ deleted: true })
       } catch {
@@ -46,7 +53,11 @@ export default createHandler(
 
     // ── File list: GET /api/dashboard?action=files&prefix=orgId/roId ──────
     if (action === 'files' && req.method === 'GET') {
-      const prefix = req.query?.prefix || user.orgId
+      // Prefix is always constrained to this org — callers may only narrow within it
+      const requested = req.query?.prefix
+      const prefix = requested && String(requested).startsWith(`${user.orgId}/`)
+        ? String(requested)
+        : String(user.orgId)
       try {
         const { blobs } = await list({
           prefix,
@@ -74,7 +85,8 @@ export default createHandler(
     const [revToday] = await sql`
       SELECT COALESCE(SUM(ro.total), 0) AS amount
       FROM repair_orders ro
-      WHERE ro.stage = ANY(${REVENUE_STAGES})
+      WHERE ro.org_id = ${user.orgId}
+        AND ro.stage = ANY(${REVENUE_STAGES})
         AND ro.updated_at::date = ${today}::date
         ${shopFilter}
     `
@@ -82,7 +94,8 @@ export default createHandler(
     const [revMTD] = await sql`
       SELECT COALESCE(SUM(ro.total), 0) AS amount
       FROM repair_orders ro
-      WHERE ro.stage = ANY(${REVENUE_STAGES})
+      WHERE ro.org_id = ${user.orgId}
+        AND ro.stage = ANY(${REVENUE_STAGES})
         AND ro.updated_at >= ${monthStart}::date
         ${shopFilter}
     `
@@ -90,14 +103,15 @@ export default createHandler(
     const [openCount] = await sql`
       SELECT COUNT(*) AS count
       FROM repair_orders ro
-      WHERE ro.stage NOT IN ('Complete', 'Invoiced', 'Paid')
+      WHERE ro.org_id = ${user.orgId}
+        AND ro.stage NOT IN ('Complete', 'Invoiced', 'Paid')
         ${shopFilter}
     `
 
     const stageRows = await sql`
       SELECT ro.stage, COUNT(*) AS count
       FROM repair_orders ro
-      WHERE 1=1 ${shopFilter}
+      WHERE ro.org_id = ${user.orgId} ${shopFilter}
       GROUP BY ro.stage
     `
     const rosByStage = {}
@@ -109,8 +123,8 @@ export default createHandler(
       SELECT ro.id, ro.ro_number, ro.stage, ro.total, ro.created_at, ro.updated_at,
              c.name AS customer_name
       FROM repair_orders ro
-      LEFT JOIN customers c ON c.id = ro.customer_id
-      WHERE 1=1 ${shopFilter}
+      LEFT JOIN customers c ON c.id = ro.customer_id AND c.org_id = ${user.orgId}
+      WHERE ro.org_id = ${user.orgId} ${shopFilter}
       ORDER BY ro.created_at DESC
       LIMIT 5
     `
@@ -124,6 +138,7 @@ export default createHandler(
       ) AS d
       LEFT JOIN repair_orders ro
         ON ro.updated_at::date = d::date
+        AND ro.org_id = ${user.orgId}
         AND ro.stage = ANY(${REVENUE_STAGES})
         ${shopFilter}
       GROUP BY d::date

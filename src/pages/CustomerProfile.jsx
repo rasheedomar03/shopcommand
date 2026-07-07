@@ -104,6 +104,12 @@ export default function CustomerProfile() {
   const avgTicket = paidROs.length > 0 ? Math.round(totalVerified / paidROs.length) : 0
   const activeROs = customerROs.filter(ro => !['Paid', 'Invoiced'].includes(ro.stage))
 
+  // Work this customer declined — follow-up opportunities
+  const declinedServices = customerROs.flatMap(ro =>
+    (ro.declinedServices || []).map(s => ({ ...s, vehicle: ro.vehicle, roId: ro.id, when: s.declinedAt || ro.updated || ro.created }))
+  )
+  const declinedTotal = declinedServices.reduce((sum, s) => sum + (s.price || 0), 0)
+
   const initials = customer.name.split(' ').map(n => n[0]).join('').toUpperCase()
 
   return (
@@ -348,6 +354,34 @@ export default function CustomerProfile() {
               </div>
             )}
           </div>
+
+          {/* Declined work — follow-up opportunities */}
+          {declinedServices.length > 0 && (
+            <div className="bg-surface border border-status-red/25 rounded-xl overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
+                <div className="text-sm font-semibold text-text-primary">Declined Work</div>
+                <span className="text-xs font-semibold text-status-red tabular-nums">{formatCurrency(declinedTotal)}</span>
+              </div>
+              <div className="divide-y divide-border">
+                {declinedServices.map((s, i) => (
+                  <div key={i} className="px-5 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm text-text-primary leading-snug">{s.name}</div>
+                        <div className="text-2xs text-text-muted mt-0.5">{s.vehicle} · {formatDate(s.when)}</div>
+                      </div>
+                      <span className="text-sm font-medium text-text-secondary tabular-nums flex-shrink-0">{formatCurrency(s.price)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="px-5 py-3 border-t border-border bg-status-red/5">
+                <div className="text-2xs text-text-muted">
+                  Deferred maintenance this customer said no to — worth a follow-up call.
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Quick actions */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">

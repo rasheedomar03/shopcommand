@@ -210,14 +210,15 @@ export function Sidebar({ open, onClose }) {
                 <div className="text-2xs text-text-muted">
                   {isAdvisor
                     ? advisorShop ? `Service Advisor · ${advisorShop.name.split(' ').slice(0, 2).join(' ')}` : 'Service Advisor'
-                    : 'Owner · 5 Locations'
+                    : shops.length > 0 ? `Owner · ${shops.length} Location${shops.length === 1 ? '' : 's'}` : 'Owner'
                   }
                 </div>
               </div>
               <Tooltip content="Sign out" side="right">
                 <button
                   onClick={handleLogout}
-                  className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+                  className="w-10 h-10 -m-2 flex items-center justify-center rounded text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+                  aria-label="Sign out"
                 >
                   <LogOut size={13} />
                 </button>

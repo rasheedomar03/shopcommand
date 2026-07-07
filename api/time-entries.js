@@ -41,6 +41,15 @@ export default createHandler(
         return res.status(400).json({ error: 'Invalid ro_id format' })
       }
 
+      // Verify the tech belongs to this org, and non-owners may only clock themselves in
+      const [tech] = await sql`
+        SELECT id FROM users WHERE id = ${tech_id} AND org_id = ${user.orgId}
+      `
+      if (!tech) return res.status(404).json({ error: 'Technician not found' })
+      if (user.role !== 'owner' && tech_id !== user.userId) {
+        return res.status(403).json({ error: 'Can only clock in yourself' })
+      }
+
       const openEntry = await sql`
         SELECT id FROM time_entries WHERE tech_id = ${tech_id} AND org_id = ${user.orgId} AND clock_out IS NULL
       `

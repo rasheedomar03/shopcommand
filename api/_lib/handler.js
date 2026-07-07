@@ -1,5 +1,5 @@
 import { rateLimit } from './rate-limit.js'
-import { authenticate, setRlsContext } from './auth.js'
+import { authenticate } from './auth.js'
 import { logger } from './logger.js'
 import { neon } from '@neondatabase/serverless'
 
@@ -38,11 +38,15 @@ export function createHandler(config, routeHandler) {
         }
       }
 
-      // Database connection with RLS context
+      // Database connection.
+      //
+      // SECURITY NOTE: there is NO active RLS safety net here. The former
+      // setRlsContext call was a no-op over the Neon HTTP driver (each sql``
+      // call is its own stateless transaction, so set_config never persisted),
+      // and the connection role bypasses RLS anyway. Tenant isolation depends
+      // ENTIRELY on every route handler filtering by user.orgId
+      // (WHERE org_id = ${user.orgId}). See api/_lib/auth.js for details.
       const sql = neon(process.env.DATABASE_URL)
-      if (user) {
-        await setRlsContext(sql, user)
-      }
 
       // Execute route handler
       const result = await routeHandler({ req, res, sql, user, requestId })
