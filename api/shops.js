@@ -1,4 +1,5 @@
 import { createHandler } from './_lib/handler.js'
+import { syncShopBilling } from './_lib/billing.js'
 
 function validate(body, partial = false) {
   const errors = []
@@ -87,7 +88,11 @@ export default createHandler(
         VALUES (${user.orgId}, ${name.trim()}, ${address?.trim() || null}, ${phone?.trim() || null})
         RETURNING *
       `
-      return res.status(201).json(row)
+      // Sync subscription to new shop count (prorated charge for the added
+      // shop). Never blocks shop creation — billing errors are logged and
+      // surfaced via billing.error.
+      const billing = await syncShopBilling(sql, user.orgId, { adding: true })
+      return res.status(201).json({ ...row, billing })
     }
 
     if (req.method === 'PUT') {
@@ -120,7 +125,9 @@ export default createHandler(
 
       const [row] = await sql`DELETE FROM shops WHERE id = ${id} AND org_id = ${user.orgId} RETURNING id`
       if (!row) return res.status(404).json({ error: 'Shop not found' })
-      return res.json({ deleted: row.id })
+      // Reduce subscription at next renewal (no proration credit)
+      const billing = await syncShopBilling(sql, user.orgId, { adding: false })
+      return res.json({ deleted: row.id, billing })
     }
   }
 )

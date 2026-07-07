@@ -3,13 +3,12 @@ import { neon } from '@neondatabase/serverless'
 import { authenticate, setRlsContext } from './_lib/auth.js'
 import { rateLimit } from './_lib/rate-limit.js'
 import { logger } from './_lib/logger.js'
+import { getFoundingPrices } from './_lib/billing.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
 
-const FOUNDING_PRICE_AMOUNT = 10000 // $100 in cents (first shop — additional shops are $50/mo = 5000 cents each)
-const FOUNDING_ADDITIONAL_SHOP = 5000 // $50 in cents per additional shop
-const PRODUCT_NAME = 'ShopCommand Founding Member'
+// Pricing lives in _lib/billing.js: $100/mo first shop + $50/mo per additional
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -47,30 +46,23 @@ async function handleCheckout(req, res, user) {
       customerId = customer.id
     }
 
-    // Price by shop count: $100/mo first shop + $50/mo each additional
+    // Price by shop count: $100/mo first shop + $50/mo each additional.
+    // Two subscription items (base + additional) so adding/removing shops
+    // later is a quantity update in _lib/billing.js, not a new checkout.
     const sql = neon(process.env.DATABASE_URL)
     const [{ count: shopCount }] = await sql`
       SELECT GREATEST(COUNT(*), 1)::int AS count FROM shops WHERE org_id = ${user.orgId}
     `
-    const monthlyAmount = FOUNDING_PRICE_AMOUNT + (shopCount - 1) * FOUNDING_ADDITIONAL_SHOP
-    const shopLabel = shopCount === 1 ? '1 shop' : `${shopCount} shops`
+    const { base, additional } = await getFoundingPrices()
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: PRODUCT_NAME,
-            description: `${shopLabel} · $100/mo first shop + $50/mo per additional shop. No per-seat fees — unlimited users. All features included. Founding rate locked forever.`,
-          },
-          unit_amount: monthlyAmount,
-          recurring: { interval: 'month' },
-        },
-        quantity: 1,
-      }],
+      line_items: [
+        { price: base.id, quantity: 1 },
+        ...(shopCount > 1 ? [{ price: additional.id, quantity: shopCount - 1 }] : []),
+      ],
       subscription_data: {
         trial_period_days: 14,
         metadata: { clerkId: user.clerkId, orgId: user.orgId, plan: 'founding' },

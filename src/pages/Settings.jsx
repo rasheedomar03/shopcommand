@@ -352,10 +352,11 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
   const [draft, setDraft] = useState(EMPTY_SHOP)
   const [confirmRemove, setConfirmRemove] = useState(null)
   const [saved, setSaved] = useState(false)
+  const [billingMsg, setBillingMsg] = useState('')
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!draft.name.trim() || !draft.address.trim()) return
-    onAdd({
+    const result = await onAdd({
       name:          sanitizeField(draft.name, 100),
       address:       sanitizeField(draft.address, 200),
       phone:         sanitizeField(draft.phone, 30),
@@ -366,8 +367,27 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
     })
     setDraft(EMPTY_SHOP)
     setAdding(false)
+    const b = result?.billing
+    if (b?.error) {
+      setBillingMsg('Shop added — billing update didn\'t go through, we\'ll sort it out on our end.')
+    } else if (b?.monthlyTotal) {
+      setBillingMsg(`Shop added — your plan is now $${b.monthlyTotal}/mo (prorated this cycle).`)
+    } else {
+      setBillingMsg('')
+    }
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setTimeout(() => { setSaved(false); setBillingMsg('') }, 5000)
+  }
+
+  const handleRemove = async (id) => {
+    const result = await onRemove(id)
+    setConfirmRemove(null)
+    const b = result?.billing
+    if (b?.monthlyTotal) {
+      setBillingMsg(`Location removed — your plan drops to $${b.monthlyTotal}/mo at your next renewal.`)
+      setSaved(true)
+      setTimeout(() => { setSaved(false); setBillingMsg('') }, 5000)
+    }
   }
 
   return (
@@ -463,7 +483,7 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
 
       {saved && (
         <div className="px-5 py-2 bg-status-green/10 border-b border-status-green/20 text-xs text-status-green font-medium">
-          ✓ Location added successfully
+          ✓ {billingMsg || 'Location added successfully'}
         </div>
       )}
 
@@ -483,6 +503,7 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
               <div className="text-sm font-semibold text-text-primary mb-1">Remove location?</div>
               <p className="text-xs text-text-muted mb-5">
                 <span className="font-medium text-text-primary">{shop?.name}</span> will be removed from your account. This can't be undone.
+                {shops.length > 1 && ' Your subscription drops by $50/mo at your next renewal.'}
               </p>
               <div className="flex gap-2 justify-end">
                 <button
@@ -492,7 +513,7 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
                   Cancel
                 </button>
                 <button
-                  onClick={() => { onRemove(confirmRemove); setConfirmRemove(null) }}
+                  onClick={() => handleRemove(confirmRemove)}
                   className="h-8 px-4 rounded-md bg-status-red/10 border border-status-red/30 text-xs font-semibold text-status-red hover:bg-status-red/20 transition-colors"
                 >
                   Remove Location

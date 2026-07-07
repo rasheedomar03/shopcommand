@@ -292,23 +292,48 @@ export function DataProvider({ children }) {
   // ── shop CRUD ─────────────────────────────────────────────────────────────
 
   const addShop = useCallback(async (shop) => {
+    if (session?.demo) {
+      const demoShop = {
+        id: crypto.randomUUID(),
+        ...shop,
+        openROs: 0,
+        revenue: { today: 0, mtd: 0, ytd: 0 },
+        avgTicket: 0, efficiency: 0, activeTechs: 0,
+        status: 'open',
+        bays: Number(shop.bays) || 0,
+      }
+      const newCount = shops.length + 1
+      setShops(prev => [...prev, demoShop])
+      return { ...demoShop, billing: { monthlyTotal: 100 + (newCount - 1) * 50, shopCount: newCount } }
+    }
     const row = await api('/api/shops', { method: 'POST', body: shop })
-    const transformed = transformShop(row)
+    const { billing, ...shopRow } = row
+    const transformed = transformShop(shopRow)
     setShops(prev => [...prev, transformed])
-    return transformed
-  }, [])
+    return { ...transformed, billing }
+  }, [session?.demo, shops.length])
 
   const updateShop = useCallback(async (id, patch) => {
+    if (session?.demo) {
+      setShops(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s))
+      return { id, ...patch }
+    }
     const row = await api('/api/shops', { method: 'PUT', params: { id }, body: patch })
     const transformed = transformShop(row)
     setShops(prev => prev.map(s => s.id === id ? transformed : s))
     return transformed
-  }, [])
+  }, [session?.demo])
 
   const removeShop = useCallback(async (id) => {
-    await api('/api/shops', { method: 'DELETE', params: { id } })
+    if (session?.demo) {
+      const newCount = Math.max(1, shops.length - 1)
+      setShops(prev => prev.filter(s => s.id !== id))
+      return { deleted: id, billing: { monthlyTotal: 100 + (newCount - 1) * 50, shopCount: newCount } }
+    }
+    const res = await api('/api/shops', { method: 'DELETE', params: { id } })
     setShops(prev => prev.filter(s => s.id !== id))
-  }, [])
+    return res
+  }, [session?.demo, shops.length])
 
   // ── customer CRUD ────────────────────────────────────────────────────────
 
