@@ -2,6 +2,7 @@ import { Link, useParams, Navigate } from 'react-router-dom'
 import { Mail, ArrowLeft } from 'lucide-react'
 import articles from '@/data/articles'
 import { PublicNav } from '@/components/PublicNav'
+import { usePageMeta } from '@/lib/seo'
 
 const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
 
@@ -47,6 +48,28 @@ function ContentBlock({ block }) {
 export default function Article() {
   const { slug } = useParams()
   const article = articles.find(a => a.slug === slug)
+
+  usePageMeta({
+    title: article ? `${article.title} | ShopCommand` : '',
+    description: article?.description || '',
+    path: `/resources/${slug}`,
+    schema: article ? [{
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: article.title,
+      description: article.description,
+      url: `https://shopcommand.net/resources/${article.slug}`,
+      datePublished: article.publishedAt,
+      dateModified: article.publishedAt,
+      author: { '@type': 'Organization', name: 'ShopCommand', url: 'https://shopcommand.net' },
+      publisher: { '@type': 'Organization', name: 'ShopCommand', url: 'https://shopcommand.net' },
+    }] : [],
+    breadcrumbs: article ? [
+      { name: 'Home', path: '/' },
+      { name: 'Resources', path: '/resources' },
+      { name: article.title },
+    ] : null,
+  })
 
   if (!article) return <Navigate to="/resources" replace />
 

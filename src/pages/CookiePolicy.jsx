@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { usePageMeta } from '@/lib/seo'
 
 function Toggle({ checked, onChange, label, description, disabled }) {
   return (
@@ -28,6 +29,11 @@ function Toggle({ checked, onChange, label, description, disabled }) {
 }
 
 export default function CookiePolicy() {
+  usePageMeta({
+    title: 'Cookie Policy | ShopCommand',
+    description: 'What cookies ShopCommand uses and how to manage your cookie preferences.',
+    path: '/cookies',
+  })
   const [preferences, setPreferences] = useState({
     essential: true,
     analytics: false,

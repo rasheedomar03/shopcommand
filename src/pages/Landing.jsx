@@ -636,10 +636,12 @@ export default function Landing() {
     }
     const script = document.createElement('script')
     script.type = 'application/ld+json'
-    script.id = 'sc-faq-schema'
+    script.setAttribute('data-sc-schema', '')
     script.text = JSON.stringify(faqSchema)
     document.head.appendChild(script)
-    return () => document.getElementById('sc-faq-schema')?.remove()
+    // Remove by reference, not id — a shared id let pages delete each
+    // other's schema and leave stale duplicates in prerendered HTML
+    return () => script.remove()
   }, [])
 
   const [compareOpen, setCompareOpen] = useState(false)

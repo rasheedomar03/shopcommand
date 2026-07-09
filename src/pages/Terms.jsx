@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom'
+import { usePageMeta } from '@/lib/seo'
 
 export default function Terms() {
+  usePageMeta({
+    title: 'Terms of Service | ShopCommand',
+    description: 'Terms of service for ShopCommand, the multi-location auto repair shop management platform.',
+    path: '/terms',
+  })
   return (
     <div className="min-h-screen bg-[#0A0B12] text-white">
       <a href="#main-content" className="skip-link">Skip to main content</a>

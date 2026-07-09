@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Mail, ArrowRight } from 'lucide-react'
 import articles from '@/data/articles'
 import { PublicNav } from '@/components/PublicNav'
+import { usePageMeta } from '@/lib/seo'
 
 const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
 
@@ -23,6 +24,23 @@ function HexMark({ size = 28 }) {
 }
 
 export default function Resources() {
+  usePageMeta({
+    title: 'Auto Repair Shop Workflow Guides & Resources | ShopCommand',
+    description: 'Practical guides for auto repair shop owners: technician time tracking, repair order workflow, parts inventory, and multi-location visibility. No fluff, no sales pitch.',
+    path: '/resources',
+    schema: [{
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'Auto Repair Shop Workflow Guides',
+      url: 'https://shopcommand.net/resources',
+      hasPart: articles.map(a => ({
+        '@type': 'Article',
+        headline: a.title,
+        url: `https://shopcommand.net/resources/${a.slug}`,
+      })),
+    }],
+    breadcrumbs: [{ name: 'Home', path: '/' }, { name: 'Resources' }],
+  })
   return (
     <div className="min-h-screen bg-white">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-orange-500 focus:text-white focus:rounded-lg">

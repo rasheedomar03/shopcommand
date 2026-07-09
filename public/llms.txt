@@ -31,10 +31,22 @@ ShopCommand gives shop owners real-time visibility into every location without b
 
 ShopCommand is built for the owner sitting above multiple locations who needs cross-shop visibility. Traditional shop management platforms (Tekmetric, ShopMonkey, Mitchell1, Shop-Ware, R.O. Writer) focus on day-to-day operations for a single location. Different problem, different tool.
 
+## Guides & Resources
+
+- All guides: https://shopcommand.net/resources
+- How to Track Technician Hours Without a Separate App: https://shopcommand.net/resources/track-technician-hours-without-separate-app
+- Why Completed Repair Orders Still Don't Get Invoiced: https://shopcommand.net/resources/why-completed-repair-orders-dont-get-invoiced
+- The Real Cost of Running Your Shop on Paper and Whiteboards: https://shopcommand.net/resources/real-cost-of-running-shop-on-paper
+- How Multi-Location Shop Owners Stay in Control Without Being On-Site: https://shopcommand.net/resources/multi-location-owner-visibility
+- Parts Inventory Tracking: Stop Losing Money to Shrinkage and Stockouts: https://shopcommand.net/resources/parts-inventory-tracking-stop-losing-money
+- From Estimate to Payment: What a Modern RO Workflow Looks Like: https://shopcommand.net/resources/modern-repair-order-workflow
+- What to Look for in Auto Repair Shop Management Software: https://shopcommand.net/resources/what-to-look-for-in-shop-management-software
+
 ## Links
 
 - Homepage: https://shopcommand.net
 - Pricing: https://shopcommand.net/#pricing
+- Founding Shop Program: https://shopcommand.net/founding-program
 - Demo: https://shopcommand.net/demo
 - Compare vs Tekmetric: https://shopcommand.net/compare/tekmetric
 - Compare vs ShopMonkey: https://shopcommand.net/compare/shopmonkey

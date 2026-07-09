@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom'
+import { usePageMeta } from '@/lib/seo'
 
 export default function Accessibility() {
+  usePageMeta({
+    title: 'Accessibility Statement | ShopCommand',
+    description: 'ShopCommand\'s commitment to accessibility: WCAG conformance, keyboard navigation, and how to report issues.',
+    path: '/accessibility',
+  })
   return (
     <div className="min-h-screen bg-[#0A0B12] text-white">
       <a href="#main-content" className="skip-link">Skip to main content</a>

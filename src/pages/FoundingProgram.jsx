@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Check, Mail, Clock, Wrench, BarChart3, Package, Users, ArrowRight } from 'lucide-react'
 import { PublicNav } from '@/components/PublicNav'
+import { usePageMeta } from '@/lib/seo'
 
 const TOTAL_SPOTS = 25
 const CLAIMED_SPOTS = 1
@@ -64,6 +65,12 @@ const whatYouGet = [
 ]
 
 export default function FoundingProgram() {
+  usePageMeta({
+    title: 'Founding Shop Program — 14-Day Guided Pilot | ShopCommand',
+    description: 'Apply for the ShopCommand Founding Shop Program: a 14-day guided pilot for auto repair shops, then $100/mo for your first shop + $50/mo per additional location, locked for life.',
+    path: '/founding-program',
+    breadcrumbs: [{ name: 'Home', path: '/' }, { name: 'Founding Shop Program' }],
+  })
   const [form, setForm] = useState({ name: '', email: '', locations: '', pain: '' })
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)

@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
+import { usePageMeta } from '@/lib/seo'
 import { CompareNav } from '@/components/CompareNav'
 
 function HexMark({ size = 36 }) {
@@ -50,28 +50,20 @@ const compareFaqs = [
   { q: 'Does R.O. Writer work on mobile?', a: 'R.O. Writer is a Windows desktop application with limited mobile support. ShopCommand is fully browser-based and works on any device — phone, tablet, or laptop.' },
 ]
 
-function setMeta(title, desc, url) {
-  document.title = title
-  document.querySelector('meta[name="description"]')?.setAttribute('content', desc)
-  document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
-  document.querySelector('meta[property="og:description"]')?.setAttribute('content', desc)
-  document.querySelector('meta[property="og:url"]')?.setAttribute('content', url)
-  document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title)
-  document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', desc)
-  document.querySelector('link[rel="canonical"]')?.setAttribute('href', url)
-}
-
 export default function VsROWriter() {
-  useEffect(() => {
-    setMeta(TITLE, DESC, URL)
-    const schema = { '@context': 'https://schema.org', '@type': 'Article', 'headline': TITLE, 'description': DESC, 'url': URL, 'dateModified': '2026-06-02', 'author': { '@type': 'Organization', 'name': 'ShopCommand' } }
-    const s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'sc-compare-schema'; s.text = JSON.stringify(schema)
-    document.head.appendChild(s)
-    const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': compareFaqs.map(({ q, a }) => ({ '@type': 'Question', 'name': q, 'acceptedAnswer': { '@type': 'Answer', 'text': a } })) }
-    const f = document.createElement('script'); f.type = 'application/ld+json'; f.id = 'sc-faq-schema'; f.text = JSON.stringify(faqSchema)
-    document.head.appendChild(f)
-    return () => { document.getElementById('sc-compare-schema')?.remove(); document.getElementById('sc-faq-schema')?.remove() }
-  }, [])
+  usePageMeta({
+    title: TITLE,
+    description: DESC,
+    path: '/compare/ro-writer',
+    schema: [
+      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-06-02', author: { '@type': 'Organization', name: 'ShopCommand' } },
+      { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: compareFaqs.map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
+    ],
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'ShopCommand vs. R.O. Writer' },
+    ],
+  })
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">

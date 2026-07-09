@@ -23,8 +23,16 @@ const DIST = join(__dirname, '..', 'dist')
 const PORT = 4173
 
 // ── Routes to prerender ─────────────────────────────────────────────────────
+// Article slugs are read from the data file so new articles are picked up
+// automatically at build time.
+const articlesSource = readFileSync(join(__dirname, '..', 'src', 'data', 'articles.js'), 'utf8')
+const ARTICLE_SLUGS = [...articlesSource.matchAll(/slug:\s*'([^']+)'/g)].map(m => m[1])
+
 const ROUTES = [
   '/',
+  '/founding-program',
+  '/resources',
+  ...ARTICLE_SLUGS.map(s => `/resources/${s}`),
   '/compare/tekmetric',
   '/compare/shopmonkey',
   '/compare/mitchell1',
@@ -90,12 +98,20 @@ const MIME = {
 }
 
 function serve() {
+  // Snapshot the clean Vite shell BEFORE any route is prerendered.
+  // Prerendering '/' overwrites dist/index.html with Landing's captured HTML
+  // (including its injected schema); serving that mutated file as the SPA
+  // fallback used to leak Landing's FAQ schema into every other page.
+  const SHELL = readFileSync(join(DIST, 'index.html'))
+
   return new Promise((resolve) => {
     const server = createServer((req, res) => {
-      let filePath = join(DIST, req.url === '/' ? 'index.html' : req.url)
+      const filePath = join(DIST, req.url === '/' ? 'index.html' : req.url)
 
-      if (!existsSync(filePath) || !extname(filePath)) {
-        filePath = join(DIST, 'index.html')
+      if (req.url === '/' || !existsSync(filePath) || !extname(filePath)) {
+        res.writeHead(200, { 'Content-Type': 'text/html' })
+        res.end(SHELL)
+        return
       }
 
       try {
@@ -104,9 +120,8 @@ function serve() {
         res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' })
         res.end(data)
       } catch {
-        const html = readFileSync(join(DIST, 'index.html'))
         res.writeHead(200, { 'Content-Type': 'text/html' })
-        res.end(html)
+        res.end(SHELL)
       }
     })
 
@@ -155,7 +170,57 @@ async function prerender() {
   await browser.close()
   server.close()
 
+  writeSitemap()
+
   console.log(`\n  Done — ${ROUTES.length} pages prerendered.\n`)
+}
+
+// ── Sitemap generation ──────────────────────────────────────────────────────
+// Written at build time so lastmod reflects real deploys instead of a
+// hand-maintained static file going stale.
+function writeSitemap() {
+  const ORIGIN = 'https://shopcommand.net'
+  const today = new Date().toISOString().slice(0, 10)
+
+  const meta = (route) => {
+    if (route === '/') return { changefreq: 'weekly', priority: '1.0' }
+    if (route === '/founding-program') return { changefreq: 'weekly', priority: '0.9' }
+    if (route === '/resources') return { changefreq: 'weekly', priority: '0.8' }
+    if (route.startsWith('/resources/')) return { changefreq: 'monthly', priority: '0.7' }
+    if (route.startsWith('/compare/')) return { changefreq: 'monthly', priority: '0.8' }
+    return { changefreq: 'yearly', priority: '0.3' } // legal pages
+  }
+
+  const extras = [
+    { loc: `${ORIGIN}/llms.txt`, changefreq: 'monthly', priority: '0.4' },
+    { loc: `${ORIGIN}/pricing.md`, changefreq: 'monthly', priority: '0.5' },
+  ]
+
+  const entries = [
+    ...ROUTES.map(route => {
+      const { changefreq, priority } = meta(route)
+      return { loc: `${ORIGIN}${route === '/' ? '/' : route}`, changefreq, priority }
+    }),
+    ...extras,
+  ]
+
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...entries.map(e => [
+      '  <url>',
+      `    <loc>${e.loc}</loc>`,
+      `    <lastmod>${today}</lastmod>`,
+      `    <changefreq>${e.changefreq}</changefreq>`,
+      `    <priority>${e.priority}</priority>`,
+      '  </url>',
+    ].join('\n')),
+    '</urlset>',
+    '',
+  ].join('\n')
+
+  writeFileSync(join(DIST, 'sitemap.xml'), xml)
+  console.log(`  ✓ sitemap.xml (${entries.length} URLs, lastmod ${today})`)
 }
 
 prerender().catch((err) => {

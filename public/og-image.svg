@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#FAFAF8"/>
+
+  <!-- Subtle grid dots -->
+  <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+    <circle cx="20" cy="20" r="0.8" fill="#e2e8f0" opacity="0.5"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+
+  <!-- Orange accent line at top -->
+  <rect x="0" y="0" width="1200" height="4" fill="#F97316"/>
+
+  <!-- HexMark logo -->
+  <g transform="translate(600, 230)">
+    <!-- Outer hex -->
+    <polygon points="0,-56 48.5,-28 48.5,28 0,56 -48.5,28 -48.5,-28" fill="#F97316"/>
+    <!-- Inner hex -->
+    <polygon points="0,-31.4 27.2,-15.7 27.2,15.7 0,31.4 -27.2,15.7 -27.2,-15.7" fill="#0D0E14"/>
+  </g>
+
+  <!-- ShopCommand text -->
+  <text x="600" y="330" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" letter-spacing="-1">
+    <tspan fill="#0f172a">Shop</tspan><tspan fill="#F97316">Command</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="600" y="378" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#64748b" font-weight="400">
+    Auto shop management for multi-location owners
+  </text>
+
+  <!-- Bottom bar with key info -->
+  <rect x="0" y="560" width="1200" height="70" fill="#0D0E14"/>
+  <text x="600" y="602" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#94a3b8" letter-spacing="0.5">
+    <tspan fill="#F97316" font-weight="600">$125/mo founding rate</tspan>
+    <tspan fill="#475569">  ·  </tspan>
+    <tspan>Real-time revenue across all locations</tspan>
+    <tspan fill="#475569">  ·  </tspan>
+    <tspan>shopcommand.net</tspan>
+  </text>
+</svg>
