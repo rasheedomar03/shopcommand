@@ -156,6 +156,75 @@ export const technicians = [
   { id: 10, shopId: 5, name: 'Faith Cooper', specialty: 'Diagnostics', level: 'Senior', status: 'clocked-in', activeROs: 2, completedToday: 4, hoursWorked: 8.2, efficiency: 93, certifications: ['ASE L1', 'ASE L3'] },
 ]
 
+export const invoices = [
+  {
+    id: 'INV-4401', roId: 'RO-8835', shopId: 1, customerId: 1, customerName: 'Gerald Hutchins',
+    customerEmail: 'g.hutchins@email.com', vehicle: '2019 Ford F-150',
+    status: 'paid', created: '2026-05-14T16:00:00', paidAt: '2026-05-14T16:45:00',
+    paymentMethod: 'Visa ending 4821',
+    services: [
+      { name: 'Oil change (synthetic)', parts: 65, labor: 45 },
+      { name: 'Tire rotation', parts: 0, labor: 35 },
+    ],
+    subtotal: 145, tax: 11.96, total: 156.96,
+  },
+  {
+    id: 'INV-4402', roId: 'RO-8837', shopId: 3, customerId: 2, customerName: 'Sandra Montoya',
+    customerEmail: 'smontoya@email.com', vehicle: '2018 Chevrolet Equinox',
+    status: 'paid', created: '2026-05-13T14:30:00', paidAt: '2026-05-13T15:10:00',
+    paymentMethod: 'Cash',
+    services: [
+      { name: 'Alternator replacement', parts: 310, labor: 180 },
+      { name: 'Belt replacement', parts: 42, labor: 35 },
+    ],
+    subtotal: 567, tax: 46.78, total: 613.78,
+  },
+  {
+    id: 'INV-4403', roId: 'RO-8839', shopId: 5, customerId: 7, customerName: 'Derek Williamson',
+    customerEmail: 'dwilliamson@email.com', vehicle: '2022 BMW X5',
+    status: 'sent', created: '2026-05-16T11:00:00', paidAt: null,
+    paymentMethod: null,
+    services: [
+      { name: 'Brake pad replacement (all)', parts: 245, labor: 280 },
+      { name: 'Rotor replacement (front)', parts: 190, labor: 0 },
+      { name: 'Brake fluid flush', parts: 22, labor: 45 },
+    ],
+    subtotal: 782, tax: 64.52, total: 846.52,
+  },
+  {
+    id: 'INV-4404', roId: 'RO-8840', shopId: 2, customerId: 4, customerName: 'Tanya Reeves',
+    customerEmail: 'treeves@email.com', vehicle: '2020 Honda Civic',
+    status: 'overdue', created: '2026-05-08T09:00:00', paidAt: null,
+    paymentMethod: null,
+    services: [
+      { name: 'Starter motor replacement', parts: 265, labor: 190 },
+    ],
+    subtotal: 455, tax: 37.54, total: 492.54,
+  },
+  {
+    id: 'INV-4405', roId: 'RO-8841', shopId: 1, customerId: 5, customerName: 'Louis Bergman',
+    customerEmail: 'lbergman@email.com', vehicle: '2021 Toyota Camry',
+    status: 'draft', created: '2026-05-17T08:00:00', paidAt: null,
+    paymentMethod: null,
+    services: [
+      { name: 'Transmission fluid flush', parts: 85, labor: 125 },
+      { name: 'Valve body cleaning', parts: 0, labor: 210 },
+      { name: 'Solenoid replacement', parts: 185, labor: 0 },
+    ],
+    subtotal: 605, tax: 49.91, total: 654.91,
+  },
+  {
+    id: 'INV-4406', roId: 'RO-8836', shopId: 4, customerId: 6, customerName: 'Alicia Watkins',
+    customerEmail: 'aliciaw@email.com', vehicle: '2017 Nissan Altima',
+    status: 'paid', created: '2026-05-11T15:30:00', paidAt: '2026-05-11T15:45:00',
+    paymentMethod: 'Mastercard ending 7733',
+    services: [
+      { name: 'AC recharge', parts: 65, labor: 45 },
+    ],
+    subtotal: 110, tax: 9.08, total: 119.08,
+  },
+]
+
 export const customers = [
   { id: 1, name: 'Gerald Hutchins', email: 'g.hutchins@email.com', phone: '+1 (713) 881-4472', vehicles: 2, totalSpent: 4820, lastVisit: '2024-10-28', shopId: 1, roCount: 11, status: 'vip' },
   { id: 2, name: 'Sandra Montoya', email: 'smontoya@email.com', phone: '+1 (281) 772-6931', vehicles: 1, totalSpent: 2310, lastVisit: '2024-11-01', shopId: 3, roCount: 6, status: 'regular' },

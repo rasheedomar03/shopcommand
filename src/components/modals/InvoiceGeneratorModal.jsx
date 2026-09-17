@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Printer } from 'lucide-react'
+import { Plus, Trash2, Printer, Check, Save } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
@@ -36,8 +36,9 @@ function itemsFromInvoice(inv) {
 }
 
 export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromRO = null }) {
-  const { shops, repairOrders } = useData()
+  const { shops, repairOrders, addInvoice } = useData()
   const { session } = useAuth()
+  const [savedFlash, setSavedFlash] = useState(false)
 
   const [shopId, setShopId] = useState('')
   const [roId, setRoId] = useState('')
@@ -82,6 +83,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
       setItems([{ ...emptyItem }])
     }
     setNotes('')
+    setSavedFlash(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -209,9 +211,45 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             <textarea className={`${field} mt-1 h-16 py-2`} value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. Due on receipt. 12-month / 12,000-mile warranty." />
           </div>
 
-          <Button className="w-full" onClick={() => window.print()}>
-            <Printer size={14} /> Print / Save as PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => {
+                const ro = repairOrders.find(r => String(r.id) === String(roId))
+                addInvoice({
+                  id: invNumber,
+                  roId: roId || null,
+                  shopId: shop?.id ?? null,
+                  customerId: ro?.customerId ?? fromInvoice?.customerId ?? null,
+                  customerName: customer,
+                  customerEmail: fromInvoice?.customerEmail ?? ro?.customerEmail ?? null,
+                  vehicle,
+                  status: fromInvoice?.status || 'draft',
+                  created: `${invDate}T12:00:00`,
+                  paidAt: fromInvoice?.paidAt ?? null,
+                  paymentMethod: fromInvoice?.paymentMethod ?? null,
+                  services: items
+                    .filter(it => it.desc || n(it.price) > 0)
+                    .map(it => ({
+                      name: it.desc || 'Item',
+                      parts: it.type === 'labor' ? 0 : lineTotal(it),
+                      labor: it.type === 'labor' ? lineTotal(it) : 0,
+                    })),
+                  subtotal: laborSubtotal + partsSubtotal,
+                  tax: Number(tax.toFixed(2)),
+                  total: Number(total.toFixed(2)),
+                })
+                setSavedFlash(true)
+                setTimeout(() => setSavedFlash(false), 2000)
+              }}
+            >
+              {savedFlash ? <><Check size={14} className="text-status-green" /> Saved</> : <><Save size={14} /> Save invoice</>}
+            </Button>
+            <Button className="flex-1" onClick={() => window.print()}>
+              <Printer size={14} /> Print / PDF
+            </Button>
+          </div>
         </div>
 
         {/* Paper preview — always light, print-faithful */}

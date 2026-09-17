@@ -10,6 +10,7 @@ import {
   technicians as mockTechnicians,
   repairOrders as mockRepairOrders,
   customers as mockCustomers,
+  invoices as mockInvoices,
 } from '@/data/mock'
 
 const DataContext = createContext(null)
@@ -137,6 +138,9 @@ export function DataProvider({ children }) {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  // Generated invoices: demo seeds from mock; real users persist to localStorage
+  // until a server-side invoices store exists
+  const [invoices, setInvoices] = useState(() => load('sc_invoices', []))
 
   // ── Parts state (API for real users, localStorage for demo) ──────────────
   const [parts, setParts] = useState(() => {
@@ -162,6 +166,7 @@ export function DataProvider({ children }) {
       setClockedInTechs(new Set())
       setTimeEntries([])
       setPayments([])
+      setInvoices([])
       setParts([])
       setNotifications([])
       setPartsOrders([])
@@ -198,6 +203,7 @@ export function DataProvider({ children }) {
     setShops(mockShops)
     setTechnicians(mockTechnicians)
     setRepairOrders(demoROs)
+    setInvoices(mockInvoices)
     // Re-base stale lastVisit dates so demo customers look recently active
     setCustomers(mockCustomers.map((c, i) => {
       const d = new Date(today)
@@ -460,6 +466,19 @@ export function DataProvider({ children }) {
     // placeholder — SMS integration not built yet
   }, [])
 
+  // ── invoices ─────────────────────────────────────────────────────────────
+
+  const addInvoice = useCallback((invoice) => {
+    const entry = { status: 'draft', paidAt: null, paymentMethod: null, ...invoice }
+    setInvoices(prev => {
+      // Same invoice number saved again replaces the earlier draft
+      const next = [entry, ...prev.filter(i => i.id !== entry.id)]
+      if (!session?.demo) save('sc_invoices', next)
+      return next
+    })
+    return entry
+  }, [session?.demo])
+
   // ── clock in/out ─────────────────────────────────────────────────────────
 
   const clockIn = useCallback(async (techId) => {
@@ -711,6 +730,7 @@ export function DataProvider({ children }) {
       partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
+      invoices, addInvoice,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,
       resetData, loading, fetchAll, fetchError,
