@@ -31,6 +31,11 @@ ShopCommand gives shop owners real-time visibility into every location without b
 
 ShopCommand is built for the owner sitting above multiple locations who needs cross-shop visibility. Traditional shop management platforms (Tekmetric, ShopMonkey, Mitchell1, Shop-Ware, R.O. Writer) focus on day-to-day operations for a single location. Different problem, different tool.
 
+## Free Tools
+
+- Auto Repair Labor Rates by State (BLS-derived estimates): https://shopcommand.net/tools/labor-rates-by-state
+- Auto Repair Labor Rate Calculator: https://shopcommand.net/tools/labor-rate-calculator
+
 ## Guides & Resources
 
 - All guides: https://shopcommand.net/resources

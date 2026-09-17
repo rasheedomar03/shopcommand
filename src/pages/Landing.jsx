@@ -1310,6 +1310,8 @@ export default function Landing() {
               <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">Resources</h4>
               <ul className="space-y-2">
                 <li><Link to="/resources" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Blog</Link></li>
+                <li><Link to="/tools/labor-rates-by-state" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Labor Rates by State</Link></li>
+                <li><Link to="/tools/labor-rate-calculator" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Labor Rate Calculator</Link></li>
                 <li><a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Book a walkthrough</a></li>
               </ul>
               <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3 mt-6">Legal</h4>

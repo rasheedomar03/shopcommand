@@ -31,6 +31,8 @@ const ARTICLE_SLUGS = [...articlesSource.matchAll(/slug:\s*'([^']+)'/g)].map(m =
 const ROUTES = [
   '/',
   '/founding-program',
+  '/tools/labor-rates-by-state',
+  '/tools/labor-rate-calculator',
   '/resources',
   ...ARTICLE_SLUGS.map(s => `/resources/${s}`),
   '/compare/tekmetric',
@@ -186,6 +188,7 @@ function writeSitemap() {
     if (route === '/') return { changefreq: 'weekly', priority: '1.0' }
     if (route === '/founding-program') return { changefreq: 'weekly', priority: '0.9' }
     if (route === '/resources') return { changefreq: 'weekly', priority: '0.8' }
+    if (route.startsWith('/tools/')) return { changefreq: 'monthly', priority: '0.8' }
     if (route.startsWith('/resources/')) return { changefreq: 'monthly', priority: '0.7' }
     if (route.startsWith('/compare/')) return { changefreq: 'monthly', priority: '0.8' }
     return { changefreq: 'yearly', priority: '0.3' } // legal pages
