@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Search, Download, Send, CheckCircle, Clock, AlertCircle, DollarSign, Printer } from 'lucide-react'
+import { Search, Download, Send, CheckCircle, Clock, AlertCircle, DollarSign, Printer, Plus } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
+import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
 import { formatCurrency, formatDate, formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
@@ -94,7 +95,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose, shops }) {
+function InvoiceDetail({ invoice, onClose, shops, onPrint }) {
   if (!invoice) return null
   const shop = shops.find(s => s.id === invoice.shopId)
 
@@ -150,8 +151,8 @@ function InvoiceDetail({ invoice, onClose, shops }) {
         <div className="flex items-center justify-between pt-2">
           <div className="text-xs text-text-muted">Created {formatDate(invoice.created)}</div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="secondary" onClick={() => window.print()}>
-              <Printer size={13} /> Print
+            <Button size="sm" variant="secondary" onClick={() => onPrint(invoice)}>
+              <Printer size={13} /> Print / PDF
             </Button>
             {invoice.status === 'draft' && (
               <Button size="sm"><Send size={13} /> Send invoice</Button>
@@ -176,6 +177,8 @@ export default function Invoices() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [selected, setSelected] = useState(null)
+  const [generatorOpen, setGeneratorOpen] = useState(false)
+  const [generatorSource, setGeneratorSource] = useState(null)
 
   const allInvoices = session?.demo ? mockInvoices : []
   const scoped = isAdvisor
@@ -210,7 +213,12 @@ export default function Invoices() {
             {scoped.filter(i => i.status === 'paid').length} paid · ${totalOutstanding.toFixed(0)} outstanding
           </p>
         </div>
-        <Button onClick={() => {
+        <div className="flex items-center gap-2">
+        <Button onClick={() => { setGeneratorSource(null); setGeneratorOpen(true) }}>
+          <Plus size={15} />
+          New invoice
+        </Button>
+        <Button variant="secondary" onClick={() => {
           const rows = scoped.map(i => [i.id, i.customerName, i.vehicle, i.status, i.total?.toFixed(2), i.created].join(','))
           const csv = ['Invoice,Customer,Vehicle,Status,Amount,Date', ...rows].join('\n')
           const blob = new Blob([csv], { type: 'text/csv' })
@@ -224,6 +232,7 @@ export default function Invoices() {
           <Download size={15} />
           Export
         </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -297,7 +306,17 @@ export default function Invoices() {
         )}
       </div>
 
-      <InvoiceDetail invoice={selected} onClose={() => setSelected(null)} shops={shops} />
+      <InvoiceDetail
+        invoice={selected}
+        onClose={() => setSelected(null)}
+        shops={shops}
+        onPrint={(inv) => { setSelected(null); setGeneratorSource(inv); setGeneratorOpen(true) }}
+      />
+      <InvoiceGeneratorModal
+        open={generatorOpen}
+        onClose={() => { setGeneratorOpen(false); setGeneratorSource(null) }}
+        fromInvoice={generatorSource}
+      />
     </div>
   )
 }

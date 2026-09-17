@@ -59,4 +59,9 @@ ShopCommand is built for the owner sitting above multiple locations who needs cr
 - Compare vs Mitchell1: https://shopcommand.net/compare/mitchell1
 - Compare vs Shop-Ware: https://shopcommand.net/compare/shop-ware
 - Compare vs R.O. Writer: https://shopcommand.net/compare/ro-writer
+- Tekmetric alternatives: https://shopcommand.net/alternatives/tekmetric
+- Shopmonkey alternatives: https://shopcommand.net/alternatives/shopmonkey
+- Mitchell1 alternatives: https://shopcommand.net/alternatives/mitchell1
+- Shop-Ware alternatives: https://shopcommand.net/alternatives/shop-ware
+- R.O. Writer alternatives: https://shopcommand.net/alternatives/ro-writer
 - Contact: rasheed.omar@outlook.com

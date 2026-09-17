@@ -41,6 +41,11 @@ const ROUTES = [
   '/compare/mitchell1',
   '/compare/shop-ware',
   '/compare/ro-writer',
+  '/alternatives/tekmetric',
+  '/alternatives/shopmonkey',
+  '/alternatives/mitchell1',
+  '/alternatives/shop-ware',
+  '/alternatives/ro-writer',
   '/terms',
   '/privacy',
   '/dpa',
@@ -192,6 +197,7 @@ function writeSitemap() {
     if (route.startsWith('/tools/')) return { changefreq: 'monthly', priority: '0.8' }
     if (route.startsWith('/resources/')) return { changefreq: 'monthly', priority: '0.7' }
     if (route.startsWith('/compare/')) return { changefreq: 'monthly', priority: '0.8' }
+    if (route.startsWith('/alternatives/')) return { changefreq: 'monthly', priority: '0.8' }
     return { changefreq: 'yearly', priority: '0.3' } // legal pages
   }
 
