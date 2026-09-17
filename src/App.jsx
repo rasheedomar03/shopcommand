@@ -104,6 +104,7 @@ const Accessibility = lazy(() => import('@/pages/Accessibility'))
 const VsTekmetric = lazy(() => import('@/pages/VsTekmetric'))
 const LaborRatesByState = lazy(() => import('@/pages/LaborRatesByState'))
 const LaborRateCalculator = lazy(() => import('@/pages/LaborRateCalculator'))
+const InvoiceGenerator = lazy(() => import('@/pages/InvoiceGenerator'))
 const VsShopmonkey = lazy(() => import('@/pages/VsShopmonkey'))
 const VsMitchell1 = lazy(() => import('@/pages/VsMitchell1'))
 const VsShopWare = lazy(() => import('@/pages/VsShopWare'))
@@ -253,6 +254,7 @@ export default function App() {
         <Route path="/founding-program" element={<FoundingProgram />} />
         <Route path="/tools/labor-rates-by-state" element={<LaborRatesByState />} />
         <Route path="/tools/labor-rate-calculator" element={<LaborRateCalculator />} />
+        <Route path="/tools/invoice-generator" element={<InvoiceGenerator />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/resources/:slug" element={<Article />} />
         <Route

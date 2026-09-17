@@ -35,6 +35,7 @@ ShopCommand is built for the owner sitting above multiple locations who needs cr
 
 - Auto Repair Labor Rates by State (BLS-derived estimates): https://shopcommand.net/tools/labor-rates-by-state
 - Auto Repair Labor Rate Calculator: https://shopcommand.net/tools/labor-rate-calculator
+- Free Auto Repair Invoice Generator: https://shopcommand.net/tools/invoice-generator
 
 ## Guides & Resources
 

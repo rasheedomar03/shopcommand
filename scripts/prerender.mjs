@@ -33,6 +33,7 @@ const ROUTES = [
   '/founding-program',
   '/tools/labor-rates-by-state',
   '/tools/labor-rate-calculator',
+  '/tools/invoice-generator',
   '/resources',
   ...ARTICLE_SLUGS.map(s => `/resources/${s}`),
   '/compare/tekmetric',

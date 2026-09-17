@@ -256,6 +256,7 @@ export default function LaborRatesByState() {
           </a>
           <div className="flex gap-5">
             <Link to="/tools/labor-rate-calculator" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Rate Calculator</Link>
+            <Link to="/tools/invoice-generator" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Invoice Generator</Link>
             <Link to="/resources" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Resources</Link>
             <Link to="/terms" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Terms</Link>
             <Link to="/privacy" className="text-slate-400 hover:text-slate-600 text-xs transition-colors">Privacy</Link>
