@@ -158,6 +158,79 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── Founding program application: POST /api/health?action=founding-signup ─
+  // Stores the lead in Neon and pings Discord. (This endpoint didn't exist
+  // for months — the form returned a generic 200 and applications were lost.)
+  if (req.method === 'POST' && req.query?.action === 'founding-signup') {
+    if (!rateLimit(req, res, 'strict')) {
+      return res.status(429).json({ error: 'Too many submissions. Try again later.' })
+    }
+
+    const { name, email, locations, pain, page } = req.body || {}
+
+    if (!name || typeof name !== 'string' || name.trim().length < 2 || name.length > 100) {
+      return res.status(400).json({ error: 'Name is required' })
+    }
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 200) {
+      return res.status(400).json({ error: 'A valid email is required' })
+    }
+
+    try {
+      const sql = neon(process.env.DATABASE_URL)
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS founding_applications (
+          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          locations TEXT,
+          pain TEXT,
+          page TEXT,
+          applicant_ip TEXT,
+          status TEXT DEFAULT 'new',
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `
+
+      const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown'
+
+      await sql`
+        INSERT INTO founding_applications (name, email, locations, pain, page, applicant_ip)
+        VALUES (${name.trim()}, ${email.trim().toLowerCase()}, ${String(locations || '').slice(0, 100) || null}, ${String(pain || '').slice(0, 2000) || null}, ${String(page || '').slice(0, 100) || null}, ${ip})
+      `
+
+      // Discord notification — must await or Vercel kills the function before it sends
+      const webhookUrl = process.env.DISCORD_BUG_WEBHOOK_URL
+      if (webhookUrl) {
+        const embed = {
+          title: '🏁 New Founding Program Application',
+          color: 0x22C55E,
+          fields: [
+            { name: 'Name', value: name.trim().slice(0, 256), inline: true },
+            { name: 'Email', value: email.trim().slice(0, 256), inline: true },
+            { name: 'Locations', value: String(locations || 'Not specified').slice(0, 256), inline: true },
+            { name: 'Biggest pain point', value: String(pain || 'Not specified').slice(0, 1024) },
+            { name: 'From page', value: String(page || 'unknown'), inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+          footer: { text: 'ShopCommand Founding Applications' },
+        }
+        try {
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds: [embed] }),
+          })
+        } catch (_) { /* Discord down — the DB row is the source of truth */ }
+      }
+
+      return res.status(201).json({ success: true, message: 'Application received' })
+    } catch (err) {
+      console.error('Founding signup error:', err)
+      return res.status(500).json({ error: 'Failed to save application' })
+    }
+  }
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET, POST, PUT, DELETE')
     return res.status(405).json({ error: 'Method not allowed' })

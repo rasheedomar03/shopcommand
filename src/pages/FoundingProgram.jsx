@@ -101,10 +101,19 @@ export default function FoundingProgram() {
     lastSubmitRef.current = now
 
     try {
-      const res = await fetch('/api/health', {
+      // Applications persist to our own database (founding_applications) and
+      // notify Discord. Formspree was abandoned: its reCAPTCHA setting blocks
+      // AJAX submissions with a 403, which silently broke lead capture.
+      const res = await fetch('/api/health?action=founding-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'founding-signup', name, email, locations: sanitizeField(form.locations), pain: sanitizeField(form.pain) }),
+        body: JSON.stringify({
+          page: 'founding-program',
+          name,
+          email,
+          locations: sanitizeField(form.locations),
+          pain: sanitizeField(form.pain),
+        }),
       })
       if (!res.ok) throw new Error('Network error')
       setSubmitted(true)

@@ -267,6 +267,9 @@ export default async function handler(req, res) {
       orgId: invite.org_id,
       shopId: invite.shop_id,
       role: invite.role,
+      // Client must carry this into its own metadata update, or the
+      // server-side value gets clobbered (invited techs lose their identity)
+      techId: invite.role === 'tech' ? newUser.id : null,
     })
   } catch (err) {
     if (err.code === '23505') {

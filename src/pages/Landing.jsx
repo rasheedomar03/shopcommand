@@ -360,10 +360,13 @@ function FoundingSection() {
     setSubmitting(true)
     lastSubmitRef.current = now
     try {
-      const res = await fetch('https://formspree.io/f/mwvzeojn', {
+      // Own-database lead capture (founding_applications + Discord ping).
+      // Formspree's reCAPTCHA setting 403s AJAX submissions, which had been
+      // silently breaking this form.
+      const res = await fetch('/api/health?action=founding-signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name, email, locations: locations || 'Not specified', _gotcha: '' }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page: 'landing', name, email, locations: locations || 'Not specified' }),
       })
       if (!res.ok) throw new Error('Submit failed')
 

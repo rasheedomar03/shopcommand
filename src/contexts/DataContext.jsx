@@ -211,6 +211,25 @@ export function DataProvider({ children }) {
       return { ...c, lastVisit: d.toISOString().slice(0, 10) }
     }))
     setClockedInTechs(new Set(mockTechnicians.slice(0, 8).map(t => t.id)))
+    // Seed time entries so hours/time-log/audit views have data in demo:
+    // an open shift today (staggered 7:00–8:45am starts) plus four 8h-ish
+    // closed shifts on prior weekdays per clocked-in tech.
+    const demoEntries = []
+    mockTechnicians.slice(0, 8).forEach((t, i) => {
+      const start = new Date(today)
+      start.setHours(7, (i * 15) % 60, 0, 0)
+      demoEntries.push({ id: `te-${t.id}-0`, techId: t.id, roId: null, clockInAt: start.toISOString(), clockOutAt: null })
+      for (let d = 1; d <= 4; d++) {
+        const inAt = new Date(today)
+        inAt.setDate(inAt.getDate() - d)
+        if (inAt.getDay() === 0 || inAt.getDay() === 6) continue
+        inAt.setHours(7, 30, 0, 0)
+        const outAt = new Date(inAt)
+        outAt.setHours(16, 15 + ((i + d) % 4) * 10, 0, 0)
+        demoEntries.push({ id: `te-${t.id}-${d}`, techId: t.id, roId: null, clockInAt: inAt.toISOString(), clockOutAt: outAt.toISOString() })
+      }
+    })
+    setTimeEntries(demoEntries)
     setLoading(false)
   }, [session?.demo])
 
@@ -224,13 +243,14 @@ export function DataProvider({ children }) {
       // instead of wiping it — never show $0 because of a network blip.
       let coreFailures = 0
       const guard = (p) => p.catch(() => { coreFailures++; return null })
-      const [shopsData, techsData, rosData, custData, paymentsData, partsData] = await Promise.all([
+      const [shopsData, techsData, rosData, custData, paymentsData, partsData, entriesData] = await Promise.all([
         guard(api('/api/shops')),
         guard(api('/api/technicians')),
         guard(api('/api/repair-orders')),
         guard(api('/api/customers')),
         api('/api/invoices?action=payments').catch(() => []),
         api('/api/health?action=parts').catch(() => null),
+        api('/api/time-entries').catch(() => null),
       ])
       setFetchError(coreFailures > 0)
       if (shopsData) setShops(shopsData.map(transformShop))
@@ -257,6 +277,17 @@ export function DataProvider({ children }) {
           save('sc_job_timers', merged)
           return merged
         })
+      }
+
+      // Time entries power hours/audit/pay displays — snake_case → camelCase
+      if (Array.isArray(entriesData)) {
+        setTimeEntries(entriesData.map(e => ({
+          id: e.id,
+          techId: e.tech_id,
+          roId: e.ro_id,
+          clockInAt: e.clock_in,
+          clockOutAt: e.clock_out,
+        })))
       }
 
       // Derive clocked-in techs from technician data

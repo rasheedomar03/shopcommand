@@ -129,12 +129,17 @@ export default function Onboarding() {
         return
       }
 
+      // Merge with existing metadata — the server (api/onboard.js) already set
+      // techId for technician invites; replacing the whole object wiped it and
+      // left invited techs with an empty TechBoard and failing clock-in.
       await user.update({
         unsafeMetadata: {
+          ...user.unsafeMetadata,
           role: data.role,
           onboarded: true,
           orgId: data.orgId,
           shopId: data.shopId,
+          ...(data.techId ? { techId: data.techId } : {}),
         },
       })
       navigate(data.role === 'tech' ? '/tech-board' : '/dashboard', { replace: true })
