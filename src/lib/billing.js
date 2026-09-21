@@ -22,3 +22,16 @@ export async function startCheckout() {
 export async function getBillingStatus() {
   return api('/api/stripe?action=billing')
 }
+
+/**
+ * Open the Stripe customer billing portal. Returns the portal URL and
+ * redirects the browser there.
+ */
+export async function openBillingPortal() {
+  const origin = window.location.origin
+  const { url } = await api('/api/stripe?action=portal', {
+    method: 'POST',
+    body: { returnUrl: `${origin}/settings?tab=billing` },
+  })
+  window.location.href = url
+}

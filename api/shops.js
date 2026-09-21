@@ -18,15 +18,55 @@ function validate(body, partial = false) {
       errors.push('Phone must be under 30 characters')
     }
   }
+  if ('bays' in body && body.bays != null) {
+    if (!Number.isInteger(Number(body.bays)) || Number(body.bays) < 0 || Number(body.bays) > 1000) {
+      errors.push('Bays must be an integer between 0 and 1000')
+    }
+  }
+  if ('manager' in body && body.manager != null) {
+    if (typeof body.manager !== 'string' || body.manager.trim().length > 100) {
+      errors.push('Manager must be a string under 100 characters')
+    }
+  }
+  if ('monthly_target' in body && body.monthly_target != null) {
+    if (typeof body.monthly_target !== 'number' || !Number.isFinite(body.monthly_target) || body.monthly_target < 0) {
+      errors.push('Monthly target must be a number >= 0')
+    }
+  }
+  if ('schedule' in body && body.schedule != null) {
+    if (typeof body.schedule !== 'object' || Array.isArray(body.schedule)) {
+      errors.push('Schedule must be an object')
+    } else if (JSON.stringify(body.schedule).length > 4000) {
+      errors.push('Schedule too large (max 4000 characters serialized)')
+    }
+  }
   return errors
+}
+
+// Extra shop fields (bays, manager, monthly_target, schedule) live in a JSONB
+// column. Shallow-merge only the keys the caller actually sent.
+function buildDataPatch(body) {
+  const patch = {}
+  if ('bays' in body && body.bays != null) patch.bays = Number(body.bays)
+  if ('manager' in body && body.manager != null) patch.manager = String(body.manager).trim()
+  if ('monthly_target' in body && body.monthly_target != null) patch.monthly_target = body.monthly_target
+  if ('schedule' in body && body.schedule != null) patch.schedule = body.schedule
+  return patch
+}
+
+// Lazily ensure the JSONB column exists (cheap no-op after the first run —
+// same per-request DDL pattern health.js uses with CREATE TABLE IF NOT EXISTS).
+async function ensureDataColumn(sql) {
+  await sql`ALTER TABLE shops ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb`
 }
 
 export default createHandler(
   { methods: ['GET', 'POST', 'PUT', 'DELETE'] },
   async ({ req, res, sql, user }) => {
     if (req.method === 'GET') {
+      await ensureDataColumn(sql)
       const rows = await sql`
-        SELECT s.id, s.org_id, s.name, s.address, s.phone, s.created_at, s.updated_at,
+        SELECT s.id, s.org_id, s.name, s.address, s.phone, s.data, s.created_at, s.updated_at,
           COALESCE((
             SELECT SUM(ro.total) FROM repair_orders ro
             WHERE ro.shop_id = s.id AND ro.org_id = ${user.orgId}
@@ -82,10 +122,13 @@ export default createHandler(
       const errors = validate(req.body || {})
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
+      await ensureDataColumn(sql)
+
       const { name, address, phone } = req.body
+      const dataPatch = buildDataPatch(req.body)
       const [row] = await sql`
-        INSERT INTO shops (org_id, name, address, phone)
-        VALUES (${user.orgId}, ${name.trim()}, ${address?.trim() || null}, ${phone?.trim() || null})
+        INSERT INTO shops (org_id, name, address, phone, data)
+        VALUES (${user.orgId}, ${name.trim()}, ${address?.trim() || null}, ${phone?.trim() || null}, ${JSON.stringify(dataPatch)}::jsonb)
         RETURNING *
       `
       // Sync subscription to new shop count (prorated charge for the added
@@ -104,12 +147,16 @@ export default createHandler(
       const errors = validate(req.body || {}, true)
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
+      await ensureDataColumn(sql)
+
       const { name, address, phone } = req.body
+      const dataPatch = buildDataPatch(req.body || {})
       const [row] = await sql`
         UPDATE shops SET
           name = COALESCE(${name?.trim() || null}, name),
           address = COALESCE(${address?.trim() || null}, address),
-          phone = COALESCE(${phone?.trim() || null}, phone)
+          phone = COALESCE(${phone?.trim() || null}, phone),
+          data = COALESCE(data, '{}'::jsonb) || ${JSON.stringify(dataPatch)}::jsonb
         WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `

@@ -87,6 +87,117 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid parts action' })
   }
 
+  // ── Parts orders CRUD (authenticated) ───────────────────────────────────
+  if (action === 'parts-orders' || action === 'add-parts-order' || action === 'update-parts-order' || action === 'delete-parts-order') {
+    if (!rateLimit(req, res)) return res.status(429).json({ error: 'Too many requests' })
+
+    const user = await authenticate(req)
+    if (!user) return res.status(401).json({ error: 'Unauthorized' })
+
+    const sql = neon(process.env.DATABASE_URL)
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS parts_orders (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        org_id UUID NOT NULL,
+        shop_id UUID,
+        name TEXT NOT NULL,
+        part_number TEXT,
+        qty INTEGER DEFAULT 1,
+        status TEXT DEFAULT 'ordered',
+        supplier TEXT,
+        eta TEXT,
+        carrier TEXT,
+        tracking_number TEXT,
+        requested_by TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+
+    const VALID_STATUSES = ['ordered', 'shipped', 'arrived', 'returned', 'credited']
+
+    // GET — list parts orders
+    if (action === 'parts-orders' && req.method === 'GET') {
+      const rows = await sql`
+        SELECT * FROM parts_orders WHERE org_id = ${user.orgId} ORDER BY created_at DESC LIMIT 200
+      `
+      return res.json(rows)
+    }
+
+    // POST — add parts order
+    if (action === 'add-parts-order' && req.method === 'POST') {
+      const { shop_id, name, part_number, qty, status, supplier, eta, carrier, tracking_number, requested_by } = req.body || {}
+
+      if (!name || typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 200) {
+        return res.status(400).json({ error: 'Name must be 1-200 characters' })
+      }
+      const qtyNum = qty != null ? Number(qty) : 1
+      if (!Number.isInteger(qtyNum) || qtyNum < 1 || qtyNum > 9999) {
+        return res.status(400).json({ error: 'Qty must be an integer between 1 and 9999' })
+      }
+      if (shop_id && !UUID_RE.test(shop_id)) {
+        return res.status(400).json({ error: 'shop_id must be a valid UUID' })
+      }
+      if (status && !VALID_STATUSES.includes(status)) {
+        return res.status(400).json({ error: `Status must be one of: ${VALID_STATUSES.join(', ')}` })
+      }
+
+      const [row] = await sql`
+        INSERT INTO parts_orders (org_id, shop_id, name, part_number, qty, status, supplier, eta, carrier, tracking_number, requested_by)
+        VALUES (
+          ${user.orgId}, ${shop_id || null}, ${name.trim()},
+          ${(part_number || '').trim() || null}, ${qtyNum}, ${status || 'ordered'},
+          ${(supplier || '').trim() || null}, ${(eta || '').trim() || null},
+          ${(carrier || '').trim() || null}, ${(tracking_number || '').trim() || null},
+          ${(requested_by || '').trim() || null}
+        )
+        RETURNING *
+      `
+      return res.status(201).json(row)
+    }
+
+    // PUT — update parts order
+    if (action === 'update-parts-order' && req.method === 'PUT') {
+      const id = req.query?.id
+      if (!id || !UUID_RE.test(id)) return res.status(400).json({ error: 'Valid parts order id is required' })
+
+      const { status, supplier, eta, carrier, tracking_number, qty } = req.body || {}
+
+      if (status != null && !VALID_STATUSES.includes(status)) {
+        return res.status(400).json({ error: `Status must be one of: ${VALID_STATUSES.join(', ')}` })
+      }
+      if (qty != null && (!Number.isInteger(Number(qty)) || Number(qty) < 1 || Number(qty) > 9999)) {
+        return res.status(400).json({ error: 'Qty must be an integer between 1 and 9999' })
+      }
+
+      const [row] = await sql`
+        UPDATE parts_orders SET
+          status = COALESCE(${status || null}, status),
+          supplier = COALESCE(${supplier?.trim() || null}, supplier),
+          eta = COALESCE(${eta?.trim() || null}, eta),
+          carrier = COALESCE(${carrier?.trim() || null}, carrier),
+          tracking_number = COALESCE(${tracking_number?.trim() || null}, tracking_number),
+          qty = COALESCE(${qty != null ? Number(qty) : null}, qty)
+        WHERE id = ${id} AND org_id = ${user.orgId}
+        RETURNING *
+      `
+      if (!row) return res.status(404).json({ error: 'Parts order not found' })
+      return res.json(row)
+    }
+
+    // DELETE — delete parts order
+    if (action === 'delete-parts-order' && req.method === 'DELETE') {
+      const id = req.query?.id
+      if (!id || !UUID_RE.test(id)) return res.status(400).json({ error: 'Valid parts order id is required' })
+
+      const [row] = await sql`DELETE FROM parts_orders WHERE id = ${id} AND org_id = ${user.orgId} RETURNING id`
+      if (!row) return res.status(404).json({ error: 'Parts order not found' })
+      return res.json({ deleted: row.id })
+    }
+
+    return res.status(400).json({ error: 'Invalid parts orders action' })
+  }
+
   // ── Bug report: POST /api/health?action=bug-report ──────────────────────
   if (req.method === 'POST' && req.query?.action === 'bug-report') {
     if (!rateLimit(req, res, 'strict')) {

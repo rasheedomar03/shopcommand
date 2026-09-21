@@ -248,7 +248,10 @@ export default function Invoices() {
         onClose={() => setSelected(null)}
         shops={shops}
         onPrint={(inv) => { setSelected(null); setGeneratorSource(inv); setGeneratorOpen(true) }}
-        onUpdate={(id, patch) => { updateInvoice(id, patch); setSelected(prev => prev ? { ...prev, ...patch } : prev) }}
+        onUpdate={async (id, patch) => {
+          const r = await updateInvoice(id, patch)
+          if (!r?.error) setSelected(prev => prev ? { ...prev, ...patch } : prev)
+        }}
       />
       <InvoiceGeneratorModal
         open={generatorOpen}

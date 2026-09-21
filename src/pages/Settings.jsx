@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { Building2, Bell, Shield, CreditCard, Users, UserPlus, ChevronRight, Phone, MessageSquare, Pencil, Check, X, Clock, Calendar, Plus, Trash2, Target, Info } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Building2, Bell, Shield, CreditCard, Users, UserPlus, Phone, Pencil, Check, X, Clock, Calendar, Plus, Trash2, Target, Info } from 'lucide-react'
+import { useClerk } from '@clerk/clerk-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn, sanitizeField } from '@/lib/utils'
-import { startCheckout } from '@/lib/billing'
+import { startCheckout, getBillingStatus, openBillingPortal } from '@/lib/billing'
 import { Tooltip } from '@/components/ui/Tooltip'
 
 const ALL_SECTIONS = [
@@ -21,10 +22,25 @@ const ALL_SECTIONS = [
 export default function Settings() {
   const { shops, updateShop, addShop, removeShop } = useData()
   const { session } = useAuth()
+  const { openUserProfile } = useClerk()
   const isOwner = session?.role === 'owner'
   const SECTIONS = ALL_SECTIONS.filter(s => !s.ownerOnly || isOwner)
   const [active, setActive] = useState('profile')
   const [saved, setSaved] = useState(false)
+
+  // Billing status (owner, non-demo only)
+  const [billing, setBilling] = useState(null)
+  const [billingLoading, setBillingLoading] = useState(false)
+  useEffect(() => {
+    if (!isOwner || session?.demo) return
+    let cancelled = false
+    setBillingLoading(true)
+    getBillingStatus()
+      .then(data => { if (!cancelled) setBilling(data) })
+      .catch(() => { if (!cancelled) setBilling(null) })
+      .finally(() => { if (!cancelled) setBillingLoading(false) })
+    return () => { cancelled = true }
+  }, [isOwner, session?.demo])
 
   const [profile, setProfile] = useState(() => {
     try {
@@ -32,14 +48,8 @@ export default function Settings() {
       if (raw) return JSON.parse(raw)
     } catch {}
     const parts = (session?.name || '').split(' ')
-    return { firstName: parts[0] || '', lastName: parts.slice(1).join(' '), email: '', phone: '', businessName: '', taxId: '' }
+    return { firstName: parts[0] || '', lastName: parts.slice(1).join(' '), email: '', phone: '', businessName: '' }
   })
-
-  const handleSave = async () => {
-    setSaved(true)
-    await new Promise(r => setTimeout(r, 1200))
-    setSaved(false)
-  }
 
   const handleProfileSave = async () => {
     const cleaned = {
@@ -48,7 +58,6 @@ export default function Settings() {
       email:        sanitizeField(profile.email, 150),
       phone:        sanitizeField(profile.phone, 30),
       businessName: sanitizeField(profile.businessName, 150),
-      taxId:        sanitizeField(profile.taxId, 20),
     }
     setProfile(cleaned)
     localStorage.setItem('sc_profile', JSON.stringify(cleaned))
@@ -87,7 +96,7 @@ export default function Settings() {
         {/* Content */}
         <div className="flex-1 min-w-0">
           {active === 'profile' && (
-            <SettingsPanel title="Account Settings" onSave={handleProfileSave} saving={saved}>
+            <SettingsPanel title="Account Settings" onSave={handleProfileSave} saving={saved} footerNote="Stored on this device.">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input label="First Name" value={profile.firstName} onChange={e => setProfile(p => ({ ...p, firstName: e.target.value }))} placeholder="First name" />
                 <Input label="Last Name" value={profile.lastName} onChange={e => setProfile(p => ({ ...p, lastName: e.target.value }))} placeholder="Last name" />
@@ -98,7 +107,6 @@ export default function Settings() {
                 <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Business</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input label="Business Name" value={profile.businessName} onChange={e => setProfile(p => ({ ...p, businessName: e.target.value }))} placeholder="Your shop group name" />
-                  <Input label="Tax ID" type="password" value={profile.taxId} onChange={e => setProfile(p => ({ ...p, taxId: e.target.value }))} placeholder="XX-XXXXXXX" />
                 </div>
               </div>
             </SettingsPanel>
@@ -109,8 +117,11 @@ export default function Settings() {
           )}
 
           {active === 'notifications' && (
-            <SettingsPanel title="Notification Preferences" onSave={handleSave} saving={saved}>
-              <div className="space-y-0">
+            <SettingsPanel title="Notification Preferences" hideFooter>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Notification preferences are coming soon — right now low-stock and overdue-parts alerts always show on your dashboard.
+              </p>
+              <div className="space-y-0 opacity-50">
                 {[
                   { label: 'Low inventory alerts', sub: 'When parts fall below minimum quantity', defaultChecked: true },
                   { label: 'New repair order', sub: 'When a customer RO is created', defaultChecked: true },
@@ -119,7 +130,7 @@ export default function Settings() {
                   { label: 'Daily revenue summary', sub: 'End-of-day revenue recap for all shops', defaultChecked: true },
                   { label: 'Technician clock-in/out', sub: 'When a tech starts or ends their shift', defaultChecked: false },
                 ].map((item, i) => (
-                  <ToggleRow key={i} {...item} />
+                  <ToggleRow key={i} {...item} disabled />
                 ))}
               </div>
             </SettingsPanel>
@@ -139,44 +150,100 @@ export default function Settings() {
           )}
 
           {active === 'security' && (
-            <SettingsPanel title="Security" onSave={handleSave} saving={saved}>
-              <div className="space-y-4">
-                <Input label="Current Password" type="password" placeholder="••••••••••" />
-                <Input label="New Password" type="password" placeholder="••••••••••" />
-                <Input label="Confirm New Password" type="password" placeholder="••••••••••" />
-              </div>
-              <div className="pt-4 border-t border-border">
-                <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Two-Factor Authentication</div>
-                <ToggleRow label="Enable 2FA" sub="Use an authenticator app for additional security" defaultChecked={false} />
+            <SettingsPanel title="Security" hideFooter>
+              <div className="rounded-lg border border-border p-4 flex items-start gap-3">
+                <Shield size={14} className="flex-shrink-0 mt-0.5 text-text-muted" />
+                <div>
+                  <div className="text-sm font-medium text-text-primary mb-1">Sign-in & security</div>
+                  <p className="text-xs text-text-muted leading-relaxed mb-3">
+                    Password, two-factor, and connected devices are managed through your secure sign-in provider.
+                  </p>
+                  <button
+                    onClick={() => openUserProfile()}
+                    disabled={!!session?.demo}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Manage sign-in & security
+                  </button>
+                  {session?.demo && (
+                    <p className="text-2xs text-text-muted mt-2">Not available in demo.</p>
+                  )}
+                </div>
               </div>
             </SettingsPanel>
           )}
 
           {active === 'billing' && (
             <SettingsPanel title="Billing" hideFooter>
-              <div className="rounded-xl border border-orange/20 bg-orange/[0.04] p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-orange/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-orange font-bold text-base leading-none">✦</span>
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-text-primary">Founding Member</div>
-                    <div className="text-xs text-text-muted mt-0.5">$100/mo + $50/shop · locked forever (normally $175 + $100/shop)</div>
-                  </div>
+              {billingLoading ? (
+                <div className="rounded-xl border border-border p-5">
+                  <div className="h-3 w-2/3 rounded bg-border/60 animate-pulse" />
                 </div>
-                <p className="text-xs text-text-muted leading-relaxed mb-4">
-                  Billing begins at public launch. Lock in your founding rate now and your card will only be charged when we go live. You'll receive an email before your first charge.
-                </p>
-                {!session?.demo && (
-                  <button
-                    onClick={async (e) => { e.currentTarget.disabled = true; e.currentTarget.textContent = 'Redirecting to Stripe…'; await startCheckout() }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <CreditCard size={14} />
-                    Lock in $100/mo rate
-                  </button>
-                )}
-              </div>
+              ) : (() => {
+                const sub = billing?.subscription
+                const subStatus = sub?.status || billing?.status
+                const isSubscribed = !!sub && (subStatus === 'active' || subStatus === 'trialing')
+                if (isSubscribed) {
+                  const amount = typeof sub.amount === 'number' ? `$${(sub.amount / 100).toLocaleString()}` : null
+                  const periodEnd = billing?.currentPeriodEnd
+                    ? new Date(billing.currentPeriodEnd * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                    : null
+                  const shopCount = billing?.shopCount ?? shops.length
+                  const parts = [
+                    'Founding plan',
+                    amount ? `${amount}/${sub.interval || 'mo'}` : null,
+                    `${shopCount} shop${shopCount !== 1 ? 's' : ''}`,
+                    periodEnd
+                      ? (subStatus === 'trialing' ? `trial ends ${periodEnd}` : billing?.cancelAtPeriodEnd ? `cancels at period end (${periodEnd})` : `renews ${periodEnd}`)
+                      : (billing?.cancelAtPeriodEnd ? 'cancels at period end' : null),
+                  ].filter(Boolean)
+                  return (
+                    <div className="rounded-xl border border-orange/20 bg-orange/[0.04] p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-full bg-orange/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-orange font-bold text-base leading-none">✦</span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-text-primary">Founding plan</div>
+                          <div className="text-xs text-text-muted mt-0.5">{parts.join(' · ')}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async (e) => { const btn = e.currentTarget; btn.disabled = true; try { await openBillingPortal() } catch { btn.disabled = false } }}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <CreditCard size={14} />
+                        Manage billing
+                      </button>
+                    </div>
+                  )
+                }
+                return (
+                  <div className="rounded-xl border border-orange/20 bg-orange/[0.04] p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-orange/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-orange font-bold text-base leading-none">✦</span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-text-primary">Founding Member</div>
+                        <div className="text-xs text-text-muted mt-0.5">$100/mo + $50/shop · locked forever (normally $175 + $100/shop)</div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-text-muted leading-relaxed mb-4">
+                      Billing begins at public launch. Lock in your founding rate now and your card will only be charged when we go live. You'll receive an email before your first charge.
+                    </p>
+                    {!session?.demo && (
+                      <button
+                        onClick={async (e) => { e.currentTarget.disabled = true; e.currentTarget.textContent = 'Redirecting to Stripe…'; await startCheckout() }}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <CreditCard size={14} />
+                        Lock in $100/mo rate
+                      </button>
+                    )}
+                  </div>
+                )
+              })()}
               <div className="rounded-lg border border-border p-4 flex items-start gap-3">
                 <Info size={13} className="flex-shrink-0 mt-0.5 text-text-muted" />
                 <p className="text-xs text-text-muted leading-relaxed">
@@ -292,7 +359,7 @@ function TeamInvites({ shops, session }) {
   )
 }
 
-function SettingsPanel({ title, children, onSave, saving, hideFooter }) {
+function SettingsPanel({ title, children, onSave, saving, hideFooter, footerNote }) {
   return (
     <div className="bg-surface border border-border rounded-lg overflow-hidden">
       <div className="px-5 py-4 border-b border-border">
@@ -302,10 +369,11 @@ function SettingsPanel({ title, children, onSave, saving, hideFooter }) {
         {children}
       </div>
       {!hideFooter && (
-        <div className="flex justify-end px-5 py-4 border-t border-border bg-background/40">
+        <div className="flex flex-col items-end gap-1.5 px-5 py-4 border-t border-border bg-background/40">
           <Button onClick={onSave} loading={saving}>
             {saving ? 'Saving…' : 'Save Changes'}
           </Button>
+          {footerNote && <span className="text-2xs text-text-muted">{footerNote}</span>}
         </div>
       )}
     </div>
@@ -313,7 +381,7 @@ function SettingsPanel({ title, children, onSave, saving, hideFooter }) {
 }
 
 
-function ToggleRow({ label, sub, defaultChecked }) {
+function ToggleRow({ label, sub, defaultChecked, disabled }) {
   const [checked, setChecked] = useState(defaultChecked)
 
   return (
@@ -325,8 +393,10 @@ function ToggleRow({ label, sub, defaultChecked }) {
       <button
         role="switch"
         aria-checked={checked}
-        onClick={() => setChecked(c => !c)}
+        disabled={disabled}
+        onClick={() => { if (!disabled) setChecked(c => !c) }}
         className={cn(
+          disabled && 'cursor-not-allowed',
           'relative inline-flex h-5 w-9 items-center rounded-full',
           'transition-colors duration-200',
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-2',
@@ -345,7 +415,7 @@ function ToggleRow({ label, sub, defaultChecked }) {
   )
 }
 
-const EMPTY_SHOP = { name: '', address: '', phone: '', twilioPhone: '', manager: '', bays: '', monthlyTarget: '' }
+const EMPTY_SHOP = { name: '', address: '', phone: '', manager: '', bays: '', monthlyTarget: '' }
 
 function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
   const [adding, setAdding] = useState(false)
@@ -357,13 +427,12 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
   const handleAdd = async () => {
     if (!draft.name.trim() || !draft.address.trim()) return
     const result = await onAdd({
-      name:          sanitizeField(draft.name, 100),
-      address:       sanitizeField(draft.address, 200),
-      phone:         sanitizeField(draft.phone, 30),
-      twilioPhone:   sanitizeField(draft.twilioPhone, 30),
-      manager:       sanitizeField(draft.manager, 100),
-      bays:          Number(draft.bays) || 0,
-      monthlyTarget: Number(draft.monthlyTarget) || 0,
+      name:           sanitizeField(draft.name, 100),
+      address:        sanitizeField(draft.address, 200),
+      phone:          sanitizeField(draft.phone, 30),
+      manager:        sanitizeField(draft.manager, 100),
+      bays:           Number(draft.bays) || 0,
+      monthly_target: Number(draft.monthlyTarget) || 0,
     })
     setDraft(EMPTY_SHOP)
     setAdding(false)
@@ -440,13 +509,6 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
               value={draft.phone}
               onChange={e => setDraft(d => ({ ...d, phone: e.target.value }))}
               placeholder="+1 (281) 555-0100"
-            />
-            <Input
-              label="SMS / Twilio Number"
-              type="tel"
-              value={draft.twilioPhone}
-              onChange={e => setDraft(d => ({ ...d, twilioPhone: e.target.value }))}
-              placeholder="+17135550100"
             />
             <Input
               label="Number of Bays"
@@ -529,7 +591,15 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
 
 function ShopLocationCard({ shop, onUpdate, onRemove }) {
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ name: shop.name || '', address: shop.address || '', phone: shop.phone || '' })
+  const initialForm = () => ({
+    name: shop.name || '',
+    address: shop.address || '',
+    phone: shop.phone || '',
+    manager: shop.manager || '',
+    bays: shop.bays != null && shop.bays !== 0 ? String(shop.bays) : '',
+    monthlyTarget: shop.monthlyTarget ? String(shop.monthlyTarget) : '',
+  })
+  const [form, setForm] = useState(initialForm)
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
@@ -538,6 +608,9 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
       name: sanitizeField(form.name, 100),
       address: sanitizeField(form.address, 300),
       phone: sanitizeField(form.phone, 30),
+      manager: sanitizeField(form.manager, 100),
+      bays: Number(form.bays) || 0,
+      monthly_target: Number(form.monthlyTarget) || 0,
     })
     setSaving(false)
     setEditing(false)
@@ -568,6 +641,28 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                 placeholder="+1 (555) 000-0000"
               />
+              <Input
+                label="Manager Name"
+                value={form.manager}
+                onChange={e => setForm(f => ({ ...f, manager: e.target.value }))}
+                placeholder="e.g. Marcus Webb"
+              />
+              <div className="grid grid-cols-2 gap-2.5">
+                <Input
+                  label="Number of Bays"
+                  type="number"
+                  value={form.bays}
+                  onChange={e => setForm(f => ({ ...f, bays: e.target.value }))}
+                  placeholder="e.g. 8"
+                />
+                <Input
+                  label="Monthly Target ($)"
+                  type="number"
+                  value={form.monthlyTarget}
+                  onChange={e => setForm(f => ({ ...f, monthlyTarget: e.target.value }))}
+                  placeholder="e.g. 100000"
+                />
+              </div>
               <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={handleSave}
@@ -577,7 +672,7 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
                   {saving ? 'Saving...' : 'Save'}
                 </button>
                 <button
-                  onClick={() => { setEditing(false); setForm({ name: shop.name || '', address: shop.address || '', phone: shop.phone || '' }) }}
+                  onClick={() => { setEditing(false); setForm(initialForm()) }}
                   className="h-7 px-3 rounded-md border border-border text-xs text-text-muted hover:text-text-primary transition-colors"
                 >
                   Cancel
@@ -589,6 +684,11 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
               <div className="text-sm font-semibold text-text-primary">{shop.name}</div>
               <div className="text-xs text-text-muted mt-0.5">{shop.address || 'No address set'}</div>
               {shop.phone && <div className="text-xs text-text-muted mt-0.5">{shop.phone}</div>}
+              {(shop.manager || shop.bays) && (
+                <div className="text-xs text-text-muted mt-0.5">
+                  {[shop.manager && `Manager: ${shop.manager}`, shop.bays && `${shop.bays} bay${Number(shop.bays) !== 1 ? 's' : ''}`].filter(Boolean).join(' · ')}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -619,7 +719,6 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
         <>
           <div className="grid grid-cols-2 gap-3">
             <ShopPhoneField field="phone" icon={Phone} iconClass="text-text-muted" label="Business Phone" shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
-            <ShopPhoneField field="twilioPhone" icon={MessageSquare} iconClass="text-orange" label="SMS Number" shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
           </div>
           <ShopTargetField shop={shop} onSave={(patch) => onUpdate(shop.id, patch)} />
         </>
@@ -671,7 +770,7 @@ function ShopTargetField({ shop, onSave }) {
   const startEdit = () => { setDraft(String(shop.monthlyTarget || '')); setEditing(true) }
   const commit = () => {
     const val = Number(draft)
-    if (!isNaN(val) && val >= 0) onSave({ monthlyTarget: val })
+    if (!isNaN(val) && val >= 0) onSave({ monthly_target: val })
     setEditing(false)
   }
   const cancel = () => setEditing(false)
@@ -734,26 +833,26 @@ const DEFAULT_HOURS = {
   sun: { open: '09:00', close: '14:00', closed: true },
 }
 
+function scheduleDraftFor(shop) {
+  const sched = shop?.schedule || {}
+  return {
+    hours:             sched.hours             || shop?.hours             || DEFAULT_HOURS,
+    clockInBufferMins: sched.clockInBufferMins ?? shop?.clockInBufferMins ?? 15,
+    maxShiftHours:     sched.maxShiftHours     ?? shop?.maxShiftHours     ?? 12,
+    maxShiftAction:    sched.maxShiftAction    || shop?.maxShiftAction    || 'alert',
+  }
+}
+
 function SchedulePanel({ shops, onSave }) {
   const [activeShop, setActiveShop] = useState(shops[0]?.id)
   const shop = shops.find(s => s.id === activeShop)
-  const [draft, setDraft]   = useState(() => ({
-    hours:             shop?.hours             || DEFAULT_HOURS,
-    clockInBufferMins: shop?.clockInBufferMins ?? 15,
-    maxShiftHours:     shop?.maxShiftHours     ?? 12,
-    maxShiftAction:    shop?.maxShiftAction    || 'alert',
-  }))
+  const [draft, setDraft] = useState(() => scheduleDraftFor(shop))
   const [saved, setSaved] = useState(false)
 
   const switchShop = (id) => {
     const s = shops.find(x => x.id === id)
     setActiveShop(id)
-    setDraft({
-      hours:             s?.hours             || DEFAULT_HOURS,
-      clockInBufferMins: s?.clockInBufferMins ?? 15,
-      maxShiftHours:     s?.maxShiftHours     ?? 12,
-      maxShiftAction:    s?.maxShiftAction    || 'alert',
-    })
+    setDraft(scheduleDraftFor(s))
     setSaved(false)
   }
 
@@ -765,11 +864,13 @@ function SchedulePanel({ shops, onSave }) {
   }
 
   const handleSave = async () => {
-    onSave(activeShop, {
-      hours:             draft.hours,
-      clockInBufferMins: draft.clockInBufferMins,
-      maxShiftHours:     draft.maxShiftHours,
-      maxShiftAction:    draft.maxShiftAction,
+    await onSave(activeShop, {
+      schedule: {
+        hours:             draft.hours,
+        clockInBufferMins: draft.clockInBufferMins,
+        maxShiftHours:     draft.maxShiftHours,
+        maxShiftAction:    draft.maxShiftAction,
+      },
     })
     setSaved(true)
     await new Promise(r => setTimeout(r, 1500))

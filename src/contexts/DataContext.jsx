@@ -32,7 +32,58 @@ function transformShop(s) {
     efficiency: Number(s.efficiency || 0),
     activeTechs: Number(s.active_techs || 0),
     status: 'open',
-    monthlyTarget: 0,
+    // Owner-configured extras live in the shops.data JSONB column
+    bays: Number(s.data?.bays) || 0,
+    manager: s.data?.manager || '',
+    monthlyTarget: Number(s.data?.monthly_target) || 0,
+    schedule: s.data?.schedule || null,
+  }
+}
+
+// DB invoices are RO-linked rows (amount/status/paid_at); enrich them with
+// display fields and line items from the already-loaded repair orders.
+function transformInvoice(row, rosById) {
+  if (row.status === 'void') return null
+  const ro = rosById[row.ro_id]
+  const displayId = row.ro_number
+    ? `INV-${String(row.ro_number).replace(/^RO-?/i, '')}`
+    : `INV-${String(row.id).slice(0, 8).toUpperCase()}`
+  const isPaid = row.status === 'paid'
+  const ageMs = Date.now() - new Date(row.created_at).getTime()
+  return {
+    id: displayId,
+    dbId: row.id,
+    roId: ro?.roNumber || ro?.id || row.ro_id,
+    shopId: ro?.shopId ?? null,
+    customerId: ro?.customerId ?? null,
+    customerName: row.customer_name || ro?.customerName || '',
+    customerEmail: ro?.customerEmail || null,
+    vehicle: ro?.vehicle || '',
+    status: isPaid ? 'paid' : ageMs > 14 * 86400000 ? 'overdue' : 'sent',
+    created: row.created_at,
+    paidAt: row.paid_at || null,
+    paymentMethod: null,
+    services: (ro?.services || []).map(s => ({ name: s.name, parts: 0, labor: Number(s.price) || 0 })),
+    subtotal: Number(row.amount) || 0,
+    tax: 0,
+    total: Number(row.amount) || 0,
+  }
+}
+
+function transformPartsOrder(p) {
+  return {
+    id: p.id,
+    shopId: p.shop_id,
+    name: p.name,
+    partNumber: p.part_number || '',
+    qty: Number(p.qty) || 1,
+    status: p.status || 'ordered',
+    supplier: p.supplier || '',
+    eta: p.eta || '',
+    carrier: p.carrier || '',
+    trackingNumber: p.tracking_number || '',
+    requestedBy: p.requested_by || '',
+    requestedAt: p.created_at,
   }
 }
 
@@ -243,7 +294,7 @@ export function DataProvider({ children }) {
       // instead of wiping it — never show $0 because of a network blip.
       let coreFailures = 0
       const guard = (p) => p.catch(() => { coreFailures++; return null })
-      const [shopsData, techsData, rosData, custData, paymentsData, partsData, entriesData] = await Promise.all([
+      const [shopsData, techsData, rosData, custData, paymentsData, partsData, entriesData, invoicesData, partsOrdersData] = await Promise.all([
         guard(api('/api/shops')),
         guard(api('/api/technicians')),
         guard(api('/api/repair-orders')),
@@ -251,6 +302,8 @@ export function DataProvider({ children }) {
         api('/api/invoices?action=payments').catch(() => []),
         api('/api/health?action=parts').catch(() => null),
         api('/api/time-entries').catch(() => null),
+        api('/api/invoices').catch(() => null),
+        api('/api/health?action=parts-orders').catch(() => null),
       ])
       setFetchError(coreFailures > 0)
       if (shopsData) setShops(shopsData.map(transformShop))
@@ -277,6 +330,20 @@ export function DataProvider({ children }) {
           save('sc_job_timers', merged)
           return merged
         })
+      }
+
+      // Invoices from the DB, enriched from the loaded ROs; locally-saved
+      // custom invoices (generator drafts without a DB row) are kept alongside
+      if (Array.isArray(invoicesData) && transformedROs) {
+        const rosById = Object.fromEntries(transformedROs.map(r => [r.id, r]))
+        const serverInvoices = invoicesData.map(row => transformInvoice(row, rosById)).filter(Boolean)
+        const serverIds = new Set(serverInvoices.map(i => i.id))
+        const localOnly = load('sc_invoices', []).filter(i => !i.dbId && !serverIds.has(i.id))
+        setInvoices([...serverInvoices, ...localOnly].sort((a, b) => new Date(b.created) - new Date(a.created)))
+      }
+
+      if (Array.isArray(partsOrdersData)) {
+        setPartsOrders(partsOrdersData.map(transformPartsOrder))
       }
 
       // Time entries power hours/audit/pay displays — snake_case → camelCase
@@ -338,7 +405,9 @@ export function DataProvider({ children }) {
         avgTicket: 0, efficiency: 0, activeTechs: 0,
         status: 'open',
         bays: Number(shop.bays) || 0,
+        monthlyTarget: Number(shop.monthly_target ?? shop.monthlyTarget) || 0,
       }
+      delete demoShop.monthly_target
       const newCount = shops.length + 1
       setShops(prev => [...prev, demoShop])
       return { ...demoShop, billing: { monthlyTotal: 100 + (newCount - 1) * 50, shopCount: newCount } }
@@ -352,8 +421,12 @@ export function DataProvider({ children }) {
 
   const updateShop = useCallback(async (id, patch) => {
     if (session?.demo) {
-      setShops(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s))
-      return { id, ...patch }
+      // Settings sends API field names — normalize for local demo state
+      const local = { ...patch }
+      if ('monthly_target' in local) { local.monthlyTarget = Number(local.monthly_target) || 0; delete local.monthly_target }
+      if ('bays' in local) local.bays = Number(local.bays) || 0
+      setShops(prev => prev.map(s => s.id === id ? { ...s, ...local } : s))
+      return { id, ...local }
     }
     const row = await api('/api/shops', { method: 'PUT', params: { id }, body: patch })
     const transformed = transformShop(row)
@@ -499,24 +572,60 @@ export function DataProvider({ children }) {
 
   // ── invoices ─────────────────────────────────────────────────────────────
 
-  const addInvoice = useCallback((invoice) => {
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+  const addInvoice = useCallback(async (invoice) => {
+    // Real accounts + RO-linked invoice → the DB is the source of truth.
+    // POST /api/invoices also moves the RO Complete → Invoiced server-side.
+    if (!session?.demo && invoice.roId && UUID_RE.test(String(invoice.roId))) {
+      try {
+        const row = await api('/api/invoices', { method: 'POST', body: { ro_id: invoice.roId } })
+        const entry = {
+          ...invoice,
+          dbId: row.id,
+          status: 'sent',
+          created: row.created_at || invoice.created,
+          subtotal: Number(row.amount) || invoice.subtotal,
+          total: Number(row.amount) || invoice.total,
+        }
+        setInvoices(prev => [entry, ...prev.filter(i => i.id !== entry.id)])
+        setRepairOrders(prev => prev.map(r => r.id === invoice.roId ? { ...r, stage: 'Invoiced' } : r))
+        return entry
+      } catch {
+        // Fall through to local persistence — better a device-local record
+        // than a lost invoice; it merges out on next successful fetch
+      }
+    }
     const entry = { status: 'draft', paidAt: null, paymentMethod: null, ...invoice }
     setInvoices(prev => {
       // Same invoice number saved again replaces the earlier draft
       const next = [entry, ...prev.filter(i => i.id !== entry.id)]
-      if (!session?.demo) save('sc_invoices', next)
+      if (!session?.demo) save('sc_invoices', next.filter(i => !i.dbId))
       return next
     })
     return entry
   }, [session?.demo])
 
-  const updateInvoice = useCallback((id, patch) => {
+  const updateInvoice = useCallback(async (id, patch) => {
+    const target = invoices.find(i => i.id === id)
+    // DB-backed invoice being paid → record it server-side first
+    if (!session?.demo && target?.dbId && patch.status === 'paid') {
+      try {
+        await api('/api/invoices?action=pay', {
+          method: 'POST',
+          body: { invoice_id: target.dbId, method: 'other' },
+        })
+      } catch (err) {
+        return { error: err.message || 'Failed to record payment' }
+      }
+    }
     setInvoices(prev => {
       const next = prev.map(i => i.id === id ? { ...i, ...patch } : i)
-      if (!session?.demo) save('sc_invoices', next)
+      if (!session?.demo) save('sc_invoices', next.filter(i => !i.dbId))
       return next
     })
-  }, [session?.demo])
+    return { ok: true }
+  }, [session?.demo, invoices])
 
   // ── clock in/out ─────────────────────────────────────────────────────────
 
@@ -688,27 +797,49 @@ export function DataProvider({ children }) {
     const entry = { id: crypto.randomUUID(), status: 'ordered', requestedAt: new Date().toISOString(), supplier: '', eta: '', carrier: '', trackingNumber: '', ...order }
     setPartsOrders(prev => {
       const next = [entry, ...prev]
-      save('sc_parts_orders', next)
+      if (session?.demo) save('sc_parts_orders', next)
       return next
     })
+    if (session?.demo) return entry
+    // Persist server-side; swap the optimistic entry for the DB row so later
+    // updates target a real id
+    api('/api/health?action=add-parts-order', {
+      method: 'POST',
+      body: {
+        shop_id: order.shopId || null,
+        name: order.name,
+        part_number: order.partNumber || null,
+        qty: order.qty || 1,
+        requested_by: session?.name || null,
+      },
+    }).then(row => {
+      setPartsOrders(prev => prev.map(o => o.id === entry.id ? { ...transformPartsOrder(row), shopName: order.shopName, partId: order.partId } : o))
+    }).catch(() => { /* optimistic entry stays for this session */ })
     return entry
-  }, [])
+  }, [session?.demo, session?.name])
 
   const updatePartsOrder = useCallback((id, patch) => {
-    setPartsOrders(prev => {
-      const next = prev.map(o => o.id === id ? { ...o, ...patch } : o)
-      save('sc_parts_orders', next)
-      return next
-    })
-  }, [])
+    setPartsOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch } : o))
+    if (session?.demo) return
+    api('/api/health?action=update-parts-order', {
+      method: 'PUT',
+      params: { id },
+      body: {
+        status: patch.status,
+        supplier: patch.supplier,
+        eta: patch.eta,
+        carrier: patch.carrier,
+        tracking_number: patch.trackingNumber,
+        qty: patch.qty,
+      },
+    }).catch(() => {})
+  }, [session?.demo])
 
   const deletePartsOrder = useCallback((id) => {
-    setPartsOrders(prev => {
-      const next = prev.filter(o => o.id !== id)
-      save('sc_parts_orders', next)
-      return next
-    })
-  }, [])
+    setPartsOrders(prev => prev.filter(o => o.id !== id))
+    if (session?.demo) return
+    api('/api/health?action=delete-parts-order', { method: 'DELETE', params: { id } }).catch(() => {})
+  }, [session?.demo])
 
   // ── job timers ────────────────────────────────────────────────────────────
 

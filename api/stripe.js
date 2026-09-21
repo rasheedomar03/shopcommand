@@ -100,6 +100,10 @@ async function handleBilling(req, res, user) {
     return res.json({ plan: org.plan || 'founding', status: 'no_subscription', subscription: null })
   }
 
+  const [{ count: shopCount }] = await sql`
+    SELECT COUNT(*)::int AS count FROM shops WHERE org_id = ${user.orgId}
+  `
+
   try {
     const sub = await stripe.subscriptions.retrieve(org.stripe_subscription_id)
     return res.json({
@@ -107,6 +111,7 @@ async function handleBilling(req, res, user) {
       status: sub.status,
       currentPeriodEnd: sub.current_period_end,
       cancelAtPeriodEnd: sub.cancel_at_period_end,
+      shopCount,
       subscription: {
         id: sub.id,
         status: sub.status,
@@ -116,6 +121,33 @@ async function handleBilling(req, res, user) {
     })
   } catch {
     return res.json({ plan: org.plan, status: 'error', subscription: null })
+  }
+}
+
+// ── Billing portal: POST /api/stripe?action=portal ──────────────────────────
+
+async function handlePortal(req, res, user) {
+  if (user.role !== 'owner') {
+    return res.status(403).json({ error: 'Only shop owners can manage billing' })
+  }
+
+  const sql = neon(process.env.DATABASE_URL)
+  const [org] = await sql`
+    SELECT stripe_customer_id FROM organizations WHERE id = ${user.orgId}
+  `
+  if (!org?.stripe_customer_id) {
+    return res.status(404).json({ error: 'No billing account found for this organization. Complete checkout first.' })
+  }
+
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: org.stripe_customer_id,
+      return_url: req.body?.returnUrl || 'https://shopcommand.net/settings',
+    })
+    return res.json({ url: session.url })
+  } catch (err) {
+    logger.error('Billing portal session failed', { error: err.message })
+    return res.status(500).json({ error: 'Failed to create billing portal session' })
   }
 }
 
@@ -206,9 +238,13 @@ export default async function handler(req, res) {
     return handleCheckout(req, res, user)
   }
 
+  if (action === 'portal' && req.method === 'POST') {
+    return handlePortal(req, res, user)
+  }
+
   if (action === 'billing' && req.method === 'GET') {
     return handleBilling(req, res, user)
   }
 
-  return res.status(400).json({ error: 'Invalid action. Use ?action=checkout, billing, or webhook' })
+  return res.status(400).json({ error: 'Invalid action. Use ?action=checkout, portal, billing, or webhook' })
 }

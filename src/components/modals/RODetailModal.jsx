@@ -472,8 +472,12 @@ export function RODetailModal({ open, onClose, ro }) {
     await new Promise(r => setTimeout(r, 400))
     const nextStage = RO_STAGES[currentStageIdx + 1]
     try {
+      // Real accounts invoicing: save details first (RO must still be in
+      // Complete stage — POST /api/invoices flips it to Invoiced server-side
+      // inside addInvoice). All other transitions save stage directly.
+      const invoicingViaApi = nextStage === 'Invoiced' && !session?.demo
       await updateRepairOrder(ro.id, {
-        stage: nextStage,
+        ...(invoicingViaApi ? {} : { stage: nextStage }),
         services,
         partsUsed,
         mpi: { ...(ro.mpi || {}), items: mpiItems },
@@ -485,7 +489,7 @@ export function RODetailModal({ open, onClose, ro }) {
         const partsSub = partsUsed.reduce((s, p) => s + (Number(p.price) || 0) * (Number(p.qty) || 1), 0)
         const sub = laborSub + partsSub
         const taxAmt = sub * 0.085
-        addInvoice({
+        await addInvoice({
           id: `INV-${String(ro.roNumber || ro.id).replace(/^RO-?/, '')}`,
           roId: ro.id,
           shopId: ro.shopId ?? null,
