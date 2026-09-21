@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Phone, Mail, MapPin, Plus, Star, Clock, TrendingUp, Wrench, Car, Check, Shield } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, MapPin, Plus, Star, Clock, TrendingUp, Wrench, Car, Shield } from 'lucide-react'
 import { useData } from '@/contexts/DataContext'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -40,12 +40,6 @@ export default function CustomerProfile() {
   const navigate = useNavigate()
   const [selectedRO, setSelectedRO] = useState(null)
   const [newROOpen, setNewROOpen] = useState(false)
-  const [textSent, setTextSent] = useState(false)
-
-  const handleTextCustomer = () => {
-    setTextSent(true)
-    setTimeout(() => setTextSent(false), 3000)
-  }
 
   const { repairOrders, customers, shops } = useData()
   const customer = customers.find(c => String(c.id) === String(id))
@@ -171,16 +165,13 @@ export default function CustomerProfile() {
           {/* Actions */}
           <div className="flex gap-2">
             <button
-              onClick={handleTextCustomer}
-              className={cn(
-                'flex items-center gap-2 h-8 px-3 rounded-md border text-xs font-medium transition-all duration-150 hover:-translate-y-px',
-                textSent
-                  ? 'border-green-500/50 text-green-400 bg-green-500/10'
-                  : 'border-border text-text-secondary hover:border-orange hover:text-text-primary hover:shadow-[0_0_10px_rgba(249,115,22,0.15)]'
-              )}
+              disabled
+              title="SMS coming soon"
+              className="flex items-center gap-2 h-8 px-3 rounded-md border border-border text-xs font-medium text-text-muted opacity-60 cursor-not-allowed"
             >
-              {textSent ? <Check size={12} /> : <Phone size={12} />}
-              {textSent ? 'Message sent!' : 'Text customer'}
+              <Phone size={12} />
+              Text customer
+              <span className="text-2xs text-text-muted">· SMS coming soon</span>
             </button>
             <Button onClick={() => setNewROOpen(true)}>
               <Plus size={13} />
@@ -399,28 +390,16 @@ export default function CustomerProfile() {
               </div>
             </button>
             <button
-              onClick={handleTextCustomer}
-              className={cn(
-                'w-full flex items-center gap-3 p-3 rounded-lg border transition-all duration-150 hover:-translate-y-px text-left',
-                textSent
-                  ? 'border-green-500/50 bg-green-500/10'
-                  : 'border-border hover:border-orange hover:text-text-primary hover:shadow-[0_0_10px_rgba(249,115,22,0.15)]'
-              )}
+              disabled
+              title="SMS coming soon"
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-border text-left opacity-60 cursor-not-allowed"
             >
-              <div className={cn(
-                'w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0',
-                textSent ? 'bg-green-500/15' : 'bg-border'
-              )}>
-                {textSent
-                  ? <Check size={13} className="text-green-400" />
-                  : <Phone size={13} className="text-text-muted" />
-                }
+              <div className="w-7 h-7 rounded-md bg-border flex items-center justify-center flex-shrink-0">
+                <Phone size={13} className="text-text-muted" />
               </div>
               <div>
-                <div className={cn('text-sm font-medium leading-tight', textSent ? 'text-green-400' : 'text-text-primary')}>
-                  {textSent ? 'Message sent!' : 'Text customer'}
-                </div>
-                <div className="text-2xs text-text-muted">{customer.phone}</div>
+                <div className="text-sm font-medium leading-tight text-text-primary">Text customer</div>
+                <div className="text-2xs text-text-muted">{customer.phone} · SMS coming soon</div>
               </div>
             </button>
           </div>

@@ -131,7 +131,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const { session } = useAuth()
   const isTech    = session?.role === 'tech'
   const isAdvisor = session?.role === 'advisor'
-  const { updateRepairOrder, sendEstimateReady, technicians, parts: allParts, addPart: addPartToInventory, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
+  const { updateRepairOrder, addInvoice, technicians, parts: allParts, addPart: addPartToInventory, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
   const [apiError, setApiError] = useState(null)
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
   const [services, setServices] = useState(ro?.services || [])
@@ -143,14 +143,12 @@ export function RODetailModal({ open, onClose, ro }) {
   const [showPartsPicker, setShowPartsPicker] = useState(false)
   const [partSearch, setPartSearch] = useState('')
   const [payment, setPayment] = useState(ro?.payment || null)
-  const [paymentPending, setPaymentPending] = useState(null)
   const [saving, setSaving] = useState(false)
   const [authStep, setAuthStep]   = useState(null)   // null | 'capturing'
   const [authMethod, setAuthMethod] = useState(null) // 'phone' | 'text' | 'in-person'
   const [showNewRO, setShowNewRO] = useState(false)
   const [showPrintPacket, setShowPrintPacket] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [receiptSent, setReceiptSent] = useState(false)
   const [estimateSent, setEstimateSent] = useState(false)
   const [warrantyOpen, setWarrantyOpen] = useState(null)
 
@@ -165,6 +163,28 @@ export function RODetailModal({ open, onClose, ro }) {
   const [confirmDeletePartId, setConfirmDeletePartId] = useState(null)
   const [attachments, setAttachments] = useState(ro?.attachments || [])
   const [attachOpen, setAttachOpen] = useState(false)
+
+  // Snapshot of the editable fields at open — used to flush unsaved edits on
+  // close. Previously, service/MPI/parts-used edits lived only in modal state
+  // and were silently lost unless a stage button happened to be clicked.
+  const initialSnapshot = useRef(JSON.stringify({
+    services: ro?.services || [],
+    mpiItems: ro?.mpi?.items?.length ? ro.mpi.items : DEFAULT_MPI_ITEMS,
+    partsUsed: ro?.partsUsed || [],
+  }))
+
+  const handleClose = () => {
+    const current = JSON.stringify({ services, mpiItems, partsUsed })
+    if (current !== initialSnapshot.current) {
+      initialSnapshot.current = current
+      updateRepairOrder(ro.id, {
+        services,
+        partsUsed,
+        mpi: { ...(ro.mpi || {}), items: mpiItems },
+      }).catch(() => { /* closing anyway — data also flushes on next stage change */ })
+    }
+    onClose()
+  }
 
   if (!ro) return null
 
@@ -458,6 +478,32 @@ export function RODetailModal({ open, onClose, ro }) {
         partsUsed,
         mpi: { ...(ro.mpi || {}), items: mpiItems },
       })
+      // "Generate Invoice" previously only changed the stage — now an actual
+      // invoice record lands on the Invoices page.
+      if (nextStage === 'Invoiced') {
+        const laborSub = services.reduce((s, x) => s + (Number(x.price) || 0), 0)
+        const partsSub = partsUsed.reduce((s, p) => s + (Number(p.price) || 0) * (Number(p.qty) || 1), 0)
+        const sub = laborSub + partsSub
+        const taxAmt = sub * 0.085
+        addInvoice({
+          id: `INV-${String(ro.roNumber || ro.id).replace(/^RO-?/, '')}`,
+          roId: ro.id,
+          shopId: ro.shopId ?? null,
+          customerId: ro.customerId ?? null,
+          customerName: ro.customerName || '',
+          customerEmail: ro.customerEmail || null,
+          vehicle: ro.vehicle || '',
+          status: 'sent',
+          created: new Date().toISOString(),
+          services: [
+            ...services.filter(x => x.name || Number(x.price) > 0).map(x => ({ name: x.name || 'Service', parts: 0, labor: Number(x.price) || 0 })),
+            ...partsUsed.map(p => ({ name: p.name || 'Part', parts: (Number(p.price) || 0) * (Number(p.qty) || 1), labor: 0 })),
+          ],
+          subtotal: sub,
+          tax: Number(taxAmt.toFixed(2)),
+          total: Number((sub + taxAmt).toFixed(2)),
+        })
+      }
       setStage(nextStage)
     } catch (err) {
       setApiError(err.message || 'Failed to update stage')
@@ -630,7 +676,7 @@ export function RODetailModal({ open, onClose, ro }) {
         <div>
           <div className="text-2xs font-medium text-text-muted uppercase tracking-wider mb-1">Customer</div>
           {ro.customerId ? (
-            <button onClick={() => { onClose(); navigate(`/customers/${ro.customerId}`) }} className="text-sm font-medium text-orange hover:underline leading-snug text-left">
+            <button onClick={() => { handleClose(); navigate(`/customers/${ro.customerId}`) }} className="text-sm font-medium text-orange hover:underline leading-snug text-left">
               {ro.customerName}
             </button>
           ) : (
@@ -1185,7 +1231,7 @@ export function RODetailModal({ open, onClose, ro }) {
             {ro.nextServiceDue.service} in ~{ro.nextServiceDue.miles.toLocaleString()} miles
           </div>
           <button
-            onClick={() => { onClose(); navigate(ro.customerId ? `/customers/${ro.customerId}` : '/customers') }}
+            onClick={() => { handleClose(); navigate(ro.customerId ? `/customers/${ro.customerId}` : '/customers') }}
             className="text-xs text-orange font-medium mt-2 hover:underline"
           >
             View customer profile →
@@ -1310,25 +1356,32 @@ export function RODetailModal({ open, onClose, ro }) {
       )}
 
       {subtotal > 0 && (
-        <button
-          onClick={() => {
-            updateRepairOrder(ro.id, { services, partsUsed, total: grandTotal })
-            sendEstimateReady(ro.id, grandTotal)
-            setEstimateSent(true)
-            setTimeout(() => setEstimateSent(false), 3000)
-          }}
-          className={cn(
-            'w-full flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-all duration-150',
-            estimateSent
-              ? 'border-status-green/30 bg-status-green/5 text-status-green'
-              : 'border-border text-text-muted hover:border-orange hover:text-orange transition-colors'
-          )}
-        >
-          {estimateSent
-            ? <><Check size={13} /> Estimate sent!</>
-            : <><MessageSquare size={13} /> Send estimate to customer</>
-          }
-        </button>
+        <div className="space-y-1.5">
+          {/* Honest action: persists the estimate. Sending it by text/email
+              needs a real messaging integration — no fake "sent!" states. */}
+          <button
+            onClick={() => {
+              updateRepairOrder(ro.id, { services, partsUsed, total: grandTotal })
+              setEstimateSent(true)
+              setTimeout(() => setEstimateSent(false), 2000)
+            }}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-all duration-150',
+              estimateSent
+                ? 'border-status-green/30 bg-status-green/5 text-status-green'
+                : 'border-border text-text-muted hover:border-orange hover:text-orange transition-colors'
+            )}
+          >
+            {estimateSent
+              ? <><Check size={13} /> Estimate saved</>
+              : <><Check size={13} /> Save estimate</>
+            }
+          </button>
+          <div className="flex items-center justify-center gap-1.5 text-2xs text-text-muted">
+            <MessageSquare size={11} />
+            Text estimate to customer — coming soon
+          </div>
+        </div>
       )}
 
       {authStep === 'capturing' ? (
@@ -1464,58 +1517,39 @@ export function RODetailModal({ open, onClose, ro }) {
         </div>
       </div>
 
-      {paymentPending === 'text-to-pay' ? (
-        <div className="flex flex-col gap-2.5">
-          <div className="bg-orange-subtle border border-orange/20 rounded-lg p-3 text-center">
-            <div className="text-xs font-semibold text-orange mb-1">Link sent</div>
-            <div className="text-sm text-text-primary">{ro.customerPhone}</div>
-            <div className="text-xs text-text-muted mt-1">Waiting for payment…</div>
-          </div>
-          <Button className="w-full" onClick={() => markPaid('text-to-pay')} loading={saving}>
-            Simulate payment received
-          </Button>
-          <Button variant="secondary" className="w-full" onClick={() => markPaid('cash')} loading={saving}>
-            Mark as paid manually
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => setPaymentPending('text-to-pay')}
-            className="w-full bg-orange hover:bg-orange-hover text-white rounded-lg p-3 text-left transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_18px_rgba(249,115,22,0.45)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-2"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center flex-shrink-0">
-                <MessageSquare size={15} className="text-white" />
-              </div>
-              <div>
-                <div className="text-sm font-semibold leading-tight">Send text-to-pay link</div>
-                <div className="text-xs text-white/75 mt-0.5">
-                  Text {formatCurrency(grandTotal)} link to {ro.customerPhone}
-                </div>
-              </div>
+      <div className="flex flex-col gap-3">
+        {/* Text-to-pay requires a payments + SMS integration that doesn't
+            exist yet — shown honestly as upcoming, never as a fake "sent". */}
+        <div className="w-full rounded-lg border border-dashed border-border p-3 text-left opacity-70 cursor-not-allowed" aria-disabled="true">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-border rounded-md flex items-center justify-center flex-shrink-0">
+              <MessageSquare size={15} className="text-text-muted" />
             </div>
-          </button>
-
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-2xs text-text-muted whitespace-nowrap">or mark as paid</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {['cash', 'card', 'check'].map(method => (
-              <button
-                key={method}
-                onClick={() => markPaid(method)}
-                className="border border-border rounded-lg py-2.5 text-center text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.2)] active:scale-[0.98] capitalize focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
-              >
-                {method.charAt(0).toUpperCase() + method.slice(1)}
-              </button>
-            ))}
+            <div>
+              <div className="text-sm font-semibold leading-tight text-text-secondary">Text-to-pay link</div>
+              <div className="text-xs text-text-muted mt-0.5">Coming soon</div>
+            </div>
           </div>
         </div>
-      )}
+
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-2xs text-text-muted whitespace-nowrap">mark as paid</span>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {['cash', 'card', 'check'].map(method => (
+            <button
+              key={method}
+              onClick={() => markPaid(method)}
+              className="border border-border rounded-lg py-2.5 text-center text-sm font-medium text-text-secondary hover:border-orange hover:text-text-primary transition-all duration-150 hover:-translate-y-px hover:shadow-[0_0_10px_rgba(249,115,22,0.2)] active:scale-[0.98] capitalize focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange"
+            >
+              {method.charAt(0).toUpperCase() + method.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   )
 
@@ -1536,16 +1570,12 @@ export function RODetailModal({ open, onClose, ro }) {
 
       <div className="grid grid-cols-2 gap-2">
         <button
-          onClick={() => { setReceiptSent(true); setTimeout(() => setReceiptSent(false), 3000) }}
-          className={cn(
-            'border rounded-lg py-2.5 text-sm font-medium transition-all duration-150 hover:-translate-y-px active:scale-[0.98] flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange',
-            receiptSent
-              ? 'border-status-green/30 bg-status-green/5 text-status-green'
-              : 'border-border text-text-secondary hover:border-orange hover:text-text-primary hover:shadow-[0_0_10px_rgba(249,115,22,0.2)]'
-          )}
+          disabled
+          title="SMS receipts coming soon"
+          className="border border-border rounded-lg py-2.5 text-sm font-medium text-text-muted opacity-60 cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {receiptSent ? <Check size={14} /> : <Phone size={14} />}
-          {receiptSent ? 'Receipt sent!' : 'Text receipt'}
+          <Phone size={14} />
+          Text receipt — soon
         </button>
         <button
           onClick={() => setShowPrintPacket(true)}
@@ -1751,7 +1781,7 @@ export function RODetailModal({ open, onClose, ro }) {
     <>
       <Modal
         open={open}
-        onClose={onClose}
+        onClose={handleClose}
         title={ro.id}
         subtitle={`${ro.vehicle} · ${ro.customerName}`}
         size="xl"

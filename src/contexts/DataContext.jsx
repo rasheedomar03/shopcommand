@@ -510,6 +510,14 @@ export function DataProvider({ children }) {
     return entry
   }, [session?.demo])
 
+  const updateInvoice = useCallback((id, patch) => {
+    setInvoices(prev => {
+      const next = prev.map(i => i.id === id ? { ...i, ...patch } : i)
+      if (!session?.demo) save('sc_invoices', next)
+      return next
+    })
+  }, [session?.demo])
+
   // ── clock in/out ─────────────────────────────────────────────────────────
 
   const clockIn = useCallback(async (techId) => {
@@ -761,7 +769,7 @@ export function DataProvider({ children }) {
       partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
-      invoices, addInvoice,
+      invoices, addInvoice, updateInvoice,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,
       resetData, loading, fetchAll, fetchError,

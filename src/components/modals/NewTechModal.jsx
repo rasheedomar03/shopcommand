@@ -1,127 +1,124 @@
 import { useState } from 'react'
+import { Check, Copy } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { api } from '@/lib/api'
 
-const LEVELS = ['Junior', 'Mid', 'Senior', 'Master']
-const SPECIALTIES = [
-  'Engine & Drivetrain',
-  'Electrical & Diagnostics',
-  'Brakes & Suspension',
-  'Transmission',
-  'Maintenance',
-  'HVAC & Electrical',
-  'General Repair',
-  'Diagnostics',
-  'Hybrid / EV',
-]
-const CERTS = ['ASE A1', 'ASE A2', 'ASE A4', 'ASE A5', 'ASE A6', 'ASE A7', 'ASE L1', 'ASE L3', 'ASE Master', 'BMW Certified', 'Ford Certified', 'GM Service', 'Toyota Certified', 'ATRA', 'Hybrid/EV']
+// Technicians join via invite codes — the only path that gives them a real
+// login and a working TechBoard. (The old version of this modal posted a
+// payload the API always rejected, then closed as if it had succeeded.)
 
 export function NewTechModal({ open, onClose }) {
-  const { addTechnician, shops } = useData()
-  const [form, setForm] = useState({
-    name: '',
-    shopId: '',
-    specialty: '',
-    level: 'Junior',
-    certifications: [],
-    status: 'clocked-out',
-    efficiency: 80,
-  })
+  const { shops } = useData()
+  const { session } = useAuth()
+  const [form, setForm] = useState({ name: '', shopId: '' })
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [inviteCode, setInviteCode] = useState(null)
+  const [copied, setCopied] = useState(false)
+  const [apiError, setApiError] = useState('')
 
   const set = (field) => (e) => {
     setForm(f => ({ ...f, [field]: e.target.value }))
     if (errors[field]) setErrors(er => ({ ...er, [field]: undefined }))
   }
 
-  const toggleCert = (cert) => {
-    setForm(f => ({
-      ...f,
-      certifications: f.certifications.includes(cert)
-        ? f.certifications.filter(c => c !== cert)
-        : [...f.certifications, cert],
-    }))
-  }
-
-  const validate = () => {
-    const e = {}
-    if (!form.name.trim()) e.name = 'Name required'
-    if (!form.shopId) e.shopId = 'Assign a shop'
-    if (!form.specialty) e.specialty = 'Select a specialty'
-    return e
+  const reset = () => {
+    setForm({ name: '', shopId: '' })
+    setErrors({})
+    setInviteCode(null)
+    setCopied(false)
+    setApiError('')
   }
 
   const handleSubmit = async (ev) => {
     ev.preventDefault()
-    const errs = validate()
+    const errs = {}
+    if (!form.shopId) errs.shopId = 'Assign a shop'
     if (Object.keys(errs).length) { setErrors(errs); return }
     setSubmitting(true)
-    await new Promise(r => setTimeout(r, 600))
-    addTechnician({ ...form, shopId: Number(form.shopId), efficiency: Number(form.efficiency) })
+    setApiError('')
+    try {
+      const data = await api('/api/onboard?action=create-invite', {
+        method: 'POST',
+        body: { role: 'tech', shopId: form.shopId },
+      })
+      setInviteCode(data.code)
+    } catch (err) {
+      setApiError(err.message || 'Could not create invite — try again')
+    }
     setSubmitting(false)
-    onClose()
-    setForm({ name: '', shopId: '', specialty: '', level: 'Junior', certifications: [], status: 'clocked-out', efficiency: 80 })
-    setErrors({})
   }
 
+  const copyCode = () => {
+    if (!inviteCode) return
+    navigator.clipboard.writeText(inviteCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const shopName = shops.find(s => String(s.id) === String(form.shopId))?.name
+
   return (
-    <Modal open={open} onClose={onClose} title="New Technician" subtitle="Add a team member account" size="md">
-      <form onSubmit={handleSubmit} noValidate>
+    <Modal open={open} onClose={() => { reset(); onClose() }} title="Invite a Technician" subtitle="They get their own login and Tech Board" size="md">
+      {session?.demo ? (
+        <div className="p-5">
+          <p className="text-sm text-text-muted">
+            Technician invites are disabled in demo mode. In a real account, this
+            generates a one-time code your tech uses to sign up — they land on
+            their own Tech Board with a time clock and their assigned jobs.
+          </p>
+          <div className="flex justify-end pt-4">
+            <Button variant="secondary" onClick={onClose}>Close</Button>
+          </div>
+        </div>
+      ) : inviteCode ? (
         <div className="p-5 space-y-4">
-
-          <Input
-            label="Full Name *"
-            placeholder="Andre Jackson"
-            value={form.name}
-            onChange={set('name')}
-            error={errors.name}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-lg border border-status-green/30 bg-status-green/5 p-4 text-center">
+            <div className="text-xs text-text-muted mb-1.5">One-time invite code{form.name ? ` for ${form.name}` : ''}{shopName ? ` · ${shopName}` : ''}</div>
+            <div className="text-2xl font-bold tracking-widest text-text-primary tabular-nums">{inviteCode}</div>
+          </div>
+          <div className="text-xs text-text-muted leading-relaxed">
+            Send this code to your technician. They sign up at{' '}
+            <span className="text-text-secondary font-medium">shopcommand.net/sign-in</span>, choose
+            "Technician", and enter the code. It expires in 7 days and works once.
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" onClick={() => { reset() }}>New invite</Button>
+            <Button onClick={copyCode}>
+              {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy code</>}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="p-5 space-y-4">
+            <Input
+              label="Technician name (optional)"
+              placeholder="Andre Jackson"
+              value={form.name}
+              onChange={set('name')}
+              helper="Just for your reference on the code screen — their profile comes from their signup"
+            />
             <Select label="Shop *" value={form.shopId} onChange={set('shopId')} error={errors.shopId}>
               <option value="">Select shop…</option>
               {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </Select>
-            <Select label="Level" value={form.level} onChange={set('level')}>
-              {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-            </Select>
+            {apiError && (
+              <div className="px-3 py-2 rounded-lg bg-status-red/10 border border-status-red/20 text-xs text-status-red">
+                {apiError}
+              </div>
+            )}
           </div>
-
-          <Select label="Specialty *" value={form.specialty} onChange={set('specialty')} error={errors.specialty}>
-            <option value="">Select specialty…</option>
-            {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
-          </Select>
-
-          {/* Certifications */}
-          <div>
-            <div className="text-xs font-medium text-text-secondary mb-2">Certifications</div>
-            <div className="flex flex-wrap gap-1.5">
-              {CERTS.map(cert => (
-                <button
-                  key={cert}
-                  type="button"
-                  onClick={() => toggleCert(cert)}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-all duration-100 ${
-                    form.certifications.includes(cert)
-                      ? 'bg-orange/10 border-orange/40 text-orange'
-                      : 'border-border text-text-muted hover:border-border-hover hover:text-text-secondary'
-                  }`}
-                >
-                  {cert}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-border bg-background/50">
+            <Button variant="secondary" type="button" onClick={() => { reset(); onClose() }}>Cancel</Button>
+            <Button type="submit" loading={submitting}>Generate invite code</Button>
           </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-border bg-background/50">
-          <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
-          <Button type="submit" loading={submitting}>Create Account</Button>
-        </div>
-      </form>
+        </form>
+      )}
     </Modal>
   )
 }

@@ -110,7 +110,6 @@ export default function Payments() {
             </div>
           </div>
           <div className="text-2xl font-semibold text-text-primary tabular-nums">{formatCurrency(totalReceived)}</div>
-          <div className="text-xs text-status-green font-medium mt-1">↑ 8% vs last month</div>
         </div>
 
         <div className="bg-surface border border-border rounded-lg p-4">

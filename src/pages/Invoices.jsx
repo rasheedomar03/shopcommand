@@ -26,7 +26,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose, shops, onPrint }) {
+function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate }) {
   if (!invoice) return null
   const shop = shops.find(s => s.id === invoice.shopId)
 
@@ -86,13 +86,19 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint }) {
               <Printer size={13} /> Print / PDF
             </Button>
             {invoice.status === 'draft' && (
-              <Button size="sm"><Send size={13} /> Send invoice</Button>
+              <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'sent' })}>
+                <Send size={13} /> Mark as sent
+              </Button>
             )}
-            {invoice.status === 'sent' && (
-              <Button size="sm"><DollarSign size={13} /> Record payment</Button>
+            {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+              <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'paid', paidAt: new Date().toISOString(), paymentMethod: 'Recorded manually' })}>
+                <DollarSign size={13} /> Record payment
+              </Button>
             )}
             {invoice.status === 'overdue' && (
-              <Button size="sm"><Send size={13} /> Send reminder</Button>
+              <Button size="sm" variant="secondary" disabled title="Email reminders coming soon">
+                <Send size={13} /> Reminder — soon
+              </Button>
             )}
           </div>
         </div>
@@ -102,7 +108,7 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint }) {
 }
 
 export default function Invoices() {
-  const { shops, invoices } = useData()
+  const { shops, invoices, updateInvoice } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
@@ -242,6 +248,7 @@ export default function Invoices() {
         onClose={() => setSelected(null)}
         shops={shops}
         onPrint={(inv) => { setSelected(null); setGeneratorSource(inv); setGeneratorOpen(true) }}
+        onUpdate={(id, patch) => { updateInvoice(id, patch); setSelected(prev => prev ? { ...prev, ...patch } : prev) }}
       />
       <InvoiceGeneratorModal
         open={generatorOpen}

@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Search, Plus, Camera, Send, Eye, CheckCircle, Clock, AlertTriangle, Paperclip } from 'lucide-react'
-import { FileUpload, FileList } from '@/components/ui/FileUpload'
+import { Search, Plus, Camera, Send, Eye, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
@@ -164,29 +163,26 @@ function InspectionDetail({ inspection, onClose, shops }) {
           ))}
         </div>
 
-        {/* MPI Photos */}
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-text-primary mb-2">
-            <Paperclip size={13} />
-            MPI Photos
-          </div>
-          <FileUpload
-            roId={inspection.roId || inspection.id}
-            category="mpi"
-            onUpload={(files) => {}}
-          />
-        </div>
-
         <div className="flex items-center justify-between pt-2">
           <div className="text-xs text-text-muted">
             {shop?.name} · {formatRelativeTime(inspection.created)}
           </div>
           <div className="flex items-center gap-2">
             {inspection.status === 'complete' && (
-              <Button size="sm"><Send size={13} /> Send to customer</Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" disabled title="Coming soon" className="opacity-60 cursor-not-allowed">
+                  <Send size={13} /> Send to customer
+                </Button>
+                <span className="text-2xs text-text-muted">Coming soon</span>
+              </div>
             )}
             {inspection.status === 'sent' && (
-              <Button size="sm" variant="secondary"><Eye size={13} /> Customer view</Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="secondary" disabled title="Coming soon" className="opacity-60 cursor-not-allowed">
+                  <Eye size={13} /> Customer view
+                </Button>
+                <span className="text-2xs text-text-muted">Coming soon</span>
+              </div>
             )}
           </div>
         </div>
@@ -226,6 +222,11 @@ export default function Inspections() {
         <div>
           <h1 className="text-xl font-semibold text-text-primary">Inspections</h1>
           <p className="text-xs text-text-muted mt-0.5">{scoped.length} total · {scoped.filter(i => i.status === 'draft').length} in progress</p>
+          {session?.demo && (
+            <p className="text-2xs text-text-muted mt-1">
+              Sample inspections — inspections your techs complete on the Tech Board are saved on each repair order.
+            </p>
+          )}
         </div>
         <Button onClick={() => setNewOpen(true)}>
           <Plus size={15} />
@@ -307,7 +308,11 @@ export default function Inspections() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="py-12 text-center text-sm text-text-muted">No inspections found</div>
+        <div className="py-12 text-center text-sm text-text-muted">
+          {session?.demo
+            ? 'No inspections found'
+            : 'No inspections yet — inspections your techs complete on the Tech Board are saved on each repair order.'}
+        </div>
       )}
 
       <InspectionDetail inspection={selected} onClose={() => setSelected(null)} shops={shops} />
