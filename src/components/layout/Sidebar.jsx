@@ -16,7 +16,6 @@ import {
   Receipt,
   MessageSquare,
   ClipboardCheck,
-  CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/Tooltip'
@@ -59,7 +58,6 @@ const navGroups = [
       { to: '/repair-orders',  label: 'Repair Orders',  icon: ClipboardList  },
       { to: '/inspections',    label: 'Inspections',    icon: ClipboardCheck },
       { to: '/invoices',       label: 'Invoices',       icon: Receipt        },
-      { to: '/payments',       label: 'Payments',       icon: CreditCard     },
       { to: '/appointments',   label: 'Appointments',   icon: CalendarDays   },
       { to: '/dispatch',       label: 'Dispatch',       icon: ArrowRightLeft },
       { to: '/technicians',    label: 'Technicians',    icon: Users          },

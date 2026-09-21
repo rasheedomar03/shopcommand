@@ -11,8 +11,18 @@ function ScrollToTop() {
 }
 
 function PageLoader() {
+  // Only show the skeleton if loading actually takes a moment — rendering it
+  // instantly caused a jarring flash on every fast route change. Under 200ms
+  // the user just sees the previous frame + TopLoader; past it, the skeleton
+  // eases in.
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 200)
+    return () => clearTimeout(t)
+  }, [])
+  if (!show) return <div className="h-screen bg-background" />
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background animate-fade-in">
       <div className="hidden lg:flex flex-col w-60 border-r border-border bg-surface">
         <div className="h-14 px-4 flex items-center gap-2.5 border-b border-border">
           <div className="w-7 h-7 rounded-md bg-border animate-pulse" />
@@ -90,7 +100,6 @@ const Estimates = lazy(() => import('@/pages/Estimates'))
 const Invoices = lazy(() => import('@/pages/Invoices'))
 const Messages = lazy(() => import('@/pages/Messages'))
 const Inspections = lazy(() => import('@/pages/Inspections'))
-const Payments = lazy(() => import('@/pages/Payments'))
 const Reports = lazy(() => import('@/pages/Reports'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const CustomerStatus = lazy(() => import('@/pages/CustomerStatus'))
@@ -198,7 +207,6 @@ function AppShell() {
             <Route path="/estimates" element={<Estimates />} />
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/inspections" element={<Inspections />} />
-            <Route path="/payments" element={<Payments />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/dispatch" element={<Dispatch />} />
