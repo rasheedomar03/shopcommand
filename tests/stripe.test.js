@@ -12,12 +12,14 @@ vi.mock('stripe', () => {
     this.customers = { list: mockCustomersList, create: mockCustomersCreate }
     this.subscriptions = { retrieve: mockSubRetrieve }
     this.webhooks = { constructEvent: vi.fn() }
+    this.prices = { list: vi.fn(() => Promise.resolve({ data: [{ id: 'price_base' }] })) }
+    this.products = { create: vi.fn(() => Promise.resolve({ id: 'prod_123' })) }
   }
   return { default: MockStripe }
 })
 
 vi.mock('@neondatabase/serverless', () => ({
-  neon: vi.fn(() => vi.fn(() => Promise.resolve([]))),
+  neon: vi.fn(() => vi.fn(() => Promise.resolve([{ count: 1 }]))),
 }))
 
 vi.mock('../api/_lib/auth.js', () => ({

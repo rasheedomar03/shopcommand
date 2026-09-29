@@ -3,6 +3,11 @@ import { createMockReq, createMockRes, MOCK_OWNER, MOCK_TECH, VALID_UUID } from 
 
 const mockSql = vi.fn(() => Promise.resolve([]))
 
+vi.mock('stripe', () => {
+  function MockStripe() {}
+  return { default: MockStripe }
+})
+
 vi.mock('@neondatabase/serverless', () => ({
   neon: vi.fn(() => mockSql),
 }))
@@ -29,7 +34,8 @@ describe('GET /api/shops', () => {
   it('returns shop list', async () => {
     authenticate.mockResolvedValueOnce(MOCK_OWNER)
     const shops = [{ id: VALID_UUID, name: 'Main Shop' }]
-    mockSql.mockResolvedValueOnce(shops)
+    mockSql.mockResolvedValueOnce([])    // ensureDataColumn
+    mockSql.mockResolvedValueOnce(shops) // SELECT shops
 
     const req = createMockReq({ method: 'GET' })
     const res = createMockRes()
@@ -74,14 +80,15 @@ describe('POST /api/shops', () => {
   it('creates shop for owners with valid data', async () => {
     authenticate.mockResolvedValueOnce(MOCK_OWNER)
     const newShop = { id: VALID_UUID, name: 'New Shop', org_id: MOCK_OWNER.orgId }
-    mockSql.mockResolvedValueOnce([newShop])
+    mockSql.mockResolvedValueOnce([])       // ensureDataColumn
+    mockSql.mockResolvedValueOnce([newShop]) // INSERT RETURNING *
 
     const req = createMockReq({ method: 'POST', body: { name: 'New Shop', address: '123 Main St' } })
     const res = createMockRes()
     await handler(req, res)
 
     expect(res.status).toHaveBeenCalledWith(201)
-    expect(res._body).toEqual(newShop)
+    expect(res._body).toEqual({ ...newShop, billing: null })
   })
 })
 
