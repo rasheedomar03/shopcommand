@@ -326,7 +326,9 @@ export default async function handler(req, res) {
             { name: 'Name', value: name.trim().slice(0, 256), inline: true },
             { name: 'Email', value: email.trim().slice(0, 256), inline: true },
             { name: 'Locations', value: String(locations || 'Not specified').slice(0, 256), inline: true },
-            { name: 'Biggest pain point', value: String(pain || 'Not specified').slice(0, 1024) },
+            // Only the /founding-program form asks about pain points; the
+            // landing form doesn't, so omit the field instead of "Not specified"
+            ...(pain ? [{ name: 'Biggest pain point', value: String(pain).slice(0, 1024) }] : []),
             { name: 'From page', value: String(page || 'unknown'), inline: true },
           ],
           timestamp: new Date().toISOString(),
