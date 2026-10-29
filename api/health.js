@@ -341,6 +341,52 @@ export default async function handler(req, res) {
         } catch (_) { /* Discord down — the DB row is the source of truth */ }
       }
 
+      // Welcome email via Resend, scheduled 5 minutes out so it reads like a
+      // person noticed the application rather than a bot auto-reply. Skipped
+      // silently when RESEND_API_KEY isn't configured; a send failure never
+      // fails the signup (the DB row + Discord ping are the source of truth).
+      const resendKey = process.env.RESEND_API_KEY
+      if (resendKey) {
+        const firstName = name.trim().split(/\s+/)[0]
+        const safeFirst = firstName.replace(/[<>&"']/g, '')
+        try {
+          const emailRes = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: 'Rasheed at ShopCommand <hello@shopcommand.net>',
+              to: [email.trim().toLowerCase()],
+              reply_to: 'rasheed@shopcommand.net',
+              subject: 'Your ShopCommand founding application',
+              scheduled_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+              text: [
+                `Hey ${safeFirst},`,
+                '',
+                'Thanks for applying to the ShopCommand founding program. I saw your application come in and wanted to reach out personally.',
+                '',
+                "Here's what happens next: I'll email you within 24 hours to set up a quick call, get your shop loaded in, and walk you through the dashboard. No credit card needed until you've seen it working with your own numbers.",
+                '',
+                'As a founding member your rate is $100/month for your first shop and $50/month for each additional location, locked in for life. It never goes up, even after public pricing moves to $175.',
+                '',
+                'If you want to skip the wait, just reply to this email and tell me a good time to talk. Replies come straight to me.',
+                '',
+                'Rasheed',
+                'Founder, ShopCommand',
+                'shopcommand.net',
+              ].join('\n'),
+            }),
+          })
+          if (!emailRes.ok) {
+            console.error('Welcome email failed:', emailRes.status, await emailRes.text().catch(() => ''))
+          }
+        } catch (err) {
+          console.error('Welcome email error:', err)
+        }
+      }
+
       return res.status(201).json({ success: true, message: 'Application received' })
     } catch (err) {
       console.error('Founding signup error:', err)
