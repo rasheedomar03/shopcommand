@@ -5,7 +5,7 @@ import { CookieBanner } from '@/components/CookieBanner'
 import { sanitizeField, isValidEmail } from '@/lib/utils'
 
 const TOTAL_SPOTS = 25
-const CLAIMED_SPOTS = 1    // ← update this manually as signups come in
+const CLAIMED_SPOTS = 2    // ← update this manually as signups come in
 const CALENDLY_URL = 'https://calendly.com/rasheed-omar/30min'
 const CONTACT_EMAIL = 'hello@shopcommand.net'
 

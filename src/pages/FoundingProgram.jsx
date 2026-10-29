@@ -5,7 +5,7 @@ import { PublicNav } from '@/components/PublicNav'
 import { usePageMeta } from '@/lib/seo'
 
 const TOTAL_SPOTS = 25
-const CLAIMED_SPOTS = 1
+const CLAIMED_SPOTS = 2
 const CALENDLY_URL = 'https://calendly.com/rasheed-omar/30min'
 const CONTACT_EMAIL = 'hello@shopcommand.net'
 
