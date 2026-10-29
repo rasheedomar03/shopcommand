@@ -361,7 +361,7 @@ export default async function handler(req, res) {
               to: [email.trim().toLowerCase()],
               reply_to: 'rasheed@shopcommand.net',
               subject: 'Your ShopCommand founding application',
-              scheduled_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+              scheduled_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
               text: [
                 `Hey ${safeFirst},`,
                 '',
