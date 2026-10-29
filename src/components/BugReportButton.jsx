@@ -5,6 +5,7 @@ export function BugReportButton() {
   const [open, setOpen] = useState(false)
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
   const [description, setDescription] = useState('')
+  const [email, setEmail] = useState('')
   const textareaRef = useRef(null)
 
   const handleSubmit = async (e) => {
@@ -16,6 +17,7 @@ export function BugReportButton() {
     try {
       const payload = {
         description: description.trim(),
+        email: email.trim() || null,
         page: window.location.pathname,
         url: window.location.href,
         userAgent: navigator.userAgent,
@@ -34,6 +36,7 @@ export function BugReportButton() {
 
       setStatus('sent')
       setDescription('')
+      setEmail('')
       setTimeout(() => { setStatus('idle'); setOpen(false) }, 2000)
     } catch {
       setStatus('error')
@@ -81,6 +84,14 @@ export function BugReportButton() {
                 maxLength={2000}
                 required
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 placeholder:text-slate-400"
+              />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email (optional — if you'd like a reply)"
+                maxLength={200}
+                className="w-full mt-2 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 placeholder:text-slate-400"
               />
               <div className="flex items-center justify-between mt-3">
                 <span className="text-[11px] text-slate-400">

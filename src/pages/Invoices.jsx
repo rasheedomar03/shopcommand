@@ -26,7 +26,8 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate }) {
+function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid }) {
+  const [confirmVoid, setConfirmVoid] = useState(false)
   if (!invoice) return null
   const shop = shops.find(s => s.id === invoice.shopId)
 
@@ -80,7 +81,22 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate }) {
         )}
 
         <div className="flex items-center justify-between pt-2">
-          <div className="text-xs text-text-muted">Created {formatDate(invoice.created)}</div>
+          <div className="flex items-center gap-3">
+            <div className="text-xs text-text-muted">Created {formatDate(invoice.created)}</div>
+            {invoice.status !== 'paid' && (
+              confirmVoid ? (
+                <span className="flex items-center gap-2 text-xs">
+                  <span className="text-status-red">Void this invoice?</span>
+                  <button onClick={() => { setConfirmVoid(false); onVoid(invoice.id) }} className="font-semibold text-status-red hover:underline">Yes, void</button>
+                  <button onClick={() => setConfirmVoid(false)} className="text-text-muted hover:text-text-primary">Cancel</button>
+                </span>
+              ) : (
+                <button onClick={() => setConfirmVoid(true)} className="text-xs text-text-muted hover:text-status-red transition-colors underline-offset-2 hover:underline">
+                  Void invoice
+                </button>
+              )
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="secondary" onClick={() => onPrint(invoice)}>
               <Printer size={13} /> Print / PDF
@@ -108,7 +124,7 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate }) {
 }
 
 export default function Invoices() {
-  const { shops, invoices, updateInvoice } = useData()
+  const { shops, invoices, updateInvoice, voidInvoice } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
@@ -251,6 +267,10 @@ export default function Invoices() {
         onUpdate={async (id, patch) => {
           const r = await updateInvoice(id, patch)
           if (!r?.error) setSelected(prev => prev ? { ...prev, ...patch } : prev)
+        }}
+        onVoid={async (id) => {
+          const r = await voidInvoice(id)
+          if (!r?.error) setSelected(null)
         }}
       />
       <InvoiceGeneratorModal

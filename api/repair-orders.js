@@ -13,7 +13,7 @@ function getResend() {
 }
 
 export default createHandler(
-  { methods: ['GET', 'POST', 'PUT'] },
+  { methods: ['GET', 'POST', 'PUT', 'DELETE'] },
   async ({ req, res, sql, user }) => {
     const action = req.query?.action
 
@@ -230,6 +230,30 @@ export default createHandler(
       `
       if (!row) return res.status(404).json({ error: 'Repair order not found' })
       return res.json(row)
+    }
+
+    if (req.method === 'DELETE') {
+      if (user.role !== 'owner') {
+        return res.status(403).json({ error: 'Only owners can delete repair orders' })
+      }
+      const id = req.query?.id
+      if (!id || !UUID_RE.test(id)) return res.status(400).json({ error: 'Valid ?id= parameter is required' })
+
+      // Never delete money records: a paid invoice anchors this RO permanently
+      const [paid] = await sql`
+        SELECT id FROM invoices WHERE ro_id = ${id} AND org_id = ${user.orgId} AND status = 'paid'
+      `
+      if (paid) {
+        return res.status(409).json({ error: 'This repair order has a paid invoice and cannot be deleted' })
+      }
+
+      // Line items and unpaid/void invoices cascade; time entries keep their
+      // hours with ro_id set NULL (schema ON DELETE rules)
+      const [row] = await sql`
+        DELETE FROM repair_orders WHERE id = ${id} AND org_id = ${user.orgId} RETURNING id
+      `
+      if (!row) return res.status(404).json({ error: 'Repair order not found' })
+      return res.json({ deleted: row.id })
     }
   }
 )

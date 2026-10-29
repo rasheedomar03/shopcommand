@@ -570,6 +570,17 @@ export function DataProvider({ children }) {
     // placeholder — SMS integration not built yet
   }, [])
 
+  const removeRepairOrder = useCallback(async (id) => {
+    if (!session?.demo) {
+      // Owner-only server-side; blocks ROs with a paid invoice
+      await api('/api/repair-orders', { method: 'DELETE', params: { id } })
+    }
+    setRepairOrders(prev => prev.filter(r => r.id !== id))
+    // Drop any unpaid invoices that pointed at it (server cascades these)
+    setInvoices(prev => prev.filter(i => !(i.roId === id && i.status !== 'paid')))
+    return { ok: true }
+  }, [session?.demo])
+
   // ── invoices ─────────────────────────────────────────────────────────────
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -605,6 +616,34 @@ export function DataProvider({ children }) {
     })
     return entry
   }, [session?.demo])
+
+  const voidInvoice = useCallback(async (id) => {
+    const target = invoices.find(i => i.id === id)
+    if (!target) return { error: 'Invoice not found' }
+    if (target.status === 'paid') return { error: 'Paid invoices cannot be voided' }
+    if (!session?.demo && target.dbId) {
+      try {
+        // Server also moves the linked RO back to Complete
+        await api('/api/invoices', { method: 'PUT', params: { id: target.dbId }, body: { status: 'void' } })
+      } catch (err) {
+        return { error: err.message || 'Failed to void invoice' }
+      }
+    }
+    setInvoices(prev => {
+      const next = prev.filter(i => i.id !== id)
+      if (!session?.demo) save('sc_invoices', next.filter(i => !i.dbId))
+      return next
+    })
+    // Reflect the RO reverting to Complete locally
+    if (target.roId) {
+      setRepairOrders(prev => prev.map(r =>
+        (r.id === target.roId || r.roNumber === target.roId) && r.stage === 'Invoiced'
+          ? { ...r, stage: 'Complete' }
+          : r
+      ))
+    }
+    return { ok: true }
+  }, [session?.demo, invoices])
 
   const updateInvoice = useCallback(async (id, patch) => {
     const target = invoices.find(i => i.id === id)
@@ -894,13 +933,13 @@ export function DataProvider({ children }) {
     <DataContext.Provider value={{
       customers, addCustomer, updateCustomer, removeCustomer,
       technicians, addTechnician, removeTechnician,
-      repairOrders, addRepairOrder, updateRepairOrder, sendEstimateReady, addVehicle,
+      repairOrders, addRepairOrder, updateRepairOrder, removeRepairOrder, sendEstimateReady, addVehicle,
       shops, updateShop, addShop, removeShop,
       parts, addPart, updatePart, deletePart, usePart, restockPart, orderPart,
       partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
-      invoices, addInvoice, updateInvoice,
+      invoices, addInvoice, updateInvoice, voidInvoice,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,
       resetData, loading, fetchAll, fetchError,

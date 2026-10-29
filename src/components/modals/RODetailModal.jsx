@@ -131,7 +131,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const { session } = useAuth()
   const isTech    = session?.role === 'tech'
   const isAdvisor = session?.role === 'advisor'
-  const { updateRepairOrder, addInvoice, technicians, parts: allParts, addPart: addPartToInventory, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
+  const { updateRepairOrder, removeRepairOrder, addInvoice, technicians, parts: allParts, addPart: addPartToInventory, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
   const [apiError, setApiError] = useState(null)
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
   const [services, setServices] = useState(ro?.services || [])
@@ -163,6 +163,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const [confirmDeletePartId, setConfirmDeletePartId] = useState(null)
   const [attachments, setAttachments] = useState(ro?.attachments || [])
   const [attachOpen, setAttachOpen] = useState(false)
+  const [confirmDeleteRO, setConfirmDeleteRO] = useState(false)
 
   // Snapshot of the editable fields at open — used to flush unsaved edits on
   // close. Previously, service/MPI/parts-used edits lived only in modal state
@@ -1805,6 +1806,41 @@ export function RODetailModal({ open, onClose, ro }) {
             {rightPanel}
           </div>
         </div>
+        {/* Delete RO — owners only; paid ROs are blocked server-side */}
+        {!isTech && !isAdvisor && (
+          <div className="px-5 py-2.5 border-t border-border flex items-center justify-end gap-3">
+            {confirmDeleteRO ? (
+              <>
+                <span className="text-xs text-status-red">Delete this repair order? Line items and unpaid invoices go with it.</span>
+                <button
+                  onClick={async () => {
+                    setSaving(true)
+                    try {
+                      await removeRepairOrder(ro.id)
+                      onClose()
+                    } catch (err) {
+                      setApiError(err.message || 'Failed to delete repair order')
+                      setConfirmDeleteRO(false)
+                    }
+                    setSaving(false)
+                  }}
+                  disabled={saving}
+                  className="text-xs font-semibold text-status-red hover:underline disabled:opacity-50"
+                >
+                  Yes, delete
+                </button>
+                <button onClick={() => setConfirmDeleteRO(false)} className="text-xs text-text-muted hover:text-text-primary">Cancel</button>
+              </>
+            ) : (
+              <button
+                onClick={() => setConfirmDeleteRO(true)}
+                className="text-xs text-text-muted hover:text-status-red transition-colors underline-offset-2 hover:underline"
+              >
+                Delete repair order
+              </button>
+            )}
+          </div>
+        )}
       </Modal>
 
       {showNewRO && (

@@ -204,7 +204,7 @@ export default async function handler(req, res) {
       return res.status(429).json({ error: 'Too many reports. Try again later.' })
     }
 
-    const { description, page, url, userAgent, screenWidth, screenHeight } = req.body || {}
+    const { description, email, page, url, userAgent, screenWidth, screenHeight } = req.body || {}
 
     if (!description || typeof description !== 'string' || description.trim().length < 5) {
       return res.status(400).json({ error: 'Description is required (minimum 5 characters)' })
@@ -212,6 +212,9 @@ export default async function handler(req, res) {
     if (description.length > 2000) {
       return res.status(400).json({ error: 'Description too long (max 2000 characters)' })
     }
+    const reporterEmail = (typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && email.length <= 200)
+      ? email.trim().toLowerCase()
+      : null
 
     try {
       const sql = neon(process.env.DATABASE_URL)
@@ -231,11 +234,13 @@ export default async function handler(req, res) {
         )
       `
 
+      await sql`ALTER TABLE bug_reports ADD COLUMN IF NOT EXISTS reporter_email TEXT`
+
       const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown'
 
       await sql`
-        INSERT INTO bug_reports (description, page, url, user_agent, screen_width, screen_height, reporter_ip)
-        VALUES (${description.trim()}, ${page || null}, ${url || null}, ${userAgent || null}, ${screenWidth || null}, ${screenHeight || null}, ${ip})
+        INSERT INTO bug_reports (description, page, url, user_agent, screen_width, screen_height, reporter_ip, reporter_email)
+        VALUES (${description.trim()}, ${page || null}, ${url || null}, ${userAgent || null}, ${screenWidth || null}, ${screenHeight || null}, ${ip}, ${reporterEmail})
       `
 
       // Discord notification — must await or Vercel kills the function before it sends
@@ -246,6 +251,7 @@ export default async function handler(req, res) {
           color: 0xF97316,
           fields: [
             { name: 'Description', value: description.trim().slice(0, 1024) },
+            { name: 'Contact', value: reporterEmail || 'Not provided', inline: true },
             { name: 'Page', value: page || 'Unknown', inline: true },
             { name: 'Screen', value: screenWidth ? `${screenWidth}×${screenHeight}` : 'Unknown', inline: true },
             { name: 'IP', value: ip, inline: true },
