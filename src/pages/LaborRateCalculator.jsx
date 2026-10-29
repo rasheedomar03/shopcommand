@@ -5,7 +5,7 @@ import { PublicNav } from '@/components/PublicNav'
 import { usePageMeta } from '@/lib/seo'
 import { STATE_WAGES, MULTIPLIER_LOW, MULTIPLIER_HIGH } from '@/data/laborRates'
 
-const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
+const CONTACT_EMAIL = 'hello@shopcommand.net'
 const WEEKS_PER_MONTH = 4.33
 const PAID_HOURS_PER_WEEK = 40
 

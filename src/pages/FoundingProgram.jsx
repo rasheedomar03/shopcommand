@@ -7,7 +7,7 @@ import { usePageMeta } from '@/lib/seo'
 const TOTAL_SPOTS = 25
 const CLAIMED_SPOTS = 1
 const CALENDLY_URL = 'https://calendly.com/rasheed-omar/30min'
-const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
+const CONTACT_EMAIL = 'hello@shopcommand.net'
 
 function HexMark({ size = 28 }) {
   const pts = (cx, cy, r) =>

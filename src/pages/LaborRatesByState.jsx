@@ -7,7 +7,7 @@ import {
   STATE_WAGES, BLS_RELEASE, BLS_SOURCE_URL, MULTIPLIER_LOW, MULTIPLIER_HIGH,
 } from '@/data/laborRates'
 
-const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
+const CONTACT_EMAIL = 'hello@shopcommand.net'
 const YEAR = new Date().getFullYear()
 
 // Round estimated rates to the nearest $5 — these are ranges, not precision claims

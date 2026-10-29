@@ -4,7 +4,7 @@ import articles from '@/data/articles'
 import { PublicNav } from '@/components/PublicNav'
 import { usePageMeta } from '@/lib/seo'
 
-const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
+const CONTACT_EMAIL = 'hello@shopcommand.net'
 
 function HexMark({ size = 28 }) {
   const pts = (cx, cy, r) =>

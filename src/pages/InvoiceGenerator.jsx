@@ -4,7 +4,7 @@ import { Mail, ArrowRight, Plus, Trash2, Printer, Calculator } from 'lucide-reac
 import { PublicNav } from '@/components/PublicNav'
 import { usePageMeta } from '@/lib/seo'
 
-const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
+const CONTACT_EMAIL = 'hello@shopcommand.net'
 
 const faqs = [
   {

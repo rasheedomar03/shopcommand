@@ -4,7 +4,7 @@ import { PublicNav } from '@/components/PublicNav'
 import { usePageMeta } from '@/lib/seo'
 import alternativesData from '@/data/alternativesData'
 
-const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
+const CONTACT_EMAIL = 'hello@shopcommand.net'
 const ORIGIN = 'https://shopcommand.net'
 
 export default function AlternativesPage() {

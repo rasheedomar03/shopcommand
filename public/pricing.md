@@ -23,4 +23,4 @@ Auto repair shop management software. Per shop, not per seat.
 - No feature tiers or paid add-ons — one plan, everything included
 - Cancel anytime
 - Data export available on cancellation
-- Contact: rasheed.omar@outlook.com
+- Contact: hello@shopcommand.net

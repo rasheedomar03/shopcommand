@@ -248,7 +248,7 @@ export default function Settings() {
                 <Info size={13} className="flex-shrink-0 mt-0.5 text-text-muted" />
                 <p className="text-xs text-text-muted leading-relaxed">
                   Questions about billing? Email{' '}
-                  <a href="mailto:rasheed.omar@outlook.com" className="text-orange hover:underline">rasheed.omar@outlook.com</a>
+                  <a href="mailto:hello@shopcommand.net" className="text-orange hover:underline">hello@shopcommand.net</a>
                 </p>
               </div>
             </SettingsPanel>

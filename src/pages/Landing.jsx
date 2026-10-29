@@ -7,7 +7,7 @@ import { sanitizeField, isValidEmail } from '@/lib/utils'
 const TOTAL_SPOTS = 25
 const CLAIMED_SPOTS = 1    // ← update this manually as signups come in
 const CALENDLY_URL = 'https://calendly.com/rasheed-omar/30min'
-const CONTACT_EMAIL = 'rasheed.omar@outlook.com'
+const CONTACT_EMAIL = 'hello@shopcommand.net'
 
 /* ─── Color tokens ────────────────────────────────────────────────────────────
    Warm light palette. Every neutral tinted toward warm-gray.
@@ -377,7 +377,7 @@ function FoundingSection() {
         localStorage.setItem('sc_founding_emails', JSON.stringify(prev))
       } catch {}
     } catch {
-      setError('Something went wrong. Try emailing rasheed.omar@outlook.com directly.')
+      setError('Something went wrong. Try emailing hello@shopcommand.net directly.')
       setSubmitting(false)
       return
     }
