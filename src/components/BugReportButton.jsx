@@ -1,12 +1,17 @@
 import { useState, useRef } from 'react'
 import { Bug, X, Send, CheckCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function BugReportButton() {
+  const { session } = useAuth()
   const [open, setOpen] = useState(false)
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
   const [description, setDescription] = useState('')
   const [email, setEmail] = useState('')
   const textareaRef = useRef(null)
+
+  // Signed-in users are identified automatically; visitors get the manual field
+  const accountEmail = !session?.demo && session?.email ? session.email : null
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -17,7 +22,8 @@ export function BugReportButton() {
     try {
       const payload = {
         description: description.trim(),
-        email: email.trim() || null,
+        email: accountEmail || email.trim() || null,
+        reporterName: accountEmail ? (session?.name || null) : null,
         page: window.location.pathname,
         url: window.location.href,
         userAgent: navigator.userAgent,
@@ -85,14 +91,20 @@ export function BugReportButton() {
                 required
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 placeholder:text-slate-400"
               />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email (optional — if you'd like a reply)"
-                maxLength={200}
-                className="w-full mt-2 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 placeholder:text-slate-400"
-              />
+              {accountEmail ? (
+                <p className="mt-2 text-[11px] text-slate-500">
+                  Reporting as <span className="font-medium text-slate-700">{accountEmail}</span> — we'll email you when it's fixed
+                </p>
+              ) : (
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email (optional — if you'd like a reply)"
+                  maxLength={200}
+                  className="w-full mt-2 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 placeholder:text-slate-400"
+                />
+              )}
               <div className="flex items-center justify-between mt-3">
                 <span className="text-[11px] text-slate-400">
                   {status === 'error' ? 'Failed — try again' : `Page: ${window.location.pathname}`}

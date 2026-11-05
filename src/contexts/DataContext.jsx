@@ -658,13 +658,33 @@ export function DataProvider({ children }) {
         return { error: err.message || 'Failed to record payment' }
       }
     }
+    // DB-backed content edit (services/total, no status change) → persist the
+    // new amount on the invoice and the edited service lines on its RO, since
+    // the server stores line detail on the RO and only a total on the invoice.
+    if (!session?.demo && target?.dbId && patch.status === undefined && patch.total !== undefined) {
+      try {
+        await api('/api/invoices', { method: 'PUT', params: { id: target.dbId }, body: { amount: patch.total } })
+      } catch (err) {
+        return { error: err.message || 'Failed to update invoice' }
+      }
+      if (patch.services) {
+        const ro = repairOrders.find(r => r.id === target.roId || r.roNumber === target.roId)
+        if (ro) {
+          try {
+            await updateRepairOrder(ro.id, {
+              services: patch.services.map(s => ({ name: s.name, price: (Number(s.parts) || 0) + (Number(s.labor) || 0) })),
+            })
+          } catch (_) { /* amount persisted; service names refresh from RO on next load */ }
+        }
+      }
+    }
     setInvoices(prev => {
       const next = prev.map(i => i.id === id ? { ...i, ...patch } : i)
       if (!session?.demo) save('sc_invoices', next.filter(i => !i.dbId))
       return next
     })
     return { ok: true }
-  }, [session?.demo, invoices])
+  }, [session?.demo, invoices, repairOrders, updateRepairOrder])
 
   // ── clock in/out ─────────────────────────────────────────────────────────
 

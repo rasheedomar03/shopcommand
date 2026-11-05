@@ -179,10 +179,16 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const { status } = req.body || {}
+      const { status, amount } = req.body || {}
 
-      if (!status || !['paid', 'void'].includes(status)) {
+      if (status === undefined && amount === undefined) {
+        return res.status(400).json({ error: 'Provide status or amount to update' })
+      }
+      if (status !== undefined && !['paid', 'void'].includes(status)) {
         return res.status(400).json({ error: 'Status must be "paid" or "void"' })
+      }
+      if (amount !== undefined && (!Number.isFinite(Number(amount)) || Number(amount) < 0 || Number(amount) > 10_000_000)) {
+        return res.status(400).json({ error: 'Amount must be a non-negative number' })
       }
 
       const [invoice] = await sql`SELECT * FROM invoices WHERE id = ${id} AND org_id = ${user.orgId}`
@@ -190,6 +196,16 @@ export default createHandler(
 
       if (invoice.status !== 'unpaid') {
         return res.status(409).json({ error: 'Only unpaid invoices can be updated' })
+      }
+
+      // Amount edit (no status change): reprice an unpaid invoice
+      if (status === undefined) {
+        const [row] = await sql`
+          UPDATE invoices SET amount = ${Number(amount)}
+          WHERE id = ${id} AND org_id = ${user.orgId}
+          RETURNING *
+        `
+        return res.json(row)
       }
 
       if (status === 'paid') {

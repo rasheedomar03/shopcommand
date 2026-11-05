@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Search, Download, Send, CheckCircle, Clock, AlertCircle, DollarSign, Printer, Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Download, Send, CheckCircle, Clock, AlertCircle, DollarSign, Printer, Plus, Pencil, Trash2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
@@ -28,8 +28,48 @@ function StatusBadge({ status }) {
 
 function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid }) {
   const [confirmVoid, setConfirmVoid] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [rows, setRows] = useState([])
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+
+  // Reset edit state when a different invoice opens (or the modal closes)
+  useEffect(() => {
+    setEditing(false)
+    setConfirmVoid(false)
+    setSaveError(null)
+  }, [invoice?.id])
+
   if (!invoice) return null
   const shop = shops.find(s => s.id === invoice.shopId)
+  const editable = invoice.status !== 'paid'
+
+  const startEdit = () => {
+    setRows(invoice.services.map(s => ({ name: s.name, parts: s.parts ?? 0, labor: s.labor ?? 0 })))
+    setSaveError(null)
+    setEditing(true)
+  }
+  const setRow = (i, field, value) => setRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r))
+  const editSubtotal = rows.reduce((sum, r) => sum + (Number(r.parts) || 0) + (Number(r.labor) || 0), 0)
+  // Local invoices carry 8.25% tax; DB-backed invoices store a tax-free total
+  const editTax = invoice.tax > 0 ? Math.round(editSubtotal * 8.25) / 100 : 0
+  const editTotal = Math.round((editSubtotal + editTax) * 100) / 100
+
+  const saveEdit = async () => {
+    const services = rows
+      .filter(r => String(r.name).trim())
+      .map(r => ({ name: String(r.name).trim(), parts: Number(r.parts) || 0, labor: Number(r.labor) || 0 }))
+    if (services.length === 0) {
+      setSaveError('An invoice needs at least one line item')
+      return
+    }
+    setSaving(true)
+    setSaveError(null)
+    const r = await onUpdate(invoice.id, { services, subtotal: editSubtotal, tax: editTax, total: editTotal })
+    setSaving(false)
+    if (r?.error) setSaveError(r.error)
+    else setEditing(false)
+  }
 
   return (
     <Modal open={!!invoice} onClose={onClose} title={invoice.id} subtitle={`${invoice.vehicle} · ${invoice.customerName}`} size="lg">
@@ -48,28 +88,79 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid }) {
             <div className="text-right">Parts</div>
             <div className="text-right">Labor</div>
           </div>
-          {invoice.services.map((svc, i) => (
-            <div key={i} className={cn('grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-3 text-sm', i > 0 && 'border-t border-border')}>
-              <div className="text-text-primary">{svc.name}</div>
-              <div className="text-right text-text-secondary tabular-nums">{formatCurrency(svc.parts)}</div>
-              <div className="text-right text-text-secondary tabular-nums">{formatCurrency(svc.labor)}</div>
-            </div>
-          ))}
+          {editing ? (
+            <>
+              {rows.map((r, i) => (
+                <div key={i} className={cn('grid grid-cols-[1fr_84px_84px_28px] gap-2 items-center px-3 py-2', i > 0 && 'border-t border-border')}>
+                  <input
+                    value={r.name}
+                    onChange={e => setRow(i, 'name', e.target.value)}
+                    placeholder="Service description"
+                    className="h-8 px-2.5 rounded-md bg-background border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40"
+                  />
+                  <input
+                    type="number" min="0" step="0.01" inputMode="decimal"
+                    value={r.parts}
+                    onChange={e => setRow(i, 'parts', e.target.value)}
+                    aria-label="Parts amount"
+                    className="h-8 px-2 rounded-md bg-background border border-border text-sm text-right text-text-primary tabular-nums focus:outline-none focus:ring-1 focus:ring-orange/40"
+                  />
+                  <input
+                    type="number" min="0" step="0.01" inputMode="decimal"
+                    value={r.labor}
+                    onChange={e => setRow(i, 'labor', e.target.value)}
+                    aria-label="Labor amount"
+                    className="h-8 px-2 rounded-md bg-background border border-border text-sm text-right text-text-primary tabular-nums focus:outline-none focus:ring-1 focus:ring-orange/40"
+                  />
+                  <button
+                    onClick={() => setRows(prev => prev.filter((_, idx) => idx !== i))}
+                    disabled={rows.length === 1}
+                    aria-label="Remove line"
+                    className="flex items-center justify-center h-8 w-7 rounded-md text-text-muted hover:text-status-red disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <div className="border-t border-border px-3 py-2">
+                <button
+                  onClick={() => setRows(prev => [...prev, { name: '', parts: 0, labor: 0 }])}
+                  className="text-xs text-orange hover:underline underline-offset-2 font-medium"
+                >
+                  + Add line item
+                </button>
+              </div>
+            </>
+          ) : (
+            invoice.services.map((svc, i) => (
+              <div key={i} className={cn('grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-3 text-sm', i > 0 && 'border-t border-border')}>
+                <div className="text-text-primary">{svc.name}</div>
+                <div className="text-right text-text-secondary tabular-nums">{formatCurrency(svc.parts)}</div>
+                <div className="text-right text-text-secondary tabular-nums">{formatCurrency(svc.labor)}</div>
+              </div>
+            ))
+          )}
           <div className="border-t border-border px-4 py-3 space-y-1.5 bg-background">
             <div className="flex justify-between text-sm text-text-secondary">
               <span>Subtotal</span>
-              <span className="tabular-nums">{formatCurrency(invoice.subtotal)}</span>
+              <span className="tabular-nums">{formatCurrency(editing ? editSubtotal : invoice.subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm text-text-secondary">
               <span>Tax (8.25%)</span>
-              <span className="tabular-nums">${invoice.tax.toFixed(2)}</span>
+              <span className="tabular-nums">${(editing ? editTax : invoice.tax).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm font-semibold text-text-primary pt-1.5 border-t border-border">
               <span>Total</span>
-              <span className="text-orange tabular-nums">${invoice.total.toFixed(2)}</span>
+              <span className="text-orange tabular-nums">${(editing ? editTotal : invoice.total).toFixed(2)}</span>
             </div>
           </div>
         </div>
+
+        {saveError && (
+          <div className="px-3 py-2.5 rounded-lg bg-status-red/5 border border-status-red/20 text-xs text-status-red">
+            {saveError}
+          </div>
+        )}
 
         {invoice.paidAt && (
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-status-green/5 border border-status-green/20">
@@ -98,23 +189,41 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid }) {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="secondary" onClick={() => onPrint(invoice)}>
-              <Printer size={13} /> Print / PDF
-            </Button>
-            {invoice.status === 'draft' && (
-              <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'sent' })}>
-                <Send size={13} /> Mark as sent
-              </Button>
-            )}
-            {(invoice.status === 'sent' || invoice.status === 'overdue') && (
-              <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'paid', paidAt: new Date().toISOString(), paymentMethod: 'Recorded manually' })}>
-                <DollarSign size={13} /> Record payment
-              </Button>
-            )}
-            {invoice.status === 'overdue' && (
-              <Button size="sm" variant="secondary" disabled title="Email reminders coming soon">
-                <Send size={13} /> Reminder — soon
-              </Button>
+            {editing ? (
+              <>
+                <Button size="sm" variant="secondary" onClick={() => { setEditing(false); setSaveError(null) }} disabled={saving}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={saveEdit} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save changes'}
+                </Button>
+              </>
+            ) : (
+              <>
+                {editable && (
+                  <Button size="sm" variant="secondary" onClick={startEdit}>
+                    <Pencil size={13} /> Edit
+                  </Button>
+                )}
+                <Button size="sm" variant="secondary" onClick={() => onPrint(invoice)}>
+                  <Printer size={13} /> Print / PDF
+                </Button>
+                {invoice.status === 'draft' && (
+                  <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'sent' })}>
+                    <Send size={13} /> Mark as sent
+                  </Button>
+                )}
+                {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                  <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'paid', paidAt: new Date().toISOString(), paymentMethod: 'Recorded manually' })}>
+                    <DollarSign size={13} /> Record payment
+                  </Button>
+                )}
+                {invoice.status === 'overdue' && (
+                  <Button size="sm" variant="secondary" disabled title="Email reminders coming soon">
+                    <Send size={13} /> Reminder — soon
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -267,6 +376,7 @@ export default function Invoices() {
         onUpdate={async (id, patch) => {
           const r = await updateInvoice(id, patch)
           if (!r?.error) setSelected(prev => prev ? { ...prev, ...patch } : prev)
+          return r
         }}
         onVoid={async (id) => {
           const r = await voidInvoice(id)
