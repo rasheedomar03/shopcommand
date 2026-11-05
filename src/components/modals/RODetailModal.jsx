@@ -161,6 +161,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const [editingOrderId, setEditingOrderId] = useState(null)
   const [orderDraft, setOrderDraft]         = useState({ supplier: '', eta: '', carrier: '', trackingNumber: '' })
   const [confirmDeletePartId, setConfirmDeletePartId] = useState(null)
+  const [customPartDraft, setCustomPartDraft] = useState(null) // { name, price, qty } or null
   const [attachments, setAttachments] = useState(ro?.attachments || [])
   const [attachOpen, setAttachOpen] = useState(false)
   const [confirmDeleteRO, setConfirmDeleteRO] = useState(false)
@@ -379,7 +380,7 @@ export function RODetailModal({ open, onClose, ro }) {
 
   const currentStageIdx = RO_STAGES.indexOf(stage)
   const servicesSubtotal = services.reduce((sum, s) => sum + (Number(s.price) || 0), 0)
-  const partsSubtotal = partsUsed.reduce((sum, p) => sum + (p.price * p.qty), 0)
+  const partsSubtotal = partsUsed.reduce((sum, p) => sum + ((Number(p.price) || 0) * (Number(p.qty) || 1)), 0)
   const subtotal = servicesSubtotal + partsSubtotal
   const taxAmount = Math.round(subtotal * TAX_RATE * 100) / 100
   const grandTotal = subtotal + taxAmount
@@ -402,6 +403,21 @@ export function RODetailModal({ open, onClose, ro }) {
     usePart(part.id, 1)
     setShowPartsPicker(false)
     setPartSearch('')
+  }
+
+  const addCustomPart = () => {
+    const name = customPartDraft?.name?.trim()
+    if (!name) return
+    const qty = Math.max(1, Number(customPartDraft.qty) || 1)
+    const price = Number(customPartDraft.price) || 0
+    setPartsUsed(prev => [...prev, { partId: null, name, qty, price }])
+    setCustomPartDraft(null)
+    setShowPartsPicker(false)
+    setPartSearch('')
+  }
+
+  const updatePartPrice = (idx, newPrice) => {
+    setPartsUsed(prev => prev.map((p, i) => i === idx ? { ...p, price: newPrice } : p))
   }
 
   const updatePartQty = (idx, newQty) => {
@@ -850,7 +866,7 @@ export function RODetailModal({ open, onClose, ro }) {
         <div className="flex items-center justify-between mb-2">
           <div className="text-2xs font-medium text-text-muted uppercase tracking-wider">Parts Used</div>
           <button
-            onClick={() => { setShowPartsPicker(v => !v); setPartSearch('') }}
+            onClick={() => { setShowPartsPicker(v => !v); setPartSearch(''); setCustomPartDraft(null) }}
             className="flex items-center gap-1 text-xs font-medium text-orange hover:text-orange/80 transition-colors"
           >
             <Plus size={11} /> Add Part
@@ -868,7 +884,18 @@ export function RODetailModal({ open, onClose, ro }) {
                   <span className="text-xs tabular-nums text-text-primary w-4 text-center">{p.qty}</span>
                   <button onClick={() => updatePartQty(i, p.qty + 1)} className="w-5 h-5 rounded border border-border text-xs text-text-muted hover:text-text-primary hover:border-orange transition-colors flex items-center justify-center">+</button>
                 </div>
-                <span className="text-xs font-medium text-text-secondary tabular-nums flex-shrink-0 w-14 text-right">{formatCurrency(p.price * p.qty)}</span>
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <span className="text-2xs text-text-muted">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={p.price}
+                    onChange={e => updatePartPrice(i, e.target.value)}
+                    className="w-16 text-xs tabular-nums bg-transparent border border-border rounded px-1 py-0.5 text-text-primary text-right focus:outline-none focus:border-orange"
+                  />
+                </div>
+                <span className="text-xs font-medium text-text-secondary tabular-nums flex-shrink-0 w-14 text-right">{formatCurrency((Number(p.price) || 0) * p.qty)}</span>
                 <button onClick={() => removePart(i)} className="text-text-muted hover:text-red-400 transition-colors flex-shrink-0"><X size={11} /></button>
               </div>
             ))}
@@ -887,6 +914,57 @@ export function RODetailModal({ open, onClose, ro }) {
                 className="w-full text-xs bg-transparent focus:outline-none text-text-primary placeholder:text-text-muted"
               />
             </div>
+            {customPartDraft ? (
+              <div className="p-2 border-b border-border space-y-1.5 bg-background">
+                <input
+                  autoFocus
+                  type="text"
+                  value={customPartDraft.name}
+                  onChange={e => setCustomPartDraft(d => ({ ...d, name: e.target.value }))}
+                  placeholder="Part name"
+                  className="w-full text-xs bg-surface border border-border rounded px-2 py-1.5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange"
+                />
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={customPartDraft.price}
+                    onChange={e => setCustomPartDraft(d => ({ ...d, price: e.target.value }))}
+                    placeholder="Price"
+                    className="flex-1 min-w-0 text-xs bg-surface border border-border rounded px-2 py-1.5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange"
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    value={customPartDraft.qty}
+                    onChange={e => setCustomPartDraft(d => ({ ...d, qty: e.target.value }))}
+                    placeholder="Qty"
+                    className="w-14 text-xs bg-surface border border-border rounded px-2 py-1.5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange"
+                  />
+                  <button
+                    onClick={addCustomPart}
+                    disabled={!customPartDraft.name.trim()}
+                    className="px-2.5 py-1.5 rounded bg-orange text-white text-xs font-medium hover:bg-orange/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Add
+                  </button>
+                  <button
+                    onClick={() => setCustomPartDraft(null)}
+                    className="px-1.5 py-1.5 text-xs text-text-muted hover:text-text-primary transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setCustomPartDraft({ name: partSearch.trim(), price: '', qty: 1 })}
+                className="w-full flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-orange hover:bg-surface transition-colors border-b border-border"
+              >
+                <Plus size={11} /> New part (not in inventory)
+              </button>
+            )}
             <div className="max-h-36 overflow-y-auto">
               {filteredPickerParts.length === 0 ? (
                 <div className="px-3 py-4 text-xs text-text-muted text-center">

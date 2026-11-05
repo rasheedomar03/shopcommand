@@ -35,7 +35,8 @@ export async function api(path, opts = {}) {
       if (v != null && v !== '') qs.set(k, v)
     }
     const str = qs.toString()
-    if (str) url += '?' + str
+    // The path may already carry a query string (e.g. /api/health?action=x)
+    if (str) url += (url.includes('?') ? '&' : '?') + str
   }
 
   const headers = await getAuthHeaders()
