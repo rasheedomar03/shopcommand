@@ -510,7 +510,7 @@ export default function Parts() {
 
   const filtered = scopedParts.filter(p => {
     const q = search.toLowerCase()
-    const matchSearch = !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+    const matchSearch = !q || (p.name || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q)
     const matchShop = isAdvisor || shopFilter === 'All' || String(p.shopId) === String(shopFilter)
     const matchStock = stockFilter === 'All'
       || (stockFilter === 'low' && p.qty <= p.minQty && p.qty > 0)

@@ -357,7 +357,7 @@ export function RODetailModal({ open, onClose, ro }) {
     const req = partsRequests.find(r => r.id === id)
     if (req) {
       const catalogMatch = allParts.find(p =>
-        p.sku.toLowerCase() === (req.partNumber || '').toLowerCase() ||
+        (req.partNumber && p.sku && p.sku.toLowerCase() === req.partNumber.toLowerCase()) ||
         p.name.toLowerCase() === req.name.toLowerCase()
       )
       if (catalogMatch) restockPart(catalogMatch.id, req.qty || 1)
@@ -390,7 +390,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const filteredPickerParts = shopParts.filter(p => {
     if (!partSearch) return true
     const q = partSearch.toLowerCase()
-    return p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+    return (p.name || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q)
   })
 
   const addPart = (part) => {

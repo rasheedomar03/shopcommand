@@ -608,7 +608,7 @@ function TechPartsTab({ techROs, shopId, updateRepairOrder }) {
   const shopParts = parts.filter(p => p.shopId === shopId)
   const filteredInv = shopParts.filter(p => {
     const q = invSearch.toLowerCase()
-    return !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+    return !q || (p.name || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q)
   })
   const lowStock = shopParts.filter(p => p.qty <= p.minQty)
 

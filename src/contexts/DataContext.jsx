@@ -315,6 +315,7 @@ export function DataProvider({ children }) {
       if (Array.isArray(partsData)) {
         setParts(partsData.map(p => ({
           ...p, shopId: p.shop_id, minQty: p.min_qty, lastOrdered: p.last_ordered,
+          name: p.name || '', sku: p.sku || '', category: p.category || '', vendor: p.vendor || '',
           cost: Number(p.cost || 0), price: Number(p.price || 0), qty: Number(p.qty || 0),
         })))
       }
@@ -758,7 +759,7 @@ export function DataProvider({ children }) {
       method: 'POST',
       body: { shop_id: part.shopId, name: part.name, sku: part.sku, category: part.category, vendor: part.vendor, qty: part.qty, min_qty: part.minQty, cost: part.cost, price: part.price },
     })
-    const transformed = { ...row, shopId: row.shop_id, minQty: row.min_qty, lastOrdered: row.last_ordered, cost: Number(row.cost || 0), price: Number(row.price || 0), qty: Number(row.qty || 0) }
+    const transformed = { ...row, shopId: row.shop_id, minQty: row.min_qty, lastOrdered: row.last_ordered, name: row.name || '', sku: row.sku || '', category: row.category || '', vendor: row.vendor || '', cost: Number(row.cost || 0), price: Number(row.price || 0), qty: Number(row.qty || 0) }
     setParts(prev => [...prev, transformed])
   }, [session?.demo])
 
@@ -776,7 +777,7 @@ export function DataProvider({ children }) {
       params: { id },
       body: { name: patch.name, sku: patch.sku, category: patch.category, vendor: patch.vendor, qty: patch.qty, min_qty: patch.minQty, cost: patch.cost, price: patch.price },
     })
-    const transformed = { ...row, shopId: row.shop_id, minQty: row.min_qty, lastOrdered: row.last_ordered, cost: Number(row.cost || 0), price: Number(row.price || 0), qty: Number(row.qty || 0) }
+    const transformed = { ...row, shopId: row.shop_id, minQty: row.min_qty, lastOrdered: row.last_ordered, name: row.name || '', sku: row.sku || '', category: row.category || '', vendor: row.vendor || '', cost: Number(row.cost || 0), price: Number(row.price || 0), qty: Number(row.qty || 0) }
     setParts(prev => prev.map(p => p.id === id ? transformed : p))
 
     // Low stock notification
