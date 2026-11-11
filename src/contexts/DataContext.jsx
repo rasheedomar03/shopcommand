@@ -687,6 +687,26 @@ export function DataProvider({ children }) {
     return { ok: true, paid: full }
   }, [session?.demo, invoices])
 
+  // Email the invoice to the customer from {Shop} <invoices@shopcommand.net>.
+  // Demo and local-only invoices simulate the send (nothing actually goes out).
+  const emailInvoice = useCallback(async (id) => {
+    const target = invoices.find(i => i.id === id)
+    if (!target) return { error: 'Invoice not found' }
+    if (!target.customerEmail) return { error: 'This customer has no email on file. Add one on the Customers page first.' }
+    if (session?.demo || !target.dbId) {
+      return { ok: true, to: target.customerEmail, simulated: true }
+    }
+    try {
+      const r = await api('/api/invoices?action=email', {
+        method: 'POST',
+        body: { invoice_id: target.dbId },
+      })
+      return { ok: true, to: r.to }
+    } catch (err) {
+      return { error: err.message || 'Failed to send the invoice' }
+    }
+  }, [session?.demo, invoices])
+
   const updateInvoice = useCallback(async (id, patch) => {
     const target = invoices.find(i => i.id === id)
     // DB-backed invoice being paid → record it server-side first
@@ -1013,7 +1033,7 @@ export function DataProvider({ children }) {
       partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
-      invoices, addInvoice, updateInvoice, voidInvoice, recordInvoicePayment,
+      invoices, addInvoice, updateInvoice, voidInvoice, recordInvoicePayment, emailInvoice,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,
       resetData, loading, fetchAll, fetchError,

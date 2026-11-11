@@ -27,7 +27,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onRecordPayment }) {
+function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onRecordPayment, onEmail }) {
   const [confirmVoid, setConfirmVoid] = useState(false)
   const [confirmUnpay, setConfirmUnpay] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -38,6 +38,8 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
   const [payAmount, setPayAmount] = useState('')
   const [payError, setPayError] = useState(null)
   const [paying, setPaying] = useState(false)
+  const [emailState, setEmailState] = useState('idle') // idle | sending | sent
+  const [emailError, setEmailError] = useState(null)
 
   // Reset edit state when a different invoice opens (or the modal closes)
   useEffect(() => {
@@ -47,6 +49,8 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
     setSaveError(null)
     setPayOpen(false)
     setPayError(null)
+    setEmailState('idle')
+    setEmailError(null)
   }, [invoice?.id])
 
   if (!invoice) return null
@@ -55,6 +59,18 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
   const amountPaid = Number(invoice.amountPaid) || 0
   const balance = Math.max(0, Math.round((invoice.total - amountPaid) * 100) / 100)
   const canTakePayment = ['sent', 'overdue', 'partial'].includes(invoice.status)
+
+  const sendEmail = async () => {
+    setEmailState('sending')
+    setEmailError(null)
+    const r = await onEmail(invoice.id)
+    if (r?.error) {
+      setEmailState('idle')
+      setEmailError(r.error)
+    } else {
+      setEmailState('sent')
+    }
+  }
 
   const submitPayment = async () => {
     setPaying(true)
@@ -183,6 +199,12 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
           </div>
         )}
 
+        {emailError && (
+          <div className="px-3 py-2.5 rounded-lg bg-status-red/5 border border-status-red/20 text-xs text-status-red">
+            {emailError}
+          </div>
+        )}
+
         {invoice.status === 'paid' && invoice.paidAt && (
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-status-green/5 border border-status-green/20">
             <CheckCircle size={14} className="text-status-green" />
@@ -271,6 +293,13 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
                 <Button size="sm" variant="secondary" onClick={() => onPrint(invoice)}>
                   <Printer size={13} /> Print / PDF
                 </Button>
+                {invoice.customerEmail && (
+                  <Button size="sm" variant="secondary" onClick={sendEmail} disabled={emailState !== 'idle'}>
+                    {emailState === 'sent'
+                      ? <><CheckCircle size={13} className="text-status-green" /> Sent</>
+                      : <><Send size={13} /> {emailState === 'sending' ? 'Sending...' : 'Email to customer'}</>}
+                  </Button>
+                )}
                 {invoice.status === 'draft' && (
                   <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'sent' })}>
                     <Send size={13} /> Mark as sent
@@ -309,7 +338,7 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
 }
 
 export default function Invoices() {
-  const { shops, invoices, updateInvoice, voidInvoice, recordInvoicePayment } = useData()
+  const { shops, invoices, updateInvoice, voidInvoice, recordInvoicePayment, emailInvoice } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
@@ -482,6 +511,7 @@ export default function Invoices() {
           const r = await voidInvoice(id)
           if (!r?.error) setSelected(null)
         }}
+        onEmail={emailInvoice}
       />
       <InvoiceGeneratorModal
         open={generatorOpen}
