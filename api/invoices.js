@@ -135,11 +135,20 @@ export default createHandler(
       const paid = Number(inv.amount_paid) || 0
       const balance = Math.max(0, Math.round((total - paid) * 100) / 100)
 
+      // The invoice amount can exceed the line items (tax rolled into the RO
+      // total); show that gap as its own line so the math reads clean.
+      const linesSum = services.reduce((sum, s) => sum + (Number(s.price) || 0), 0)
+      const taxGap = Math.round((total - linesSum) * 100) / 100
+
       const rowsHtml = services.map(s => `
         <tr>
           <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#0f172a;">${esc(s.name)}</td>
           <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#334155;text-align:right;white-space:nowrap;">${money(s.price)}</td>
-        </tr>`).join('')
+        </tr>`).join('') + (taxGap > 0.005 ? `
+        <tr>
+          <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#64748b;">Tax</td>
+          <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#334155;text-align:right;white-space:nowrap;">${money(taxGap)}</td>
+        </tr>` : '')
 
       const statusLine = inv.status === 'paid'
         ? `<p style="margin:16px 0 0;color:#16a34a;font-weight:600;">Paid in full. Thank you!</p>`
@@ -176,6 +185,7 @@ export default createHandler(
         vehicle ? `Vehicle: ${vehicle}` : null,
         '',
         ...services.map(s => `${s.name}: ${money(s.price)}`),
+        ...(taxGap > 0.005 ? [`Tax: ${money(taxGap)}`] : []),
         `Total${inv.status === 'paid' ? '' : ' due'}: ${money(total)}`,
         inv.status === 'paid' ? 'Paid in full. Thank you!' : paid > 0 ? `Paid so far: ${money(paid)} · Balance due: ${money(balance)}` : null,
         '',
