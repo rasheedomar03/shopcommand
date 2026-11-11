@@ -40,8 +40,12 @@ export default function CustomerProfile() {
   const navigate = useNavigate()
   const [selectedRO, setSelectedRO] = useState(null)
   const [newROOpen, setNewROOpen] = useState(false)
+  const [editingEmail, setEditingEmail] = useState(false)
+  const [emailDraft, setEmailDraft] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailErr, setEmailErr] = useState(null)
 
-  const { repairOrders, customers, shops } = useData()
+  const { repairOrders, customers, shops, updateCustomer } = useData()
   const customer = customers.find(c => String(c.id) === String(id))
   if (!customer) {
     return (
@@ -146,11 +150,53 @@ export default function CustomerProfile() {
                     {customer.phone}
                   </span>
                 )}
-                {customer.email && (
+                {editingEmail ? (
                   <span className="flex items-center gap-1.5">
                     <Mail size={11} />
-                    {customer.email}
+                    <input
+                      autoFocus
+                      type="email"
+                      value={emailDraft}
+                      onChange={e => setEmailDraft(e.target.value)}
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Escape') { setEditingEmail(false); setEmailErr(null) }
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          setEmailSaving(true)
+                          setEmailErr(null)
+                          try {
+                            await updateCustomer(customer.id, { email: emailDraft.trim() || null })
+                            setEditingEmail(false)
+                          } catch (err) {
+                            setEmailErr(err.message || 'Could not save')
+                          }
+                          setEmailSaving(false)
+                        }
+                      }}
+                      placeholder="customer@email.com"
+                      disabled={emailSaving}
+                      className="h-6 w-48 px-1.5 rounded border border-border bg-background text-xs text-text-primary focus:outline-none focus:border-orange"
+                    />
+                    <span className="text-2xs text-text-muted">{emailSaving ? 'Saving…' : 'Enter to save · Esc to cancel'}</span>
+                    {emailErr && <span className="text-2xs text-status-red">{emailErr}</span>}
                   </span>
+                ) : customer.email ? (
+                  <button
+                    onClick={() => { setEmailDraft(customer.email); setEditingEmail(true) }}
+                    title="Edit email"
+                    className="flex items-center gap-1.5 hover:text-text-primary transition-colors"
+                  >
+                    <Mail size={11} />
+                    {customer.email}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setEmailDraft(''); setEditingEmail(true) }}
+                    className="flex items-center gap-1.5 text-orange hover:underline underline-offset-2"
+                  >
+                    <Mail size={11} />
+                    Add email
+                  </button>
                 )}
                 {shop && (
                   <span className="flex items-center gap-1.5">

@@ -24,6 +24,7 @@ export function NewROModal({
     customerId: null,
     customerName: preCustomerName,
     customerPhone: preCustomerPhone,
+    customerEmail: '',
     vin: '',
     vehicle: '',
     year: '',
@@ -97,6 +98,7 @@ export function NewROModal({
 
     const cleanName  = sanitizeField(form.customerName, 100)
     const cleanPhone = sanitizeField(form.customerPhone, 30)
+    const cleanEmail = sanitizeField(form.customerEmail, 200)
     const cleanYear  = sanitizeField(form.year, 4)
     const cleanMake  = sanitizeField(form.make, 50)
     const cleanModel = sanitizeField(form.model, 50)
@@ -111,6 +113,7 @@ export function NewROModal({
         const cust = await addCustomer({
           name: cleanName,
           phone: cleanPhone || null,
+          email: cleanEmail || null,
           shop_id: form.shopId,
         })
         customerId = cust.id
@@ -149,6 +152,7 @@ export function NewROModal({
         customerId: null,
         customerName: preCustomerName,
         customerPhone: preCustomerPhone,
+        customerEmail: '',
         vin: '',
         vehicle: '',
         year: '',
@@ -234,7 +238,7 @@ export function NewROModal({
                         key={c.id}
                         type="button"
                         onMouseDown={() => {
-                          setForm(f => ({ ...f, customerName: c.name, customerPhone: c.phone, customerId: c.id }))
+                          setForm(f => ({ ...f, customerName: c.name, customerPhone: c.phone || '', customerEmail: c.email || '', customerId: c.id }))
                           setShowSuggestions(false)
                           if (errors.customerName) setErrors(er => ({ ...er, customerName: undefined }))
                         }}
@@ -252,6 +256,7 @@ export function NewROModal({
               </div>
               <Input label="Phone" placeholder="+1 (713) 881-4472" value={form.customerPhone} onChange={set('customerPhone')} type="tel" />
             </div>
+            <Input label="Email (for emailed invoices)" placeholder="customer@email.com" value={form.customerEmail} onChange={set('customerEmail')} type="email" />
           </div>
 
           {/* Vehicle */}

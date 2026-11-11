@@ -29,7 +29,7 @@ export default function Customers() {
 
   const filtered = scopedCustomers.filter(c => {
     const q = search.toLowerCase()
-    const matchSearch = !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.includes(q)
+    const matchSearch = !q || (c.name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || (c.phone || '').includes(q)
     const matchStatus = statusFilter === 'All' || c.status === statusFilter
     return matchSearch && matchStatus
   })

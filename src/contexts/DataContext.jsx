@@ -474,11 +474,26 @@ export function DataProvider({ children }) {
   }, [session?.demo])
 
   const updateCustomer = useCallback(async (id, patch) => {
+    if (session?.demo) {
+      let updated
+      setCustomers(prev => prev.map(c => {
+        if (c.id !== id) return c
+        updated = { ...c, ...patch }
+        return updated
+      }))
+      return updated
+    }
     const row = await api('/api/customers', { method: 'PUT', params: { id }, body: patch })
-    const transformed = transformCustomer(row)
-    setCustomers(prev => prev.map(c => c.id === id ? transformed : c))
-    return transformed
-  }, [])
+    // PUT returns the bare row (no stats aggregates) — merge the contact
+    // fields into the existing record instead of replacing it
+    let merged
+    setCustomers(prev => prev.map(c => {
+      if (c.id !== id) return c
+      merged = { ...c, name: row.name, email: row.email, phone: row.phone, address: row.address, notes: row.notes, updatedAt: row.updated_at }
+      return merged
+    }))
+    return merged
+  }, [session?.demo])
 
   const removeCustomer = useCallback(async (id) => {
     await api('/api/customers', { method: 'DELETE', params: { id } })
