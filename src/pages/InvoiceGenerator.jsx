@@ -43,6 +43,15 @@ export default function InvoiceGenerator() {
   const [items, setItems] = useState([{ ...emptyItem, desc: '', type: 'labor' }])
   const [taxRate, setTaxRate] = useState('8.25')
   const [taxLabor, setTaxLabor] = useState(false)
+  // Categorize lines as labor/part/fee. Some shops bill flat line amounts
+  // with no breakdown; remember the choice across sessions.
+  const [itemize, setItemize] = useState(() => {
+    try { return localStorage.getItem('sc_inv_itemize') !== '0' } catch { return true }
+  })
+  const toggleItemize = (on) => {
+    setItemize(on)
+    try { localStorage.setItem('sc_inv_itemize', on ? '1' : '0') } catch { /* per-viewer convenience only */ }
+  }
   const [notes, setNotes] = useState('')
 
   useEffect(() => {
@@ -84,7 +93,9 @@ export default function InvoiceGenerator() {
   const laborSubtotal = items.filter(i => i.type === 'labor').reduce((s, i) => s + lineTotal(i), 0)
   const partsSubtotal = items.filter(i => i.type === 'part').reduce((s, i) => s + lineTotal(i), 0)
   const feesSubtotal = items.filter(i => i.type === 'fee').reduce((s, i) => s + lineTotal(i), 0)
-  const taxable = partsSubtotal + feesSubtotal + (taxLabor ? laborSubtotal : 0)
+  const subtotal = laborSubtotal + partsSubtotal + feesSubtotal
+  // Without itemization there is no labor/parts split, so tax the whole subtotal
+  const taxable = itemize ? partsSubtotal + feesSubtotal + (taxLabor ? laborSubtotal : 0) : subtotal
   const tax = taxable * (n(taxRate) / 100)
   const total = laborSubtotal + partsSubtotal + feesSubtotal + tax
   const fmt = v => `$${v.toFixed(2)}`
@@ -174,13 +185,15 @@ export default function InvoiceGenerator() {
                 <h2 className="text-sm font-bold text-slate-900 mb-3">Line items</h2>
                 <div className="space-y-2">
                   {items.map((it, i) => (
-                    <div key={i} className="grid grid-cols-[1fr_84px_56px_84px_32px] gap-2 items-center">
-                      <input className={input} placeholder={it.type === 'labor' ? 'e.g. Front brake pads & rotors — labor' : it.type === 'part' ? 'e.g. Brake pads (set)' : 'e.g. Shop supplies'} value={it.desc} onChange={e => setItem(i, { desc: e.target.value })} />
-                      <select className={input} value={it.type} onChange={e => setItem(i, { type: e.target.value })}>
-                        <option value="labor">Labor</option>
-                        <option value="part">Part</option>
-                        <option value="fee">Fee</option>
-                      </select>
+                    <div key={i} className={itemize ? 'grid grid-cols-[1fr_84px_56px_84px_32px] gap-2 items-center' : 'grid grid-cols-[1fr_56px_84px_32px] gap-2 items-center'}>
+                      <input className={input} placeholder={!itemize ? 'e.g. Front brake job — parts & labor' : it.type === 'labor' ? 'e.g. Front brake pads & rotors — labor' : it.type === 'part' ? 'e.g. Brake pads (set)' : 'e.g. Shop supplies'} value={it.desc} onChange={e => setItem(i, { desc: e.target.value })} />
+                      {itemize && (
+                        <select className={input} value={it.type} onChange={e => setItem(i, { type: e.target.value })}>
+                          <option value="labor">Labor</option>
+                          <option value="part">Part</option>
+                          <option value="fee">Fee</option>
+                        </select>
+                      )}
                       <input className={input} inputMode="decimal" placeholder="Qty" value={it.qty} onChange={e => setItem(i, { qty: e.target.value })} />
                       <input className={input} inputMode="decimal" placeholder="$" value={it.price} onChange={e => setItem(i, { price: e.target.value })} />
                       <button onClick={() => removeItem(i)} aria-label="Remove line item" className="p-1.5 rounded-md text-slate-300 hover:text-red-500 transition-colors">
@@ -190,16 +203,28 @@ export default function InvoiceGenerator() {
                   ))}
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button onClick={() => addItem('labor')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:border-orange-300 hover:text-orange-600 transition-colors">
-                    <Plus size={12} /> Labor
-                  </button>
-                  <button onClick={() => addItem('part')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:border-orange-300 hover:text-orange-600 transition-colors">
-                    <Plus size={12} /> Part
-                  </button>
-                  <button onClick={() => addItem('fee')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:border-orange-300 hover:text-orange-600 transition-colors">
-                    <Plus size={12} /> Fee
-                  </button>
+                  {itemize ? (
+                    <>
+                      <button onClick={() => addItem('labor')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:border-orange-300 hover:text-orange-600 transition-colors">
+                        <Plus size={12} /> Labor
+                      </button>
+                      <button onClick={() => addItem('part')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:border-orange-300 hover:text-orange-600 transition-colors">
+                        <Plus size={12} /> Part
+                      </button>
+                      <button onClick={() => addItem('fee')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:border-orange-300 hover:text-orange-600 transition-colors">
+                        <Plus size={12} /> Fee
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => addItem('labor')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:border-orange-300 hover:text-orange-600 transition-colors">
+                      <Plus size={12} /> Add line
+                    </button>
+                  )}
                 </div>
+                <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                  <input type="checkbox" checked={itemize} onChange={e => toggleItemize(e.target.checked)} className="w-4 h-4 accent-orange-500" />
+                  <span className="text-sm text-slate-600">Categorize lines as labor / part / fee <span className="text-slate-400">(off = plain line amounts)</span></span>
+                </label>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3 items-end">
@@ -207,10 +232,12 @@ export default function InvoiceGenerator() {
                   <span className={label}>Sales tax %</span>
                   <input className={`${input} mt-1`} inputMode="decimal" value={taxRate} onChange={e => setTaxRate(e.target.value)} />
                 </div>
-                <label className="flex items-center gap-2 py-2.5 cursor-pointer">
-                  <input type="checkbox" checked={taxLabor} onChange={e => setTaxLabor(e.target.checked)} className="w-4 h-4 accent-orange-500" />
-                  <span className="text-sm text-slate-600">Apply tax to labor <span className="text-slate-400">(varies by state)</span></span>
-                </label>
+                {itemize && (
+                  <label className="flex items-center gap-2 py-2.5 cursor-pointer">
+                    <input type="checkbox" checked={taxLabor} onChange={e => setTaxLabor(e.target.checked)} className="w-4 h-4 accent-orange-500" />
+                    <span className="text-sm text-slate-600">Apply tax to labor <span className="text-slate-400">(varies by state)</span></span>
+                  </label>
+                )}
               </div>
 
               <div>
@@ -273,7 +300,7 @@ export default function InvoiceGenerator() {
                     <tr key={i} className="border-t border-slate-100">
                       <td className="py-2 text-slate-900">
                         {it.desc || '—'}
-                        <span className="ml-2 text-[10px] uppercase tracking-wider text-slate-400">{it.type}</span>
+                        {itemize && <span className="ml-2 text-[10px] uppercase tracking-wider text-slate-400">{it.type}</span>}
                       </td>
                       <td className="py-2 text-right tabular-nums text-slate-600">{n(it.qty)}</td>
                       <td className="py-2 text-right tabular-nums text-slate-600">{fmt(n(it.price))}</td>
@@ -284,10 +311,16 @@ export default function InvoiceGenerator() {
               </table>
 
               <div className="mt-4 pt-4 border-t border-slate-200 space-y-1.5 text-sm">
-                <div className="flex justify-between text-slate-600"><span>Labor</span><span className="tabular-nums">{fmt(laborSubtotal)}</span></div>
-                <div className="flex justify-between text-slate-600"><span>Parts</span><span className="tabular-nums">{fmt(partsSubtotal)}</span></div>
-                {feesSubtotal > 0 && <div className="flex justify-between text-slate-600"><span>Fees</span><span className="tabular-nums">{fmt(feesSubtotal)}</span></div>}
-                <div className="flex justify-between text-slate-600"><span>Tax ({n(taxRate)}%{taxLabor ? ', incl. labor' : ', parts & fees'})</span><span className="tabular-nums">{fmt(tax)}</span></div>
+                {itemize ? (
+                  <>
+                    <div className="flex justify-between text-slate-600"><span>Labor</span><span className="tabular-nums">{fmt(laborSubtotal)}</span></div>
+                    <div className="flex justify-between text-slate-600"><span>Parts</span><span className="tabular-nums">{fmt(partsSubtotal)}</span></div>
+                    {feesSubtotal > 0 && <div className="flex justify-between text-slate-600"><span>Fees</span><span className="tabular-nums">{fmt(feesSubtotal)}</span></div>}
+                  </>
+                ) : (
+                  <div className="flex justify-between text-slate-600"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
+                )}
+                <div className="flex justify-between text-slate-600"><span>Tax ({n(taxRate)}%{!itemize ? '' : taxLabor ? ', incl. labor' : ', parts & fees'})</span><span className="tabular-nums">{fmt(tax)}</span></div>
                 <div className="flex justify-between pt-2 border-t border-slate-200 text-base font-bold text-slate-900"><span>Total due</span><span className="tabular-nums">{fmt(total)}</span></div>
               </div>
 
