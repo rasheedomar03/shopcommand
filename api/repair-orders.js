@@ -108,7 +108,7 @@ export default createHandler(
       const customerFilter = customerId ? sql`AND ro.customer_id = ${customerId}` : sql``
 
       const rows = await sql`
-        SELECT ro.*, c.name AS customer_name,
+        SELECT ro.*, c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone,
           v.year AS vehicle_year, v.make AS vehicle_make, v.model AS vehicle_model,
           tech.name AS tech_name, adv.name AS advisor_name,
           s.name AS shop_name
