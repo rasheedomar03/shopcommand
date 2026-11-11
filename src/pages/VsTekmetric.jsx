@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Check, X, Minus } from 'lucide-react'
+import { Check, Minus } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 import { usePageMeta } from '@/lib/seo'
 import { CompareNav } from '@/components/CompareNav'
@@ -21,38 +21,35 @@ function HexMark({ size = 36 }) {
   )
 }
 
+// scWin: true = ShopCommand wins, false = Tekmetric wins, null = tie or not comparable
 const rows = [
-  { label: 'Pricing',              sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed — call required',      scWin: true },
-  { label: 'Pricing transparency', sc: 'Shown openly on our site',          them: 'Hidden behind a sales call',         scWin: true },
-  { label: 'Multi-location view',  sc: 'Core product — day one',            them: 'Separate module / higher tier',      scWin: true },
-  { label: 'Setup time',           sc: 'Up and running same day',           them: 'Days of onboarding calls',           scWin: true },
-  { label: 'Per-seat fees',        sc: 'Never',                             them: 'Yes',                                scWin: true },
-  { label: 'Feature tiers',        sc: 'One plan, everything included',     them: 'Multiple tiers + paid add-ons',      scWin: true },
-  { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',            scWin: true },
-  { label: 'Founding rate lock',   sc: '$100/mo + $50/shop locked forever', them: 'No equivalent offer',                scWin: true },
-  { label: 'G2 reviews',           sc: 'Early access — building toward it', them: '600+ reviews, multiple badges',      scWin: false },
-  { label: 'Tire Suite',           sc: 'Coming',                            them: 'Yes — fully built out',              scWin: false },
-  { label: 'Built-in CRM',         sc: 'Coming',                            them: 'Yes — CRM & Marketing module',       scWin: false },
-  { label: 'Two-way texting',      sc: 'Coming',                            them: 'Available (higher tiers)',           scWin: false },
-  { label: 'Payments',             sc: 'Coming',                            them: 'Fully embedded',                     scWin: false },
+  { label: 'Pricing',                 sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed, call required',           scWin: true },
+  { label: 'Pricing transparency',    sc: 'Shown openly on our site',             them: 'Quote after a sales call',               scWin: true },
+  { label: 'Multi-location dashboard', sc: 'Included at base price',              them: 'Multi-shop tools on higher tiers',       scWin: true },
+  { label: 'Per-seat fees',           sc: 'Never',                                them: 'Priced per shop, not per user',          scWin: null },
+  { label: 'Long-term contract',      sc: 'None, cancel anytime',                 them: 'Varies by agreement',                    scWin: true },
+  { label: 'Time clock',              sc: 'Included',                             them: 'Included',                               scWin: null },
+  { label: 'Founder access',          sc: 'Direct line, same-day fixes',          them: 'Established support team',               scWin: true },
+  { label: 'Founding rate lock',      sc: '$100/mo + $50/shop locked forever',    them: 'No equivalent offer',                    scWin: true },
+  { label: 'Track record',            sc: 'Early access, founding stage',         them: 'Years in market, thousands of shops',    scWin: false },
+  { label: 'Verified reviews',        sc: 'Building toward it',                   them: '600+ G2 reviews, multiple badges',       scWin: false },
+  { label: 'Tire module',             sc: 'Coming',                               them: 'Yes, fully built out',                   scWin: false },
+  { label: 'CRM and marketing',       sc: 'Coming',                               them: 'Yes, dedicated module',                  scWin: false },
+  { label: 'Two-way texting',         sc: 'Coming',                               them: 'Yes, mature feature',                    scWin: false },
+  { label: 'Integrated payments',     sc: 'Coming',                               them: 'Fully embedded',                         scWin: false },
+  { label: 'Parts and integrations',  sc: 'Coming',                               them: 'PartsTech, CARFAX, QuickBooks and more', scWin: false },
 ]
 
-function Tick({ win }) {
-  if (win === true)  return <Check size={15} className="text-orange-600 mx-auto" strokeWidth={2.5} />
-  if (win === false) return <Minus size={15} className="text-slate-400 mx-auto" strokeWidth={2} />
-  return <X size={15} className="text-slate-400 mx-auto" strokeWidth={2} />
-}
-
-const TITLE = 'ShopCommand vs. Tekmetric — Auto Shop Software Comparison'
+const TITLE = 'ShopCommand vs. Tekmetric | Auto Shop Software Comparison'
 const DESC = 'Transparent pricing, no per-seat fees, and built for multi-location owners from day one. See how ShopCommand compares to Tekmetric. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/tekmetric'
-const LAST_UPDATED = 'June 2, 2026'
+const LAST_UPDATED = 'November 11, 2026'
 
 const compareFaqs = [
-  { q: 'How much does Tekmetric cost per month?', a: 'Tekmetric doesn\'t publish pricing on their website — you need to book a demo and speak to sales to get a quote. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
-  { q: 'Can I switch from Tekmetric to ShopCommand?', a: 'Yes. ShopCommand is designed for quick setup — you can be running the same day. We\'re building data import tools to make migration smoother. Founding members get direct support from Rasheed during onboarding.' },
-  { q: 'Is ShopCommand better than Tekmetric?', a: 'It depends on your needs. Tekmetric is a mature platform with 600+ G2 reviews, CRM, payments, and tire management — great for single-location day-to-day operations. ShopCommand is built specifically for the owner managing multiple locations who needs cross-shop visibility without jumping between logins.' },
-  { q: 'Does Tekmetric charge per seat?', a: 'Yes, Tekmetric uses per-user pricing. ShopCommand charges per shop with unlimited users — $100/mo for the first shop plus $50/mo for each additional location, whether you have 2 people or 20 at each.' },
+  { q: 'How much does Tekmetric cost per month?', a: 'Tekmetric doesn\'t publish pricing on their website. You need to book a demo and speak to sales to get a quote. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
+  { q: 'Can I switch from Tekmetric to ShopCommand?', a: 'Yes. ShopCommand is designed for quick setup, and you can be running the same day. We\'re building data import tools to make migration smoother. Founding members get direct support from Rasheed during onboarding. If you depend on Tekmetric\'s tire module, CRM, or embedded payments today, those are still on our roadmap, so check the table above before you move.' },
+  { q: 'Is ShopCommand better than Tekmetric?', a: 'It depends on your needs. Tekmetric is a mature platform with 600+ G2 reviews, a built-in CRM, embedded payments, two-way texting, a tire module, and a wide integration ecosystem. If you want all of that today, Tekmetric wins. ShopCommand is built specifically for the owner managing multiple locations who needs cross-shop visibility at a transparent price without jumping between logins.' },
+  { q: 'Does Tekmetric charge per seat?', a: 'Tekmetric prices per shop, not per user, but they don\'t publish the numbers, so you\'d confirm the details on a sales call. ShopCommand also charges per shop with unlimited users: $100/mo for the first shop plus $50/mo for each additional location, whether you have 2 people or 20 at each.' },
 ]
 
 export default function VsTekmetric() {
@@ -61,7 +58,7 @@ export default function VsTekmetric() {
     description: DESC,
     path: '/compare/tekmetric',
     schema: [
-      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-06-02', author: { '@type': 'Organization', name: 'ShopCommand' } },
+      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-11-11', author: { '@type': 'Organization', name: 'ShopCommand' } },
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: compareFaqs.map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
     ],
     breadcrumbs: [
@@ -86,14 +83,15 @@ export default function VsTekmetric() {
           ShopCommand vs. Tekmetric
         </h1>
         <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-          Tekmetric is a mature, full-featured shop management platform. ShopCommand is built for a different problem — the owner managing multiple locations who needs cross-shop visibility without jumping between logins.
+          Tekmetric is a mature, full-featured shop management platform. ShopCommand is built for a different problem: the owner managing multiple locations who needs cross-shop visibility without jumping between logins.
         </p>
+        <p className="text-slate-400 text-xs mt-4">Last updated: {LAST_UPDATED}</p>
       </section>
 
       {/* Table */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <div className="rounded-2xl border border-slate-200 overflow-hidden">
-          {/* Header — desktop */}
+          {/* Header (desktop) */}
           <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
             <div className="text-slate-400 text-xs uppercase tracking-widest" />
             <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium">Tekmetric</div>
@@ -106,20 +104,26 @@ export default function VsTekmetric() {
               <div className={`hidden sm:grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-500 text-sm font-medium pt-0.5">{label}</div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed ${scWin ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === false ? 'text-slate-700 font-medium' : scWin === true ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
                 </div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-600' : 'text-slate-400'}`}>{sc}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === true ? 'text-orange-600 font-medium' : scWin === false ? 'text-slate-400' : 'text-slate-500'}`}>{sc}</span>
                 </div>
               </div>
               {/* Mobile stacked */}
               <div className={`sm:hidden px-5 py-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-700 text-sm font-medium mb-2">{label}</div>
-                <div className="flex items-start gap-2 text-xs text-slate-400 mb-1">
-                  <span className="text-slate-300 flex-shrink-0">✕</span> {them}
+                <div className={`flex items-start gap-2 text-xs mb-1 ${scWin === false ? 'text-slate-700 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === false
+                    ? <Check size={12} className="text-slate-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {them}
                 </div>
-                <div className="flex items-start gap-2 text-xs text-orange-600 font-semibold">
-                  <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} /> {sc}
+                <div className={`flex items-start gap-2 text-xs ${scWin === true ? 'text-orange-600 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === true
+                    ? <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {sc}
                 </div>
               </div>
             </div>
@@ -127,7 +131,7 @@ export default function VsTekmetric() {
         </div>
 
         <p className="text-slate-400 text-xs text-center mt-4">
-          Tekmetric data sourced from their public website and G2 reviews. ShopCommand is in early access — features marked "coming" are on the roadmap.
+          Tekmetric data sourced from their public website and G2 reviews. ShopCommand is in early access, and features marked "coming" are on the roadmap.
         </p>
       </section>
 
@@ -140,16 +144,16 @@ export default function VsTekmetric() {
           <div className="space-y-6">
             {[
               {
-                heading: 'Tekmetric is excellent at running a shop.',
-                body: 'If you have one location and want a mature, fully-featured platform with 600+ reviews, CRM, payments, tire management, and two-way texting — Tekmetric is a serious product. It\'s been built out over years.',
+                heading: 'Tekmetric wins on features today.',
+                body: 'If you have one location and want a mature platform with 600+ reviews, a built-in CRM, embedded payments, a tire module, two-way texting, and integrations with PartsTech, CARFAX, and QuickBooks, Tekmetric is the stronger product right now. It has been built out over years by a large team.',
               },
               {
                 heading: 'ShopCommand is built for a different moment.',
-                body: 'When you own three shops and spend your Fridays driving location to location to piece together how the week went — that\'s the problem ShopCommand is solving. Real-time cross-location visibility, owner-first, all in one dashboard.',
+                body: 'When you own three shops and spend your Fridays driving location to location to piece together how the week went, that\'s the problem ShopCommand is solving. Real-time cross-location visibility, owner-first, all in one dashboard, included at the base price.',
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get the product at $100/mo + $50/shop locked forever, direct access to the team, and a say in where the product goes. You\'re not buying software — you\'re shaping it.',
+                body: 'Founding members get the product at $100/mo + $50/shop locked forever, a direct line to the founder with same-day fixes, and a say in where the product goes. If you need Tekmetric\'s full feature set today, buy Tekmetric. If the multi-location dashboard and the price are what matter, this is the better bet.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">

@@ -53,17 +53,33 @@ export default function Article() {
     title: article ? `${article.title} | ShopCommand` : '',
     description: article?.description || '',
     path: `/resources/${slug}`,
-    schema: article ? [{
-      '@context': 'https://schema.org',
-      '@type': 'Article',
-      headline: article.title,
-      description: article.description,
-      url: `https://shopcommand.net/resources/${article.slug}`,
-      datePublished: article.publishedAt,
-      dateModified: article.publishedAt,
-      author: { '@type': 'Organization', name: 'ShopCommand', url: 'https://shopcommand.net' },
-      publisher: { '@type': 'Organization', name: 'ShopCommand', url: 'https://shopcommand.net' },
-    }] : [],
+    schema: article ? [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: article.title,
+        description: article.description,
+        url: `https://shopcommand.net/resources/${article.slug}`,
+        datePublished: article.publishedAt,
+        dateModified: article.updatedAt || article.publishedAt,
+        author: {
+          '@type': 'Person',
+          name: 'Rasheed Omar',
+          jobTitle: 'Founder',
+          worksFor: { '@type': 'Organization', name: 'ShopCommand' },
+        },
+        publisher: { '@type': 'Organization', name: 'ShopCommand', url: 'https://shopcommand.net' },
+      },
+      ...(article.faqs?.length ? [{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: article.faqs.map(faq => ({
+          '@type': 'Question',
+          name: faq.q,
+          acceptedAnswer: { '@type': 'Answer', text: faq.a },
+        })),
+      }] : []),
+    ] : [],
     breadcrumbs: article ? [
       { name: 'Home', path: '/' },
       { name: 'Resources', path: '/resources' },
@@ -112,6 +128,20 @@ export default function Article() {
                   {new Date(article.publishedAt + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </time>
               </div>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400 mt-2">
+                <span>By Rasheed Omar &middot; Founder, ShopCommand</span>
+                {article.updatedAt && (
+                  <>
+                    <span className="w-1 h-1 rounded-full bg-slate-300" />
+                    <span>
+                      Updated{' '}
+                      <time dateTime={article.updatedAt}>
+                        {new Date(article.updatedAt + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </time>
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Content */}
@@ -120,6 +150,21 @@ export default function Article() {
                 <ContentBlock key={i} block={block} />
               ))}
             </div>
+
+            {/* FAQ */}
+            {article.faqs?.length > 0 && (
+              <div className="mt-12">
+                <h2 className="text-lg font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>FAQ</h2>
+                <div className="space-y-6">
+                  {article.faqs.map((faq, i) => (
+                    <div key={i}>
+                      <p className="text-[15px] font-semibold text-slate-900 mb-1.5">{faq.q}</p>
+                      <p className="text-slate-600 text-[15px] leading-relaxed">{faq.a}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* CTA */}
             <div className="mt-14 p-6 rounded-2xl border border-orange-200 bg-orange-50/40">

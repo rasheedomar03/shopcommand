@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Check } from 'lucide-react'
+import { Check, Minus } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 import { usePageMeta } from '@/lib/seo'
 import { CompareNav } from '@/components/CompareNav'
@@ -21,33 +21,34 @@ function HexMark({ size = 36 }) {
   )
 }
 
+// scWin: true = ShopCommand wins, false = Mitchell1 wins, null = tie or not comparable
 const rows = [
-  { label: 'Pricing',              sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed — contact sales',       scWin: true  },
-  { label: 'Pricing transparency', sc: 'Shown openly on our site',           them: 'Hidden behind a sales process',       scWin: true  },
-  { label: 'Multi-location view',  sc: 'Core product — day one',             them: 'Possible, not the core focus',        scWin: true  },
-  { label: 'Cloud-native',         sc: 'Fully browser-based',                them: 'Desktop roots — partial cloud',       scWin: true  },
-  { label: 'Setup time',           sc: 'Up and running same day',            them: 'Weeks — training required',           scWin: true  },
-  { label: 'Per-seat fees',        sc: 'Never',                              them: 'Yes — per-user licensing',            scWin: true  },
-  { label: 'Modern UI',            sc: 'Built in 2024',                      them: 'Legacy interface, incremental updates', scWin: true },
-  { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',              scWin: true  },
-  { label: 'Founding rate lock',   sc: '$100/mo + $50/shop locked forever',  them: 'No equivalent offer',                 scWin: true  },
-  { label: 'Repair data / times',  sc: 'Coming',                             them: 'Industry-leading — ProDemand',        scWin: false },
-  { label: 'Parts integrations',   sc: 'Coming',                             them: 'Extensive — deep supplier network',   scWin: false },
-  { label: 'Market presence',      sc: 'Early access — founding stage',      them: '50,000+ shops',                       scWin: false },
-  { label: 'Two-way texting',      sc: 'Coming',                             them: 'Available',                           scWin: false },
+  { label: 'Pricing',                 sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed, contact sales',          scWin: true  },
+  { label: 'Pricing transparency',    sc: 'Shown openly on our site',             them: 'Quote after a sales conversation',       scWin: true  },
+  { label: 'Multi-location dashboard', sc: 'Included at base price',              them: 'Possible, not the core focus',           scWin: true  },
+  { label: 'Cloud-native',            sc: 'Fully browser-based',                  them: 'Desktop roots, partial cloud',           scWin: true  },
+  { label: 'Setup time',              sc: 'Up and running same day',              them: 'Installation plus scheduled training',   scWin: true  },
+  { label: 'Per-seat fees',           sc: 'Never',                                them: 'Yes, per-user licensing',                scWin: true  },
+  { label: 'Founding rate lock',      sc: '$100/mo + $50/shop locked forever',    them: 'No equivalent offer',                    scWin: true  },
+  { label: 'Repair information',      sc: 'Coming',                               them: 'Industry-leading with ProDemand',        scWin: false },
+  { label: 'Labor times and estimating', sc: 'Coming',                            them: 'Decades of OEM data behind it',          scWin: false },
+  { label: 'Parts and integrations',  sc: 'Coming',                               them: 'Deep supplier and catalog network',      scWin: false },
+  { label: 'Track record',            sc: 'Early access, founding stage',         them: '50,000+ shops, decades in market',       scWin: false },
+  { label: 'Two-way texting',         sc: 'Coming',                               them: 'Available in Manager SE',                scWin: false },
+  { label: 'Training and support org', sc: 'Founder-direct, same-day fixes',      them: 'Large established training network',     scWin: null  },
 ]
 
-const TITLE = 'ShopCommand vs. Mitchell1 — Auto Shop Software Comparison'
-const DESC = 'Mitchell1 is the legacy leader in repair data. ShopCommand is built for the owner sitting above their locations — transparent pricing, no per-seat fees, same-day setup. Founding spots at $100/mo.'
+const TITLE = 'ShopCommand vs. Mitchell1 | Auto Shop Software Comparison'
+const DESC = 'Mitchell1 is the legacy leader in repair data. ShopCommand is built for the owner sitting above their locations: transparent pricing, no per-seat fees, same-day setup. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/mitchell1'
 
-const LAST_UPDATED = 'June 2, 2026'
+const LAST_UPDATED = 'November 11, 2026'
 
 const compareFaqs = [
-  { q: 'How much does Mitchell1 cost per month?', a: 'Mitchell1 doesn\'t publish pricing — you need to contact sales for a quote. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
-  { q: 'Can I switch from Mitchell1 to ShopCommand?', a: 'Yes. ShopCommand is cloud-native and sets up in a day — no desktop installation, no Windows server. Founding members get direct onboarding support from Rasheed.' },
-  { q: 'Is Mitchell1 better than ShopCommand?', a: 'Mitchell1 has industry-leading repair data (ProDemand) and 50,000+ shops. If your techs live in repair data and wiring diagrams all day, Mitchell1 is strong. ShopCommand is built for the owner layer — real-time visibility across multiple locations without legacy desktop software.' },
-  { q: 'Does Mitchell1 work on mobile?', a: 'Mitchell1 grew up as a Windows desktop application. Cloud access is an incremental update. ShopCommand is fully browser-based and works on any device from day one.' },
+  { q: 'How much does Mitchell1 cost per month?', a: 'Mitchell1 doesn\'t publish pricing, so you need to contact sales for a quote. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
+  { q: 'Can I switch from Mitchell1 to ShopCommand?', a: 'Yes. ShopCommand is cloud-native and sets up in a day with no desktop installation and no Windows server. Founding members get direct onboarding support from Rasheed. Keep in mind ShopCommand does not replace ProDemand\'s repair data, and many shops run repair information software alongside their management system.' },
+  { q: 'Is Mitchell1 better than ShopCommand?', a: 'For repair data, yes. Mitchell1 has industry-leading repair information (ProDemand), decades of labor time data, a deep parts supplier network, and 50,000+ shops. If your techs live in repair data and wiring diagrams all day, Mitchell1 wins that comparison. ShopCommand is built for the owner layer: real-time visibility across multiple locations at a transparent price, without legacy desktop software.' },
+  { q: 'Does Mitchell1 work on mobile?', a: 'Mitchell1 grew up as a Windows desktop application, and cloud access has been added incrementally on top of that. ShopCommand is fully browser-based and works on any device from day one.' },
 ]
 
 export default function VsMitchell1() {
@@ -56,7 +57,7 @@ export default function VsMitchell1() {
     description: DESC,
     path: '/compare/mitchell1',
     schema: [
-      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-06-02', author: { '@type': 'Organization', name: 'ShopCommand' } },
+      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-11-11', author: { '@type': 'Organization', name: 'ShopCommand' } },
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: compareFaqs.map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
     ],
     breadcrumbs: [
@@ -81,14 +82,15 @@ export default function VsMitchell1() {
           ShopCommand vs. Mitchell1
         </h1>
         <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-          Mitchell1 is the industry standard for repair data and labor times. ShopCommand is built for a different problem — the owner who needs real-time visibility across all their locations without a legacy desktop application.
+          Mitchell1 is the industry standard for repair data and labor times. ShopCommand is built for a different problem: the owner who needs real-time visibility across all their locations without a legacy desktop application.
         </p>
+        <p className="text-slate-400 text-xs mt-4">Last updated: {LAST_UPDATED}</p>
       </section>
 
       {/* Table */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <div className="rounded-2xl border border-slate-200 overflow-hidden">
-          {/* Header — desktop */}
+          {/* Header (desktop) */}
           <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
             <div className="text-slate-400 text-xs uppercase tracking-widest" />
             <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium">Mitchell1</div>
@@ -101,20 +103,26 @@ export default function VsMitchell1() {
               <div className={`hidden sm:grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-500 text-sm font-medium pt-0.5">{label}</div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed ${scWin ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === false ? 'text-slate-700 font-medium' : scWin === true ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
                 </div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-600' : 'text-slate-400'}`}>{sc}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === true ? 'text-orange-600 font-medium' : scWin === false ? 'text-slate-400' : 'text-slate-500'}`}>{sc}</span>
                 </div>
               </div>
               {/* Mobile stacked */}
               <div className={`sm:hidden px-5 py-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-700 text-sm font-medium mb-2">{label}</div>
-                <div className="flex items-start gap-2 text-xs text-slate-400 mb-1">
-                  <span className="text-slate-300 flex-shrink-0">✕</span> {them}
+                <div className={`flex items-start gap-2 text-xs mb-1 ${scWin === false ? 'text-slate-700 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === false
+                    ? <Check size={12} className="text-slate-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {them}
                 </div>
-                <div className="flex items-start gap-2 text-xs text-orange-600 font-semibold">
-                  <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} /> {sc}
+                <div className={`flex items-start gap-2 text-xs ${scWin === true ? 'text-orange-600 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === true
+                    ? <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {sc}
                 </div>
               </div>
             </div>
@@ -122,7 +130,7 @@ export default function VsMitchell1() {
         </div>
 
         <p className="text-slate-400 text-xs text-center mt-4">
-          Mitchell1 data sourced from their public website and G2 reviews. ShopCommand is in early access — features marked "coming" are on the roadmap.
+          Mitchell1 data sourced from their public website and G2 reviews. ShopCommand is in early access, and features marked "coming" are on the roadmap.
         </p>
       </section>
 
@@ -136,19 +144,19 @@ export default function VsMitchell1() {
             {[
               {
                 heading: 'Mitchell1 owns the repair data layer.',
-                body: 'ProDemand is genuinely best-in-class for labor times, wiring diagrams, and repair procedures. If your techs live in repair data all day, Mitchell1 has built something over decades that\'s hard to replicate. Manager SE handles the shop management side, and the two are tightly integrated.',
+                body: 'ProDemand is genuinely best-in-class for labor times, wiring diagrams, and repair procedures. If your techs live in repair data all day, Mitchell1 has built something over decades that is hard to replicate. Manager SE handles the shop management side, and the two are tightly integrated.',
               },
               {
                 heading: 'The desktop model is the friction.',
-                body: 'Mitchell1 grew up as a Windows application. The cloud story is an incremental update on top of that heritage — not a ground-up rethink. For shop owners trying to check in from their phone on a Saturday, or see across three locations without VPN access to a server, the experience shows its age.',
+                body: 'Mitchell1 grew up as a Windows application, and the cloud story is an incremental update on top of that heritage rather than a ground-up rethink. For shop owners trying to check in from their phone on a Saturday, or see across three locations without VPN access to a server, the experience shows its age.',
               },
               {
                 heading: 'Different tools for different jobs.',
-                body: 'If you need deep repair data integrated with your ROs, Mitchell1 is worth the call. If you need a clean, fast view across your locations with transparent pricing and no IT setup, ShopCommand is built for that. Many shops end up using both.',
+                body: 'If you need deep repair data integrated with your ROs, Mitchell1 is worth the call, and nothing on our roadmap replaces ProDemand. If you need a clean, fast view across your locations with transparent pricing and no IT setup, ShopCommand is built for that. Many shops end up using both.',
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor with the pricing to match.',
+                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product. You\'re getting in at the ground floor with the pricing to match.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Check } from 'lucide-react'
+import { Check, Minus } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 import { usePageMeta } from '@/lib/seo'
 import { CompareNav } from '@/components/CompareNav'
@@ -21,31 +21,34 @@ function HexMark({ size = 36 }) {
   )
 }
 
+// scWin: true = ShopCommand wins, false = Shop-Ware wins, null = tie or not comparable
 const rows = [
-  { label: 'Pricing',              sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed — demo required',       scWin: true  },
-  { label: 'Pricing transparency', sc: 'Shown openly on our site',           them: 'Hidden behind a sales call',          scWin: true  },
-  { label: 'Multi-location view',  sc: 'Core product — day one',             them: 'Available, single-location focus',    scWin: true  },
-  { label: 'Setup time',           sc: 'Up and running same day',            them: 'Guided onboarding process',           scWin: true  },
-  { label: 'Feature tiers',        sc: 'One plan, everything included',      them: 'Multiple tiers — features gated',     scWin: true  },
-  { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',              scWin: true  },
-  { label: 'Founding rate lock',   sc: '$100/mo + $50/shop locked forever',  them: 'No equivalent offer',                 scWin: true  },
-  { label: 'Digital inspections',  sc: 'Coming',                             them: 'Best-in-class — core feature',        scWin: false },
-  { label: 'Customer texting',     sc: 'Coming',                             them: 'Yes — built in',                      scWin: false },
-  { label: 'Workflow automation',  sc: 'Coming',                             them: 'Strong — built-in automation',        scWin: false },
-  { label: 'Shops using it',       sc: 'Early access — founding stage',      them: '1,000+ shops',                        scWin: false },
+  { label: 'Pricing',                 sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed, demo required',          scWin: true  },
+  { label: 'Pricing transparency',    sc: 'Shown openly on our site',             them: 'Quote after a sales call',               scWin: true  },
+  { label: 'Multi-location dashboard', sc: 'Included at base price',              them: 'Supported for multi-shop groups',        scWin: true  },
+  { label: 'Setup time',              sc: 'Same day for most shops',              them: 'Guided onboarding, timeline varies',     scWin: null  },
+  { label: 'Long-term contract',      sc: 'None, cancel anytime',                 them: 'Varies by agreement',                    scWin: true  },
+  { label: 'Founder access',          sc: 'Direct line, same-day fixes',          them: 'Established onboarding and support',     scWin: true  },
+  { label: 'Founding rate lock',      sc: '$100/mo + $50/shop locked forever',    them: 'No equivalent offer',                    scWin: true  },
+  { label: 'Digital inspections',     sc: 'Coming',                               them: 'Best-in-class, core feature',            scWin: false },
+  { label: 'Customer texting',        sc: 'Coming',                               them: 'Yes, built in and mature',               scWin: false },
+  { label: 'Workflow automation',     sc: 'Coming',                               them: 'Strong, built-in automation',            scWin: false },
+  { label: 'Tire and wheel module',   sc: 'Coming',                               them: 'Yes, available',                         scWin: false },
+  { label: 'Parts and integrations',  sc: 'Coming',                               them: 'PartsTech and catalog integrations',     scWin: false },
+  { label: 'Track record',            sc: 'Early access, founding stage',         them: '1,000+ shops, years in market',          scWin: false },
 ]
 
-const TITLE = 'ShopCommand vs. Shop-Ware — Auto Shop Software Comparison'
+const TITLE = 'ShopCommand vs. Shop-Ware | Auto Shop Software Comparison'
 const DESC = 'Shop-Ware has excellent digital inspections and customer texting. ShopCommand is built for the multi-location owner who needs cross-shop visibility with transparent pricing. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/shop-ware'
 
-const LAST_UPDATED = 'June 2, 2026'
+const LAST_UPDATED = 'November 11, 2026'
 
 const compareFaqs = [
-  { q: 'How much does Shop-Ware cost per month?', a: 'Shop-Ware doesn\'t publish pricing — you need to book a demo. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
-  { q: 'Can I switch from Shop-Ware to ShopCommand?', a: 'Yes. ShopCommand is designed for same-day setup with no complex onboarding process. Founding members get direct support from Rasheed during migration.' },
-  { q: 'Is Shop-Ware better than ShopCommand?', a: 'Shop-Ware has excellent digital inspections and customer texting — great for single-location customer communication. ShopCommand is built for the owner managing multiple locations who needs consolidated visibility across all shops without switching between accounts.' },
-  { q: 'Does Shop-Ware support multiple locations?', a: 'Shop-Ware focuses on single-location operations. ShopCommand is built from the ground up for the multi-location owner who needs cross-shop visibility, consolidated reporting, and one dashboard for everything.' },
+  { q: 'How much does Shop-Ware cost per month?', a: 'Shop-Ware doesn\'t publish pricing, so you need to book a demo. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
+  { q: 'Can I switch from Shop-Ware to ShopCommand?', a: 'Yes. ShopCommand is designed for same-day setup. Founding members get direct support from Rasheed during migration. If you rely on Shop-Ware\'s digital inspections or customer texting today, those are still on our roadmap, so check the table above before you move.' },
+  { q: 'Is Shop-Ware better than ShopCommand?', a: 'For digital inspections and customer communication, yes. Shop-Ware\'s DVI experience is one of the best in the industry, and its texting and workflow automation are mature. ShopCommand is built for the owner managing multiple locations who needs consolidated visibility across all shops at a transparent price without switching between accounts.' },
+  { q: 'Does Shop-Ware support multiple locations?', a: 'Yes, Shop-Ware supports multi-shop groups. The difference is emphasis: ShopCommand puts the cross-location owner dashboard at the center of the product and includes it at base price, while Shop-Ware\'s strength is the in-shop workflow, especially inspections and customer communication.' },
 ]
 
 export default function VsShopWare() {
@@ -54,7 +57,7 @@ export default function VsShopWare() {
     description: DESC,
     path: '/compare/shop-ware',
     schema: [
-      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-06-02', author: { '@type': 'Organization', name: 'ShopCommand' } },
+      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-11-11', author: { '@type': 'Organization', name: 'ShopCommand' } },
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: compareFaqs.map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
     ],
     breadcrumbs: [
@@ -79,14 +82,15 @@ export default function VsShopWare() {
           ShopCommand vs. Shop-Ware
         </h1>
         <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-          Shop-Ware is a modern, well-designed platform with excellent digital inspections and customer communication. ShopCommand is built for a different problem — the owner who needs a real-time view across all their locations at once.
+          Shop-Ware is a modern, well-designed platform with excellent digital inspections and customer communication. ShopCommand is built for a different problem: the owner who needs a real-time view across all their locations at once.
         </p>
+        <p className="text-slate-400 text-xs mt-4">Last updated: {LAST_UPDATED}</p>
       </section>
 
       {/* Table */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <div className="rounded-2xl border border-slate-200 overflow-hidden">
-          {/* Header — desktop */}
+          {/* Header (desktop) */}
           <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
             <div className="text-slate-400 text-xs uppercase tracking-widest" />
             <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium">Shop-Ware</div>
@@ -99,20 +103,26 @@ export default function VsShopWare() {
               <div className={`hidden sm:grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-500 text-sm font-medium pt-0.5">{label}</div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed ${scWin ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === false ? 'text-slate-700 font-medium' : scWin === true ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
                 </div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-600' : 'text-slate-400'}`}>{sc}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === true ? 'text-orange-600 font-medium' : scWin === false ? 'text-slate-400' : 'text-slate-500'}`}>{sc}</span>
                 </div>
               </div>
               {/* Mobile stacked */}
               <div className={`sm:hidden px-5 py-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-700 text-sm font-medium mb-2">{label}</div>
-                <div className="flex items-start gap-2 text-xs text-slate-400 mb-1">
-                  <span className="text-slate-300 flex-shrink-0">✕</span> {them}
+                <div className={`flex items-start gap-2 text-xs mb-1 ${scWin === false ? 'text-slate-700 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === false
+                    ? <Check size={12} className="text-slate-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {them}
                 </div>
-                <div className="flex items-start gap-2 text-xs text-orange-600 font-semibold">
-                  <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} /> {sc}
+                <div className={`flex items-start gap-2 text-xs ${scWin === true ? 'text-orange-600 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === true
+                    ? <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {sc}
                 </div>
               </div>
             </div>
@@ -120,7 +130,7 @@ export default function VsShopWare() {
         </div>
 
         <p className="text-slate-400 text-xs text-center mt-4">
-          Shop-Ware data sourced from their public website and G2 reviews. ShopCommand is in early access — features marked "coming" are on the roadmap.
+          Shop-Ware data sourced from their public website and G2 reviews. ShopCommand is in early access, and features marked "coming" are on the roadmap.
         </p>
       </section>
 
@@ -134,7 +144,7 @@ export default function VsShopWare() {
             {[
               {
                 heading: 'Shop-Ware is genuinely well built.',
-                body: 'The digital inspection experience is one of the best in the industry — customers get photo-rich inspection reports, can approve work from their phone, and get two-way text updates throughout the process. If customer communication and DVI are your priority for a single location, Shop-Ware is worth a serious look.',
+                body: 'The digital inspection experience is one of the best in the industry. Customers get photo-rich inspection reports, can approve work from their phone, and get two-way text updates throughout the process. If customer communication and DVI are your priority, Shop-Ware wins that comparison today, and our inspection tools are still on the roadmap.',
               },
               {
                 heading: 'The pricing model is opaque.',
@@ -142,11 +152,11 @@ export default function VsShopWare() {
               },
               {
                 heading: 'ShopCommand is built for the owner layer.',
-                body: 'Shop-Ware is excellent at running one shop\'s day-to-day operations. ShopCommand is built for the person sitting above all their locations — consolidated revenue, open ROs across every shop, technician status everywhere, without switching between accounts.',
+                body: 'Shop-Ware is excellent at running a shop\'s day-to-day operations and does support multi-shop groups. ShopCommand makes the cross-location view the center of the product: consolidated revenue, open ROs across every shop, technician status everywhere, included at base price rather than as an add-on conversation.',
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re shaping what comes next.',
+                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product. If you need Shop-Ware\'s inspection depth today, buy Shop-Ware.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">

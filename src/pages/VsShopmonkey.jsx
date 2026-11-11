@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Check, X, Minus } from 'lucide-react'
+import { Check, Minus } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 import { usePageMeta } from '@/lib/seo'
 import { CompareNav } from '@/components/CompareNav'
@@ -21,33 +21,34 @@ function HexMark({ size = 36 }) {
   )
 }
 
+// scWin: true = ShopCommand wins, false = Shopmonkey wins, null = tie or not comparable
 const rows = [
-  { label: 'Pricing',              sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed — demo required',     scWin: true  },
-  { label: 'Pricing transparency', sc: 'Shown openly on our site',            them: 'Hidden behind a sales call',        scWin: true  },
-  { label: 'Multi-location view',  sc: 'Core product — day one',              them: 'Available, but not the core focus', scWin: true  },
-  { label: 'Setup time',           sc: 'Up and running same day',             them: 'Enterprise onboarding process',     scWin: true  },
-  { label: 'Per-seat fees',        sc: 'Never',                               them: 'Yes',                               scWin: true  },
-  { label: 'Feature tiers',        sc: 'One plan, everything included',       them: 'Multiple tiers — basics gated',     scWin: true  },
-  { label: 'Founder access',       sc: 'Direct line, every founding member',  them: 'Standard support team',             scWin: true  },
-  { label: 'Founding rate lock',   sc: '$100/mo + $50/shop locked forever',   them: 'No equivalent offer',               scWin: true  },
-  { label: 'Shops using it',       sc: 'Early access — founding stage',       them: '8,000+ shops',                      scWin: false },
-  { label: 'Two-way texting',      sc: 'Coming',                              them: 'Yes — all plans',                   scWin: false },
-  { label: 'Buy Now Pay Later',    sc: 'Coming',                              them: 'Yes — integrated',                  scWin: false },
-  { label: 'Multi-language',       sc: 'English',                             them: 'English, French, Spanish',          scWin: false },
-  { label: 'Built-in CRM',        sc: 'Coming',                              them: 'Yes — CRM Essentials',              scWin: false },
+  { label: 'Pricing',                 sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed, demo required',          scWin: true  },
+  { label: 'Pricing transparency',    sc: 'Shown openly on our site',             them: 'Quote after a sales call',               scWin: true  },
+  { label: 'Multi-location dashboard', sc: 'Included at base price',              them: 'Supported, not the core focus',          scWin: true  },
+  { label: 'Per-seat fees',           sc: 'Never',                                them: 'Yes, priced per user',                   scWin: true  },
+  { label: 'Setup time',              sc: 'Same day for most shops',              them: 'Guided onboarding, timeline varies',     scWin: null  },
+  { label: 'Founder access',          sc: 'Direct line, same-day fixes',          them: 'Established support team',               scWin: true  },
+  { label: 'Founding rate lock',      sc: '$100/mo + $50/shop locked forever',    them: 'No equivalent offer',                    scWin: true  },
+  { label: 'Track record',            sc: 'Early access, founding stage',         them: '8,000+ shops, years in market',          scWin: false },
+  { label: 'Two-way texting',         sc: 'Coming',                               them: 'Yes, in every plan',                     scWin: false },
+  { label: 'CRM and marketing',       sc: 'Coming',                               them: 'Yes, built in',                          scWin: false },
+  { label: 'Integrated payments',     sc: 'Coming',                               them: 'Yes, with Buy Now Pay Later',            scWin: false },
+  { label: 'Parts and integrations',  sc: 'Coming',                               them: 'PartsTech, QuickBooks, CARFAX and more', scWin: false },
+  { label: 'Multi-language',          sc: 'English',                              them: 'English, French, Spanish',               scWin: false },
 ]
 
-const SM_TITLE = 'ShopCommand vs. Shopmonkey — Auto Shop Software Comparison'
+const SM_TITLE = 'ShopCommand vs. Shopmonkey | Auto Shop Software Comparison'
 const SM_DESC = 'No demo required, no hidden pricing. See how ShopCommand compares to Shopmonkey on price transparency, multi-location focus, and setup time. Founding spots at $100/mo.'
 const SM_URL = 'https://shopcommand.net/compare/shopmonkey'
 
-const LAST_UPDATED = 'June 2, 2026'
+const LAST_UPDATED = 'November 11, 2026'
 
 const compareFaqs = [
-  { q: 'How much does Shopmonkey cost per month?', a: 'Shopmonkey doesn\'t publish pricing — you need to book a demo. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
-  { q: 'Can I switch from Shopmonkey to ShopCommand?', a: 'Yes. ShopCommand is designed for same-day setup. We\'re building data import tools to make migration smoother. Founding members get direct support from Rasheed during onboarding.' },
-  { q: 'Is ShopCommand better than Shopmonkey for multiple locations?', a: 'ShopCommand is built specifically for multi-location visibility — seeing all your shops from one dashboard without jumping between logins. Shopmonkey supports multiple locations but isn\'t built around that problem first.' },
-  { q: 'Does Shopmonkey charge per seat?', a: 'Yes, Shopmonkey uses per-seat pricing. ShopCommand charges per shop with unlimited users included — $100/mo for the first shop plus $50/mo for each additional location. No per-seat fees ever.' },
+  { q: 'How much does Shopmonkey cost per month?', a: 'Shopmonkey doesn\'t publish pricing, so you need to book a demo. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing.' },
+  { q: 'Can I switch from Shopmonkey to ShopCommand?', a: 'Yes. ShopCommand is designed for same-day setup, and we\'re building data import tools to make migration smoother. Founding members get direct support from Rasheed during onboarding. If you rely on Shopmonkey\'s texting, CRM, or integrated payments today, those are still on our roadmap, so check the table above first.' },
+  { q: 'Is ShopCommand better than Shopmonkey for multiple locations?', a: 'ShopCommand is built specifically for multi-location visibility: seeing all your shops from one dashboard without jumping between logins, included at base price. Shopmonkey supports multiple locations and has a far deeper feature set today. Which one fits depends on whether cross-shop visibility or feature depth matters more to you right now.' },
+  { q: 'Does Shopmonkey charge per seat?', a: 'Yes, Shopmonkey uses per-seat pricing. ShopCommand charges per shop with unlimited users included: $100/mo for the first shop plus $50/mo for each additional location. No per-seat fees ever.' },
 ]
 
 export default function VsShopmonkey() {
@@ -56,7 +57,7 @@ export default function VsShopmonkey() {
     description: SM_DESC,
     path: '/compare/shopmonkey',
     schema: [
-      { '@context': 'https://schema.org', '@type': 'Article', headline: SM_TITLE, description: SM_DESC, url: SM_URL, dateModified: '2026-06-02', author: { '@type': 'Organization', name: 'ShopCommand' } },
+      { '@context': 'https://schema.org', '@type': 'Article', headline: SM_TITLE, description: SM_DESC, url: SM_URL, dateModified: '2026-11-11', author: { '@type': 'Organization', name: 'ShopCommand' } },
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: compareFaqs.map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
     ],
     breadcrumbs: [
@@ -81,14 +82,15 @@ export default function VsShopmonkey() {
           ShopCommand vs. Shopmonkey
         </h1>
         <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-          Shopmonkey is a proven platform running 8,000+ shops. ShopCommand is built for a different problem — the owner who needs to see across all their locations at once, with transparent pricing and no enterprise complexity.
+          Shopmonkey is a proven platform running 8,000+ shops. ShopCommand is built for a different problem: the owner who needs to see across all their locations at once, with transparent pricing and no enterprise complexity.
         </p>
+        <p className="text-slate-400 text-xs mt-4">Last updated: {LAST_UPDATED}</p>
       </section>
 
       {/* Table */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <div className="rounded-2xl border border-slate-200 overflow-hidden">
-          {/* Header — desktop */}
+          {/* Header (desktop) */}
           <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
             <div className="text-slate-400 text-xs uppercase tracking-widest" />
             <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium">Shopmonkey</div>
@@ -101,20 +103,26 @@ export default function VsShopmonkey() {
               <div className={`hidden sm:grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-500 text-sm font-medium pt-0.5">{label}</div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed ${scWin ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === false ? 'text-slate-700 font-medium' : scWin === true ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
                 </div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-600' : 'text-slate-400'}`}>{sc}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === true ? 'text-orange-600 font-medium' : scWin === false ? 'text-slate-400' : 'text-slate-500'}`}>{sc}</span>
                 </div>
               </div>
               {/* Mobile stacked */}
               <div className={`sm:hidden px-5 py-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-700 text-sm font-medium mb-2">{label}</div>
-                <div className="flex items-start gap-2 text-xs text-slate-400 mb-1">
-                  <span className="text-slate-300 flex-shrink-0">✕</span> {them}
+                <div className={`flex items-start gap-2 text-xs mb-1 ${scWin === false ? 'text-slate-700 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === false
+                    ? <Check size={12} className="text-slate-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {them}
                 </div>
-                <div className="flex items-start gap-2 text-xs text-orange-600 font-semibold">
-                  <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} /> {sc}
+                <div className={`flex items-start gap-2 text-xs ${scWin === true ? 'text-orange-600 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === true
+                    ? <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {sc}
                 </div>
               </div>
             </div>
@@ -122,7 +130,7 @@ export default function VsShopmonkey() {
         </div>
 
         <p className="text-slate-400 text-xs text-center mt-4">
-          Shopmonkey data sourced from their public website and G2 reviews. ShopCommand is in early access — features marked "coming" are on the roadmap.
+          Shopmonkey data sourced from their public website and G2 reviews. ShopCommand is in early access, and features marked "coming" are on the roadmap.
         </p>
       </section>
 
@@ -136,11 +144,11 @@ export default function VsShopmonkey() {
             {[
               {
                 heading: 'Shopmonkey has the scale and the features.',
-                body: '8,000+ shops, two-way texting in every plan, multi-language support, Buy Now Pay Later, a full CRM — Shopmonkey is a mature platform that\'s been investing in their product for years. If you want a tool with that depth right now, they\'re a serious option.',
+                body: '8,000+ shops, two-way texting in every plan, multi-language support, Buy Now Pay Later, a full CRM, integrated payments. Shopmonkey has been investing in their product for years. If you want that depth right now, they are the stronger choice.',
               },
               {
                 heading: 'The pricing model is a real difference.',
-                body: 'Shopmonkey doesn\'t publish pricing. You book a demo, talk to sales, and get a quote. ShopCommand shows you $100/mo + $50/shop founding and $175 + $100/shop standard, right on the page. Per-seat fees vs. per-shop tiered pricing — for an owner with 8 techs across multiple locations, that difference adds up fast.',
+                body: 'Shopmonkey doesn\'t publish pricing. You book a demo, talk to sales, and get a quote, and the quote is priced per seat. ShopCommand shows you $100/mo + $50/shop founding and $175 + $100/shop standard, right on the page, with unlimited users. For an owner with 8 techs across multiple locations, that difference adds up fast.',
               },
               {
                 heading: 'ShopCommand is built for the multi-location owner first.',
@@ -148,7 +156,7 @@ export default function VsShopmonkey() {
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor.',
+                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product. If you need Shopmonkey\'s feature depth today, buy Shopmonkey.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">

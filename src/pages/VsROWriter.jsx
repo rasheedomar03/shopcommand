@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Check } from 'lucide-react'
+import { Check, Minus } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
 import { usePageMeta } from '@/lib/seo'
 import { CompareNav } from '@/components/CompareNav'
@@ -21,33 +21,33 @@ function HexMark({ size = 36 }) {
   )
 }
 
+// scWin: true = ShopCommand wins, false = R.O. Writer wins, null = tie or not comparable
 const rows = [
-  { label: 'Pricing',              sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed — contact sales',       scWin: true  },
-  { label: 'Pricing transparency', sc: 'Shown openly on our site',           them: 'Hidden behind a sales process',       scWin: true  },
-  { label: 'Multi-location view',  sc: 'Core product — day one',             them: 'Available, complex to manage',        scWin: true  },
-  { label: 'Cloud-native',         sc: 'Fully browser-based',                them: 'Windows desktop — not true cloud',    scWin: true  },
-  { label: 'Setup time',           sc: 'Up and running same day',            them: 'Days to weeks — installation req.',   scWin: true  },
-  { label: 'Per-seat fees',        sc: 'Never',                              them: 'Yes — per-workstation licensing',     scWin: true  },
-  { label: 'Mobile access',        sc: 'Fully mobile-friendly',              them: 'Limited mobile support',              scWin: true  },
-  { label: 'Modern UI',            sc: 'Built in 2024',                      them: 'Legacy interface',                    scWin: true  },
-  { label: 'Founder access',       sc: 'Direct line, every founding member', them: 'Standard support queue',              scWin: true  },
-  { label: 'Founding rate lock',   sc: '$100/mo + $50/shop locked forever',  them: 'No equivalent offer',                 scWin: true  },
-  { label: 'Parts integrations',   sc: 'Coming',                             them: 'Extensive — core strength',           scWin: false },
-  { label: 'Labor guide',          sc: 'Coming',                             them: 'Built-in — multiple sources',         scWin: false },
-  { label: 'Market presence',      sc: 'Early access — founding stage',      them: 'Established — large install base',    scWin: false },
+  { label: 'Pricing',                 sc: '$100/mo + $50/mo per shop · $175 + $100/mo per shop', them: 'Not disclosed, contact sales',          scWin: true  },
+  { label: 'Pricing transparency',    sc: 'Shown openly on our site',             them: 'Quote after a sales conversation',       scWin: true  },
+  { label: 'Multi-location dashboard', sc: 'Included at base price',              them: 'Available, complex to manage',           scWin: true  },
+  { label: 'Cloud-native',            sc: 'Fully browser-based',                  them: 'Windows desktop application',            scWin: true  },
+  { label: 'Mobile access',           sc: 'Works on any device',                  them: 'Limited mobile support',                 scWin: true  },
+  { label: 'Setup time',              sc: 'Up and running same day',              them: 'Installation plus training required',    scWin: true  },
+  { label: 'Per-seat fees',           sc: 'Never',                                them: 'Yes, per-workstation licensing',         scWin: true  },
+  { label: 'Founding rate lock',      sc: '$100/mo + $50/shop locked forever',    them: 'No equivalent offer',                    scWin: true  },
+  { label: 'Parts and integrations',  sc: 'Coming',                               them: 'Extensive, a core strength',             scWin: false },
+  { label: 'Labor guide',             sc: 'Coming',                               them: 'Built in, multiple sources',             scWin: false },
+  { label: 'Track record',            sc: 'Early access, founding stage',         them: 'Decades in market, large install base',  scWin: false },
+  { label: 'Training and support org', sc: 'Founder-direct, same-day fixes',      them: 'Established support and training team',  scWin: null  },
 ]
 
-const TITLE = 'ShopCommand vs. R.O. Writer — Auto Shop Software Comparison'
+const TITLE = 'ShopCommand vs. R.O. Writer | Auto Shop Software Comparison'
 const DESC = 'R.O. Writer is a legacy desktop platform with strong parts integrations. ShopCommand is cloud-native, mobile-friendly, and built for multi-location visibility with transparent pricing. Founding spots at $100/mo.'
 const URL = 'https://shopcommand.net/compare/ro-writer'
 
-const LAST_UPDATED = 'June 2, 2026'
+const LAST_UPDATED = 'November 11, 2026'
 
 const compareFaqs = [
-  { q: 'How much does R.O. Writer cost per month?', a: 'R.O. Writer doesn\'t publish pricing — you need to contact sales. They use per-workstation licensing. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing, with unlimited users included.' },
-  { q: 'Can I switch from R.O. Writer to ShopCommand?', a: 'Yes. ShopCommand is fully cloud-based — no Windows installation, no server required. You can be running the same day. Founding members get direct onboarding support from Rasheed.' },
-  { q: 'Is R.O. Writer better than ShopCommand?', a: 'R.O. Writer has deep parts integrations and a built-in labor guide — strong for high-volume parts ordering shops. ShopCommand is cloud-native, mobile-friendly, and built for owners who need real-time visibility across multiple locations without a desktop application.' },
-  { q: 'Does R.O. Writer work on mobile?', a: 'R.O. Writer is a Windows desktop application with limited mobile support. ShopCommand is fully browser-based and works on any device — phone, tablet, or laptop.' },
+  { q: 'How much does R.O. Writer cost per month?', a: 'R.O. Writer doesn\'t publish pricing, so you need to contact sales. They use per-workstation licensing. ShopCommand is $100/mo for the first shop plus $50/mo for each additional location for founding members (locked forever), and $175/mo for the first shop plus $100/mo per additional location at standard launch pricing, with unlimited users included.' },
+  { q: 'Can I switch from R.O. Writer to ShopCommand?', a: 'Yes. ShopCommand is fully cloud-based, so there is no Windows installation and no server required, and you can be running the same day. Founding members get direct onboarding support from Rasheed. If your workflow depends on R.O. Writer\'s parts ordering integrations or built-in labor guide, those are still on our roadmap.' },
+  { q: 'Is R.O. Writer better than ShopCommand?', a: 'For parts ordering, yes. R.O. Writer has deep supplier integrations and a built-in labor guide, built over decades, and that is a real advantage for high-volume parts shops. ShopCommand is cloud-native, mobile-friendly, and built for owners who need real-time visibility across multiple locations without a desktop application.' },
+  { q: 'Does R.O. Writer work on mobile?', a: 'R.O. Writer is a Windows desktop application with limited mobile support. ShopCommand is fully browser-based and works on any device: phone, tablet, or laptop.' },
 ]
 
 export default function VsROWriter() {
@@ -56,7 +56,7 @@ export default function VsROWriter() {
     description: DESC,
     path: '/compare/ro-writer',
     schema: [
-      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-06-02', author: { '@type': 'Organization', name: 'ShopCommand' } },
+      { '@context': 'https://schema.org', '@type': 'Article', headline: TITLE, description: DESC, url: URL, dateModified: '2026-11-11', author: { '@type': 'Organization', name: 'ShopCommand' } },
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: compareFaqs.map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
     ],
     breadcrumbs: [
@@ -83,12 +83,13 @@ export default function VsROWriter() {
         <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
           R.O. Writer is a long-established platform with deep parts integrations and a large install base. ShopCommand is cloud-native, mobile-first, and built for owners who need real-time visibility across multiple locations without a Windows server.
         </p>
+        <p className="text-slate-400 text-xs mt-4">Last updated: {LAST_UPDATED}</p>
       </section>
 
       {/* Table */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <div className="rounded-2xl border border-slate-200 overflow-hidden">
-          {/* Header — desktop */}
+          {/* Header (desktop) */}
           <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
             <div className="text-slate-400 text-xs uppercase tracking-widest" />
             <div className="text-slate-400 text-xs text-center uppercase tracking-widest font-medium">R.O. Writer</div>
@@ -101,20 +102,26 @@ export default function VsROWriter() {
               <div className={`hidden sm:grid grid-cols-3 px-6 py-4 items-start gap-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-500 text-sm font-medium pt-0.5">{label}</div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed ${scWin ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === false ? 'text-slate-700 font-medium' : scWin === true ? 'text-slate-400' : 'text-slate-500'}`}>{them}</span>
                 </div>
                 <div className="text-center">
-                  <span className={`text-xs leading-relaxed font-medium ${scWin ? 'text-orange-600' : 'text-slate-400'}`}>{sc}</span>
+                  <span className={`text-xs leading-relaxed ${scWin === true ? 'text-orange-600 font-medium' : scWin === false ? 'text-slate-400' : 'text-slate-500'}`}>{sc}</span>
                 </div>
               </div>
               {/* Mobile stacked */}
               <div className={`sm:hidden px-5 py-4 ${i < rows.length - 1 ? 'border-b border-slate-100' : ''}`}>
                 <div className="text-slate-700 text-sm font-medium mb-2">{label}</div>
-                <div className="flex items-start gap-2 text-xs text-slate-400 mb-1">
-                  <span className="text-slate-300 flex-shrink-0">✕</span> {them}
+                <div className={`flex items-start gap-2 text-xs mb-1 ${scWin === false ? 'text-slate-700 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === false
+                    ? <Check size={12} className="text-slate-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {them}
                 </div>
-                <div className="flex items-start gap-2 text-xs text-orange-600 font-semibold">
-                  <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} /> {sc}
+                <div className={`flex items-start gap-2 text-xs ${scWin === true ? 'text-orange-600 font-semibold' : 'text-slate-400'}`}>
+                  {scWin === true
+                    ? <Check size={12} className="text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    : <Minus size={12} className="text-slate-300 flex-shrink-0 mt-0.5" strokeWidth={2} />}
+                  {sc}
                 </div>
               </div>
             </div>
@@ -122,7 +129,7 @@ export default function VsROWriter() {
         </div>
 
         <p className="text-slate-400 text-xs text-center mt-4">
-          R.O. Writer data sourced from their public website and G2 reviews. ShopCommand is in early access — features marked "coming" are on the roadmap.
+          R.O. Writer data sourced from their public website and G2 reviews. ShopCommand is in early access, and features marked "coming" are on the roadmap.
         </p>
       </section>
 
@@ -136,7 +143,7 @@ export default function VsROWriter() {
             {[
               {
                 heading: 'R.O. Writer has serious parts integration depth.',
-                body: 'If your shop\'s workflow is deeply embedded in parts ordering — live pricing from suppliers, electronic ordering, core tracking — R.O. Writer has built that infrastructure over many years. For high-volume parts shops, those integrations have real operational value.',
+                body: 'If your shop\'s workflow is deeply embedded in parts ordering, with live pricing from suppliers, electronic ordering, and core tracking, R.O. Writer has built that infrastructure over many years. For high-volume parts shops, those integrations have real operational value, and nothing on our roadmap matches that depth yet.',
               },
               {
                 heading: 'The desktop model is the limiting factor.',
@@ -144,11 +151,11 @@ export default function VsROWriter() {
               },
               {
                 heading: 'Per-workstation licensing adds up fast.',
-                body: 'Pricing based on the number of workstations or users means your costs scale with your headcount. A shop with 10 techs and 3 service advisors is paying for 13 seats. ShopCommand uses tiered per-shop pricing — $100/mo for the first shop plus $50/mo for each additional location, never per seat — whether you have 2 people or 20 at each location.',
+                body: 'Pricing based on the number of workstations or users means your costs scale with your headcount. A shop with 10 techs and 3 service advisors is paying for 13 seats. ShopCommand uses tiered per-shop pricing: $100/mo for the first shop plus $50/mo for each additional location, never per seat, whether you have 2 people or 20 at each location.',
               },
               {
                 heading: 'We\'re early. That\'s the point.',
-                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product — you\'re getting in at the ground floor with the pricing to match.',
+                body: 'Founding members get $100/mo + $50/shop locked forever, direct access to Rasheed, and a real say in the roadmap. You\'re not buying a finished product. You\'re getting in at the ground floor with the pricing to match.',
               },
             ].map(({ heading, body }) => (
               <div key={heading} className="flex gap-5">

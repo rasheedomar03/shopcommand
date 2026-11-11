@@ -25,6 +25,7 @@ const compareLinks = [
   { to: '/compare/mitchell1',  label: 'ShopCommand vs. Mitchell1'  },
   { to: '/compare/shop-ware',  label: 'ShopCommand vs. Shop-Ware'  },
   { to: '/compare/ro-writer',  label: 'ShopCommand vs. R.O. Writer'},
+  { to: '/compare/fullbay',    label: 'ShopCommand vs. Fullbay'    },
 ]
 
 export function CompareNav() {

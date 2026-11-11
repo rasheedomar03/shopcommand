@@ -118,6 +118,8 @@ const VsShopmonkey = lazy(() => import('@/pages/VsShopmonkey'))
 const VsMitchell1 = lazy(() => import('@/pages/VsMitchell1'))
 const VsShopWare = lazy(() => import('@/pages/VsShopWare'))
 const VsROWriter = lazy(() => import('@/pages/VsROWriter'))
+const VsFullbay = lazy(() => import('@/pages/VsFullbay'))
+const TruckRepairSoftware = lazy(() => import('@/pages/TruckRepairSoftware'))
 const AlternativesPage = lazy(() => import('@/pages/AlternativesPage'))
 const Onboarding = lazy(() => import('@/pages/Onboarding'))
 const FoundingProgram = lazy(() => import('@/pages/FoundingProgram'))
@@ -260,7 +262,9 @@ export default function App() {
         <Route path="/compare/mitchell1" element={<VsMitchell1 />} />
         <Route path="/compare/shop-ware" element={<VsShopWare />} />
         <Route path="/compare/ro-writer" element={<VsROWriter />} />
+        <Route path="/compare/fullbay" element={<VsFullbay />} />
         <Route path="/alternatives/:slug" element={<AlternativesPage />} />
+        <Route path="/truck-repair-shop-software" element={<TruckRepairSoftware />} />
         <Route path="/founding-program" element={<FoundingProgram />} />
         <Route path="/tools/labor-rates-by-state" element={<LaborRatesByState />} />
         <Route path="/tools/labor-rate-calculator" element={<LaborRateCalculator />} />

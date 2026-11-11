@@ -65,6 +65,15 @@ const cards = {
     pricing: 'Not published — demo required.',
     multiShop: false,
   },
+  fullbay: {
+    name: 'Fullbay',
+    positioning: 'The established heavy-duty repair shop platform',
+    bestFor: 'Heavy-duty and diesel shops that need deep HD features today',
+    description:
+      'Fullbay has been built for heavy-duty truck and trailer shops for years: preventive maintenance scheduling, a customer portal for fleet approvals and repair status, parts inventory, invoicing, and an established QuickBooks integration. Reviewers rate the product and support well.',
+    pricing: 'Express plan listed at $149/mo (1 user); Basic, Pro, and Elite require a sales call. Plans scoped by user count.',
+    multiShop: false,
+  },
   ari: {
     name: 'ARI',
     positioning: 'Lightweight shop management app',
@@ -165,6 +174,28 @@ export const alternativesData = {
       { q: 'How much does Shop-Ware cost?', a: 'Shop-Ware doesn\'t publish pricing — you book a demo to get a quote. ShopCommand publishes its pricing: $100/mo first shop + $50/mo per additional location for founding members (locked forever), $175 + $100 standard after launch.' },
       { q: 'Does Shop-Ware support multiple locations?', a: 'Shop-Ware focuses on single-location operations. ShopCommand is built from the ground up for the multi-location owner — consolidated reporting and one dashboard across all shops.' },
       { q: 'Which alternative has the strongest digital inspections?', a: 'Digital inspections are Shop-Ware\'s standout strength, so weigh that honestly. Tekmetric and Shopmonkey both offer inspection workflows as part of mature platforms; ShopCommand\'s inspection tooling is part of its roadmap alongside its core multi-shop dashboard.' },
+    ],
+  },
+  fullbay: {
+    competitor: 'Fullbay',
+    title: `Fullbay Alternatives for Truck & Diesel Repair Shops (${YEAR})`,
+    metaTitle: `Fullbay Alternatives for Truck & Diesel Repair Shops (${YEAR})`,
+    metaDescription:
+      'Fullbay alternatives for heavy-duty and diesel repair shops compared: published pricing, per-user fees, multi-location dashboards, and where Fullbay still wins.',
+    intro:
+      'Fullbay is the established name in heavy-duty repair shop software, and it earned that position: preventive maintenance scheduling, a fleet customer portal, and years of well-reviewed service. But only its Express plan ($149/mo, one user) has a published price; Basic, Pro, and Elite require a sales call, and plans are scoped by user count, so the bill grows with your team. Reviewers also describe a real learning curve during setup, and smaller shops flag the cost. If any of that gives you pause, these alternatives are worth comparing.',
+    whySwitch: [
+      'Only the Express plan has a published price; the main plans require a sales call',
+      'Plans are scoped by user count, with additional users priced separately',
+      'Reviewers describe a real learning curve getting set up',
+      'Smaller truck shops flag the cost as hard to justify at their scale',
+    ],
+    alternatives: withUs(['tekmetric', 'shopmonkey', 'autoleap', 'mitchell1', 'ari']),
+    faqs: [
+      { q: 'What is the best Fullbay alternative for truck repair shops?', a: 'For truck and diesel shops that want published flat pricing and no per-user fees, ShopCommand is built with heavy-duty shops on board from day one: per-job custom parts with per-truck pricing, job timers across multi-day repair orders, and partial payments for fleet accounts. If you need Fullbay\'s full heavy-duty depth today, including PM scheduling, the honest answer is that Fullbay is still the deepest HD-specific option.' },
+      { q: 'How much does Fullbay cost?', a: 'Fullbay publishes one price: the Express plan at $149/mo with one user license. Basic, Pro, and Elite require a sales call, and plans are scoped by user count with additional users priced separately. ShopCommand publishes everything: $100/mo first shop plus $50/mo per additional location for founding members (locked forever), with unlimited users.' },
+      { q: 'Is there a Fullbay alternative without per-user pricing?', a: 'Yes. ShopCommand charges per shop with unlimited users, so a shop with 3 techs and a shop with 15 pay the same. Most of the other established platforms, including Fullbay, scope plans or pricing by user count.' },
+      { q: 'Do generic auto repair platforms work for heavy-duty shops?', a: 'Sometimes, with friction. Platforms built around passenger-car work tend to assume short jobs, retail customers, and single-day repair orders. Heavy-duty shops deal with multi-day jobs, fleet accounts that pay on terms, and per-truck parts pricing. Look for software that handles those directly, whichever one you pick.' },
     ],
   },
   'ro-writer': {
