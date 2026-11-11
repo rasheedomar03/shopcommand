@@ -128,8 +128,15 @@ export default createHandler(
         : `INV-${String(inv.id).slice(0, 8).toUpperCase()}`
       const vehicle = [inv.vehicle_year, inv.vehicle_make, inv.vehicle_model].filter(Boolean).join(' ')
       const shopName = String(inv.shop_name || 'Your repair shop').replace(/[<>@]/g, '')
-      const services = Array.isArray(inv.ro_data?.services) && inv.ro_data.services.length
-        ? inv.ro_data.services
+      // Line items = the RO's service lines plus any parts used on the job
+      // (stored separately on the RO), so the Tax gap below is really tax.
+      const roServices = Array.isArray(inv.ro_data?.services) ? inv.ro_data.services : []
+      const roParts = (Array.isArray(inv.ro_data?.partsUsed) ? inv.ro_data.partsUsed : []).map(p => ({
+        name: `${p.name || 'Part'}${Number(p.qty) > 1 ? ` (x${Number(p.qty)})` : ''}`,
+        price: (Number(p.price) || 0) * (Number(p.qty) || 1),
+      }))
+      const services = roServices.length + roParts.length > 0
+        ? [...roServices, ...roParts]
         : [{ name: 'Repair services', price: Number(inv.amount) || 0 }]
       const total = Number(inv.amount) || 0
       const paid = Number(inv.amount_paid) || 0

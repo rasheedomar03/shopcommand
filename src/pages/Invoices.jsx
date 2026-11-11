@@ -209,7 +209,7 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-status-green/5 border border-status-green/20">
             <CheckCircle size={14} className="text-status-green" />
             <span className="text-xs text-status-green font-medium">
-              Paid {formatRelativeTime(invoice.paidAt)} via {invoice.paymentMethod}
+              Paid {formatRelativeTime(invoice.paidAt)}{invoice.paymentMethod ? ` via ${invoice.paymentMethod}` : ''}
             </span>
           </div>
         )}

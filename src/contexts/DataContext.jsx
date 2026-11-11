@@ -65,7 +65,16 @@ function transformInvoice(row, rosById) {
     paidAt: row.paid_at || null,
     amountPaid,
     paymentMethod: null,
-    services: (ro?.services || []).map(s => ({ name: s.name, parts: 0, labor: Number(s.price) || 0 })),
+    // Line items = RO services plus parts used on the job (kept separately on
+    // the RO) so displayed lines and edit math account for the whole amount
+    services: [
+      ...(ro?.services || []).map(s => ({ name: s.name, parts: 0, labor: Number(s.price) || 0 })),
+      ...(ro?.partsUsed || []).map(p => ({
+        name: `${p.name || 'Part'}${Number(p.qty) > 1 ? ` (x${Number(p.qty)})` : ''}`,
+        parts: (Number(p.price) || 0) * (Number(p.qty) || 1),
+        labor: 0,
+      })),
+    ],
     subtotal: Number(row.amount) || 0,
     tax: 0,
     total: Number(row.amount) || 0,
@@ -760,8 +769,12 @@ export function DataProvider({ children }) {
         const ro = repairOrders.find(r => r.id === target.roId || r.roNumber === target.roId)
         if (ro) {
           try {
+            // The invoice's editable rows already include the RO's parts as
+            // lines, so write the full list as services and clear partsUsed —
+            // leaving both would double-count on the next load
             await updateRepairOrder(ro.id, {
               services: patch.services.map(s => ({ name: s.name, price: (Number(s.parts) || 0) + (Number(s.labor) || 0) })),
+              ...(ro.partsUsed?.length ? { partsUsed: [] } : {}),
             })
           } catch (_) { /* amount persisted; service names refresh from RO on next load */ }
         }
