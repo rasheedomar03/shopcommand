@@ -49,6 +49,15 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const [items, setItems] = useState([{ ...emptyItem }])
   const [taxRate, setTaxRate] = useState('8.25')
   const [taxLabor, setTaxLabor] = useState(false)
+  // Categorize lines as labor/part/fee. Some shops bill flat line amounts
+  // with no breakdown; remember the choice across sessions.
+  const [itemize, setItemize] = useState(() => {
+    try { return localStorage.getItem('sc_inv_itemize') !== '0' } catch { return true }
+  })
+  const toggleItemize = (on) => {
+    setItemize(on)
+    try { localStorage.setItem('sc_inv_itemize', on ? '1' : '0') } catch { /* per-viewer convenience only */ }
+  }
   const [notes, setNotes] = useState('')
 
   const billableROs = repairOrders.filter(ro => REVENUE_STAGES.has(ro.stage))
@@ -93,7 +102,9 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const lineTotal = it => n(it.qty) * n(it.price)
   const laborSubtotal = items.filter(i => i.type === 'labor').reduce((s, i) => s + lineTotal(i), 0)
   const partsSubtotal = items.filter(i => i.type !== 'labor').reduce((s, i) => s + lineTotal(i), 0)
-  const taxable = partsSubtotal + (taxLabor ? laborSubtotal : 0)
+  const subtotal = laborSubtotal + partsSubtotal
+  // Without itemization there is no labor/parts split, so tax the whole subtotal
+  const taxable = itemize ? partsSubtotal + (taxLabor ? laborSubtotal : 0) : subtotal
   const tax = taxable * (n(taxRate) / 100)
   const total = laborSubtotal + partsSubtotal + tax
   const fmt = v => `$${v.toFixed(2)}`
@@ -180,13 +191,15 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             </div>
             <div className="space-y-1.5">
               {items.map((it, i) => (
-                <div key={i} className="grid grid-cols-[1fr_68px_44px_64px_24px] gap-1.5 items-center">
+                <div key={i} className={itemize ? 'grid grid-cols-[1fr_68px_44px_64px_24px] gap-1.5 items-center' : 'grid grid-cols-[1fr_44px_64px_24px] gap-1.5 items-center'}>
                   <input className={field} placeholder="Description" value={it.desc} onChange={e => setItem(i, { desc: e.target.value })} />
-                  <select className={field} value={it.type} onChange={e => setItem(i, { type: e.target.value })}>
-                    <option value="labor">Labor</option>
-                    <option value="part">Part</option>
-                    <option value="fee">Fee</option>
-                  </select>
+                  {itemize && (
+                    <select className={field} value={it.type} onChange={e => setItem(i, { type: e.target.value })}>
+                      <option value="labor">Labor</option>
+                      <option value="part">Part</option>
+                      <option value="fee">Fee</option>
+                    </select>
+                  )}
                   <input className={field} inputMode="decimal" placeholder="Qty" value={it.qty} onChange={e => setItem(i, { qty: e.target.value })} />
                   <input className={field} inputMode="decimal" placeholder="$" value={it.price} onChange={e => setItem(i, { price: e.target.value })} />
                   <button
@@ -202,9 +215,16 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={taxLabor} onChange={e => setTaxLabor(e.target.checked)} className="w-3.5 h-3.5 accent-orange-500" />
-            <span className="text-xs text-text-secondary">Apply tax to labor <span className="text-text-muted">(varies by state)</span></span>
+            <input type="checkbox" checked={itemize} onChange={e => toggleItemize(e.target.checked)} className="w-3.5 h-3.5 accent-orange-500" />
+            <span className="text-xs text-text-secondary">Categorize lines as labor / part / fee <span className="text-text-muted">(off = plain line amounts)</span></span>
           </label>
+
+          {itemize && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={taxLabor} onChange={e => setTaxLabor(e.target.checked)} className="w-3.5 h-3.5 accent-orange-500" />
+              <span className="text-xs text-text-secondary">Apply tax to labor <span className="text-text-muted">(varies by state)</span></span>
+            </label>
+          )}
 
           <div>
             <label className="text-2xs font-semibold text-text-muted uppercase tracking-wider">Notes / payment terms</label>
@@ -293,7 +313,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
                 <tr key={i} className="border-t border-slate-100">
                   <td className="py-1.5">
                     {it.desc || '—'}
-                    <span className="ml-1.5 text-[9px] uppercase tracking-wider text-slate-400">{it.type}</span>
+                    {itemize && <span className="ml-1.5 text-[9px] uppercase tracking-wider text-slate-400">{it.type}</span>}
                   </td>
                   <td className="py-1.5 text-right tabular-nums text-slate-600">{n(it.qty)}</td>
                   <td className="py-1.5 text-right tabular-nums text-slate-600">{fmt(n(it.price))}</td>
@@ -304,9 +324,15 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           </table>
 
           <div className="mt-3 pt-3 border-t border-slate-200 space-y-1 text-sm">
-            <div className="flex justify-between text-slate-600"><span>Labor</span><span className="tabular-nums">{fmt(laborSubtotal)}</span></div>
-            <div className="flex justify-between text-slate-600"><span>Parts & fees</span><span className="tabular-nums">{fmt(partsSubtotal)}</span></div>
-            <div className="flex justify-between text-slate-600"><span>Tax ({n(taxRate)}%{taxLabor ? ', incl. labor' : ''})</span><span className="tabular-nums">{fmt(tax)}</span></div>
+            {itemize ? (
+              <>
+                <div className="flex justify-between text-slate-600"><span>Labor</span><span className="tabular-nums">{fmt(laborSubtotal)}</span></div>
+                <div className="flex justify-between text-slate-600"><span>Parts & fees</span><span className="tabular-nums">{fmt(partsSubtotal)}</span></div>
+              </>
+            ) : (
+              <div className="flex justify-between text-slate-600"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
+            )}
+            <div className="flex justify-between text-slate-600"><span>Tax ({n(taxRate)}%{itemize && taxLabor ? ', incl. labor' : ''})</span><span className="tabular-nums">{fmt(tax)}</span></div>
             <div className="flex justify-between pt-1.5 border-t border-slate-200 text-base font-bold"><span>Total due</span><span className="tabular-nums">{fmt(total)}</span></div>
           </div>
 
