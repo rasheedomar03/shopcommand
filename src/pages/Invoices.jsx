@@ -256,19 +256,23 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
           <div className="flex items-center gap-3">
-            <div className="text-xs text-text-muted">Created {formatDate(invoice.created)}</div>
+            <div className="text-xs text-text-muted whitespace-nowrap">Created {formatDate(invoice.created)}</div>
             {invoice.status !== 'paid' && (
               confirmVoid ? (
                 <span className="flex items-center gap-2 text-xs">
-                  <span className="text-status-red">Void this invoice?</span>
-                  <button onClick={() => { setConfirmVoid(false); onVoid(invoice.id) }} className="font-semibold text-status-red hover:underline">Yes, void</button>
+                  <span className="text-status-red">Remove this invoice? It's kept on record for your books.</span>
+                  <button onClick={() => { setConfirmVoid(false); onVoid(invoice.id) }} className="font-semibold text-status-red hover:underline whitespace-nowrap">Yes, void it</button>
                   <button onClick={() => setConfirmVoid(false)} className="text-text-muted hover:text-text-primary">Cancel</button>
                 </span>
               ) : (
-                <button onClick={() => setConfirmVoid(true)} className="text-xs text-text-muted hover:text-status-red transition-colors underline-offset-2 hover:underline">
-                  Void invoice
+                <button
+                  onClick={() => setConfirmVoid(true)}
+                  title="Removes the invoice from the list; the record is kept for your books"
+                  className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-status-red/30 text-xs font-medium text-status-red hover:bg-status-red/10 transition-colors whitespace-nowrap flex-shrink-0"
+                >
+                  <Trash2 size={13} /> Void invoice
                 </button>
               )
             )}
