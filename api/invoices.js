@@ -54,7 +54,21 @@ export default createHandler(
       if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
       if (invoice.status === 'paid') return res.status(409).json({ error: 'Invoice already paid' })
 
-      const payAmount = amount ? Number(amount) : Number(invoice.amount)
+      // Partial payments: sum what's already been paid and cap this one at
+      // the remaining balance
+      const [{ paid_so_far }] = await sql`
+        SELECT COALESCE(SUM(amount), 0) AS paid_so_far
+        FROM payments WHERE invoice_id = ${invoice_id} AND org_id = ${user.orgId} AND status = 'completed'
+      `
+      const balance = Number(invoice.amount) - Number(paid_so_far)
+      const payAmount = amount !== undefined && amount !== null && amount !== '' ? Number(amount) : balance
+
+      if (!Number.isFinite(payAmount) || payAmount <= 0) {
+        return res.status(400).json({ error: 'Payment amount must be greater than zero' })
+      }
+      if (payAmount > balance + 0.005) {
+        return res.status(400).json({ error: `Payment exceeds the remaining balance of $${balance.toFixed(2)}` })
+      }
 
       const [payment] = await sql`
         INSERT INTO payments (org_id, invoice_id, shop_id, amount, method, last4, customer_name, status)
@@ -62,11 +76,15 @@ export default createHandler(
         RETURNING *
       `
 
-      // Mark invoice as paid and RO as Paid
-      await sql`UPDATE invoices SET status = 'paid', paid_at = now() WHERE id = ${invoice_id} AND org_id = ${user.orgId}`
-      await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+      const totalPaid = Number(paid_so_far) + payAmount
+      const fullyPaid = totalPaid >= Number(invoice.amount) - 0.005
 
-      return res.status(201).json(payment)
+      if (fullyPaid) {
+        await sql`UPDATE invoices SET status = 'paid', paid_at = now() WHERE id = ${invoice_id} AND org_id = ${user.orgId}`
+        await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+      }
+
+      return res.status(201).json({ ...payment, amount_paid: totalPaid, invoice_paid: fullyPaid })
     }
 
     // ── Update payment status: PUT /api/invoices?action=update-payment ────
@@ -96,7 +114,8 @@ export default createHandler(
       if (id) {
         const [row] = await sql`
           SELECT i.*, ro.ro_number, ro.total AS ro_total,
-            c.name AS customer_name, c.email AS customer_email
+            c.name AS customer_name, c.email AS customer_email,
+            COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = i.id AND p.status = 'completed'), 0) AS amount_paid
           FROM invoices i
           LEFT JOIN repair_orders ro ON ro.id = i.ro_id
           LEFT JOIN customers c ON c.id = ro.customer_id
@@ -120,7 +139,8 @@ export default createHandler(
       // List all invoices
       const rows = await sql`
         SELECT i.*, ro.ro_number,
-          c.name AS customer_name
+          c.name AS customer_name,
+          COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = i.id AND p.status = 'completed'), 0) AS amount_paid
         FROM invoices i
         LEFT JOIN repair_orders ro ON ro.id = i.ro_id
         LEFT JOIN customers c ON c.id = ro.customer_id
@@ -184,8 +204,8 @@ export default createHandler(
       if (status === undefined && amount === undefined) {
         return res.status(400).json({ error: 'Provide status or amount to update' })
       }
-      if (status !== undefined && !['paid', 'void'].includes(status)) {
-        return res.status(400).json({ error: 'Status must be "paid" or "void"' })
+      if (status !== undefined && !['paid', 'void', 'unpaid'].includes(status)) {
+        return res.status(400).json({ error: 'Status must be "paid", "void", or "unpaid"' })
       }
       if (amount !== undefined && (!Number.isFinite(Number(amount)) || Number(amount) < 0 || Number(amount) > 10_000_000)) {
         return res.status(400).json({ error: 'Amount must be a non-negative number' })
@@ -193,6 +213,22 @@ export default createHandler(
 
       const [invoice] = await sql`SELECT * FROM invoices WHERE id = ${id} AND org_id = ${user.orgId}`
       if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
+
+      // Revert a paid invoice to unpaid (mistaken payment). Its recorded
+      // payments are marked refunded so the paid total resets with it.
+      if (status === 'unpaid') {
+        if (invoice.status !== 'paid') {
+          return res.status(409).json({ error: 'Only paid invoices can be marked unpaid' })
+        }
+        const [row] = await sql`
+          UPDATE invoices SET status = 'unpaid', paid_at = NULL
+          WHERE id = ${id} AND org_id = ${user.orgId}
+          RETURNING *
+        `
+        await sql`UPDATE payments SET status = 'refunded' WHERE invoice_id = ${id} AND org_id = ${user.orgId} AND status = 'completed'`
+        await sql`UPDATE repair_orders SET stage = 'Invoiced' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        return res.json({ ...row, amount_paid: 0 })
+      }
 
       if (invoice.status !== 'unpaid') {
         return res.status(409).json({ error: 'Only unpaid invoices can be updated' })

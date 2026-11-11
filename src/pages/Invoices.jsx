@@ -11,6 +11,7 @@ import { useData } from '@/contexts/DataContext'
 
 const INVOICE_STATUS = {
   paid:     { label: 'Paid',     color: 'text-status-green',  bg: 'bg-status-green/10', icon: CheckCircle },
+  partial:  { label: 'Partial',  color: 'text-orange',        bg: 'bg-orange/10',       icon: DollarSign },
   sent:     { label: 'Sent',     color: 'text-blue-400',      bg: 'bg-blue-500/10',     icon: Send },
   overdue:  { label: 'Overdue',  color: 'text-status-red',    bg: 'bg-status-red/10',   icon: AlertCircle },
   draft:    { label: 'Draft',    color: 'text-text-muted',    bg: 'bg-border',          icon: Clock },
@@ -26,23 +27,43 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid }) {
+function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onRecordPayment }) {
   const [confirmVoid, setConfirmVoid] = useState(false)
+  const [confirmUnpay, setConfirmUnpay] = useState(false)
   const [editing, setEditing] = useState(false)
   const [rows, setRows] = useState([])
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const [payOpen, setPayOpen] = useState(false)
+  const [payAmount, setPayAmount] = useState('')
+  const [payError, setPayError] = useState(null)
+  const [paying, setPaying] = useState(false)
 
   // Reset edit state when a different invoice opens (or the modal closes)
   useEffect(() => {
     setEditing(false)
     setConfirmVoid(false)
+    setConfirmUnpay(false)
     setSaveError(null)
+    setPayOpen(false)
+    setPayError(null)
   }, [invoice?.id])
 
   if (!invoice) return null
   const shop = shops.find(s => s.id === invoice.shopId)
   const editable = invoice.status !== 'paid'
+  const amountPaid = Number(invoice.amountPaid) || 0
+  const balance = Math.max(0, Math.round((invoice.total - amountPaid) * 100) / 100)
+  const canTakePayment = ['sent', 'overdue', 'partial'].includes(invoice.status)
+
+  const submitPayment = async () => {
+    setPaying(true)
+    setPayError(null)
+    const r = await onRecordPayment(invoice.id, Number(payAmount))
+    setPaying(false)
+    if (r?.error) setPayError(r.error)
+    else { setPayOpen(false); setPayAmount('') }
+  }
 
   const startEdit = () => {
     setRows(invoice.services.map(s => ({ name: s.name, parts: s.parts ?? 0, labor: s.labor ?? 0 })))
@@ -162,12 +183,54 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid }) {
           </div>
         )}
 
-        {invoice.paidAt && (
+        {invoice.status === 'paid' && invoice.paidAt && (
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-status-green/5 border border-status-green/20">
             <CheckCircle size={14} className="text-status-green" />
             <span className="text-xs text-status-green font-medium">
               Paid {formatRelativeTime(invoice.paidAt)} via {invoice.paymentMethod}
             </span>
+          </div>
+        )}
+
+        {invoice.status !== 'paid' && amountPaid > 0 && (
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-orange/5 border border-orange/20">
+            <DollarSign size={14} className="text-orange" />
+            <span className="text-xs text-orange font-medium">
+              {formatCurrency(amountPaid)} paid · {formatCurrency(balance)} balance remaining
+            </span>
+          </div>
+        )}
+
+        {payOpen && canTakePayment && (
+          <div className="px-3 py-3 rounded-lg bg-background border border-border space-y-2">
+            <div className="text-xs font-medium text-text-secondary">Record a payment</div>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-text-muted">$</span>
+                <input
+                  autoFocus
+                  type="number" min="0.01" step="0.01" inputMode="decimal"
+                  value={payAmount}
+                  onChange={e => setPayAmount(e.target.value)}
+                  placeholder={balance.toFixed(2)}
+                  className="w-full h-8 pl-6 pr-2.5 rounded-md bg-surface border border-border text-sm text-text-primary tabular-nums focus:outline-none focus:ring-1 focus:ring-orange/40"
+                />
+              </div>
+              <button
+                onClick={() => setPayAmount(String(balance.toFixed(2)))}
+                className="text-xs text-orange hover:underline underline-offset-2 whitespace-nowrap"
+              >
+                Full balance
+              </button>
+              <Button size="sm" onClick={submitPayment} disabled={paying || !(Number(payAmount) > 0)}>
+                {paying ? 'Recording...' : 'Record'}
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => { setPayOpen(false); setPayError(null) }} disabled={paying}>
+                Cancel
+              </Button>
+            </div>
+            <div className="text-2xs text-text-muted">A partial amount keeps the invoice open with the remaining balance.</div>
+            {payError && <div className="text-xs text-status-red">{payError}</div>}
           </div>
         )}
 
@@ -213,10 +276,23 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid }) {
                     <Send size={13} /> Mark as sent
                   </Button>
                 )}
-                {(invoice.status === 'sent' || invoice.status === 'overdue') && (
-                  <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'paid', paidAt: new Date().toISOString(), paymentMethod: 'Recorded manually' })}>
+                {canTakePayment && (
+                  <Button size="sm" onClick={() => { setPayOpen(v => !v); setPayAmount(''); setPayError(null) }}>
                     <DollarSign size={13} /> Record payment
                   </Button>
+                )}
+                {invoice.status === 'paid' && (
+                  confirmUnpay ? (
+                    <span className="flex items-center gap-2 text-xs">
+                      <span className="text-text-secondary">Move back to unpaid?</span>
+                      <button onClick={() => { setConfirmUnpay(false); onUpdate(invoice.id, { status: 'unpaid' }) }} className="font-semibold text-orange hover:underline">Yes</button>
+                      <button onClick={() => setConfirmUnpay(false)} className="text-text-muted hover:text-text-primary">Cancel</button>
+                    </span>
+                  ) : (
+                    <Button size="sm" variant="secondary" onClick={() => setConfirmUnpay(true)}>
+                      Mark as unpaid
+                    </Button>
+                  )
                 )}
                 {invoice.status === 'overdue' && (
                   <Button size="sm" variant="secondary" disabled title="Email reminders coming soon">
@@ -233,7 +309,7 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid }) {
 }
 
 export default function Invoices() {
-  const { shops, invoices, updateInvoice, voidInvoice } = useData()
+  const { shops, invoices, updateInvoice, voidInvoice, recordInvoicePayment } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
@@ -263,8 +339,8 @@ export default function Invoices() {
   }, {})
 
   const totalOutstanding = scoped
-    .filter(inv => inv.status === 'sent' || inv.status === 'overdue')
-    .reduce((sum, inv) => sum + inv.total, 0)
+    .filter(inv => ['sent', 'overdue', 'partial'].includes(inv.status))
+    .reduce((sum, inv) => sum + (inv.total - (Number(inv.amountPaid) || 0)), 0)
 
   return (
     <div className="p-4 sm:p-5 lg:p-6 space-y-4 sm:space-y-5 animate-fade-in">
@@ -375,7 +451,31 @@ export default function Invoices() {
         onPrint={(inv) => { setSelected(null); setGeneratorSource(inv); setGeneratorOpen(true) }}
         onUpdate={async (id, patch) => {
           const r = await updateInvoice(id, patch)
-          if (!r?.error) setSelected(prev => prev ? { ...prev, ...patch } : prev)
+          if (!r?.error) {
+            // 'unpaid' is the server transition; locally the invoice shows as sent
+            const display = patch.status === 'unpaid'
+              ? { ...patch, status: 'sent', paidAt: null, amountPaid: 0, paymentMethod: null }
+              : patch
+            setSelected(prev => prev ? { ...prev, ...display } : prev)
+          }
+          return r
+        }}
+        onRecordPayment={async (id, amount) => {
+          const r = await recordInvoicePayment(id, amount)
+          if (!r?.error) {
+            setSelected(prev => {
+              if (!prev) return prev
+              const newPaid = (Number(prev.amountPaid) || 0) + amount
+              const full = newPaid >= prev.total - 0.005
+              return {
+                ...prev,
+                amountPaid: newPaid,
+                status: full ? 'paid' : 'partial',
+                paidAt: full ? new Date().toISOString() : prev.paidAt,
+                paymentMethod: full ? (prev.paymentMethod || 'Recorded manually') : prev.paymentMethod,
+              }
+            })
+          }
           return r
         }}
         onVoid={async (id) => {

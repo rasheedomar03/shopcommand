@@ -49,6 +49,7 @@ function transformInvoice(row, rosById) {
     ? `INV-${String(row.ro_number).replace(/^RO-?/i, '')}`
     : `INV-${String(row.id).slice(0, 8).toUpperCase()}`
   const isPaid = row.status === 'paid'
+  const amountPaid = Number(row.amount_paid) || 0
   const ageMs = Date.now() - new Date(row.created_at).getTime()
   return {
     id: displayId,
@@ -59,9 +60,10 @@ function transformInvoice(row, rosById) {
     customerName: row.customer_name || ro?.customerName || '',
     customerEmail: ro?.customerEmail || null,
     vehicle: ro?.vehicle || '',
-    status: isPaid ? 'paid' : ageMs > 14 * 86400000 ? 'overdue' : 'sent',
+    status: isPaid ? 'paid' : amountPaid > 0 ? 'partial' : ageMs > 14 * 86400000 ? 'overdue' : 'sent',
     created: row.created_at,
     paidAt: row.paid_at || null,
+    amountPaid,
     paymentMethod: null,
     services: (ro?.services || []).map(s => ({ name: s.name, parts: 0, labor: Number(s.price) || 0 })),
     subtotal: Number(row.amount) || 0,
@@ -646,6 +648,45 @@ export function DataProvider({ children }) {
     return { ok: true }
   }, [session?.demo, invoices])
 
+  // Record a payment against an invoice; partial amounts leave a balance.
+  // Returns { ok } or { error }.
+  const recordInvoicePayment = useCallback(async (id, amount) => {
+    const target = invoices.find(i => i.id === id)
+    if (!target) return { error: 'Invoice not found' }
+    const total = Number(target.total) || 0
+    const already = Number(target.amountPaid) || 0
+    const balance = Math.round((total - already) * 100) / 100
+    const pay = Math.round((Number(amount) || 0) * 100) / 100
+    if (pay <= 0) return { error: 'Payment amount must be greater than zero' }
+    if (pay > balance + 0.005) return { error: `Payment exceeds the remaining balance of $${balance.toFixed(2)}` }
+
+    if (!session?.demo && target.dbId) {
+      try {
+        await api('/api/invoices?action=pay', {
+          method: 'POST',
+          body: { invoice_id: target.dbId, method: 'other', amount: pay },
+        })
+      } catch (err) {
+        return { error: err.message || 'Failed to record payment' }
+      }
+    }
+    const newPaid = already + pay
+    const full = newPaid >= total - 0.005
+    setInvoices(prev => {
+      const next = prev.map(i => i.id === id ? {
+        ...i,
+        amountPaid: newPaid,
+        status: full ? 'paid' : 'partial',
+        paidAt: full ? new Date().toISOString() : i.paidAt,
+        paymentMethod: full ? (i.paymentMethod || 'Recorded manually') : i.paymentMethod,
+      } : i)
+      if (!session?.demo) save('sc_invoices', next.filter(i => !i.dbId))
+      else save('sc_invoices', next)
+      return next
+    })
+    return { ok: true, paid: full }
+  }, [session?.demo, invoices])
+
   const updateInvoice = useCallback(async (id, patch) => {
     const target = invoices.find(i => i.id === id)
     // DB-backed invoice being paid → record it server-side first
@@ -658,6 +699,18 @@ export function DataProvider({ children }) {
       } catch (err) {
         return { error: err.message || 'Failed to record payment' }
       }
+    }
+    // Paid → unpaid revert (mistaken payment); server also resets payments
+    if (patch.status === 'unpaid') {
+      if (!session?.demo && target?.dbId) {
+        try {
+          await api('/api/invoices', { method: 'PUT', params: { id: target.dbId }, body: { status: 'unpaid' } })
+        } catch (err) {
+          return { error: err.message || 'Failed to mark unpaid' }
+        }
+      }
+      // 'unpaid' is a server status; locally the invoice goes back to sent
+      patch = { ...patch, status: 'sent', paidAt: null, amountPaid: 0, paymentMethod: null }
     }
     // DB-backed content edit (services/total, no status change) → persist the
     // new amount on the invoice and the edited service lines on its RO, since
@@ -960,7 +1013,7 @@ export function DataProvider({ children }) {
       partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
-      invoices, addInvoice, updateInvoice, voidInvoice,
+      invoices, addInvoice, updateInvoice, voidInvoice, recordInvoicePayment,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,
       resetData, loading, fetchAll, fetchError,
