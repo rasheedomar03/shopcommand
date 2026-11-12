@@ -72,7 +72,7 @@ export default function TruckRepairSoftware() {
         <section className="px-6 py-16 border-b border-slate-100">
           <div className="max-w-3xl mx-auto text-center">
             <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Heavy Duty</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Truck Repair Shop Software That Fits How HD Shops Actually Work
             </h1>
             <p className="text-slate-500 leading-relaxed max-w-2xl mx-auto mb-8">
@@ -82,10 +82,10 @@ export default function TruckRepairSoftware() {
               published right here on the site.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/founding-program" className="px-6 py-3 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
+              <Link to="/founding-program" className="px-6 py-3 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
                 See the Founding Shop Program →
               </Link>
-              <Link to="/demo" className="px-6 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <Link to="/demo" className="px-6 py-3 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 Try the live demo
               </Link>
             </div>
@@ -95,7 +95,7 @@ export default function TruckRepairSoftware() {
         {/* Why generic software fits poorly */}
         <section className="px-6 py-14">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Why generic auto repair software fits heavy-duty shops poorly
             </h2>
             <div className="space-y-4 text-[15px] text-slate-600 leading-relaxed">
@@ -126,7 +126,7 @@ export default function TruckRepairSoftware() {
         {/* What to look for */}
         <section className="px-6 py-14 bg-slate-50 border-y border-slate-200">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               What to look for in heavy-duty shop software
             </h2>
             <div className="space-y-3 text-[15px] text-slate-600 leading-relaxed">
@@ -153,7 +153,7 @@ export default function TruckRepairSoftware() {
         {/* How ShopCommand handles it */}
         <section className="px-6 py-14">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-2 text-center" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-2 text-center" style={{ letterSpacing: '-0.01em' }}>
               How ShopCommand handles heavy-duty work
             </h2>
             <p className="text-slate-500 text-sm text-center mb-10 max-w-xl mx-auto">
@@ -168,8 +168,8 @@ export default function TruckRepairSoftware() {
                 { icon: LayoutDashboard, title: 'Multi-location dashboard', body: 'Run two or three shops? Revenue, open ROs, and tech efficiency for every location in one view, with unlimited users at every shop.' },
                 { icon: MessageSquare, title: 'Founder-direct support', body: 'Bug reports and feature requests go to the person who builds the product. Founding shops have seen reported bugs fixed the same day.' },
               ].map(({ icon: Icon, title, body }) => (
-                <div key={title} className="p-5 rounded-2xl border border-slate-200">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-3">
+                <div key={title} className="p-5 rounded-lg border border-slate-200">
+                  <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center mb-3">
                     <Icon size={18} className="text-orange-500" strokeWidth={1.8} />
                   </div>
                   <h3 className="text-[15px] font-semibold text-slate-900 mb-1.5">{title}</h3>
@@ -183,7 +183,7 @@ export default function TruckRepairSoftware() {
         {/* Where we're early */}
         <section className="px-6 py-14 bg-slate-50 border-y border-slate-200">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Where we're early
             </h2>
             <div className="space-y-4 text-[15px] text-slate-600 leading-relaxed">
@@ -207,7 +207,7 @@ export default function TruckRepairSoftware() {
         {/* Founding story */}
         <section className="px-6 py-14">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Our first founding shop is a truck shop
             </h2>
             <div className="space-y-4 text-[15px] text-slate-600 leading-relaxed">
@@ -230,19 +230,19 @@ export default function TruckRepairSoftware() {
         {/* Pricing */}
         <section className="px-6 py-14 bg-slate-50 border-y border-slate-200">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
               Pricing, published like it should be
             </h2>
             <p className="text-slate-500 text-sm mb-8 max-w-xl mx-auto">
               No sales call, no quote, no per-user fees. This is the whole price.
             </p>
             <div className="grid sm:grid-cols-2 gap-5 max-w-2xl mx-auto text-left">
-              <div className="p-6 rounded-2xl border-2 border-orange-300 bg-white">
+              <div className="p-6 rounded-lg border-2 border-orange-300 bg-white">
                 <div className="text-xs font-semibold text-orange-600 uppercase tracking-wider mb-2">Founding rate · 25 spots</div>
                 <div className="text-3xl font-extrabold text-slate-900 mb-1">$100<span className="text-sm font-normal text-slate-400">/mo</span></div>
                 <p className="text-slate-500 text-sm leading-relaxed">First shop, plus $50/mo per additional location. Locked for life. Unlimited users.</p>
               </div>
-              <div className="p-6 rounded-2xl border border-slate-200 bg-white">
+              <div className="p-6 rounded-lg border border-slate-200 bg-white">
                 <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Standard · after launch</div>
                 <div className="text-3xl font-extrabold text-slate-900 mb-1">$175<span className="text-sm font-normal text-slate-400">/mo</span></div>
                 <p className="text-slate-500 text-sm leading-relaxed">First shop, plus $100/mo per additional location. Unlimited users.</p>
@@ -254,7 +254,7 @@ export default function TruckRepairSoftware() {
         {/* FAQ */}
         <section className="px-6 py-14">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
             <div className="space-y-6">
               {faqs.map(({ q, a }) => (
                 <div key={q}>
@@ -269,17 +269,17 @@ export default function TruckRepairSoftware() {
         {/* CTA */}
         <section className="px-6 py-16 bg-slate-50 border-t border-slate-200">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
               Run a truck shop? Help shape the software you'll use for years.
             </h2>
             <p className="text-slate-500 text-sm mb-6">
               25 founding spots at $100/mo, locked for life. Direct line to the founder, same-day fixes, and a roadmap your shop helps set.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/founding-program" className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+              <Link to="/founding-program" className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                 Founding Shop Program <ArrowRight size={14} className="inline ml-1" />
               </Link>
-              <Link to="/demo" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <Link to="/demo" className="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 Try the live demo
               </Link>
             </div>

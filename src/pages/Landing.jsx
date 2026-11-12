@@ -151,7 +151,7 @@ function DashboardPreview() {
   }, [triggered])
 
   return (
-    <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
+    <div ref={containerRef} className="relative w-full rounded-lg overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
       {/* Keep dashboard dark-themed — it IS the product */}
       <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
         <span className="text-white/60 text-xs uppercase tracking-wider">Live preview</span>
@@ -203,7 +203,7 @@ function ROPreview() {
     { id: 'RO-4818', vehicle: '2021 Accord · Oil + rotate', status: 'Invoiced', advisor: 'James T.', color: 'text-slate-400', bg: 'bg-slate-400/15' },
   ]
   return (
-    <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
+    <div className="rounded-lg overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
       <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
         <span className="text-white/60 text-xs uppercase tracking-wider">Repair orders</span>
         <span className="text-white/60 text-xs">Today</span>
@@ -230,7 +230,7 @@ function TechPreview() {
     { name: 'Andre W.', status: 'On break', job: '—', hours: '4.1h', efficiency: '78%', effColor: 'text-amber-400' },
   ]
   return (
-    <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
+    <div className="rounded-lg overflow-hidden border border-slate-200/80 shadow-xl shadow-slate-900/[0.06]">
       <div className="flex items-center justify-between px-5 py-3 bg-[#0F1018] border-b border-white/[0.08]">
         <span className="text-white/60 text-xs uppercase tracking-wider">Technicians</span>
         <span className="text-white/60 text-xs">Live</span>
@@ -390,7 +390,7 @@ function FoundingSection() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
           <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Founding Shop Program</div>
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
             A guided 14-day pilot before you commit.
           </h2>
           <p className="text-slate-500 leading-relaxed max-w-lg mx-auto">
@@ -428,7 +428,7 @@ function FoundingSection() {
           </div>
 
           {/* Form / success */}
-          <div className="rounded-2xl border border-orange-200 bg-white p-7 shadow-sm max-w-2xl mx-auto">
+          <div className="rounded-lg border border-orange-200 bg-white p-7 shadow-sm max-w-2xl mx-auto">
             {submitted ? (
               <div className="text-center py-6">
                 <div className="w-14 h-14 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center mx-auto mb-5">
@@ -464,7 +464,7 @@ function FoundingSection() {
                       autoComplete="name"
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                      className="w-full h-11 px-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
                     />
                   </div>
                   <div>
@@ -476,7 +476,7 @@ function FoundingSection() {
                       autoComplete="email"
                       value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                      className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                      className="w-full h-11 px-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
                     />
                   </div>
                 </div>
@@ -486,7 +486,7 @@ function FoundingSection() {
                     id="founding-locations"
                     value={form.locations}
                     onChange={e => setForm(f => ({ ...f, locations: e.target.value }))}
-                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors appearance-none"
+                    className="w-full h-11 px-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors appearance-none"
                   >
                     <option value="">Select...</option>
                     <option value="1">1 location</option>
@@ -499,7 +499,7 @@ function FoundingSection() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full h-12 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm">
+                  className="w-full h-12 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm">
                   {submitting ? 'Reserving your spot…' : 'Apply for the Founding Program →'}
                 </button>
                 <p className="text-center text-slate-400 text-xs">No credit card. No commitment. We'll schedule your setup call within 24 hours.</p>
@@ -528,8 +528,7 @@ function ROICalculator() {
     <section className="border-t border-slate-200 py-24 px-6">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">See your numbers</div>
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
             What's this actually worth to you?
           </h2>
           <p className="text-slate-500 text-base max-w-xl mx-auto leading-relaxed">
@@ -537,7 +536,7 @@ function ROICalculator() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-10">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 md:p-10">
           <div className="space-y-8">
             {/* Locations */}
             <div>
@@ -603,7 +602,7 @@ function ROICalculator() {
         </div>
 
         <div className="text-center mt-8">
-          <a href="#founding" className="inline-flex px-7 py-3.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
+          <a href="#founding" className="inline-flex px-7 py-3.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Apply for the Founding Program →
           </a>
         </div>
@@ -706,7 +705,7 @@ export default function Landing() {
               <ChevronDown size={13} className={`motion-safe:transition-transform duration-200 ${compareOpen ? 'rotate-180' : ''}`} />
             </button>
             {compareOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg shadow-slate-900/[0.08] z-50 w-52">
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-slate-200 rounded-lg overflow-hidden shadow-lg shadow-slate-900/[0.08] z-50 w-52">
                 {[
                   { to: '/compare/tekmetric', label: 'ShopCommand vs. Tekmetric' },
                   { to: '/compare/shopmonkey', label: 'ShopCommand vs. Shopmonkey' },
@@ -775,7 +774,7 @@ export default function Landing() {
               key={href}
               href={href}
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+              className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
             >
               {label}
             </a>
@@ -783,21 +782,21 @@ export default function Landing() {
           <Link
             to="/resources"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
           >
             Resources
           </Link>
           <Link
             to="/demo"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
           >
             Try the demo
           </Link>
           <Link
             to="/sign-in"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+            className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
           >
             Sign in
           </Link>
@@ -816,7 +815,7 @@ export default function Landing() {
                 key={to}
                 to={to}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center h-11 px-3 text-sm text-slate-500 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+                className="flex items-center h-11 px-3 text-sm text-slate-500 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
               >
                 {label}
               </Link>
@@ -828,7 +827,7 @@ export default function Landing() {
             <a
               href="#founding"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center h-12 rounded-xl text-sm font-semibold bg-orange-500 active:bg-orange-600 text-white transition-colors"
+              className="flex items-center justify-center h-12 rounded-lg text-sm font-semibold bg-orange-500 active:bg-orange-600 text-white transition-colors"
             >
               Join the Founding Program →
             </a>
@@ -848,8 +847,8 @@ export default function Landing() {
             </a>
 
             <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 mb-5 leading-[1.1]"
-              style={{ letterSpacing: '-0.03em' }}
+              className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 mb-5 leading-[1.08]"
+              style={{ letterSpacing: '-0.01em' }}
             >
               Your shops are running right now.
               <br />
@@ -874,10 +873,10 @@ export default function Landing() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-start gap-3">
-              <a href="#founding" className="px-6 py-3 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
+              <a href="#founding" className="px-6 py-3 rounded-lg text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
                 Apply for the Founding Program →
               </a>
-              <a href="#how-it-works" className="px-6 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <a href="#how-it-works" className="px-6 py-3 rounded-lg text-base font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 How it works
               </a>
             </div>
@@ -919,16 +918,23 @@ export default function Landing() {
       >
         <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_1.6fr] gap-12 md:gap-16 items-start">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Up and running in a day
             </h2>
             <p className="text-slate-500 leading-relaxed">No long onboarding calls. No implementation fees. Just connect and go.</p>
           </div>
           <div className="space-y-8">
-            {steps.map(({ title, desc }) => (
-              <div key={title}>
-                <h3 className="text-base font-semibold text-slate-900 mb-1.5">{title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+            {steps.map(({ title, desc }, i) => (
+              <div key={title} className="flex gap-4">
+                {/* Hex step marker echoes the logo mark */}
+                <svg width="30" height="30" viewBox="0 0 32 32" className="flex-shrink-0 mt-0.5" aria-hidden="true">
+                  <polygon points="16,2 28.1,9 28.1,23 16,30 3.9,23 3.9,9" fill="none" stroke="#F97316" strokeWidth="2" />
+                  <text x="16" y="21" textAnchor="middle" fontSize="13" fontWeight="700" fill="#0f172a">{i + 1}</text>
+                </svg>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900 mb-1.5">{title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -938,7 +944,7 @@ export default function Landing() {
       {/* Features — alternating split layouts */}
       <section className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
             One dashboard. Every location. Every tech. Every RO.
           </h2>
           <p className="text-slate-500 max-w-md mx-auto leading-relaxed">Built specifically for auto repair shops. Fast enough that you never wait on a loading screen.</p>
@@ -947,7 +953,7 @@ export default function Landing() {
         {/* Feature 1: RO tracking — text left, preview right */}
         <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center mb-20">
           <div>
-            <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
+            <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
               <ClipboardList size={18} className="text-orange-500" strokeWidth={1.8} />
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Stop asking "where's that RO?"</h3>
@@ -967,19 +973,19 @@ export default function Landing() {
       >
         <div className="max-w-3xl mx-auto text-center">
           <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">Built for every role</div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-10" style={{ letterSpacing: '-0.02em' }}>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-slate-900 mb-10" style={{ letterSpacing: '-0.01em' }}>
             One platform, three views
           </h2>
           <div className="grid sm:grid-cols-3 gap-6 text-left">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="rounded-lg border border-slate-200 bg-white p-5">
               <div className="text-orange-600 text-xs uppercase tracking-widest font-semibold mb-2">Owner</div>
               <p className="text-slate-600 text-sm leading-relaxed">Revenue, open ROs, and who's on the clock — all locations, one tab.</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="rounded-lg border border-slate-200 bg-white p-5">
               <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Service Advisor</div>
               <p className="text-slate-600 text-sm leading-relaxed">Write and track ROs from estimate to payment with instant vehicle history.</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="rounded-lg border border-slate-200 bg-white p-5">
               <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Technician</div>
               <p className="text-slate-600 text-sm leading-relaxed">Clock in, see assigned jobs, update status — all from your phone.</p>
             </div>
@@ -991,8 +997,7 @@ export default function Landing() {
       <section className="border-t border-slate-200 py-24 px-6 bg-slate-50/60">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">A different kind of tool</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Most shop software is complex and overpriced.
               <br className="hidden md:block" />
               <span className="text-orange-500"> Ours is built to be neither.</span>
@@ -1002,7 +1007,7 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
+          <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
             {/* Header row — desktop */}
             <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-5 md:px-8 py-4">
               <div />
@@ -1053,7 +1058,7 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">From our conversations</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               What we hear from shop owners
             </h2>
             <p className="text-slate-500 max-w-md mx-auto leading-relaxed text-sm md:text-base">
@@ -1075,7 +1080,7 @@ export default function Landing() {
                 attr: 'Owner-operator, single location',
               },
             ].map(({ quote, attr }, i) => (
-              <div key={i} className="rounded-xl border border-slate-200 bg-white p-6 flex flex-col justify-between">
+              <div key={i} className="rounded-lg border border-slate-200 bg-white p-6 flex flex-col justify-between">
                 <p className="text-slate-600 text-sm leading-relaxed mb-5">"{quote}"</p>
                 <p className="text-slate-400 text-xs font-medium">{attr}</p>
               </div>
@@ -1088,7 +1093,7 @@ export default function Landing() {
       <section id="pricing" className="border-t border-slate-200 py-24 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Per location. No per-seat fees.
             </h2>
             <p className="text-slate-500 leading-relaxed max-w-md mx-auto">
@@ -1097,7 +1102,7 @@ export default function Landing() {
           </div>
           <div className="grid md:grid-cols-2 gap-5">
             {/* Founding Member */}
-            <div className="relative rounded-2xl border-2 border-orange-400 bg-white p-7 flex flex-col h-full shadow-sm">
+            <div className="relative rounded-lg border-2 border-orange-400 bg-white p-7 flex flex-col h-full shadow-sm">
                 <div className="absolute -top-3 left-6">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold">
                     {TOTAL_SPOTS - CLAIMED_SPOTS} spots left
@@ -1130,13 +1135,13 @@ export default function Landing() {
                   ))}
                 </div>
                 <a href="#founding"
-                  className="mt-auto w-full py-3 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors text-center shadow-sm">
+                  className="mt-auto w-full py-3 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors text-center shadow-sm">
                   Apply for the Founding Program →
                 </a>
               </div>
 
             {/* Standard */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-7 flex flex-col h-full">
+            <div className="rounded-lg border border-slate-200 bg-white p-7 flex flex-col h-full">
                 <div className="mb-5">
                   <div className="text-slate-400 text-xs uppercase tracking-widest mb-3 font-medium">Standard: After launch</div>
                   <div className="flex items-end gap-1.5 mb-1">
@@ -1158,7 +1163,7 @@ export default function Landing() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-auto w-full py-3 rounded-xl text-sm font-medium border border-slate-200 text-slate-400 text-center cursor-default">
+                <div className="mt-auto w-full py-3 rounded-lg text-sm font-medium border border-slate-200 text-slate-400 text-center cursor-default">
                   Available at launch
                 </div>
               </div>
@@ -1195,8 +1200,7 @@ export default function Landing() {
       <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <div className="text-xs text-slate-400 uppercase tracking-widest font-medium mb-4">Built to last</div>
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Your shop data is safe with us
             </h2>
             <p className="text-slate-500 text-sm max-w-xl mx-auto leading-relaxed">
@@ -1211,7 +1215,7 @@ export default function Landing() {
               { icon: Clock, title: '99.9% uptime', desc: 'Hosted on Vercel with automatic failover. Your dashboard is up when you need it, not down for maintenance.' },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="text-center px-2">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3">
+                <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3">
                   <Icon size={18} className="text-orange-500" strokeWidth={1.8} />
                 </div>
                 <div className="text-slate-900 text-sm font-semibold mb-1.5">{title}</div>
@@ -1225,7 +1229,7 @@ export default function Landing() {
       {/* FAQ */}
       <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+          <h2 className="font-display text-2xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.01em' }}>
             Common questions
           </h2>
           <div className="space-y-0 divide-y divide-slate-200">
@@ -1241,8 +1245,7 @@ export default function Landing() {
 
       {/* CTA */}
       <section className="relative py-28 px-6 text-center overflow-hidden border-t border-slate-200">
-          <p className="relative text-orange-600 text-xs uppercase tracking-widest font-medium mb-4">Early access open now</p>
-          <h2 className="relative text-4xl md:text-5xl font-bold text-slate-900 mb-5 max-w-xl mx-auto" style={{ letterSpacing: '-0.03em' }}>
+          <h2 className="font-display relative text-4xl md:text-5xl font-bold text-slate-900 mb-5 max-w-xl mx-auto" style={{ letterSpacing: '-0.01em' }}>
             Stop driving to your shops to check on every bay.
           </h2>
           <p className="relative text-slate-500 mb-10 max-w-sm mx-auto leading-relaxed">
@@ -1251,12 +1254,12 @@ export default function Landing() {
           <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
               href="#founding"
-              className="px-8 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
+              className="px-8 py-3.5 rounded-lg text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
               Apply for the Founding Program: {TOTAL_SPOTS - CLAIMED_SPOTS} spots left →
             </a>
             <Link
               to="/demo"
-              className="px-6 py-3.5 rounded-xl text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              className="px-6 py-3.5 rounded-lg text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
               Try the demo
             </Link>
           </div>

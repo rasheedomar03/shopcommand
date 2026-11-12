@@ -30,7 +30,7 @@ export default function Terms() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
-          <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Terms of Service</h1>
+          <h1 style={{ letterSpacing: '-0.01em' }} className="font-display text-3xl font-bold text-white mb-2">Terms of Service</h1>
           <p className="text-white/60 text-sm">Last updated: May 13, 2026</p>
         </div>
 

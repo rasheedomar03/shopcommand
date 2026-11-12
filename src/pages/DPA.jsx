@@ -30,7 +30,7 @@ export default function DPA() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
-          <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Data Processing Agreement</h1>
+          <h1 style={{ letterSpacing: '-0.01em' }} className="font-display text-3xl font-bold text-white mb-2">Data Processing Agreement</h1>
           <p className="text-white/60 text-sm">Last updated: May 13, 2026</p>
           <p className="text-white/60 text-sm mt-1">This DPA is incorporated into and forms part of the ShopCommand <Link to="/terms" className="text-orange-400 hover:underline">Terms of Service</Link>.</p>
         </div>
@@ -56,15 +56,15 @@ export default function DPA() {
               In the course of providing the Service, ShopCommand processes the following categories of personal data on behalf of the Customer:
             </p>
             <div className="mt-4 space-y-3">
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-white text-sm font-medium mb-1">Customer (End-Customer) Data</p>
                 <p className="text-white/55 text-sm">Names, phone numbers, email addresses, and vehicle information belonging to the auto shop's customers. This data is entered by the shop operator or collected via customer-facing status pages.</p>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-white text-sm font-medium mb-1">Technician Data</p>
                 <p className="text-white/55 text-sm">Names, clock-in and clock-out timestamps, work records, efficiency metrics, and repair assignments for employees of the auto shop.</p>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-white text-sm font-medium mb-1">Repair Order Data</p>
                 <p className="text-white/55 text-sm">Repair order content, service histories, technician assignments, parts used, status updates, and associated communications including SMS messages sent to end-customers.</p>
               </div>
@@ -90,21 +90,21 @@ export default function DPA() {
               The Customer grants ShopCommand general authorization to engage sub-processors to assist in delivering the Service. ShopCommand's current sub-processors are:
             </p>
             <div className="mt-4 space-y-3">
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">Twilio Inc.</p>
                   <p className="text-white/60 text-xs mt-0.5">San Francisco, CA, USA</p>
                   <p className="text-white/55 text-sm mt-1">SMS delivery. Receives end-customer phone numbers and message content to transmit repair order notifications.</p>
                 </div>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">Vercel Inc.</p>
                   <p className="text-white/60 text-xs mt-0.5">San Francisco, CA, USA</p>
                   <p className="text-white/55 text-sm mt-1">Cloud hosting and infrastructure. Stores and processes all Customer Data on ShopCommand's behalf.</p>
                 </div>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4 flex items-start gap-4">
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">Stripe Inc.</p>
                   <p className="text-white/60 text-xs mt-0.5">San Francisco, CA, USA</p>

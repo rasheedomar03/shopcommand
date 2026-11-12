@@ -62,7 +62,7 @@ export default function AlternativesPage() {
         <section className="px-6 py-16 border-b border-slate-100">
           <div className="max-w-3xl mx-auto text-center">
             <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Alternatives</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               {data.title}
             </h1>
             <p className="text-slate-500 leading-relaxed max-w-xl mx-auto">
@@ -74,7 +74,7 @@ export default function AlternativesPage() {
         {/* Why shops switch */}
         <section className="px-6 py-12 border-b border-slate-100">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-5" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-5" style={{ letterSpacing: '-0.01em' }}>
               Why shops look for {data.competitor} alternatives
             </h2>
             <ul className="space-y-3">
@@ -91,14 +91,14 @@ export default function AlternativesPage() {
         {/* Alternatives cards */}
         <section className="px-6 py-12">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>
               The best {data.competitor} alternatives in {new Date().getFullYear()}
             </h2>
             <div className="space-y-5">
               {data.alternatives.map((alt, i) => (
                 <div
                   key={alt.name}
-                  className={`p-6 rounded-2xl border ${alt.isUs ? 'border-orange-200 bg-orange-50/40' : 'border-slate-200'}`}
+                  className={`p-6 rounded-lg border ${alt.isUs ? 'border-orange-200 bg-orange-50/40' : 'border-slate-200'}`}
                 >
                   <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
                     <h3 className="text-base font-semibold text-slate-900">{i + 1}. {alt.name}</h3>
@@ -118,10 +118,10 @@ export default function AlternativesPage() {
                   </p>
                   {alt.isUs && (
                     <div className="flex flex-wrap gap-3 mt-4">
-                      <Link to="/demo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+                      <Link to="/demo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                         Try the live demo <ArrowRight size={14} />
                       </Link>
-                      <Link to="/founding-program" className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+                      <Link to="/founding-program" className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                         Founding Shop Program →
                       </Link>
                     </div>
@@ -135,10 +135,10 @@ export default function AlternativesPage() {
         {/* Comparison table */}
         <section className="px-6 pb-12">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-5" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-5" style={{ letterSpacing: '-0.01em' }}>
               At a glance
             </h2>
-            <div className="border border-slate-200 rounded-2xl overflow-hidden">
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[560px]">
                   <thead>
@@ -177,7 +177,7 @@ export default function AlternativesPage() {
         {/* FAQ */}
         <section className="px-6 py-12 bg-slate-50 border-y border-slate-200">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
             <div className="space-y-6">
               {data.faqs.map(({ q, a }) => (
                 <div key={q}>
@@ -198,7 +198,7 @@ export default function AlternativesPage() {
         {/* Product CTA */}
         <section className="px-6 py-16">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
               Running more than one shop?
             </h2>
             <p className="text-slate-500 text-sm mb-6">
@@ -206,10 +206,10 @@ export default function AlternativesPage() {
               every shop in one dashboard. $100/mo for your first shop — no per-seat fees.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/demo" className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+              <Link to="/demo" className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                 Try the live demo
               </Link>
-              <Link to="/founding-program" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <Link to="/founding-program" className="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 Founding Shop Program →
               </Link>
             </div>

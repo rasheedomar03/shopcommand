@@ -137,17 +137,17 @@ export default function FoundingProgram() {
         <section className="px-6 py-20 bg-orange-50/40 border-b border-slate-200">
           <div className="max-w-3xl mx-auto text-center">
             <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Founding Shop Program</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               A guided 14-day pilot before you commit.
             </h1>
             <p className="text-slate-500 leading-relaxed max-w-lg mx-auto mb-8">
               Prove that ShopCommand fits your workflow — repair orders, technician time, parts handoff, and invoice readiness — against your real day-to-day before choosing a paid plan.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a href="#apply" className="px-6 py-3 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
+              <a href="#apply" className="px-6 py-3 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
                 Apply for the Founding Program →
               </a>
-              <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 Book a 15-min walkthrough
               </a>
             </div>
@@ -157,12 +157,12 @@ export default function FoundingProgram() {
         {/* How it works */}
         <section className="px-6 py-20 border-b border-slate-100">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-slate-900 mb-10 text-center" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-2xl font-bold text-slate-900 mb-10 text-center" style={{ letterSpacing: '-0.01em' }}>
               How the pilot works
             </h2>
             <div className="grid sm:grid-cols-2 gap-6">
               {pilotSteps.map(step => (
-                <div key={step.num} className="flex gap-4 p-5 rounded-2xl border border-slate-200">
+                <div key={step.num} className="flex gap-4 p-5 rounded-lg border border-slate-200">
                   <div className="w-8 h-8 rounded-full bg-orange-500 text-white text-sm font-bold flex items-center justify-center shrink-0">
                     {step.num}
                   </div>
@@ -180,7 +180,7 @@ export default function FoundingProgram() {
         <section className="px-6 py-20 border-b border-slate-100 bg-slate-50/40">
           <div className="max-w-3xl mx-auto">
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="rounded-lg border border-slate-200 bg-white p-6">
                 <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">What the pilot includes</h3>
                 <ul className="space-y-3">
                   {included.map((item, i) => (
@@ -191,7 +191,7 @@ export default function FoundingProgram() {
                   ))}
                 </ul>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="rounded-lg border border-slate-200 bg-white p-6">
                 <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Who should apply</h3>
                 <ul className="space-y-3">
                   {qualifiers.map((item, i) => (
@@ -209,7 +209,7 @@ export default function FoundingProgram() {
         {/* What you get */}
         <section className="px-6 py-20 border-b border-slate-100">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3 text-center" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-2xl font-bold text-slate-900 mb-3 text-center" style={{ letterSpacing: '-0.01em' }}>
               What's included at $100/mo
             </h2>
             <p className="text-slate-500 text-sm text-center mb-10 max-w-md mx-auto">
@@ -219,8 +219,8 @@ export default function FoundingProgram() {
               {whatYouGet.map(item => {
                 const Icon = item.icon
                 return (
-                  <div key={item.title} className="flex gap-4 p-5 rounded-2xl border border-slate-200">
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0">
+                  <div key={item.title} className="flex gap-4 p-5 rounded-lg border border-slate-200">
+                    <div className="w-9 h-9 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0">
                       <Icon size={16} className="text-orange-500" strokeWidth={1.8} />
                     </div>
                     <div>
@@ -237,11 +237,11 @@ export default function FoundingProgram() {
         {/* Pricing comparison */}
         <section className="px-6 py-20 border-b border-slate-100 bg-slate-50/40">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-2xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.01em' }}>
               Simple, per-location pricing
             </h2>
             <div className="inline-flex flex-col sm:flex-row gap-6">
-              <div className="rounded-2xl border-2 border-orange-300 bg-white p-6 text-left min-w-[220px]">
+              <div className="rounded-lg border-2 border-orange-300 bg-white p-6 text-left min-w-[220px]">
                 <div className="text-xs text-orange-600 font-semibold uppercase tracking-wider mb-2">Founding Rate</div>
                 <div className="text-3xl font-bold text-slate-900 mb-1">$100<span className="text-base font-normal text-slate-400">/mo</span></div>
                 <p className="text-slate-500 text-xs mb-4">First shop, unlimited users</p>
@@ -251,7 +251,7 @@ export default function FoundingProgram() {
                   <li className="flex gap-2"><Check size={14} className="text-orange-500 mt-0.5 shrink-0" /> Rate locked for life</li>
                 </ul>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 text-left min-w-[220px]">
+              <div className="rounded-lg border border-slate-200 bg-white p-6 text-left min-w-[220px]">
                 <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Each Additional Shop</div>
                 <div className="text-3xl font-bold text-slate-900 mb-1">$50<span className="text-base font-normal text-slate-400">/mo</span></div>
                 <p className="text-slate-500 text-xs mb-4">Per additional location</p>
@@ -268,7 +268,7 @@ export default function FoundingProgram() {
         {/* Application form */}
         <section id="apply" className="px-6 py-20">
           <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3 text-center" style={{ letterSpacing: '-0.02em' }}>
+            <h2 className="font-display text-2xl font-bold text-slate-900 mb-3 text-center" style={{ letterSpacing: '-0.01em' }}>
               Apply for the Founding Shop Program
             </h2>
             <p className="text-slate-500 text-sm text-center mb-8">
@@ -289,7 +289,7 @@ export default function FoundingProgram() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-orange-200 bg-white p-7 shadow-sm">
+            <div className="rounded-lg border border-orange-200 bg-white p-7 shadow-sm">
               {submitted ? (
                 <div className="text-center py-6">
                   <div className="w-14 h-14 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center mx-auto mb-5">
@@ -322,7 +322,7 @@ export default function FoundingProgram() {
                         autoComplete="name"
                         value={form.name}
                         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                        className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                        className="w-full h-11 px-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
                       />
                     </div>
                     <div>
@@ -334,7 +334,7 @@ export default function FoundingProgram() {
                         autoComplete="email"
                         value={form.email}
                         onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                        className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                        className="w-full h-11 px-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
                       />
                     </div>
                   </div>
@@ -345,7 +345,7 @@ export default function FoundingProgram() {
                         id="fp-locations"
                         value={form.locations}
                         onChange={e => setForm(f => ({ ...f, locations: e.target.value }))}
-                        className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors appearance-none"
+                        className="w-full h-11 px-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors appearance-none"
                       >
                         <option value="">Select...</option>
                         <option value="1">1 location</option>
@@ -362,7 +362,7 @@ export default function FoundingProgram() {
                         placeholder="e.g. Invoicing takes too long"
                         value={form.pain}
                         onChange={e => setForm(f => ({ ...f, pain: e.target.value }))}
-                        className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
+                        className="w-full h-11 px-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors"
                       />
                     </div>
                   </div>
@@ -370,7 +370,7 @@ export default function FoundingProgram() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full h-12 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm"
+                    className="w-full h-12 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors shadow-sm"
                   >
                     {submitting ? 'Reserving your spot…' : 'Apply for the Founding Program →'}
                   </button>

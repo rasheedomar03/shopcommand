@@ -93,14 +93,14 @@ export default function LaborRatesByState() {
         <section className="px-6 py-16 border-b border-slate-100">
           <div className="max-w-3xl mx-auto text-center">
             <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Free Tool</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Average Auto Repair Labor Rates by State ({YEAR})
             </h1>
             <p className="text-slate-500 leading-relaxed max-w-xl mx-auto mb-6">
               Estimated shop labor rates for all 50 states and DC, built from Bureau of Labor Statistics
               technician wage data ({BLS_RELEASE}) — with the methodology shown, not hidden.
             </p>
-            <div className="inline-flex items-baseline gap-2 px-5 py-3 rounded-xl bg-orange-50 border border-orange-200">
+            <div className="inline-flex items-baseline gap-2 px-5 py-3 rounded-lg bg-orange-50 border border-orange-200">
               <span className="text-sm text-slate-600">Typical US shop rate:</span>
               <span className="text-2xl font-bold text-slate-900 tabular-nums">${natLow}–${natHigh}</span>
               <span className="text-sm text-slate-500">/hr (est.)</span>
@@ -111,7 +111,7 @@ export default function LaborRatesByState() {
         {/* Table */}
         <section className="px-6 py-12">
           <div className="max-w-3xl mx-auto">
-            <div className="border border-slate-200 rounded-2xl overflow-hidden">
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[520px]">
                   <thead>
@@ -157,9 +157,9 @@ export default function LaborRatesByState() {
           <div className="max-w-3xl mx-auto">
             <Link
               to="/tools/labor-rate-calculator"
-              className="group flex items-center gap-5 p-6 rounded-2xl border border-orange-200 bg-orange-50/40 hover:bg-orange-50 transition-colors"
+              className="group flex items-center gap-5 p-6 rounded-lg border border-orange-200 bg-orange-50/40 hover:bg-orange-50 transition-colors"
             >
-              <div className="w-11 h-11 rounded-xl bg-white border border-orange-200 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-lg bg-white border border-orange-200 flex items-center justify-center shrink-0">
                 <Calculator size={20} className="text-orange-500" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
@@ -178,7 +178,7 @@ export default function LaborRatesByState() {
         {/* Methodology */}
         <section className="px-6 py-12 bg-slate-50 border-y border-slate-200">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>Methodology</h2>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>Methodology</h2>
             <div className="space-y-3 text-[15px] text-slate-600 leading-relaxed">
               <p>
                 There is no public registry of what auto repair shops charge, so most "labor rates by state" pages publish
@@ -210,7 +210,7 @@ export default function LaborRatesByState() {
         {/* FAQ */}
         <section className="px-6 py-12">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
             <div className="space-y-6">
               {faqs.map(({ q, a }) => (
                 <div key={q}>
@@ -225,7 +225,7 @@ export default function LaborRatesByState() {
         {/* Product CTA */}
         <section className="px-6 py-16 bg-slate-50 border-t border-slate-200">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
               Know your rate. Now see if your shops actually hit it.
             </h2>
             <p className="text-slate-500 text-sm mb-6">
@@ -233,10 +233,10 @@ export default function LaborRatesByState() {
               every shop in one dashboard. $100/mo for your first shop — no per-seat fees.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/demo" className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+              <Link to="/demo" className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                 Try the live demo
               </Link>
-              <Link to="/founding-program" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <Link to="/founding-program" className="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 Founding Shop Program →
               </Link>
             </div>

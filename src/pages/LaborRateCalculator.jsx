@@ -32,7 +32,7 @@ function Field({ label, suffix, value, onChange, min = 0, max, step = 1, hint })
   return (
     <label className="block">
       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
-      <div className="mt-1.5 flex items-center rounded-xl border border-slate-200 bg-white focus-within:border-orange-400 transition-colors">
+      <div className="mt-1.5 flex items-center rounded-lg border border-slate-200 bg-white focus-within:border-orange-400 transition-colors">
         <input
           type="number"
           inputMode="decimal"
@@ -41,7 +41,7 @@ function Field({ label, suffix, value, onChange, min = 0, max, step = 1, hint })
           max={max}
           step={step}
           onChange={e => onChange(e.target.value)}
-          className="w-full px-4 py-2.5 text-slate-900 text-[15px] bg-transparent outline-none rounded-xl"
+          className="w-full px-4 py-2.5 text-slate-900 text-[15px] bg-transparent outline-none rounded-lg"
         />
         {suffix && <span className="pr-4 text-sm text-slate-400 whitespace-nowrap">{suffix}</span>}
       </div>
@@ -125,7 +125,7 @@ export default function LaborRateCalculator() {
         <section className="px-6 py-16 border-b border-slate-100">
           <div className="max-w-3xl mx-auto text-center">
             <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Free Tool</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Auto Repair Labor Rate Calculator
             </h1>
             <p className="text-slate-500 leading-relaxed max-w-xl mx-auto">
@@ -160,7 +160,7 @@ export default function LaborRateCalculator() {
                 <select
                   value={stateCode}
                   onChange={e => setStateCode(e.target.value)}
-                  className="mt-1.5 w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-[15px] outline-none focus:border-orange-400 transition-colors"
+                  className="mt-1.5 w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 text-[15px] outline-none focus:border-orange-400 transition-colors"
                 >
                   {STATE_WAGES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
                 </select>
@@ -168,7 +168,7 @@ export default function LaborRateCalculator() {
             </div>
 
             {/* Results */}
-            <div className="md:sticky md:top-20 rounded-2xl border border-slate-200 overflow-hidden">
+            <div className="md:sticky md:top-20 rounded-lg border border-slate-200 overflow-hidden">
               <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Your numbers</div>
               </div>
@@ -206,14 +206,14 @@ export default function LaborRateCalculator() {
         {/* How it works */}
         <section className="px-6 py-12 bg-slate-50 border-y border-slate-200">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>How the math works</h2>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>How the math works</h2>
             <div className="space-y-3 text-[15px] text-slate-600 leading-relaxed">
               <p>
                 You pay technicians for every clocked hour, but you only collect for <em>billed</em> hours. So the true
                 cost of one billable hour is your total monthly labor cost plus fixed overhead, divided by the hours you
                 actually sell:
               </p>
-              <p className="px-4 py-3 rounded-xl bg-white border border-slate-200 font-mono text-sm text-slate-700">
+              <p className="px-4 py-3 rounded-lg bg-white border border-slate-200 font-mono text-sm text-slate-700">
                 break-even = (tech pay + overhead) ÷ billed hours<br />
                 rate = break-even ÷ (1 − target margin)
               </p>
@@ -232,9 +232,9 @@ export default function LaborRateCalculator() {
           <div className="max-w-3xl mx-auto">
             <Link
               to="/tools/labor-rates-by-state"
-              className="group flex items-center gap-5 p-6 rounded-2xl border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all"
+              className="group flex items-center gap-5 p-6 rounded-lg border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all"
             >
-              <div className="w-11 h-11 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0">
                 <Table2 size={20} className="text-orange-500" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
@@ -253,7 +253,7 @@ export default function LaborRateCalculator() {
         {/* FAQ */}
         <section className="px-6 pb-12">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
             <div className="space-y-6">
               {faqs.map(({ q, a }) => (
                 <div key={q}>
@@ -268,7 +268,7 @@ export default function LaborRateCalculator() {
         {/* Product CTA */}
         <section className="px-6 py-16 bg-slate-50 border-t border-slate-200">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
               The calculator assumes you know your billable hours. Do you?
             </h2>
             <p className="text-slate-500 text-sm mb-6">
@@ -276,10 +276,10 @@ export default function LaborRateCalculator() {
               efficiency, not guesses. $100/mo per shop, unlimited users.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/demo" className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+              <Link to="/demo" className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                 Try the live demo
               </Link>
-              <Link to="/founding-program" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <Link to="/founding-program" className="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 Founding Shop Program →
               </Link>
             </div>

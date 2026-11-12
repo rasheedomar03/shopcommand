@@ -28,7 +28,7 @@ function ContentBlock({ block }) {
     return <p className="text-slate-600 text-[15px] leading-relaxed">{block.text}</p>
   }
   if (block.type === 'heading') {
-    return <h2 className="text-lg font-bold text-slate-900 mt-8 mb-2" style={{ letterSpacing: '-0.01em' }}>{block.text}</h2>
+    return <h2 className="font-display text-lg font-bold text-slate-900 mt-8 mb-2" style={{ letterSpacing: '-0.01em' }}>{block.text}</h2>
   }
   if (block.type === 'list') {
     return (
@@ -113,10 +113,10 @@ export default function Article() {
 
             {/* Header */}
             <div className="mb-10">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
+              <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
                 <Icon size={18} className="text-orange-500" strokeWidth={1.8} />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.02em' }}>
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
                 {article.title}
               </h1>
               <div className="flex items-center gap-4 text-sm text-slate-400">
@@ -154,7 +154,7 @@ export default function Article() {
             {/* FAQ */}
             {article.faqs?.length > 0 && (
               <div className="mt-12">
-                <h2 className="text-lg font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>FAQ</h2>
+                <h2 className="font-display text-lg font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>FAQ</h2>
                 <div className="space-y-6">
                   {article.faqs.map((faq, i) => (
                     <div key={i}>
@@ -167,16 +167,16 @@ export default function Article() {
             )}
 
             {/* CTA */}
-            <div className="mt-14 p-6 rounded-2xl border border-orange-200 bg-orange-50/40">
+            <div className="mt-14 p-6 rounded-lg border border-orange-200 bg-orange-50/40">
               <h3 className="text-base font-semibold text-slate-900 mb-2">See this in action</h3>
               <p className="text-slate-500 text-sm mb-4">
                 ShopCommand handles repair orders, technician time, parts inventory, and invoicing from one dashboard. Try it free.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Link to="/demo" className="px-4 py-2 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+                <Link to="/demo" className="px-4 py-2 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                   Try the live demo
                 </Link>
-                <Link to="/founding-program" className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+                <Link to="/founding-program" className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                   Founding Shop Program →
                 </Link>
               </div>

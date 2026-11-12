@@ -128,7 +128,7 @@ export default function InvoiceGenerator() {
         <section className="px-6 py-14 border-b border-slate-100">
           <div className="max-w-3xl mx-auto text-center">
             <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Free Tool</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Free Auto Repair Invoice Generator
             </h1>
             <p className="text-slate-500 leading-relaxed max-w-xl mx-auto">
@@ -247,7 +247,7 @@ export default function InvoiceGenerator() {
 
               <button
                 onClick={() => window.print()}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors"
               >
                 <Printer size={15} />
                 Print / Save as PDF
@@ -255,7 +255,7 @@ export default function InvoiceGenerator() {
             </div>
 
             {/* Live preview */}
-            <div id="invoice-print" className="rounded-2xl border border-slate-200 shadow-sm p-8 bg-white lg:sticky lg:top-20">
+            <div id="invoice-print" className="rounded-lg border border-slate-200 shadow-sm p-8 bg-white lg:sticky lg:top-20">
               <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200">
                 <div>
                   <div className="text-lg font-bold text-slate-900">{shop.name || 'Your Shop Name'}</div>
@@ -333,8 +333,8 @@ export default function InvoiceGenerator() {
         {/* Cross-links */}
         <section className="px-6 py-10">
           <div className="max-w-3xl mx-auto grid sm:grid-cols-2 gap-4">
-            <Link to="/tools/labor-rate-calculator" className="group flex items-center gap-4 p-5 rounded-2xl border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0">
+            <Link to="/tools/labor-rate-calculator" className="group flex items-center gap-4 p-5 rounded-lg border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all">
+              <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0">
                 <Calculator size={18} className="text-orange-500" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
@@ -343,8 +343,8 @@ export default function InvoiceGenerator() {
               </div>
               <ArrowRight size={14} className="text-slate-300 group-hover:text-orange-400 shrink-0" />
             </Link>
-            <Link to="/tools/labor-rates-by-state" className="group flex items-center gap-4 p-5 rounded-2xl border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0">
+            <Link to="/tools/labor-rates-by-state" className="group flex items-center gap-4 p-5 rounded-lg border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all">
+              <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0">
                 <ArrowRight size={18} className="text-orange-500" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
@@ -359,7 +359,7 @@ export default function InvoiceGenerator() {
         {/* FAQ */}
         <section className="px-6 py-10">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-6" style={{ letterSpacing: '-0.01em' }}>Frequently asked questions</h2>
             <div className="space-y-6">
               {faqs.map(({ q, a }) => (
                 <div key={q}>
@@ -374,7 +374,7 @@ export default function InvoiceGenerator() {
         {/* Product CTA */}
         <section className="px-6 py-16 bg-slate-50 border-t border-slate-200">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
               Typing invoices by hand at more than one shop?
             </h2>
             <p className="text-slate-500 text-sm mb-6">
@@ -382,10 +382,10 @@ export default function InvoiceGenerator() {
               status tracked across every location. $100/mo per shop, unlimited users.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/demo" className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+              <Link to="/demo" className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                 Try the live demo
               </Link>
-              <Link to="/founding-program" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <Link to="/founding-program" className="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 Founding Shop Program →
               </Link>
             </div>

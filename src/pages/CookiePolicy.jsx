@@ -85,7 +85,7 @@ export default function CookiePolicy() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
-          <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Cookie Policy</h1>
+          <h1 style={{ letterSpacing: '-0.01em' }} className="font-display text-3xl font-bold text-white mb-2">Cookie Policy</h1>
           <p className="text-white/60 text-sm">Last updated: May 31, 2026</p>
         </div>
 
@@ -102,7 +102,7 @@ export default function CookiePolicy() {
             <h2 className="text-white text-base font-semibold mb-2">Cookies we use</h2>
 
             <div className="mt-4 space-y-4">
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-white text-sm font-medium">Essential</p>
                   <span className="text-[10px] font-medium uppercase tracking-wider text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full">Always active</span>
@@ -128,7 +128,7 @@ export default function CookiePolicy() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-white text-sm font-medium mb-2">Analytics</p>
                 <p className="text-white/55 text-sm">Help us understand how users interact with the platform so we can improve it. We use Vercel Analytics, which is cookieless and privacy-friendly. No personal data is collected or shared with third parties.</p>
                 <div className="mt-3 space-y-1.5">
@@ -139,7 +139,7 @@ export default function CookiePolicy() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-white text-sm font-medium mb-2">Functional</p>
                 <p className="text-white/55 text-sm">Remember your in-app preferences like selected tabs, sidebar state, and local draft data. These make the app feel more responsive but are not strictly required.</p>
                 <div className="mt-3 space-y-1.5">
@@ -184,7 +184,7 @@ export default function CookiePolicy() {
           {/* Preferences Panel */}
           <section>
             <h2 className="text-white text-base font-semibold mb-4">Your preferences</h2>
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+            <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-5">
               <Toggle
                 checked={preferences.essential}
                 onChange={() => {}}

@@ -30,7 +30,7 @@ export default function Privacy() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
-          <h1 style={{ letterSpacing: '-0.02em' }} className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
+          <h1 style={{ letterSpacing: '-0.01em' }} className="font-display text-3xl font-bold text-white mb-2">Privacy Policy</h1>
           <p className="text-white/60 text-sm">Last updated: May 13, 2026</p>
         </div>
 
@@ -81,15 +81,15 @@ export default function Privacy() {
               ShopCommand does not sell your personal information or your Customer Data to third parties. We share information only in the following limited circumstances:
             </p>
             <div className="mt-4 space-y-4">
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-white text-sm font-medium mb-1">Twilio Inc.</p>
                 <p className="text-white/55 text-sm">SMS delivery sub-processor. Receives customer phone numbers and message content as needed to deliver SMS messages you initiate through the platform.</p>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-white text-sm font-medium mb-1">Vercel Inc.</p>
                 <p className="text-white/55 text-sm">Cloud hosting and infrastructure provider. Hosts the ShopCommand application and associated data storage infrastructure.</p>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-white text-sm font-medium mb-1">Stripe Inc.</p>
                 <p className="text-white/55 text-sm">Payment processing. Handles subscription billing and receives payment card information on ShopCommand's behalf.</p>
               </div>

@@ -78,7 +78,7 @@ export function CompareNav() {
             <ChevronDown size={13} className={`transition-transform duration-200 ${compareOpen ? 'rotate-180' : ''}`} />
           </button>
           {compareOpen && (
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xl shadow-slate-200/60 z-50 w-60">
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xl shadow-slate-200/60 z-50 w-60">
               {compareLinks.map(({ to, label }, i) => (
                 <Link
                   key={to}
@@ -127,20 +127,20 @@ export function CompareNav() {
       <div className="px-5 py-4 space-y-1 max-h-[calc(100dvh-4rem)] overflow-y-auto">
         <a
           href="/#how-it-works"
-          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
         >
           How it works
         </a>
         <a
           href="/#pricing"
-          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
         >
           Pricing
         </a>
         <Link
           to="/login"
           onClick={() => setMobileOpen(false)}
-          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+          className="flex items-center h-12 px-3 text-sm font-medium text-slate-700 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
         >
           Log in
         </Link>
@@ -153,7 +153,7 @@ export function CompareNav() {
               key={to}
               to={to}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center h-11 px-3 text-sm text-slate-500 active:text-orange-600 active:bg-orange-50 rounded-xl transition-colors"
+              className="flex items-center h-11 px-3 text-sm text-slate-500 active:text-orange-600 active:bg-orange-50 rounded-lg transition-colors"
             >
               {label}
             </Link>
@@ -164,7 +164,7 @@ export function CompareNav() {
         <div className="pt-3 pb-1 border-t border-slate-100">
           <a
             href="/#founding"
-            className="flex items-center justify-center h-12 rounded-xl text-sm font-semibold bg-orange-500 active:bg-orange-600 text-white transition-colors"
+            className="flex items-center justify-center h-12 rounded-lg text-sm font-semibold bg-orange-500 active:bg-orange-600 text-white transition-colors"
           >
             Reserve your spot →
           </a>

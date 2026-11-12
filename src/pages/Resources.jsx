@@ -54,7 +54,7 @@ export default function Resources() {
         <section className="px-6 py-20 border-b border-slate-100">
           <div className="max-w-3xl mx-auto text-center">
             <div className="text-xs text-orange-600 uppercase tracking-widest font-semibold mb-4">Resources</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
               Workflow guides for auto repair shops
             </h1>
             <p className="text-slate-500 leading-relaxed max-w-lg mx-auto">
@@ -73,9 +73,9 @@ export default function Resources() {
                   <Link
                     key={article.slug}
                     to={`/resources/${article.slug}`}
-                    className="group flex gap-5 p-6 rounded-2xl border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all"
+                    className="group flex gap-5 p-6 rounded-lg border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center shrink-0 mt-0.5">
                       <Icon size={18} className="text-orange-500" strokeWidth={1.8} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -102,17 +102,17 @@ export default function Resources() {
         {/* CTA */}
         <section className="px-6 py-16 bg-slate-50 border-t border-slate-200">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.01em' }}>
               Ready to see it in action?
             </h2>
             <p className="text-slate-500 text-sm mb-6">
               Try the live demo or apply for the Founding Shop Program — 14-day guided pilot, $100/mo locked rate.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/demo" className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
+              <Link to="/demo" className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors">
                 Try the live demo
               </Link>
-              <Link to="/founding-program" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+              <Link to="/founding-program" className="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
                 Founding Shop Program →
               </Link>
             </div>

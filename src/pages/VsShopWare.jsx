@@ -78,7 +78,7 @@ export default function VsShopWare() {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-slate-100 text-slate-500 text-xs font-medium mb-6">
           Comparison
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5" style={{ letterSpacing: '-0.03em' }}>
+        <h1 className="font-display text-4xl md:text-5xl font-bold text-slate-900 mb-5" style={{ letterSpacing: '-0.01em' }}>
           ShopCommand vs. Shop-Ware
         </h1>
         <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
@@ -89,7 +89,7 @@ export default function VsShopWare() {
 
       {/* Table */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
-        <div className="rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="rounded-lg border border-slate-200 overflow-hidden">
           {/* Header (desktop) */}
           <div className="hidden sm:grid grid-cols-3 bg-slate-50 border-b border-slate-200 px-6 py-4">
             <div className="text-slate-400 text-xs uppercase tracking-widest" />
@@ -137,7 +137,7 @@ export default function VsShopWare() {
       {/* The honest take */}
       <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.01em' }}>
             The honest take
           </h2>
           <div className="space-y-6">
@@ -174,7 +174,7 @@ export default function VsShopWare() {
       {/* FAQ */}
       <section className="border-t border-slate-200 py-20 px-6">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.02em' }}>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-slate-900 mb-8" style={{ letterSpacing: '-0.01em' }}>
             Frequently asked questions
           </h2>
           <div className="space-y-6">
@@ -191,15 +191,15 @@ export default function VsShopWare() {
 
       {/* CTA */}
       <section className="border-t border-slate-200 py-20 px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
+        <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
           Ready to see it for yourself?
         </h2>
         <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">25 founding spots starting at $100/mo locked forever. Price goes to $175 at public launch.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a href="/#founding" className="px-7 py-3.5 rounded-xl text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
+          <a href="/#founding" className="px-7 py-3.5 rounded-lg text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm">
             Reserve a founding spot →
           </a>
-          <Link to="/login" className="px-6 py-3.5 rounded-xl text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
+          <Link to="/login" className="px-6 py-3.5 rounded-lg text-base font-medium text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 transition-colors">
             See the dashboard
           </Link>
         </div>
