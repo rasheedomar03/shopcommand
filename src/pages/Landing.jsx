@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Wrench, ClipboardList, Gauge, Car, Check, Mail, ChevronDown, Menu, X, Shield, Zap, Smartphone, Clock } from 'lucide-react'
 import { CookieBanner } from '@/components/CookieBanner'
+import { HexNum, HexChip, HexDot } from '@/components/Hex'
 import { sanitizeField, isValidEmail } from '@/lib/utils'
 
 const TOTAL_SPOTS = 25
@@ -866,7 +867,7 @@ export default function Landing() {
                 'Replace whiteboards and manager calls',
               ].map(item => (
                 <span key={item} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs">
-                  <Check size={10} className="text-orange-500 flex-shrink-0" strokeWidth={2.5} />
+                  <HexDot size={8} />
                   {item}
                 </span>
               ))}
@@ -926,11 +927,7 @@ export default function Landing() {
           <div className="space-y-8">
             {steps.map(({ title, desc }, i) => (
               <div key={title} className="flex gap-4">
-                {/* Hex step marker echoes the logo mark */}
-                <svg width="30" height="30" viewBox="0 0 32 32" className="flex-shrink-0 mt-0.5" aria-hidden="true">
-                  <polygon points="16,2 28.1,9 28.1,23 16,30 3.9,23 3.9,9" fill="none" stroke="#F97316" strokeWidth="2" />
-                  <text x="16" y="21" textAnchor="middle" fontSize="13" fontWeight="700" fill="#0f172a">{i + 1}</text>
-                </svg>
+                <HexNum n={i + 1} className="flex-shrink-0 mt-0.5" />
                 <div>
                   <h3 className="text-base font-semibold text-slate-900 mb-1.5">{title}</h3>
                   <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
@@ -953,9 +950,9 @@ export default function Landing() {
         {/* Feature 1: RO tracking — text left, preview right */}
         <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center mb-20">
           <div>
-            <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center mb-4">
+            <HexChip className="mb-4">
               <ClipboardList size={18} className="text-orange-500" strokeWidth={1.8} />
-            </div>
+            </HexChip>
             <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.01em' }}>Stop asking "where's that RO?"</h3>
             <p className="text-slate-500 text-sm leading-relaxed mb-4">
               You know the call. It's 2pm, a customer wants a status update, and nobody can find the ticket. Every RO lives here, from the moment it's written to the moment it's paid. Search any customer, any vehicle, any ticket in seconds.
@@ -978,15 +975,15 @@ export default function Landing() {
           </h2>
           <div className="grid sm:grid-cols-3 gap-6 text-left">
             <div className="rounded-lg border border-slate-200 bg-white p-5">
-              <div className="text-orange-600 text-xs uppercase tracking-widest font-semibold mb-2">Owner</div>
+              <div className="flex items-center gap-1.5 text-orange-600 text-xs uppercase tracking-widest font-semibold mb-2"><HexDot size={8} />Owner</div>
               <p className="text-slate-600 text-sm leading-relaxed">Revenue, open ROs, and who's on the clock — all locations, one tab.</p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-5">
-              <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Service Advisor</div>
+              <div className="flex items-center gap-1.5 text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2"><HexDot size={8} color="#94A3B8" />Service Advisor</div>
               <p className="text-slate-600 text-sm leading-relaxed">Write and track ROs from estimate to payment with instant vehicle history.</p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-5">
-              <div className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2">Technician</div>
+              <div className="flex items-center gap-1.5 text-slate-400 text-xs uppercase tracking-widest font-semibold mb-2"><HexDot size={8} color="#94A3B8" />Technician</div>
               <p className="text-slate-600 text-sm leading-relaxed">Clock in, see assigned jobs, update status — all from your phone.</p>
             </div>
           </div>
@@ -1215,9 +1212,9 @@ export default function Landing() {
               { icon: Clock, title: '99.9% uptime', desc: 'Hosted on Vercel with automatic failover. Your dashboard is up when you need it, not down for maintenance.' },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="text-center px-2">
-                <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3">
-                  <Icon size={18} className="text-orange-500" strokeWidth={1.8} />
-                </div>
+                <HexChip size={40} className="mx-auto mb-3">
+                  <Icon size={17} className="text-orange-500" strokeWidth={1.8} />
+                </HexChip>
                 <div className="text-slate-900 text-sm font-semibold mb-1.5">{title}</div>
                 <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>
               </div>

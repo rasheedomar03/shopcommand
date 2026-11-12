@@ -1,5 +1,7 @@
 import { SignUp as ClerkSignUp } from '@clerk/clerk-react'
 import { Link } from 'react-router-dom'
+import { HexDot, HexPattern } from '@/components/Hex'
+import { clerkAppearance } from '@/lib/clerkAppearance'
 
 function HexMark({ size = 32 }) {
   const pts = (cx, cy, r) =>
@@ -18,55 +20,71 @@ function HexMark({ size = 32 }) {
   )
 }
 
-const clerkAppearance = {
-  variables: {
-    colorPrimary: '#F97316',
-    colorText: '#0F172A',
-    colorTextSecondary: '#64748B',
-    colorBackground: '#FFFFFF',
-    colorInputBackground: '#FFFFFF',
-    colorInputText: '#0F172A',
-    borderRadius: '0.75rem',
-    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-    fontSize: '0.875rem',
-  },
-  elements: {
-    rootBox: 'w-full',
-    card: 'shadow-lg shadow-slate-900/[0.08] border border-slate-200/80',
-    footerPagesLink: 'hidden',
-    footer: 'hidden',
-  },
-  layout: {
-    unsafe_disableDevelopmentModeWarnings: true,
-    socialButtonsPlacement: 'top',
-  },
-}
-
 export default function SignUpPage() {
   return (
-    <main className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4 py-8">
-      <Link to="/" className="flex items-center gap-2.5 mb-8 hover:opacity-80 transition-opacity">
-        <HexMark size={28} />
-        <span className="text-xl font-semibold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-          <span className="text-slate-900">Shop</span>
-          <span className="text-orange-500">Command</span>
-        </span>
-      </Link>
+    <main className="min-h-screen grid lg:grid-cols-[1.05fr_1fr]">
+      {/* Brand panel */}
+      <aside className="hidden lg:flex relative flex-col justify-between overflow-hidden p-10 xl:p-14" style={{ backgroundColor: '#0D0E14' }}>
+        <HexPattern className="absolute inset-0 opacity-[0.06]" stroke="#F97316" />
+        <Link to="/" className="relative flex items-center gap-2.5 hover:opacity-80 transition-opacity w-fit">
+          <HexMark size={30} />
+          <span className="text-xl font-semibold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+            <span className="text-white">Shop</span>
+            <span className="text-orange-500">Command</span>
+          </span>
+        </Link>
 
-      <div className="w-full max-w-sm mx-auto">
-        <ClerkSignUp
-          routing="path"
-          path="/sign-up"
-          signInUrl="/sign-in"
-          forceRedirectUrl="/onboarding"
-          appearance={clerkAppearance}
-        />
+        <div className="relative max-w-sm">
+          <h1 className="font-display text-3xl xl:text-4xl font-bold text-white mb-4" style={{ letterSpacing: '-0.01em' }}>
+            Set up your shop
+            <br />
+            in an afternoon.
+          </h1>
+          <p className="text-slate-400 text-sm leading-relaxed mb-8">
+            No onboarding calls required, no implementation fees. Add your locations and go.
+          </p>
+          <ul className="space-y-3">
+            {[
+              'Unlimited users, no per-seat fees',
+              'Every location on one dashboard',
+              'Founding rate locked for life',
+            ].map(item => (
+              <li key={item} className="flex items-center gap-2.5 text-slate-300 text-sm">
+                <HexDot size={9} />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative text-xs text-slate-500">Built in Houston, TX</p>
+      </aside>
+
+      {/* Form side */}
+      <div className="flex flex-col items-center justify-center px-4 py-10 bg-[#FAFAF8]">
+        <Link to="/" className="lg:hidden flex items-center gap-2.5 mb-8 hover:opacity-80 transition-opacity">
+          <HexMark size={28} />
+          <span className="text-xl font-semibold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+            <span className="text-slate-900">Shop</span>
+            <span className="text-orange-500">Command</span>
+          </span>
+        </Link>
+
+        <div className="w-full max-w-sm mx-auto">
+          <ClerkSignUp
+            routing="path"
+            path="/sign-up"
+            signInUrl="/sign-in"
+            forceRedirectUrl="/onboarding"
+            appearance={clerkAppearance}
+          />
+        </div>
+
+        <p className="mt-6 text-xs text-slate-400">
+          Already have an account?{' '}
+          <Link to="/sign-in" className="text-orange-500 hover:text-orange-600 font-medium">Sign in</Link>
+        </p>
       </div>
-
-      <p className="mt-6 text-xs text-slate-400">
-        Already have an account?{' '}
-        <Link to="/sign-in" className="text-orange-500 hover:text-orange-600 font-medium">Sign in</Link>
-      </p>
     </main>
   )
 }

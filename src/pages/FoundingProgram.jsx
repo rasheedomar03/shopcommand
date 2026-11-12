@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Check, Mail, Clock, Wrench, BarChart3, Package, Users, ArrowRight } from 'lucide-react'
 import { PublicNav } from '@/components/PublicNav'
+import { HexNum } from '@/components/Hex'
 import { usePageMeta } from '@/lib/seo'
 
 const TOTAL_SPOTS = 25
@@ -163,9 +164,7 @@ export default function FoundingProgram() {
             <div className="grid sm:grid-cols-2 gap-6">
               {pilotSteps.map(step => (
                 <div key={step.num} className="flex gap-4 p-5 rounded-lg border border-slate-200">
-                  <div className="w-8 h-8 rounded-full bg-orange-500 text-white text-sm font-bold flex items-center justify-center shrink-0">
-                    {step.num}
-                  </div>
+                  <HexNum n={step.num} className="shrink-0 mt-0.5" />
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 mb-1">{step.title}</h3>
                     <p className="text-slate-500 text-sm leading-relaxed">{step.desc}</p>
