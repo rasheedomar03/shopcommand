@@ -32,8 +32,11 @@ export function StatCard({ label, value, sub, icon: Icon, trend, trendValue, loa
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-medium text-text-muted uppercase tracking-wider">{label}</span>
         {Icon && (
-          <div className="w-7 h-7 rounded-md bg-orange-muted flex items-center justify-center">
-            <Icon size={14} className="text-orange" />
+          <div className="relative w-7 h-7 flex items-center justify-center">
+            <svg width="28" height="28" viewBox="0 0 32 32" className="absolute inset-0" aria-hidden="true">
+              <polygon points="16,2 28.1,9 28.1,23 16,30 3.9,23 3.9,9" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.25)" strokeWidth="1.5" />
+            </svg>
+            <Icon size={14} className="relative text-orange" />
           </div>
         )}
       </div>
