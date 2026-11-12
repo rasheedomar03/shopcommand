@@ -100,7 +100,7 @@ export default function Dispatch() {
   return (
     <div className="p-5 lg:p-6 space-y-5 animate-fade-in">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Dispatch Board</h1>
+        <h1 className="font-display text-xl font-semibold text-text-primary">Dispatch Board</h1>
         <p className="text-xs text-text-muted mt-0.5">
           {totalOpen} open {totalOpen === 1 ? 'job' : 'jobs'} · drag to assign or reassign
         </p>

@@ -1298,7 +1298,7 @@ export default function TechBoard() {
                   <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
                     <div>
                       <div className="flex items-center gap-2.5 mb-0.5">
-                        <h2 className="text-lg font-semibold text-text-primary">My Jobs</h2>
+                        <h2 className="font-display text-lg font-semibold text-text-primary">My Jobs</h2>
                       </div>
                       <p className="text-xs text-text-muted">{shop?.name}</p>
                     </div>

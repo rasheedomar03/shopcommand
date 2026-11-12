@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Search, AlertTriangle, Package, ShoppingCart, Check, Plus, Pencil, Trash2, X, Truck, ExternalLink, ChevronDown, QrCode, Printer } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
+import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
@@ -540,7 +541,7 @@ export default function Parts() {
     <div className="p-5 lg:p-6 space-y-5 animate-fade-in">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Parts Inventory</h1>
+          <h1 className="font-display text-xl font-semibold text-text-primary">Parts Inventory</h1>
           <p className="text-xs text-text-muted mt-0.5">{scopedParts.length} SKUs tracked</p>
         </div>
         <button
@@ -894,20 +895,34 @@ export default function Parts() {
           )
         })}
         {filtered.length === 0 && (
-          <div className="py-10 text-center text-sm text-text-muted">No parts found.</div>
+          scopedParts.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="No parts yet"
+              hint="Build your inventory as you go. Start with the parts you reorder most."
+              actionLabel="Add your first part"
+              onAction={() => setModalPart(defaultNewPart)}
+            />
+          ) : (
+            <EmptyState search title="No parts match your search" />
+          )
         )}
       </div>
 
       {/* Table */}
       <div className="hidden sm:block bg-surface border border-border rounded-lg overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="w-12 h-12 rounded-xl bg-border mx-auto mb-3 flex items-center justify-center">
-              <Package size={20} className="text-text-muted" />
-            </div>
-            <p className="text-sm text-text-muted">No parts found.</p>
-            <button onClick={() => setModalPart(defaultNewPart)} className="mt-3 text-xs text-orange hover:underline">Add your first part →</button>
-          </div>
+          scopedParts.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="No parts yet"
+              hint="Build your inventory as you go. Start with the parts you reorder most."
+              actionLabel="Add your first part"
+              onAction={() => setModalPart(defaultNewPart)}
+            />
+          ) : (
+            <EmptyState search title="No parts match your search" />
+          )
         ) : (
           <Table>
             <Thead>

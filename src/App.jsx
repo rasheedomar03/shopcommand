@@ -25,7 +25,11 @@ function PageLoader() {
     <div className="flex h-screen bg-background animate-fade-in">
       <div className="hidden lg:flex flex-col w-60 border-r border-border bg-surface">
         <div className="h-14 px-4 flex items-center gap-2.5 border-b border-border">
-          <div className="w-7 h-7 rounded-md bg-border animate-pulse" />
+          {/* Real brand mark in the skeleton so even loading is ShopCommand */}
+          <svg width="26" height="26" viewBox="0 0 32 32" className="animate-pulse" aria-hidden="true">
+            <polygon points="16,2 28.1,9 28.1,23 16,30 3.9,23 3.9,9" fill="#F97316" />
+            <polygon points="16,7 23.8,11.5 23.8,20.5 16,25 8.2,20.5 8.2,11.5" fill="#0D0E14" />
+          </svg>
           <div className="h-4 w-28 rounded bg-border animate-pulse" />
         </div>
         <div className="flex-1 px-3 py-4 space-y-2">

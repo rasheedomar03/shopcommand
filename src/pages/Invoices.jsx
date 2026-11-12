@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Search, Download, Send, CheckCircle, Clock, AlertCircle, DollarSign, Printer, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Search, Download, Send, CheckCircle, Clock, AlertCircle, DollarSign, Printer, Plus, Pencil, Trash2, FileText } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
@@ -379,7 +380,7 @@ export default function Invoices() {
     <div className="p-4 sm:p-5 lg:p-6 space-y-4 sm:space-y-5 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Invoices</h1>
+          <h1 className="font-display text-xl font-semibold text-text-primary">Invoices</h1>
           <p className="text-xs text-text-muted mt-0.5">
             {scoped.filter(i => i.status === 'paid').length} paid · ${totalOutstanding.toFixed(0)} outstanding
           </p>
@@ -473,7 +474,17 @@ export default function Invoices() {
           </Tbody>
         </Table>
         {filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-text-muted">No invoices found</div>
+          scoped.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="No invoices yet"
+              hint="An invoice is created when a repair order reaches Complete. You can also build one from scratch."
+              actionLabel="New invoice"
+              onAction={() => { setGeneratorSource(null); setGeneratorOpen(true) }}
+            />
+          ) : (
+            <EmptyState search title="No invoices match your search" />
+          )
         )}
       </div>
 

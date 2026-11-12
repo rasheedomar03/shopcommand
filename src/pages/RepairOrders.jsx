@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Search, Plus, Filter } from 'lucide-react'
+import { Search, Plus, Filter, Wrench } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
@@ -46,7 +47,7 @@ export default function RepairOrders() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Repair Orders</h1>
+          <h1 className="font-display text-xl font-semibold text-text-primary">Repair Orders</h1>
           <p className="text-xs text-text-muted mt-0.5">{scopedROs.length} total · {scopedROs.filter(r => r.stage !== 'Invoiced').length} active</p>
         </div>
         <Button onClick={() => setNewROOpen(true)}>
@@ -126,7 +127,17 @@ export default function RepairOrders() {
           </button>
         ))}
         {filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-text-muted">No repair orders found.</div>
+          scopedROs.length === 0 ? (
+            <EmptyState
+              icon={Wrench}
+              title="No repair orders yet"
+              hint="Every job starts here. Write your first RO and it follows the vehicle from intake to paid."
+              actionLabel="New RO"
+              onAction={() => setNewROOpen(true)}
+            />
+          ) : (
+            <EmptyState search title="No repair orders match your filters" />
+          )
         )}
       </div>
 

@@ -97,7 +97,7 @@ export default function Appointments() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg sm:text-xl font-semibold text-text-primary">Appointments</h1>
+          <h1 className="font-display text-lg sm:text-xl font-semibold text-text-primary">Appointments</h1>
           <p className="text-xs text-text-muted mt-0.5">{totalThisWeek} scheduled this week</p>
         </div>
         <button

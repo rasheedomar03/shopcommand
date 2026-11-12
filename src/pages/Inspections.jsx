@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Search, Plus, Camera, Send, Eye, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
+import { Search, Plus, Camera, Send, Eye, CheckCircle, Clock, AlertTriangle, ClipboardCheck } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
@@ -220,7 +221,7 @@ export default function Inspections() {
     <div className="p-4 sm:p-5 lg:p-6 space-y-4 sm:space-y-5 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Inspections</h1>
+          <h1 className="font-display text-xl font-semibold text-text-primary">Inspections</h1>
           <p className="text-xs text-text-muted mt-0.5">{scoped.length} total · {scoped.filter(i => i.status === 'draft').length} in progress</p>
           {session?.demo && (
             <p className="text-2xs text-text-muted mt-1">
@@ -308,11 +309,11 @@ export default function Inspections() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="py-12 text-center text-sm text-text-muted">
-          {session?.demo
-            ? 'No inspections found'
-            : 'No inspections yet — inspections your techs complete on the Tech Board are saved on each repair order.'}
-        </div>
+        <EmptyState
+          icon={ClipboardCheck}
+          title={session?.demo ? 'No inspections found' : 'No inspections yet'}
+          hint="Inspections your techs complete on the Tech Board are saved here on each repair order."
+        />
       )}
 
       <InspectionDetail inspection={selected} onClose={() => setSelected(null)} shops={shops} />

@@ -15,7 +15,7 @@ export default function AllShops() {
   return (
     <div className="p-5 lg:p-6 space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">All Shops</h1>
+        <h1 className="font-display text-xl font-semibold text-text-primary">All Shops</h1>
         <p className="text-xs text-text-muted mt-0.5">{shops.length} locations · Houston metro area</p>
       </div>
 

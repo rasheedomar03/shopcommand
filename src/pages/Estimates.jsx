@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Search, Plus } from 'lucide-react'
+import { Search, Plus, FileText } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
@@ -71,7 +72,7 @@ export default function Estimates() {
     <div className="p-4 sm:p-5 lg:p-6 space-y-4 sm:space-y-5 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Estimates</h1>
+          <h1 className="font-display text-xl font-semibold text-text-primary">Estimates</h1>
           <p className="text-xs text-text-muted mt-0.5">
             Repair orders awaiting customer approval · {statusCounts.pending} pending · {statusCounts.approved} approved
           </p>
@@ -152,9 +153,11 @@ export default function Estimates() {
           </Tbody>
         </Table>
         {filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-text-muted">
-            No estimates right now — new repair orders start here in the Estimate stage.
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="No estimates right now"
+            hint="New repair orders start here in the Estimate stage, then move through approval to the floor."
+          />
         )}
       </div>
 

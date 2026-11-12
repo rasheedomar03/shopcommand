@@ -220,7 +220,7 @@ export default function Messages() {
         <div className="px-4 py-3 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-lg font-semibold text-text-primary">Messages</h1>
+              <h1 className="font-display text-lg font-semibold text-text-primary">Messages</h1>
               {totalUnread > 0 && (
                 <p className="text-2xs text-text-muted">{totalUnread} unread</p>
               )}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, UserCircle } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Badge } from '@/components/ui/Badge'
@@ -37,7 +38,7 @@ export default function Customers() {
   return (
     <div className="p-5 lg:p-6 space-y-5 animate-fade-in">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Customers</h1>
+        <h1 className="font-display text-xl font-semibold text-text-primary">Customers</h1>
         <p className="text-xs text-text-muted mt-0.5">{scopedCustomers.length} customers{isAdvisor ? ' at your location' : ' across all locations'}</p>
       </div>
 
@@ -113,19 +114,30 @@ export default function Customers() {
           )
         })}
         {filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-text-muted">No customers found.</div>
+          scopedCustomers.length === 0 ? (
+            <EmptyState
+              icon={UserCircle}
+              title="No customers yet"
+              hint="Customers are added automatically when you write their first repair order, vehicle and all."
+            />
+          ) : (
+            <EmptyState search title="No customers match your search" />
+          )
         )}
       </div>
 
       {/* Table */}
       <div className="hidden sm:block bg-surface border border-border rounded-lg overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="w-12 h-12 rounded-xl bg-border mx-auto mb-3 flex items-center justify-center">
-              <UserCircle size={20} className="text-text-muted" />
-            </div>
-            <p className="text-sm text-text-muted">No customers found.</p>
-          </div>
+          scopedCustomers.length === 0 ? (
+            <EmptyState
+              icon={UserCircle}
+              title="No customers yet"
+              hint="Customers are added automatically when you write their first repair order, vehicle and all."
+            />
+          ) : (
+            <EmptyState search title="No customers match your search" />
+          )
         ) : (
           <Table>
             <Thead>

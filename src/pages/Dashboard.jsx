@@ -219,7 +219,7 @@ export default function Dashboard() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Dashboard</h1>
+          <h1 className="font-display text-xl font-semibold text-text-primary">Dashboard</h1>
           <p className="text-xs text-text-muted mt-0.5">{dynamicDate()}{isAdvisor ? ` · ${advisorShop?.name}` : shops.length > 0 ? ` · ${shops.length === 1 ? '1 location' : `All ${shops.length} locations`}` : ''}</p>
         </div>
         <Button onClick={() => setNewROOpen(true)}>

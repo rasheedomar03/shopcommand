@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Users, Plus, Trash2, Clock, AlertTriangle, Flag } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { NewTechModal } from '@/components/modals/NewTechModal'
@@ -46,7 +47,7 @@ export default function Technicians() {
     <div className="p-5 lg:p-6 space-y-5 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Technicians</h1>
+          <h1 className="font-display text-xl font-semibold text-text-primary">Technicians</h1>
           <p className="text-xs text-text-muted mt-0.5">
             {technicians.length} total · {clockedIn} clocked in
           </p>
@@ -113,11 +114,16 @@ export default function Technicians() {
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="bg-surface border border-border rounded-lg py-16 text-center">
-          <div className="w-12 h-12 rounded-xl bg-border mx-auto mb-3 flex items-center justify-center">
-            <Users size={20} className="text-text-muted" />
-          </div>
-          <p className="text-sm text-text-muted">No technicians found.</p>
+        <div className="bg-surface border border-border rounded-lg">
+          {technicians.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title="No technicians yet"
+              hint="Add your techs so you can assign jobs, track hours, and see who is on the floor."
+            />
+          ) : (
+            <EmptyState search title="No technicians match your search" />
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
