@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useData } from '@/contexts/DataContext'
 import { AlertsModal } from '@/components/modals/AlertsModal'
+import { HexAvatar } from '@/components/Hex'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
@@ -238,9 +239,7 @@ export function Header({ onMenuOpen }) {
             className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-md hover:bg-surface transition-colors duration-150"
             aria-label="Account menu"
           >
-            <div className="w-7 h-7 rounded-full bg-orange/20 border border-orange/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-orange text-xs font-bold leading-none">{initials}</span>
-            </div>
+            <HexAvatar initials={initials} />
             <div className="hidden sm:block text-left">
               <div className="text-xs font-medium text-text-primary leading-none mb-0.5">
                 {session?.name ?? session?.role}

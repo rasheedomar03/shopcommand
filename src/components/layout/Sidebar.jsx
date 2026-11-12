@@ -18,6 +18,7 @@ import {
   ClipboardCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { HexAvatar } from '@/components/Hex'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
@@ -198,11 +199,7 @@ export function Sidebar({ open, onClose }) {
 
           <div className="mt-3 px-3 py-2.5 rounded-md bg-background border border-border">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-orange/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-semibold text-orange">
-                  {session?.name ? session.name.split(' ').map(n => n[0]).join('').slice(0, 2) : '?'}
-                </span>
-              </div>
+              <HexAvatar initials={session?.name ? session.name.split(' ').map(n => n[0]).join('').slice(0, 2) : '?'} />
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-medium text-text-primary truncate">{session?.name || 'User'}</div>
                 <div className="text-2xs text-text-muted">

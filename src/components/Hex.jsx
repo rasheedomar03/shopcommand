@@ -34,6 +34,18 @@ export function HexDot({ size = 9, color = '#F97316', className = '' }) {
   )
 }
 
+/** User avatar: initials inside a soft orange hex. */
+export function HexAvatar({ initials, size = 28, className = '' }) {
+  return (
+    <div className={`relative inline-flex items-center justify-center flex-shrink-0 ${className}`} style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox="0 0 32 32" className="absolute inset-0" aria-hidden="true">
+        <polygon points={HEX} fill="rgba(249,115,22,0.16)" stroke="rgba(249,115,22,0.4)" strokeWidth="1.5" />
+      </svg>
+      <span className="relative text-xs font-semibold text-orange leading-none">{initials}</span>
+    </div>
+  )
+}
+
 /** Subtle repeating hex outline texture for dark brand panels. */
 export function HexPattern({ className = '', stroke = '#F97316' }) {
   return (
