@@ -24,6 +24,14 @@ export async function getBillingStatus() {
 }
 
 /**
+ * Lightweight plan/trial state, readable by every role.
+ * { plan, trialEndsAt, daysLeft, active, paid }
+ */
+export async function getTrialStatus() {
+  return api('/api/stripe?action=trial-status')
+}
+
+/**
  * Open the Stripe customer billing portal. Returns the portal URL and
  * redirects the browser there.
  */

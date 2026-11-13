@@ -230,7 +230,7 @@ export default function Settings() {
                       </div>
                     </div>
                     <p className="text-xs text-text-muted leading-relaxed mb-4">
-                      Billing begins at public launch. Lock in your founding rate now and your card will only be charged when we go live. You'll receive an email before your first charge.
+                      14-day free trial, then $100/mo for your first shop plus $50/mo per additional location, locked for life. Cancel anytime during the trial and you pay nothing. You'll get an email before your first charge.
                     </p>
                     {!session?.demo && (
                       <button
@@ -238,7 +238,7 @@ export default function Settings() {
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-orange text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                       >
                         <CreditCard size={14} />
-                        Lock in $100/mo rate
+                        Start your free trial
                       </button>
                     )}
                   </div>

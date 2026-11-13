@@ -53,7 +53,13 @@ export async function authenticate(req) {
     })
 
     const sql = neon(process.env.DATABASE_URL)
-    const [user] = await sql`SELECT id, org_id, shop_id, role, name, email FROM users WHERE clerk_id = ${claims.sub}`
+    const [user] = await sql`
+      SELECT u.id, u.org_id, u.shop_id, u.role, u.name, u.email,
+        o.plan AS org_plan, o.trial_ends_at
+      FROM users u
+      LEFT JOIN organizations o ON o.id = u.org_id
+      WHERE u.clerk_id = ${claims.sub}
+    `
 
     if (!user) return null
 
@@ -65,6 +71,8 @@ export async function authenticate(req) {
       role: user.role,
       name: user.name,
       email: user.email,
+      plan: user.org_plan,
+      trialEndsAt: user.trial_ends_at,
     }
   } catch (err) {
     logger.warn('Auth failed', { error: err.message })

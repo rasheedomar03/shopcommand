@@ -61,6 +61,8 @@ function PageLoader() {
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
+import { TrialBanner, TrialLock } from '@/components/TrialGate'
+import { getTrialStatus } from '@/lib/billing'
 import { useAuth } from '@/contexts/AuthContext'
 import { useData } from '@/contexts/DataContext'
 
@@ -196,12 +198,36 @@ function FetchErrorBanner() {
 
 function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { session } = useAuth()
+  const [trial, setTrial] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    if (!session || session.demo) { setTrial({ active: true, paid: true, daysLeft: null }); return }
+    // Returning from a successful checkout: trust it before the webhook lands
+    if (new URLSearchParams(window.location.search).has('subscribed')) {
+      setTrial({ active: true, paid: true, daysLeft: null })
+      return
+    }
+    getTrialStatus()
+      .then(t => { if (!cancelled) setTrial(t) })
+      // Never lock anyone out on a failed status check
+      .catch(() => { if (!cancelled) setTrial({ active: true, paid: false, daysLeft: null }) })
+    return () => { cancelled = true }
+  }, [session])
+
+  if (trial && !trial.active) {
+    return <TrialLock />
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuOpen={() => setSidebarOpen(true)} />
+        {trial && !trial.paid && trial.daysLeft != null && session?.role === 'owner' && (
+          <TrialBanner daysLeft={trial.daysLeft} />
+        )}
         <FetchErrorBanner />
         <main className="flex-1 overflow-y-auto will-change-scroll">
           <PageErrorBoundary>

@@ -14,6 +14,9 @@ export default async function handler(req, res) {
     const user = await authenticate(req)
     if (!user) return res.status(401).json({ error: 'Unauthorized' })
     if (user.role === 'tech') return res.status(403).json({ error: 'Technicians cannot manage parts inventory' })
+    if (req.method !== 'GET' && user.plan !== 'founding' && user.trialEndsAt && new Date(user.trialEndsAt).getTime() < Date.now()) {
+      return res.status(402).json({ error: 'Your free trial has ended. Start your plan in Settings to keep working.', code: 'subscription_required' })
+    }
 
     const sql = neon(process.env.DATABASE_URL)
 

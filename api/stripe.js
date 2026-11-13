@@ -55,6 +55,15 @@ async function handleCheckout(req, res, user) {
     `
     const { base, additional } = await getFoundingPrices()
 
+    // The app trial starts at signup, so Stripe's card trial only covers
+    // whatever remains of it. Expired or legacy-exempt trials get a short
+    // grace so checkout never charges with zero warning mid-flow.
+    let trialDays = 14
+    if (user.trialEndsAt) {
+      const remainingMs = new Date(user.trialEndsAt).getTime() - Date.now()
+      trialDays = Math.max(0, Math.ceil(remainingMs / 86_400_000))
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -64,7 +73,7 @@ async function handleCheckout(req, res, user) {
         ...(shopCount > 1 ? [{ price: additional.id, quantity: shopCount - 1 }] : []),
       ],
       subscription_data: {
-        trial_period_days: 14,
+        ...(trialDays > 0 ? { trial_period_days: trialDays } : {}),
         metadata: { clerkId: user.clerkId, orgId: user.orgId, plan: 'founding' },
       },
       allow_promotion_codes: true,
@@ -307,6 +316,24 @@ export default async function handler(req, res) {
 
   if (action === 'billing' && req.method === 'GET') {
     return handleBilling(req, res, user)
+  }
+
+  // Lightweight trial/plan state, readable by every role (techs need to
+  // know the org is locked too). No Stripe API call involved.
+  if (action === 'trial-status' && req.method === 'GET') {
+    const active = user.plan === 'founding'
+      || !user.trialEndsAt
+      || new Date(user.trialEndsAt).getTime() > Date.now()
+    const daysLeft = user.trialEndsAt
+      ? Math.max(0, Math.ceil((new Date(user.trialEndsAt).getTime() - Date.now()) / 86_400_000))
+      : null
+    return res.json({
+      plan: user.plan || 'trial',
+      trialEndsAt: user.trialEndsAt,
+      daysLeft,
+      active,
+      paid: user.plan === 'founding',
+    })
   }
 
   return res.status(400).json({ error: 'Invalid action. Use ?action=checkout, portal, billing, or webhook' })

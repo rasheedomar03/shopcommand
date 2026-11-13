@@ -36,6 +36,22 @@ export function createHandler(config, routeHandler) {
         if (!user) {
           return res.status(401).json({ error: 'Unauthorized' })
         }
+
+        // Trial enforcement: orgs created after the trial system shipped get
+        // trial_ends_at = signup + 14 days. Once it passes without a paid
+        // plan, writes are refused (reads stay open so data is never held
+        // hostage). Legacy orgs have trial_ends_at NULL and are exempt;
+        // paying orgs have plan = 'founding'.
+        const isWrite = req.method !== 'GET'
+        const trialExpired = user.plan !== 'founding'
+          && user.trialEndsAt
+          && new Date(user.trialEndsAt).getTime() < Date.now()
+        if (isWrite && trialExpired) {
+          return res.status(402).json({
+            error: 'Your free trial has ended. Start your plan in Settings to keep working.',
+            code: 'subscription_required',
+          })
+        }
       }
 
       // Database connection.

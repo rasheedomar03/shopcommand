@@ -177,9 +177,12 @@ export default async function handler(req, res) {
       const userName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || 'Owner'
       const userEmail = clerkUser.emailAddresses?.[0]?.emailAddress || ''
 
+      // New orgs start a 14-day free trial from signup; legacy orgs
+      // (trial_ends_at NULL) are exempt from trial enforcement
+      await sql`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ`
       const [org] = await sql`
-        INSERT INTO organizations (name, owner_clerk_id)
-        VALUES (${name}, ${clerkId})
+        INSERT INTO organizations (name, owner_clerk_id, trial_ends_at)
+        VALUES (${name}, ${clerkId}, now() + interval '14 days')
         RETURNING id
       `
 
