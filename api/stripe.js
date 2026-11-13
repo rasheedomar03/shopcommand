@@ -206,6 +206,69 @@ async function handleWebhook(req, res) {
         logger.warn('Payment failed', { subscriptionId: event.data.object.subscription })
         break
       }
+      case 'customer.subscription.updated': {
+        // Keep the stored subscription id fresh and surface status changes
+        // (past_due, cancel-at-period-end) in the logs
+        const sub = event.data.object
+        const orgId = sub.metadata?.orgId
+        if (orgId) {
+          await sql`
+            UPDATE organizations
+            SET stripe_subscription_id = ${sub.id}, updated_at = now()
+            WHERE id = ${orgId}
+          `
+        }
+        if (sub.status === 'past_due' || sub.status === 'unpaid') {
+          logger.warn('Subscription past due', { orgId, subscriptionId: sub.id, status: sub.status })
+        }
+        if (sub.cancel_at_period_end) {
+          logger.warn('Subscription set to cancel at period end', { orgId, subscriptionId: sub.id })
+        }
+        break
+      }
+      case 'invoice.paid': {
+        const inv = event.data.object
+        logger.info('Subscription payment succeeded', {
+          amountPaid: inv.amount_paid,
+          customer: inv.customer,
+          subscriptionId: inv.subscription,
+        })
+        break
+      }
+      case 'customer.subscription.trial_will_end': {
+        // Fires ~3 days before a trial ends: give the owner a heads-up email
+        const sub = event.data.object
+        const orgId = sub.metadata?.orgId
+        if (!orgId || !process.env.RESEND_API_KEY) break
+        try {
+          const [owner] = await sql`
+            SELECT name, email FROM users WHERE org_id = ${orgId} AND role = 'owner' AND email IS NOT NULL LIMIT 1
+          `
+          if (!owner?.email) break
+          const endsAt = sub.trial_end
+            ? new Date(sub.trial_end * 1000).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+            : 'in a few days'
+          const firstName = (owner.name || '').split(' ')[0] || 'there'
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: 'Rasheed at ShopCommand <hello@shopcommand.net>',
+              to: owner.email,
+              reply_to: 'rasheed@shopcommand.net',
+              subject: 'Your ShopCommand trial wraps up soon',
+              text: `Hey ${firstName},\n\nQuick heads up: your ShopCommand trial ends ${endsAt}. After that your founding rate kicks in automatically, $100/mo for your first shop and $50/mo for each additional location, locked for life.\n\nNothing to do if you're happy. If anything isn't working the way your shop needs, reply to this email and I'll fix it before you pay a dollar.\n\nRasheed\nShopCommand`,
+            }),
+          })
+          logger.info('Trial ending email sent', { orgId })
+        } catch (err) {
+          logger.warn('Trial ending email failed', { orgId, error: err.message })
+        }
+        break
+      }
     }
   } catch (err) {
     logger.error('Webhook processing error', { type: event.type, error: err.message })
