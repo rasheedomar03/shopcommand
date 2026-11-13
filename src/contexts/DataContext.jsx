@@ -45,9 +45,9 @@ function transformShop(s) {
 function transformInvoice(row, rosById) {
   if (row.status === 'void') return null
   const ro = rosById[row.ro_id]
-  const displayId = row.ro_number
+  const displayId = row.number || (row.ro_number
     ? `INV-${String(row.ro_number).replace(/^RO-?/i, '')}`
-    : `INV-${String(row.id).slice(0, 8).toUpperCase()}`
+    : `INV-${String(row.id).slice(0, 8).toUpperCase()}`)
   const isPaid = row.status === 'paid'
   const amountPaid = Number(row.amount_paid) || 0
   const ageMs = Date.now() - new Date(row.created_at).getTime()
@@ -756,12 +756,19 @@ export function DataProvider({ children }) {
       // 'unpaid' is a server status; locally the invoice goes back to sent
       patch = { ...patch, status: 'sent', paidAt: null, amountPaid: 0, paymentMethod: null }
     }
-    // DB-backed content edit (services/total, no status change) → persist the
-    // new amount on the invoice and the edited service lines on its RO, since
-    // the server stores line detail on the RO and only a total on the invoice.
-    if (!session?.demo && target?.dbId && patch.status === undefined && patch.total !== undefined) {
+    // DB-backed content edit (services/total/number, no status change) →
+    // persist the new amount/number on the invoice and the edited service
+    // lines on its RO, since the server stores line detail on the RO.
+    if (!session?.demo && target?.dbId && patch.status === undefined && (patch.total !== undefined || patch.number !== undefined)) {
       try {
-        await api('/api/invoices', { method: 'PUT', params: { id: target.dbId }, body: { amount: patch.total } })
+        await api('/api/invoices', {
+          method: 'PUT',
+          params: { id: target.dbId },
+          body: {
+            ...(patch.total !== undefined ? { amount: patch.total } : {}),
+            ...(patch.number !== undefined ? { number: patch.number } : {}),
+          },
+        })
       } catch (err) {
         return { error: err.message || 'Failed to update invoice' }
       }
@@ -780,13 +787,27 @@ export function DataProvider({ children }) {
         }
       }
     }
+    // Contact edits write through to the customer record (name/email live
+    // there, not on the invoice); demo mode updates its local customer
+    if ((patch.customerName !== undefined || patch.customerEmail !== undefined) && target?.customerId) {
+      try {
+        await updateCustomer(target.customerId, {
+          ...(patch.customerName !== undefined ? { name: patch.customerName } : {}),
+          ...(patch.customerEmail !== undefined ? { email: patch.customerEmail } : {}),
+        })
+      } catch (err) {
+        return { error: err.message || 'Failed to update customer info' }
+      }
+    }
+    // A new number becomes the invoice's display id locally
+    if (patch.number !== undefined) patch = { ...patch, id: patch.number }
     setInvoices(prev => {
       const next = prev.map(i => i.id === id ? { ...i, ...patch } : i)
       if (!session?.demo) save('sc_invoices', next.filter(i => !i.dbId))
       return next
     })
     return { ok: true }
-  }, [session?.demo, invoices, repairOrders, updateRepairOrder])
+  }, [session?.demo, invoices, repairOrders, updateRepairOrder, updateCustomer])
 
   // ── clock in/out ─────────────────────────────────────────────────────────
 

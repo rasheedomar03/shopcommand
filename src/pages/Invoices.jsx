@@ -33,6 +33,9 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
   const [confirmUnpay, setConfirmUnpay] = useState(false)
   const [editing, setEditing] = useState(false)
   const [rows, setRows] = useState([])
+  const [numDraft, setNumDraft] = useState('')
+  const [billName, setBillName] = useState('')
+  const [billEmail, setBillEmail] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [payOpen, setPayOpen] = useState(false)
@@ -84,6 +87,9 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
 
   const startEdit = () => {
     setRows(invoice.services.map(s => ({ name: s.name, parts: s.parts ?? 0, labor: s.labor ?? 0 })))
+    setNumDraft(invoice.id)
+    setBillName(invoice.customerName || '')
+    setBillEmail(invoice.customerEmail || '')
     setSaveError(null)
     setEditing(true)
   }
@@ -101,9 +107,27 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
       setSaveError('An invoice needs at least one line item')
       return
     }
+    const newNumber = numDraft.trim()
+    if (!newNumber || newNumber.length > 30) {
+      setSaveError('Invoice number must be 1-30 characters')
+      return
+    }
+    const newEmail = billEmail.trim()
+    if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      setSaveError('That customer email does not look valid')
+      return
+    }
     setSaving(true)
     setSaveError(null)
-    const r = await onUpdate(invoice.id, { services, subtotal: editSubtotal, tax: editTax, total: editTotal })
+    const r = await onUpdate(invoice.id, {
+      services,
+      subtotal: editSubtotal,
+      tax: editTax,
+      total: editTotal,
+      ...(newNumber !== invoice.id ? { number: newNumber } : {}),
+      ...(billName.trim() !== (invoice.customerName || '') ? { customerName: billName.trim() } : {}),
+      ...(newEmail !== (invoice.customerEmail || '') ? { customerEmail: newEmail } : {}),
+    })
     setSaving(false)
     if (r?.error) setSaveError(r.error)
     else setEditing(false)
@@ -119,6 +143,41 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
             <div className="text-xs text-text-muted">RO: {invoice.roId}</div>
           </div>
         </div>
+
+        {editing && (
+          <div className="grid sm:grid-cols-3 gap-2.5">
+            <div>
+              <label className="block text-2xs font-medium text-text-muted uppercase tracking-wider mb-1">Invoice #</label>
+              <input
+                value={numDraft}
+                onChange={e => setNumDraft(e.target.value)}
+                maxLength={30}
+                className="w-full h-8 px-2.5 rounded-md bg-background border border-border text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-orange/40"
+              />
+            </div>
+            <div>
+              <label className="block text-2xs font-medium text-text-muted uppercase tracking-wider mb-1">Bill to</label>
+              <input
+                value={billName}
+                onChange={e => setBillName(e.target.value)}
+                maxLength={100}
+                placeholder="Customer name"
+                className="w-full h-8 px-2.5 rounded-md bg-background border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40"
+              />
+            </div>
+            <div>
+              <label className="block text-2xs font-medium text-text-muted uppercase tracking-wider mb-1">Customer email</label>
+              <input
+                type="email"
+                value={billEmail}
+                onChange={e => setBillEmail(e.target.value)}
+                maxLength={200}
+                placeholder="customer@email.com"
+                className="w-full h-8 px-2.5 rounded-md bg-background border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="rounded-lg border border-border overflow-hidden">
           <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 bg-background text-xs font-medium text-text-muted uppercase tracking-wider">
@@ -497,9 +556,11 @@ export default function Invoices() {
           const r = await updateInvoice(id, patch)
           if (!r?.error) {
             // 'unpaid' is the server transition; locally the invoice shows as sent
-            const display = patch.status === 'unpaid'
+            let display = patch.status === 'unpaid'
               ? { ...patch, status: 'sent', paidAt: null, amountPaid: 0, paymentMethod: null }
               : patch
+            // A new number becomes the display id
+            if (display.number !== undefined) display = { ...display, id: display.number }
             setSelected(prev => prev ? { ...prev, ...display } : prev)
           }
           return r

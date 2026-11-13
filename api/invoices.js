@@ -10,6 +10,9 @@ export default createHandler(
   async ({ req, res, sql, user }) => {
     const action = req.query?.action
 
+    // Custom invoice numbers: owners can override the RO-derived number
+    await sql`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS number TEXT`
+
     // ── List payments: GET /api/invoices?action=payments ───────────────────
     if (action === 'payments' && req.method === 'GET') {
       const shopId = req.query?.shop_id
@@ -123,9 +126,9 @@ export default createHandler(
       const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]))
       const money = (v) => `$${(Number(v) || 0).toFixed(2)}`
 
-      const invNumber = inv.ro_number
+      const invNumber = inv.number || (inv.ro_number
         ? `INV-${String(inv.ro_number).replace(/^RO-?/i, '')}`
-        : `INV-${String(inv.id).slice(0, 8).toUpperCase()}`
+        : `INV-${String(inv.id).slice(0, 8).toUpperCase()}`)
       const vehicle = [inv.vehicle_year, inv.vehicle_make, inv.vehicle_model].filter(Boolean).join(' ')
       const shopName = String(inv.shop_name || 'Your repair shop').replace(/[<>@]/g, '')
       // Line items = the RO's service lines plus any parts used on the job
@@ -333,16 +336,19 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
-      const { status, amount } = req.body || {}
+      const { status, amount, number } = req.body || {}
 
-      if (status === undefined && amount === undefined) {
-        return res.status(400).json({ error: 'Provide status or amount to update' })
+      if (status === undefined && amount === undefined && number === undefined) {
+        return res.status(400).json({ error: 'Provide status, amount, or number to update' })
       }
       if (status !== undefined && !['paid', 'void', 'unpaid'].includes(status)) {
         return res.status(400).json({ error: 'Status must be "paid", "void", or "unpaid"' })
       }
       if (amount !== undefined && (!Number.isFinite(Number(amount)) || Number(amount) < 0 || Number(amount) > 10_000_000)) {
         return res.status(400).json({ error: 'Amount must be a non-negative number' })
+      }
+      if (number !== undefined && (typeof number !== 'string' || !number.trim() || number.trim().length > 30)) {
+        return res.status(400).json({ error: 'Invoice number must be 1-30 characters' })
       }
 
       const [invoice] = await sql`SELECT * FROM invoices WHERE id = ${id} AND org_id = ${user.orgId}`
@@ -368,10 +374,12 @@ export default createHandler(
         return res.status(409).json({ error: 'Only unpaid invoices can be updated' })
       }
 
-      // Amount edit (no status change): reprice an unpaid invoice
+      // Content edit (no status change): reprice and/or renumber an unpaid invoice
       if (status === undefined) {
         const [row] = await sql`
-          UPDATE invoices SET amount = ${Number(amount)}
+          UPDATE invoices SET
+            amount = COALESCE(${amount !== undefined ? Number(amount) : null}, amount),
+            number = COALESCE(${number !== undefined ? number.trim() : null}, number)
           WHERE id = ${id} AND org_id = ${user.orgId}
           RETURNING *
         `
