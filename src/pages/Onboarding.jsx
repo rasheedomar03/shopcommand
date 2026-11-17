@@ -1,37 +1,34 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react'
-import { Building2, ClipboardList, Wrench, ArrowLeft, Loader2 } from 'lucide-react'
+import { Building2, Users, ArrowLeft, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const roles = [
+// Two ways in. A shop owner sets up a new shop; everyone else (advisor, tech,
+// manager) joins with an invite code, and the code decides their role, so
+// nobody has to guess it.
+const paths = [
   {
     id: 'owner',
-    label: 'Owner / Manager',
+    label: 'Set up my shop',
     description: 'I own the shop and want to set up my business',
     icon: Building2,
-    redirect: '/dashboard',
   },
   {
-    id: 'advisor',
-    label: 'Service Advisor',
-    description: 'My shop owner gave me an invite code',
-    icon: ClipboardList,
-    redirect: '/dashboard',
-  },
-  {
-    id: 'tech',
-    label: 'Technician',
-    description: 'My shop owner gave me an invite code',
-    icon: Wrench,
-    redirect: '/tech-board',
+    id: 'invite',
+    label: 'I have an invite code',
+    description: 'My shop owner gave me a code to join their shop',
+    icon: Users,
   },
 ]
 
+const homeFor = role => (role === 'tech' ? '/tech-board' : '/dashboard')
+
 export default function Onboarding() {
-  const { user } = useUser()
+  const { user, isLoaded, isSignedIn } = useUser()
   const { getToken } = useClerkAuth()
   const navigate = useNavigate()
+  const [checking, setChecking] = useState(true)
   const [selected, setSelected] = useState(null)
   const [step, setStep] = useState('role')
   const [shopName, setShopName] = useState('')
@@ -39,32 +36,51 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  const handleRoleContinue = async () => {
-    if (!selected) return
-    setError(null)
+  // Anyone who already has an account never needs this page. Forward them,
+  // and repair their saved profile if it was lost (e.g. a cleared session).
+  // If the lookup fails for any reason, fall through to the normal choices.
+  useEffect(() => {
+    if (!isLoaded) return
+    if (!isSignedIn || !user) { setChecking(false); return }
 
-    if (selected === 'owner') {
-      // Check if org already exists — skip shop name if so
-      setSaving(true)
+    const meta = user.unsafeMetadata || {}
+    if (meta.onboarded) {
+      navigate(homeFor(meta.role), { replace: true })
+      return
+    }
+
+    let cancelled = false
+    ;(async () => {
       try {
         const token = await getToken()
         const res = await fetch('/api/onboard?action=check', {
           headers: { Authorization: `Bearer ${token}` },
         })
         const data = await res.json()
-        if (res.ok && data.exists && data.orgId) {
+        if (!cancelled && res.ok && data.exists && data.orgId) {
           await user.update({
-            unsafeMetadata: { role: 'owner', onboarded: true, orgId: data.orgId, shopId: data.shopId },
+            unsafeMetadata: {
+              ...meta,
+              role: data.role || 'owner',
+              onboarded: true,
+              orgId: data.orgId,
+              shopId: data.shopId,
+              ...(data.techId ? { techId: data.techId } : {}),
+            },
           })
-          navigate('/dashboard', { replace: true })
+          navigate(homeFor(data.role), { replace: true })
           return
         }
-      } catch {}
-      setSaving(false)
-      setStep('shop')
-    } else {
-      setStep('invite')
-    }
+      } catch { /* fall through to the choices */ }
+      if (!cancelled) setChecking(false)
+    })()
+    return () => { cancelled = true }
+  }, [isLoaded, isSignedIn, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleContinue = () => {
+    if (!selected) return
+    setError(null)
+    setStep(selected === 'owner' ? 'shop' : 'invite')
   }
 
   const handleOwnerSubmit = async () => {
@@ -119,7 +135,8 @@ export default function Onboarding() {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ role: selected, inviteCode: inviteCode.trim() }),
+        // No role: the invite code decides it.
+        body: JSON.stringify({ inviteCode: inviteCode.trim() }),
       })
 
       const data = await res.json()
@@ -142,11 +159,23 @@ export default function Onboarding() {
           ...(data.techId ? { techId: data.techId } : {}),
         },
       })
-      navigate(data.role === 'tech' ? '/tech-board' : '/dashboard', { replace: true })
+      navigate(homeFor(data.role), { replace: true })
     } catch {
       setError('Network error. Please try again.')
       setSaving(false)
     }
+  }
+
+  if (isLoaded && !isSignedIn) {
+    return <Navigate to="/sign-in" replace />
+  }
+
+  if (!isLoaded || checking) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 size={24} className="text-orange animate-spin" />
+      </main>
+    )
   }
 
   return (
@@ -156,11 +185,11 @@ export default function Onboarding() {
           <>
             <div className="text-center mb-6">
               <h1 className="text-lg font-semibold text-text-primary">Welcome to ShopCommand</h1>
-              <p className="text-xs text-text-muted mt-1">What's your role?</p>
+              <p className="text-xs text-text-muted mt-1">How would you like to get started?</p>
             </div>
 
-            <div className="space-y-3 mb-6">
-              {roles.map(({ id, label, description, icon: Icon }) => (
+            <div className="space-y-3 mb-4">
+              {paths.map(({ id, label, description, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => setSelected(id)}
@@ -197,8 +226,12 @@ export default function Onboarding() {
               ))}
             </div>
 
+            <p className="text-2xs text-text-muted text-center leading-relaxed mb-5">
+              Managers, service advisors, and technicians join with a code from the shop owner.
+            </p>
+
             <button
-              onClick={handleRoleContinue}
+              onClick={handleContinue}
               disabled={!selected}
               className="w-full h-11 rounded-lg bg-orange text-white text-sm font-semibold hover:bg-orange/90 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
             >
@@ -217,9 +250,13 @@ export default function Onboarding() {
               Back
             </button>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <h1 className="text-lg font-semibold text-text-primary">Name your shop</h1>
               <p className="text-xs text-text-muted mt-1">You can add more locations later.</p>
+            </div>
+
+            <div className="rounded-lg border border-border bg-surface px-3 py-2.5 mb-4 text-xs text-text-muted leading-relaxed">
+              This creates a new shop account. If a shop owner invited you to join their shop, go back and choose "I have an invite code" instead.
             </div>
 
             <input
@@ -266,7 +303,7 @@ export default function Onboarding() {
 
             <div className="text-center mb-6">
               <div className="w-12 h-12 rounded-xl bg-border flex items-center justify-center mx-auto mb-4">
-                {selected === 'advisor' ? <ClipboardList size={20} className="text-text-muted" /> : <Wrench size={20} className="text-text-muted" />}
+                <Users size={20} className="text-text-muted" />
               </div>
               <h1 className="text-lg font-semibold text-text-primary mb-2">Enter your invite code</h1>
               <p className="text-xs text-text-muted leading-relaxed">
@@ -278,8 +315,10 @@ export default function Onboarding() {
               type="text"
               value={inviteCode}
               onChange={e => setInviteCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8))}
+              onKeyDown={e => e.key === 'Enter' && handleInviteSubmit()}
               placeholder="e.g. ABCD1234"
               maxLength={8}
+              autoFocus
               className="w-full h-12 rounded-xl border border-border bg-surface px-4 text-center text-lg font-mono tracking-widest text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/20"
             />
 

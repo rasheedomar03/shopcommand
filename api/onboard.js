@@ -29,13 +29,23 @@ export default async function handler(req, res) {
     }
     if (!shopId) return res.status(400).json({ error: 'shopId is required' })
 
+    // Optional. When present, the invite only works for this email (checked
+    // when the invitee joins), so it must look like a real address.
+    let inviteEmail = null
+    if (email !== undefined && email !== null && String(email).trim() !== '') {
+      inviteEmail = String(email).trim().toLowerCase()
+      if (inviteEmail.length > 200 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)) {
+        return res.status(400).json({ error: 'Enter a valid email address, or leave it blank' })
+      }
+    }
+
     const sql = neon(process.env.DATABASE_URL)
     await setRlsContext(sql, user)
 
     const code = generateCode()
     const [invite] = await sql`
       INSERT INTO invites (org_id, shop_id, role, email, code, created_by)
-      VALUES (${user.orgId}, ${shopId}, ${role}, ${email || null}, ${code}, ${user.userId})
+      VALUES (${user.orgId}, ${shopId}, ${role}, ${inviteEmail}, ${code}, ${user.userId})
       RETURNING id, code, role, expires_at
     `
 
@@ -66,9 +76,12 @@ export default async function handler(req, res) {
     return res.json(invites)
   }
 
-  // ── Check if already onboarded: GET /api/onboard?action=check ───────────
+  // ── Who am I: GET /api/onboard?action=check ─────────────────────────────
+  // Lets the onboarding page forward people who already have an account (any
+  // role) instead of asking them to onboard again. Read-only, so it uses the
+  // general rate limit: several staff may sign up from one shop network.
   if (action === 'check' && req.method === 'GET') {
-    if (!rateLimit(req, res, 'auth')) return res.status(429).json({ error: 'Too many requests' })
+    if (!rateLimit(req, res)) return res.status(429).json({ error: 'Too many requests' })
 
     const token = req.headers.authorization?.split(' ')[1]
     if (!token) return res.status(401).json({ error: 'Missing token' })
@@ -82,6 +95,22 @@ export default async function handler(req, res) {
     }
 
     const sql = neon(process.env.DATABASE_URL)
+
+    // Any existing user: owner, advisor, or tech
+    const [member] = await sql`
+      SELECT id, org_id, shop_id, role FROM users WHERE clerk_id = ${clerkId} LIMIT 1
+    `
+    if (member) {
+      return res.json({
+        exists: true,
+        role: member.role,
+        orgId: member.org_id,
+        shopId: member.shop_id,
+        techId: member.role === 'tech' ? member.id : null,
+      })
+    }
+
+    // Older owner accounts that have an organization but no users row
     const existing = await sql`
       SELECT o.id AS org_id, s.id AS shop_id
       FROM organizations o
@@ -91,7 +120,7 @@ export default async function handler(req, res) {
     `
 
     if (existing.length > 0) {
-      return res.json({ exists: true, orgId: existing[0].org_id, shopId: existing[0].shop_id })
+      return res.json({ exists: true, role: 'owner', orgId: existing[0].org_id, shopId: existing[0].shop_id })
     }
     return res.json({ exists: false })
   }
@@ -122,7 +151,12 @@ export default async function handler(req, res) {
 
   const { role, shopName, inviteCode } = req.body || {}
 
-  if (!role || !['owner', 'advisor', 'tech'].includes(role)) {
+  // `role` is optional when joining with an invite code: the invite decides
+  // it. Older clients still send it, and it is checked against the invite.
+  if (role && !['owner', 'advisor', 'tech'].includes(role)) {
+    return res.status(400).json({ error: 'Invalid role' })
+  }
+  if (!role && !inviteCode) {
     return res.status(400).json({ error: 'Invalid role' })
   }
 
@@ -130,7 +164,7 @@ export default async function handler(req, res) {
 
   // ── Block role mismatch for existing users ────────────────────────────
   const [existingUser] = await sql`SELECT id, role FROM users WHERE clerk_id = ${clerkId} LIMIT 1`
-  if (existingUser && existingUser.role !== role) {
+  if (role && existingUser && existingUser.role !== role) {
     return res.status(403).json({ error: `You are registered as a ${existingUser.role}. Contact your shop owner to change your role.` })
   }
 
@@ -147,12 +181,12 @@ export default async function handler(req, res) {
     if (userEmail) {
       const [pendingInvite] = await sql`
         SELECT id, role FROM invites
-        WHERE email = ${userEmail} AND used_by IS NULL AND expires_at > NOW()
+        WHERE lower(email) = lower(${userEmail}) AND used_by IS NULL AND expires_at > NOW()
         LIMIT 1
       `
       if (pendingInvite) {
         return res.status(403).json({
-          error: `Your email has a pending invite as a ${pendingInvite.role}. Please select "${pendingInvite.role}" instead and enter your invite code. If you believe this is a mistake, contact your shop owner.`
+          error: `Your email has a pending invite to join a shop as a ${pendingInvite.role}. Go back, choose "I have an invite code", and enter your code. If you believe this is a mistake, contact your shop owner.`
         })
       }
     }
@@ -224,7 +258,7 @@ export default async function handler(req, res) {
 
   try {
     const [invite] = await sql`
-      SELECT id, org_id, shop_id, role, expires_at
+      SELECT id, org_id, shop_id, role, email, expires_at
       FROM invites
       WHERE code = ${code} AND used_by IS NULL
     `
@@ -237,13 +271,36 @@ export default async function handler(req, res) {
       return res.status(410).json({ error: 'This invite has expired. Ask your shop owner for a new one.' })
     }
 
-    if (invite.role !== role) {
+    // Older clients send the role they picked; it must match the invite.
+    if (role && invite.role !== role) {
       return res.status(400).json({ error: `This invite is for a ${invite.role}, not a ${role}` })
+    }
+
+    // The invite decides the role. An existing account cannot switch roles
+    // by joining with a code.
+    if (existingUser && existingUser.role !== invite.role) {
+      return res.status(403).json({ error: `You are registered as a ${existingUser.role}. Contact your shop owner to change your role.` })
     }
 
     const clerkUser = await clerk.users.getUser(clerkId)
     const userName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || 'User'
     const userEmail = clerkUser.emailAddresses?.[0]?.emailAddress || ''
+
+    // An invite made out to a specific email only works for that email. Only
+    // verified addresses count, so adding someone else's address to an account
+    // without verifying it cannot unlock their invite. Invites with no email
+    // stay open to anyone holding the code.
+    if (invite.email) {
+      const invited = String(invite.email).trim().toLowerCase()
+      const verified = (clerkUser.emailAddresses || [])
+        .filter(ea => ea.verification?.status === 'verified')
+        .map(ea => String(ea.emailAddress || '').trim().toLowerCase())
+      if (!verified.includes(invited)) {
+        return res.status(403).json({
+          error: 'This invite was made out to a different email address. Sign in with the email your shop owner invited, or ask them for a new code.',
+        })
+      }
+    }
 
     // Create user record
     const [newUser] = await sql`

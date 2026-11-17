@@ -262,7 +262,10 @@ export default function Settings() {
 function TeamInvites({ shops, session }) {
   const [role, setRole] = useState('tech')
   const [shopId, setShopId] = useState(shops[0]?.id || '')
+  const [inviteEmail, setInviteEmail] = useState('')
   const [generatedCode, setGeneratedCode] = useState(null)
+  const [generatedFor, setGeneratedFor] = useState(null)
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -270,16 +273,21 @@ function TeamInvites({ shops, session }) {
     if (!shopId || loading) return
     setLoading(true)
     setGeneratedCode(null)
+    setGeneratedFor(null)
+    setError(null)
 
     try {
       const { api } = await import('@/lib/api')
+      const email = inviteEmail.trim()
       const data = await api('/api/onboard?action=create-invite', {
         method: 'POST',
-        body: { role, shopId },
+        body: { role, shopId, ...(email ? { email } : {}) },
       })
       setGeneratedCode(data.code)
-    } catch {
+      setGeneratedFor(email ? email.toLowerCase() : null)
+    } catch (err) {
       setGeneratedCode(null)
+      setError(err.message || 'Could not create the invite')
     }
     setLoading(false)
   }
@@ -331,6 +339,27 @@ function TeamInvites({ shops, session }) {
           </div>
         </div>
 
+        <div>
+          <label htmlFor="invite-email" className="text-xs text-text-secondary mb-1 block">
+            Their email <span className="text-text-muted">(optional)</span>
+          </label>
+          <input
+            id="invite-email"
+            type="email"
+            value={inviteEmail}
+            onChange={e => setInviteEmail(e.target.value)}
+            placeholder="name@example.com"
+            maxLength={200}
+            autoComplete="off"
+            className="w-full h-9 rounded-lg border border-border bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-orange"
+          />
+          <p className="text-2xs text-text-muted mt-1">
+            With an email, the code only works for someone who signs up with that exact email. Leave it blank and anyone with the code can join.
+          </p>
+        </div>
+
+        {error && <p className="text-xs text-red-500">{error}</p>}
+
         <button
           onClick={handleCreate}
           disabled={loading}
@@ -351,7 +380,10 @@ function TeamInvites({ shops, session }) {
                 {copied ? 'Copied!' : 'Copy'}
               </button>
             </div>
-            <p className="text-2xs text-text-muted mt-2">Expires in 7 days. One-time use.</p>
+            <p className="text-2xs text-text-muted mt-2">
+              {generatedFor ? `Only works for ${generatedFor}. ` : 'Works for anyone who has the code. '}
+              Expires in 7 days. One-time use.
+            </p>
           </div>
         )}
       </div>
