@@ -112,7 +112,9 @@ export default function ApproveEstimate() {
         `/api/health?action=approval&roId=${encodeURIComponent(roId)}&token=${encodeURIComponent(token)}`
       )
       if (!res.ok) throw new Error('invalid')
-      setEst(await res.json())
+      const data = await res.json()
+      // A shop with no name saved still reads naturally
+      setEst({ ...data, shopName: data.shopName || 'the shop' })
       setInvalid(false)
     } catch {
       setInvalid(true)

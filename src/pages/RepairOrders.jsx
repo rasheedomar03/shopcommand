@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search, Plus, Filter, Wrench } from 'lucide-react'
 import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
@@ -24,6 +25,20 @@ export default function RepairOrders() {
   const scopedROs = isAdvisor
     ? repairOrders.filter(ro => ro.shopId === session.shopId)
     : repairOrders
+
+  // Deep link from notification emails: /repair-orders?ro=<id> opens that RO.
+  // Uses the same shop scoping as the list, so an advisor cannot open another
+  // shop's RO this way.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const deepLinkId = searchParams.get('ro')
+  useEffect(() => {
+    if (!deepLinkId) return
+    const match = scopedROs.find(ro => String(ro.id) === deepLinkId)
+    if (match) {
+      setSelectedRO(match)
+      setSearchParams({}, { replace: true })
+    }
+  }, [deepLinkId, repairOrders]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = scopedROs.filter(ro => {
     const q = search.toLowerCase()

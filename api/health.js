@@ -2,6 +2,7 @@ import { neon } from '@neondatabase/serverless'
 import { rateLimit } from './_lib/rate-limit.js'
 import { authenticate } from './_lib/auth.js'
 import { estimateTotals, approvalState, tokenMatches, isTokenFormat, cleanName } from './_lib/approval.js'
+import { shopResponseEmail } from './_lib/approval-email.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -9,7 +10,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 async function loadApprovalRO(sql, roId) {
   const [ro] = await sql`
     SELECT ro.id, ro.org_id, ro.stage, ro.data, ro.ro_number, ro.advisor_id,
-      c.name AS customer_name,
+      c.name AS customer_name, c.phone AS customer_phone,
       v.year AS vehicle_year, v.make AS vehicle_make, v.model AS vehicle_model,
       s.name AS shop_name, s.address AS shop_address, s.phone AS shop_phone
     FROM repair_orders ro
@@ -379,25 +380,25 @@ export default async function handler(req, res) {
           `
           const to = rows.map(r => r.email).filter(Boolean)
           if (to.length) {
-            const vehicle = [ro.vehicle_year, ro.vehicle_make, ro.vehicle_model].filter(Boolean).join(' ') || 'a vehicle'
-            const verb = decision === 'approve' ? 'approved' : 'declined'
+            const notice = shopResponseEmail({
+              decision,
+              signer,
+              customerName: ro.customer_name,
+              customerPhone: ro.customer_phone,
+              shopName: ro.shop_name,
+              vehicle: [ro.vehicle_year, ro.vehicle_make, ro.vehicle_model].filter(Boolean).join(' '),
+              roNumber: ro.ro_number,
+              total: totals.total,
+              roId: ro.id,
+            })
             await fetch('https://api.resend.com/emails', {
               method: 'POST',
               headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 from: 'ShopCommand <notifications@shopcommand.net>',
                 to,
-                subject: `Estimate ${verb}: ${ro.ro_number}`,
-                text: [
-                  `${signer || ro.customer_name || 'The customer'} ${verb} the estimate for ${vehicle} (${ro.ro_number}).`,
-                  `Estimate total: $${totals.total.toFixed(2)}`,
-                  '',
-                  decision === 'approve'
-                    ? 'The repair order has moved to Approved and is ready to start.'
-                    : 'The repair order is still in the Estimate stage. You may want to call the customer.',
-                  '',
-                  'Open ShopCommand: https://shopcommand.net/repair-orders',
-                ].join('\n'),
+                subject: notice.subject,
+                text: notice.text,
               }),
             })
           }

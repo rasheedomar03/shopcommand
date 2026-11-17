@@ -1,6 +1,7 @@
 import { createHandler } from './_lib/handler.js'
 import { Resend } from 'resend'
 import { newToken, hashToken, tokenMatches, estimateTotals, APPROVAL_TTL_MS, APP_BASE_URL } from './_lib/approval.js'
+import { customerEstimateEmail, headerSafe } from './_lib/approval-email.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const VALID_STAGES = [
@@ -94,7 +95,7 @@ export default createHandler(
         SELECT ro.id, ro.stage, ro.data, ro.ro_number,
           c.name AS customer_name, c.email AS customer_email,
           v.year AS vehicle_year, v.make AS vehicle_make, v.model AS vehicle_model,
-          s.name AS shop_name, s.phone AS shop_phone
+          s.name AS shop_name, s.phone AS shop_phone, s.address AS shop_address
         FROM repair_orders ro
         LEFT JOIN customers c ON c.id = ro.customer_id
         LEFT JOIN vehicles v ON v.id = ro.vehicle_id
@@ -147,25 +148,31 @@ export default createHandler(
           result.emailError = 'Email service not configured'
         } else {
           const vehicle = [ro.vehicle_year, ro.vehicle_make, ro.vehicle_model].filter(Boolean).join(' ')
+          const email = customerEstimateEmail({
+            customerName: ro.customer_name,
+            shopName: ro.shop_name || 'Your repair shop',
+            shopPhone: ro.shop_phone,
+            shopAddress: ro.shop_address,
+            vehicle,
+            roNumber: ro.ro_number,
+            url,
+            totals,
+            expiresAt: approval.expiresAt,
+          })
           try {
-            await resend.emails.send({
-              from: `${ro.shop_name} via ShopCommand <notifications@shopcommand.net>`,
+            // The Resend SDK returns { error } instead of throwing on API
+            // failures (unverified domain, rejected address), so check it.
+            const { error } = await resend.emails.send({
+              // Quoted display name: shop names often contain commas or periods
+              from: `"${headerSafe(ro.shop_name) || 'Your repair shop'} via ShopCommand" <notifications@shopcommand.net>`,
               to: ro.customer_email,
-              subject: `Your estimate is ready: ${vehicle || 'your vehicle'}`,
-              text: [
-                `Hi ${ro.customer_name || 'there'},`,
-                '',
-                `${ro.shop_name} has prepared an estimate for your ${vehicle || 'vehicle'}. You can review it and approve or decline it from your phone:`,
-                '',
-                url,
-                '',
-                `The estimate total is $${totals.total.toFixed(2)}. This link works for 14 days.`,
-                '',
-                `Questions? Call ${ro.shop_phone || 'the shop'}.`,
-                '',
-                ro.shop_name,
-              ].join('\n'),
+              // Replies reach the staff member who sent the estimate
+              ...(user.email ? { replyTo: user.email } : {}),
+              subject: email.subject,
+              text: email.text,
+              html: email.html,
             })
+            if (error) throw new Error(error.message || 'send failed')
             result.emailed = true
           } catch {
             result.emailError = 'Failed to send email'
