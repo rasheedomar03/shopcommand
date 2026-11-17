@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
 import { formatCurrency, RO_STAGES } from '@/lib/utils'
-import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X, Package, Link2, Check, Clock, PlayCircle, Flag, Zap, Square, StopCircle, Shield, Trash2, Paperclip } from 'lucide-react'
+import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X, Package, Link2, Check, Clock, PlayCircle, Flag, Zap, Square, StopCircle, Shield, Trash2, Paperclip, Mail, QrCode } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
+import { api } from '@/lib/api'
 import { FileUpload, FileList } from '@/components/ui/FileUpload'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
@@ -150,6 +152,11 @@ export function RODetailModal({ open, onClose, ro }) {
   const [showPrintPacket, setShowPrintPacket] = useState(false)
   const [copied, setCopied] = useState(false)
   const [estimateSent, setEstimateSent] = useState(false)
+  // Customer approval link (email / copy / QR)
+  const [approvalLink, setApprovalLink] = useState(null)
+  const [approvalBusy, setApprovalBusy] = useState(false)
+  const [approvalMsg, setApprovalMsg] = useState(null)
+  const [showQr, setShowQr] = useState(false)
   const [warrantyOpen, setWarrantyOpen] = useState(null)
 
   const [assignedTechId, setAssignedTechId] = useState(ro?.techId ? String(ro.techId) : '')
@@ -439,6 +446,44 @@ export function RODetailModal({ open, onClose, ro }) {
     await navigator.clipboard.writeText(`${window.location.origin}/status/${ro.id}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  // Customer approval link. mode: 'email' | 'copy' | 'qr'.
+  // The server prices the estimate from what is saved, so save it first.
+  // Once a link exists in this session, reuse it so a link already emailed,
+  // copied, or shown as a QR code is never invalidated by another button.
+  const sendForApproval = async (mode) => {
+    if (session?.demo) return
+    setApprovalBusy(true)
+    setApprovalMsg(null)
+    try {
+      await updateRepairOrder(ro.id, { services, partsUsed, total: grandTotal })
+      const existing = approvalLink ? approvalLink.split('/').pop() : undefined
+      const r = await api('/api/repair-orders?action=approval-link', {
+        method: 'POST',
+        body: { ro_id: ro.id, send_email: mode === 'email', ...(existing ? { token: existing } : {}) },
+      })
+      setApprovalLink(r.url)
+      if (mode === 'copy') {
+        setShowQr(false)
+        try {
+          await navigator.clipboard.writeText(r.url)
+          setApprovalMsg({ ok: true, text: 'Link copied. It works for 14 days.' })
+        } catch {
+          setApprovalMsg({ ok: true, text: 'Link ready below. Select it to copy.' })
+        }
+      } else if (mode === 'qr') {
+        setShowQr(true)
+        setApprovalMsg({ ok: true, text: 'Have the customer scan this with their phone camera.' })
+      } else if (r.emailed) {
+        setApprovalMsg({ ok: true, text: `Emailed to ${ro.customerEmail}.` })
+      } else {
+        setApprovalMsg({ ok: false, text: r.emailError || 'Could not send the email.' })
+      }
+    } catch (err) {
+      setApprovalMsg({ ok: false, text: err.message || 'Could not create the approval link' })
+    }
+    setApprovalBusy(false)
   }
 
   // MPI helpers
@@ -1460,9 +1505,67 @@ export function RODetailModal({ open, onClose, ro }) {
               : <><Check size={13} /> Save estimate</>
             }
           </button>
+          {!isTech && (
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <div className="text-2xs font-medium text-text-muted uppercase tracking-wider">Customer approval link</div>
+              {ro.approval?.declinedAt && !approvalLink && (
+                <div className="text-xs text-status-red">
+                  Customer declined this estimate on {new Date(ro.approval.declinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}. Sending a new link starts a fresh approval.
+                </div>
+              )}
+              {session?.demo ? (
+                <div className="text-2xs text-text-muted">Approval links are not available in demo mode.</div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => sendForApproval('email')}
+                    disabled={approvalBusy || !ro.customerEmail}
+                    className="w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-orange/10 text-orange text-sm font-medium hover:bg-orange/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Mail size={13} /> Email approval link
+                  </button>
+                  {!ro.customerEmail && (
+                    <div className="text-2xs text-text-muted">No email on file for this customer. Copy the link or show the QR code instead.</div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => sendForApproval('copy')}
+                      disabled={approvalBusy}
+                      className="flex items-center justify-center gap-1.5 h-9 rounded-lg border border-border text-xs text-text-muted hover:text-text-primary hover:border-orange transition-colors disabled:opacity-40"
+                    >
+                      <Link2 size={12} /> Copy link
+                    </button>
+                    <button
+                      onClick={() => sendForApproval('qr')}
+                      disabled={approvalBusy}
+                      className="flex items-center justify-center gap-1.5 h-9 rounded-lg border border-border text-xs text-text-muted hover:text-text-primary hover:border-orange transition-colors disabled:opacity-40"
+                    >
+                      <QrCode size={12} /> QR code
+                    </button>
+                  </div>
+                  {approvalMsg && (
+                    <div className={cn('text-2xs', approvalMsg.ok ? 'text-status-green' : 'text-status-red')}>{approvalMsg.text}</div>
+                  )}
+                  {approvalLink && (
+                    <input
+                      readOnly
+                      value={approvalLink}
+                      onFocus={e => e.target.select()}
+                      className="w-full h-8 px-2 rounded-md bg-background border border-border text-2xs text-text-muted"
+                    />
+                  )}
+                  {approvalLink && showQr && (
+                    <div className="bg-white p-3 rounded-lg w-fit mx-auto">
+                      <QRCodeSVG value={approvalLink} size={168} />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
           <div className="flex items-center justify-center gap-1.5 text-2xs text-text-muted">
             <MessageSquare size={11} />
-            Text estimate to customer — coming soon
+            Text estimate to customer: coming soon
           </div>
         </div>
       )}

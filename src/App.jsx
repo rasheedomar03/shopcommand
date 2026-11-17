@@ -109,6 +109,7 @@ const Inspections = lazy(() => import('@/pages/Inspections'))
 const Reports = lazy(() => import('@/pages/Reports'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const CustomerStatus = lazy(() => import('@/pages/CustomerStatus'))
+const ApproveEstimate = lazy(() => import('@/pages/ApproveEstimate'))
 const Dispatch = lazy(() => import('@/pages/Dispatch'))
 const Appointments = lazy(() => import('@/pages/Appointments'))
 const Terms = lazy(() => import('@/pages/Terms'))
@@ -282,6 +283,7 @@ export default function App() {
         <Route path="/login" element={<Navigate to="/sign-in" replace />} />
         <Route path="/parts/scan/:sku" element={<PartScanRedirect />} />
         <Route path="/status/:roId" element={<CustomerStatus />} />
+        <Route path="/approve/:roId/:token" element={<ApproveEstimate />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/dpa" element={<DPA />} />

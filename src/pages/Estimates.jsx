@@ -17,10 +17,13 @@ import { cn } from '@/lib/utils'
 const ESTIMATE_STATUS = {
   pending:  { label: 'Awaiting approval', color: 'text-status-yellow', bg: 'bg-status-yellow/10' },
   approved: { label: 'Approved',          color: 'text-status-green',  bg: 'bg-status-green/10' },
+  declined: { label: 'Declined',          color: 'text-status-red',    bg: 'bg-status-red/10' },
 }
 
 function estimateStatus(ro) {
   if (ro.stage === 'Approved' || ro.authorized) return 'approved'
+  // The customer declined from their approval link and no new link was sent
+  if (ro.approval?.declinedAt) return 'declined'
   return 'pending'
 }
 

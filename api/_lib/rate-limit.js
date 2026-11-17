@@ -29,6 +29,8 @@ function cleanupStale(now) {
 const DEFAULTS = {
   general: { max: 100, windowMs: 60_000 },
   auth:    { max: 5,   windowMs: 15 * 60_000 },
+  // Public customer approval links (view and respond)
+  approval: { max: 30, windowMs: 60_000 },
 }
 
 function getClientIp(req) {

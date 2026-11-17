@@ -1,5 +1,6 @@
 import { createHandler } from './_lib/handler.js'
 import { Resend } from 'resend'
+import { newToken, hashToken, tokenMatches, estimateTotals, APPROVAL_TTL_MS, APP_BASE_URL } from './_lib/approval.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const VALID_STAGES = [
@@ -73,6 +74,106 @@ export default createHandler(
       } catch (err) {
         return res.status(500).json({ error: 'Failed to send email' })
       }
+    }
+
+    // ── Create approval link: POST /api/repair-orders?action=approval-link ──
+    // Generates a fresh customer approval link for an estimate (replacing any
+    // earlier one) and optionally emails it. Only the token's hash is stored.
+    if (action === 'approval-link' && req.method === 'POST') {
+      if (user.role === 'tech') {
+        return res.status(403).json({ error: 'Technicians cannot send estimates for approval' })
+      }
+      // `token` lets the shop reuse the link it just generated (e.g. email it
+      // after copying it) instead of invalidating the one already shared.
+      const { ro_id, send_email, token: existingToken } = req.body || {}
+      if (!ro_id || !UUID_RE.test(ro_id)) {
+        return res.status(400).json({ error: 'Valid ro_id is required' })
+      }
+
+      const [ro] = await sql`
+        SELECT ro.id, ro.stage, ro.data, ro.ro_number,
+          c.name AS customer_name, c.email AS customer_email,
+          v.year AS vehicle_year, v.make AS vehicle_make, v.model AS vehicle_model,
+          s.name AS shop_name, s.phone AS shop_phone
+        FROM repair_orders ro
+        LEFT JOIN customers c ON c.id = ro.customer_id
+        LEFT JOIN vehicles v ON v.id = ro.vehicle_id
+        LEFT JOIN shops s ON s.id = ro.shop_id
+        WHERE ro.id = ${ro_id} AND ro.org_id = ${user.orgId}
+      `
+      if (!ro) return res.status(404).json({ error: 'Repair order not found' })
+      if (ro.stage !== 'Estimate') {
+        return res.status(400).json({ error: 'Only estimates awaiting approval can be sent for approval' })
+      }
+      const totals = estimateTotals(ro.data)
+      if (totals.total <= 0) {
+        return res.status(400).json({ error: 'Add estimate lines and save the estimate before sending it' })
+      }
+
+      const now = new Date()
+      const current = ro.data?.approval
+      const reuse = existingToken
+        && tokenMatches(existingToken, current)
+        && !current.declinedAt
+        && new Date(current.expiresAt).getTime() > now.getTime()
+
+      let token, approval
+      if (reuse) {
+        token = existingToken
+        approval = current
+      } else {
+        token = newToken()
+        approval = {
+          tokenHash: hashToken(token),
+          createdAt: now.toISOString(),
+          expiresAt: new Date(now.getTime() + APPROVAL_TTL_MS).toISOString(),
+        }
+        await sql`
+          UPDATE repair_orders
+          SET data = COALESCE(data, '{}'::jsonb) || ${JSON.stringify({ approval })}::jsonb,
+              updated_at = now()
+          WHERE id = ${ro.id} AND org_id = ${user.orgId}
+        `
+      }
+
+      const url = `${APP_BASE_URL}/approve/${ro.id}/${token}`
+      const result = { url, expiresAt: approval.expiresAt, emailed: false }
+
+      if (send_email) {
+        const resend = getResend()
+        if (!ro.customer_email) {
+          result.emailError = 'Customer has no email address on file'
+        } else if (!resend) {
+          result.emailError = 'Email service not configured'
+        } else {
+          const vehicle = [ro.vehicle_year, ro.vehicle_make, ro.vehicle_model].filter(Boolean).join(' ')
+          try {
+            await resend.emails.send({
+              from: `${ro.shop_name} via ShopCommand <notifications@shopcommand.net>`,
+              to: ro.customer_email,
+              subject: `Your estimate is ready: ${vehicle || 'your vehicle'}`,
+              text: [
+                `Hi ${ro.customer_name || 'there'},`,
+                '',
+                `${ro.shop_name} has prepared an estimate for your ${vehicle || 'vehicle'}. You can review it and approve or decline it from your phone:`,
+                '',
+                url,
+                '',
+                `The estimate total is $${totals.total.toFixed(2)}. This link works for 14 days.`,
+                '',
+                `Questions? Call ${ro.shop_phone || 'the shop'}.`,
+                '',
+                ro.shop_name,
+              ].join('\n'),
+            })
+            result.emailed = true
+          } catch {
+            result.emailError = 'Failed to send email'
+          }
+        }
+      }
+
+      return res.json(result)
     }
 
     if (req.method === 'GET') {

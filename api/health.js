@@ -1,8 +1,25 @@
 import { neon } from '@neondatabase/serverless'
 import { rateLimit } from './_lib/rate-limit.js'
 import { authenticate } from './_lib/auth.js'
+import { estimateTotals, approvalState, tokenMatches, isTokenFormat, cleanName } from './_lib/approval.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Repair order + shop/vehicle details for the public customer approval link.
+async function loadApprovalRO(sql, roId) {
+  const [ro] = await sql`
+    SELECT ro.id, ro.org_id, ro.stage, ro.data, ro.ro_number, ro.advisor_id,
+      c.name AS customer_name,
+      v.year AS vehicle_year, v.make AS vehicle_make, v.model AS vehicle_model,
+      s.name AS shop_name, s.address AS shop_address, s.phone AS shop_phone
+    FROM repair_orders ro
+    LEFT JOIN customers c ON c.id = ro.customer_id
+    LEFT JOIN vehicles v ON v.id = ro.vehicle_id
+    LEFT JOIN shops s ON s.id = ro.shop_id
+    WHERE ro.id = ${roId}
+  `
+  return ro || null
+}
 
 export default async function handler(req, res) {
   const action = req.query?.action
@@ -282,6 +299,118 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── Customer estimate response: POST /api/health?action=approval-respond ─
+  // Public, token-protected. The org/shop come from the database row, never
+  // from the request, and only the approval fields are ever written.
+  if (req.method === 'POST' && req.query?.action === 'approval-respond') {
+    if (!rateLimit(req, res, 'approval')) {
+      return res.status(429).json({ error: 'Too many requests. Try again in a minute.' })
+    }
+
+    const { roId, token, decision, name, total } = req.body || {}
+    if (!roId || !UUID_RE.test(roId) || !isTokenFormat(token) || !['approve', 'decline'].includes(decision)) {
+      return res.status(400).json({ error: 'Invalid request' })
+    }
+
+    try {
+      const sql = neon(process.env.DATABASE_URL)
+      const ro = await loadApprovalRO(sql, roId)
+      if (!ro || !tokenMatches(token, ro.data?.approval)) {
+        return res.status(404).json({ error: 'This link is not valid' })
+      }
+
+      const state = approvalState(ro)
+      if (state !== 'pending') {
+        return res.status(409).json({ error: 'This estimate can no longer be changed from this link', code: state })
+      }
+
+      const totals = estimateTotals(ro.data)
+      const signer = cleanName(name)
+      const nowIso = new Date().toISOString()
+
+      if (decision === 'approve') {
+        if (signer.length < 2) {
+          return res.status(400).json({ error: 'Please type your full name to approve' })
+        }
+        // The customer must approve the exact total they were shown. If the
+        // shop edited the estimate after sending it, make them look again.
+        if (!Number.isFinite(Number(total)) || Math.abs(Number(total) - totals.total) > 0.005) {
+          return res.status(409).json({
+            error: 'This estimate was updated. Please review the new total.',
+            code: 'estimate_changed',
+          })
+        }
+        const [updated] = await sql`
+          UPDATE repair_orders
+          SET stage = 'Approved',
+              data = COALESCE(data, '{}'::jsonb) || ${JSON.stringify({
+                authorized: true,
+                authorizedAt: nowIso,
+                authorizedVia: 'customer link',
+                approvedBy: signer,
+                approvedTotal: totals.total,
+              })}::jsonb,
+              updated_at = now()
+          WHERE id = ${ro.id} AND stage = 'Estimate'
+          RETURNING id
+        `
+        if (!updated) return res.status(409).json({ error: 'This estimate can no longer be changed from this link', code: 'closed' })
+      } else {
+        const approval = { ...(ro.data?.approval || {}), declinedAt: nowIso, declinedBy: signer || null }
+        const [updated] = await sql`
+          UPDATE repair_orders
+          SET data = COALESCE(data, '{}'::jsonb) || ${JSON.stringify({ approval })}::jsonb,
+              updated_at = now()
+          WHERE id = ${ro.id} AND stage = 'Estimate'
+          RETURNING id
+        `
+        if (!updated) return res.status(409).json({ error: 'This estimate can no longer be changed from this link', code: 'closed' })
+      }
+
+      // Tell the shop (owner + the RO's advisor). Never fails the customer.
+      // Must be awaited or Vercel ends the function before it sends.
+      const resendKey = process.env.RESEND_API_KEY
+      if (resendKey) {
+        try {
+          const rows = await sql`
+            SELECT DISTINCT email FROM users
+            WHERE org_id = ${ro.org_id} AND email IS NOT NULL
+              AND (role = 'owner' OR id = ${ro.advisor_id})
+          `
+          const to = rows.map(r => r.email).filter(Boolean)
+          if (to.length) {
+            const vehicle = [ro.vehicle_year, ro.vehicle_make, ro.vehicle_model].filter(Boolean).join(' ') || 'a vehicle'
+            const verb = decision === 'approve' ? 'approved' : 'declined'
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                from: 'ShopCommand <notifications@shopcommand.net>',
+                to,
+                subject: `Estimate ${verb}: ${ro.ro_number}`,
+                text: [
+                  `${signer || ro.customer_name || 'The customer'} ${verb} the estimate for ${vehicle} (${ro.ro_number}).`,
+                  `Estimate total: $${totals.total.toFixed(2)}`,
+                  '',
+                  decision === 'approve'
+                    ? 'The repair order has moved to Approved and is ready to start.'
+                    : 'The repair order is still in the Estimate stage. You may want to call the customer.',
+                  '',
+                  'Open ShopCommand: https://shopcommand.net/repair-orders',
+                ].join('\n'),
+              }),
+            })
+          }
+        } catch { /* the response is already saved; the email is a courtesy */ }
+      }
+
+      return res.json({ ok: true, state: decision === 'approve' ? 'approved' : 'declined' })
+    } catch (err) {
+      console.error('Approval respond error:', err)
+      return res.status(500).json({ error: 'Something went wrong. Please call the shop.' })
+    }
+  }
+
   // ── Founding program application: POST /api/health?action=founding-signup ─
   // Stores the lead in Neon and pings Discord. (This endpoint didn't exist
   // for months — the form returned a generic 200 and applications were lost.)
@@ -410,6 +539,47 @@ export default async function handler(req, res) {
 
   if (!rateLimit(req, res)) {
     return res.status(429).json({ error: 'Too many requests' })
+  }
+
+  // ── Customer estimate view: GET /api/health?action=approval&roId=&token= ─
+  // Public, token-protected. Returns only what the customer needs to decide:
+  // no customer phone/email/address, nothing from other records.
+  if (action === 'approval') {
+    if (!rateLimit(req, res, 'approval')) {
+      return res.status(429).json({ error: 'Too many requests. Try again in a minute.' })
+    }
+    const roId = req.query?.roId
+    const token = req.query?.token
+    if (!roId || !UUID_RE.test(roId) || !isTokenFormat(token)) {
+      return res.status(404).json({ error: 'This link is not valid' })
+    }
+
+    const sql = neon(process.env.DATABASE_URL)
+    const ro = await loadApprovalRO(sql, roId)
+    if (!ro || !tokenMatches(token, ro.data?.approval)) {
+      return res.status(404).json({ error: 'This link is not valid' })
+    }
+
+    const state = approvalState(ro)
+    const data = ro.data || {}
+    const base = {
+      state,
+      roNumber: ro.ro_number,
+      customerName: ro.customer_name,
+      vehicle: [ro.vehicle_year, ro.vehicle_make, ro.vehicle_model].filter(Boolean).join(' '),
+      shopName: ro.shop_name,
+      shopAddress: ro.shop_address,
+      shopPhone: ro.shop_phone,
+    }
+    if (state === 'expired' || state === 'closed') return res.json(base)
+
+    return res.json({
+      ...base,
+      ...estimateTotals(data),
+      approvedAt: state === 'approved' ? (data.authorizedAt || null) : null,
+      approvedBy: state === 'approved' ? (data.approvedBy || null) : null,
+      declinedAt: state === 'declined' ? (data.approval?.declinedAt || null) : null,
+    })
   }
 
   // ── Public RO status lookup: GET /api/health?action=status&roId=xxx ─────
