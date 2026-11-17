@@ -115,6 +115,12 @@ async function handleBilling(req, res, user) {
 
   try {
     const sub = await stripe.subscriptions.retrieve(org.stripe_subscription_id)
+    // Total across every item (base + additional shops + add-ons), in cents.
+    // Item order is not guaranteed, so never read just items.data[0].
+    const totalAmount = sub.items.data.reduce(
+      (sum, item) => sum + (item.price?.unit_amount ?? 0) * (item.quantity ?? 1),
+      0
+    )
     return res.json({
       plan: org.plan,
       status: sub.status,
@@ -124,7 +130,7 @@ async function handleBilling(req, res, user) {
       subscription: {
         id: sub.id,
         status: sub.status,
-        amount: sub.items.data[0]?.price?.unit_amount,
+        amount: totalAmount,
         interval: sub.items.data[0]?.price?.recurring?.interval,
       },
     })

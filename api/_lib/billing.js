@@ -16,6 +16,14 @@ const ADDITIONAL_LOOKUP = 'founding_additional_shop'
 const BASE_AMOUNT = 10000      // $100 in cents
 const ADDITIONAL_AMOUNT = 5000 // $50 in cents
 
+// Optional texting add-on: a third subscription item, quantity 1 per org.
+// The Stripe price is created lazily on first use (same pattern as above), so
+// nothing exists in Stripe until an org actually turns texting on.
+// PLACEHOLDER AMOUNT: confirm the real price before the first org enables it,
+// since changing it later means creating a new price.
+const SMS_LOOKUP = 'sms_addon'
+const SMS_AMOUNT = 1500 // $15 in cents
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 async function findOrCreatePrice(lookupKey, productName, unitAmount) {
@@ -37,6 +45,52 @@ export async function getFoundingPrices() {
     findOrCreatePrice(ADDITIONAL_LOOKUP, 'ShopCommand Founding Member — Additional Shop', ADDITIONAL_AMOUNT),
   ])
   return { base, additional }
+}
+
+export function getSmsPrice() {
+  return findOrCreatePrice(SMS_LOOKUP, 'ShopCommand Texting Add-on', SMS_AMOUNT)
+}
+
+/**
+ * Add or remove the texting add-on item on the org's existing subscription.
+ * Does not touch the database: the caller records the on/off flag.
+ *
+ * - enabling  → prorated charge now (create_prorations)
+ * - disabling → item removed, no refund (matches shop removal behavior)
+ * - trialing subs add the item without charging
+ *
+ * @returns {Promise<{enabled:boolean}|null|{error:true}>}
+ *   null when the org has no active subscription yet.
+ */
+export async function syncSmsAddon(sql, orgId, enabled) {
+  try {
+    const [org] = await sql`
+      SELECT stripe_subscription_id FROM organizations WHERE id = ${orgId}
+    `
+    if (!org?.stripe_subscription_id) return null
+
+    const sub = await stripe.subscriptions.retrieve(org.stripe_subscription_id)
+    if (!['active', 'trialing', 'past_due'].includes(sub.status)) return null
+
+    const smsItem = sub.items.data.find(i => i.price.lookup_key === SMS_LOOKUP)
+
+    if (enabled && !smsItem) {
+      const price = await getSmsPrice()
+      await stripe.subscriptionItems.create({
+        subscription: sub.id,
+        price: price.id,
+        quantity: 1,
+        proration_behavior: 'create_prorations',
+      })
+    } else if (!enabled && smsItem) {
+      await stripe.subscriptionItems.del(smsItem.id, { proration_behavior: 'none' })
+    }
+
+    return { enabled }
+  } catch (err) {
+    logger.error('Texting add-on sync failed', { orgId, error: err.message })
+    return { error: true }
+  }
 }
 
 /**
@@ -79,7 +133,8 @@ export async function syncShopBilling(sql, orgId, { adding = true } = {}) {
     if (!baseItem) {
       // Legacy lump-sum subscription — replace its single item with the
       // two-item structure in one update (keeps the sub, no new checkout).
-      const legacyItem = sub.items.data[0]
+      // Skip the texting add-on item, which must survive the migration.
+      const legacyItem = sub.items.data.find(i => i.price.lookup_key !== SMS_LOOKUP) || sub.items.data[0]
       await stripe.subscriptions.update(sub.id, {
         items: [
           { id: legacyItem.id, deleted: true },
