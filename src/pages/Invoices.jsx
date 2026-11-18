@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
+import { BlankFormModal } from '@/components/modals/BlankFormModal'
 import { formatMoney, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
 import { cn } from '@/lib/utils'
@@ -486,6 +487,7 @@ export default function Invoices() {
   const [selected, setSelected] = useState(null)
   const [generatorOpen, setGeneratorOpen] = useState(false)
   const [generatorSource, setGeneratorSource] = useState(null)
+  const [blankFormOpen, setBlankFormOpen] = useState(false)
 
   const allInvoices = invoices
   const scoped = isAdvisor
@@ -538,6 +540,10 @@ export default function Invoices() {
         }}>
           <Download size={15} />
           Export
+        </Button>
+        <Button variant="secondary" onClick={() => setBlankFormOpen(true)} title="Print a blank paper work order to fill in by hand, for when the system is down">
+          <Printer size={15} />
+          Blank form
         </Button>
         </div>
       </div>
@@ -664,6 +670,7 @@ export default function Invoices() {
         }}
         onEmail={emailInvoice}
       />
+      <BlankFormModal open={blankFormOpen} onClose={() => setBlankFormOpen(false)} />
       <InvoiceGeneratorModal
         open={generatorOpen}
         onClose={() => { setGeneratorOpen(false); setGeneratorSource(null) }}
