@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react'
 import { Building2, Users, ArrowLeft, Loader2 } from 'lucide-react'
+import { useAuth as useAppAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
 // Two ways in. A shop owner sets up a new shop; everyone else (advisor, tech,
@@ -27,6 +28,9 @@ const homeFor = role => (role === 'tech' ? '/tech-board' : '/dashboard')
 export default function Onboarding() {
   const { user, isLoaded, isSignedIn } = useUser()
   const { getToken } = useClerkAuth()
+  // The app's logout also clears the cached session, so signing out here
+  // cannot leave stale state behind
+  const { logout } = useAppAuth()
   const navigate = useNavigate()
   const [checking, setChecking] = useState(true)
   const [selected, setSelected] = useState(null)
@@ -342,6 +346,20 @@ export default function Onboarding() {
             </p>
           </>
         )}
+
+        {/* Always a way out: signed in with the wrong account, or not ready to continue */}
+        <p className="text-2xs text-text-muted text-center mt-8 leading-relaxed">
+          {user?.primaryEmailAddress?.emailAddress && (
+            <>Signed in as {user.primaryEmailAddress.emailAddress}.{' '}</>
+          )}
+          <button
+            type="button"
+            onClick={() => logout()}
+            className="text-orange hover:underline font-medium"
+          >
+            Sign out
+          </button>
+        </p>
       </div>
     </main>
   )
