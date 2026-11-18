@@ -329,6 +329,17 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
           </div>
         )}
 
+        {!isDb && (
+          <p className="text-2xs text-text-muted">
+            This invoice is saved on this computer only for now. Print / PDF prints it exactly as shown above; choose Save as PDF in the print window for a PDF file.
+          </p>
+        )}
+        {isDb && (
+          <p className="text-2xs text-text-muted">
+            Print / PDF prints this invoice exactly as shown above. Choose Save as PDF in the print window for a PDF file.
+          </p>
+        )}
+
         <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="text-xs text-text-muted whitespace-nowrap">Created {formatDate(invoice.created)}</div>

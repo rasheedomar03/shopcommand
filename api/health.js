@@ -84,9 +84,9 @@ export default async function handler(req, res) {
       const [row] = await sql`
         UPDATE parts SET
           name = COALESCE(${name?.trim() || null}, name),
-          sku = COALESCE(${sku?.trim() || null}, sku),
+          sku = COALESCE(${typeof sku === 'string' ? sku.trim() : null}, sku),
           category = COALESCE(${category || null}, category),
-          vendor = COALESCE(${vendor?.trim() || null}, vendor),
+          vendor = COALESCE(${typeof vendor === 'string' ? vendor.trim() : null}, vendor),
           qty = COALESCE(${qty != null ? Number(qty) : null}, qty),
           min_qty = COALESCE(${min_qty != null ? Number(min_qty) : null}, min_qty),
           cost = COALESCE(${cost != null ? Number(cost) : null}, cost),

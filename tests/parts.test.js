@@ -19,15 +19,21 @@ const { authenticate } = await import('../api/_lib/auth.js')
 const { default: handler } = await import('../api/health.js')
 
 let insertedVals
+let updatedVals
 
 beforeEach(() => {
   vi.clearAllMocks()
   insertedVals = null
+  updatedVals = null
   mockSql.mockReset()
   mockSql.mockImplementation((strings, ...vals) => {
     const q = strings.join('?').replace(/\s+/g, ' ')
     if (/INSERT INTO parts/.test(q)) {
       insertedVals = vals
+      return Promise.resolve([{ id: VALID_UUID }])
+    }
+    if (/UPDATE parts SET/.test(q)) {
+      updatedVals = vals
       return Promise.resolve([{ id: VALID_UUID }])
     }
     return Promise.resolve([])
@@ -44,6 +50,34 @@ async function addPart(body) {
   await handler(req, res)
   return res
 }
+
+// UPDATE values, in order: name, sku, category, vendor, qty, min_qty, cost, price, last_ordered, id, org_id
+async function updatePart(body) {
+  authenticate.mockResolvedValueOnce(MOCK_OWNER)
+  const req = createMockReq({ method: 'PUT', query: { action: 'update-part', id: VALID_UUID }, body })
+  const res = createMockRes()
+  await handler(req, res)
+  return res
+}
+
+describe('PUT update-part SKU and vendor', () => {
+  it('lets the SKU and vendor be cleared to blank', async () => {
+    const res = await updatePart({ name: 'Heater hose', sku: '', vendor: '   ' })
+    expect(res.statusCode).toBe(200)
+    expect(updatedVals[1]).toBe('')
+    expect(updatedVals[3]).toBe('')
+  })
+  it('trims a new SKU and vendor', async () => {
+    await updatePart({ sku: '  HH-34  ', vendor: ' NAPA ' })
+    expect(updatedVals[1]).toBe('HH-34')
+    expect(updatedVals[3]).toBe('NAPA')
+  })
+  it('leaves SKU and vendor alone when they are not sent (e.g. a quantity-only edit)', async () => {
+    await updatePart({ qty: 4 })
+    expect(updatedVals[1]).toBeNull()
+    expect(updatedVals[3]).toBeNull()
+  })
+})
 
 describe('POST add-part minimum quantity', () => {
   it('keeps an explicit minimum of 0', async () => {

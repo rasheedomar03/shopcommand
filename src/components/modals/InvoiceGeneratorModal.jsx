@@ -45,6 +45,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const { shops, repairOrders, addInvoice } = useData()
   const { session } = useAuth()
   const [savedFlash, setSavedFlash] = useState(false)
+  const [savedOnServer, setSavedOnServer] = useState(false)
 
   const [shopId, setShopId] = useState('')
   const [roId, setRoId] = useState('')
@@ -337,13 +338,13 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             <Button
               variant="secondary"
               className="flex-1"
-              onClick={() => {
+              onClick={async () => {
                 setBaseline(snapshot)
                 restoredRef.current = false
                 setRestored(false)
                 clearDraft()
                 const ro = repairOrders.find(r => String(r.id) === String(roId))
-                addInvoice({
+                const entry = await addInvoice({
                   id: invNumber,
                   roId: roId || null,
                   shopId: shop?.id ?? null,
@@ -366,16 +367,29 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
                   tax: Number(tax.toFixed(2)),
                   total: Number(total.toFixed(2)),
                 })
+                // Only invoices linked to a repair order reach the server; be
+                // honest about where this one actually went.
+                setSavedOnServer(!!entry?.dbId)
                 setSavedFlash(true)
-                setTimeout(() => setSavedFlash(false), 2000)
+                setTimeout(() => setSavedFlash(false), 3500)
               }}
             >
-              {savedFlash ? <><Check size={14} className="text-status-green" /> Saved</> : <><Save size={14} /> Save invoice</>}
+              {savedFlash
+                ? <><Check size={14} className="text-status-green" /> {savedOnServer ? 'Saved' : 'Saved on this computer'}</>
+                : <><Save size={14} /> Save invoice</>}
             </Button>
             <Button className="flex-1" onClick={() => window.print()}>
               <Printer size={14} /> Print / PDF
             </Button>
           </div>
+          {!roId && (
+            <p className="text-xs text-text-muted">
+              Invoices made from scratch are saved on this computer only for now, so keep using the same browser and press Export on the Invoices page now and then to keep a copy.
+            </p>
+          )}
+          <p className="text-2xs text-text-muted">
+            Print / PDF prints the paper preview on the right. In the print window, choose Save as PDF to get a PDF file.
+          </p>
         </div>
 
         {/* Paper preview — always light, print-faithful */}
