@@ -11,7 +11,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { StageBadge } from '@/components/ui/Badge'
-import { formatCurrency, formatDate, computeHoursMs, formatHours, startOfToday, startOfWeek } from '@/lib/utils'
+import { formatCurrency, formatDate, computeHoursMs, formatHours, roLabel, startOfToday, startOfWeek } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
@@ -139,7 +139,7 @@ function JobCard({ ro, status, onStart, onDone, onResume, onOpen, startTime, now
     >
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
-          <div className="text-xs font-mono text-orange mb-0.5">{ro.id}</div>
+          <div className="text-xs font-mono text-orange mb-0.5">{roLabel(ro)}</div>
           <div className="text-base font-semibold text-text-primary leading-snug">{ro.vehicle}</div>
           <div className="text-xs text-text-muted mt-0.5">{ro.customerName}</div>
         </div>
@@ -453,7 +453,7 @@ function StoreDashboard({ shop, repairOrders }) {
               <div key={ro.id} className="flex items-center gap-3 px-5 py-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-orange">{ro.id}</span>
+                    <span className="text-xs font-mono text-orange">{roLabel(ro)}</span>
                     <StageBadge stage={ro.stage} />
                   </div>
                   <div className="text-xs text-text-muted truncate mt-0.5">{ro.vehicle} · {ro.customerName}</div>
@@ -548,7 +548,7 @@ function StoreCustomers({ shopId, repairOrders, onOpenRO, customers = [] }) {
                             >
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="text-xs font-mono text-orange">{ro.id}</span>
+                                  <span className="text-xs font-mono text-orange">{roLabel(ro)}</span>
                                   <StageBadge stage={ro.stage} />
                                 </div>
                                 <div className="text-xs text-text-muted truncate">{ro.vehicle}</div>
@@ -679,7 +679,7 @@ function TechPartsTab({ techROs, shopId, updateRepairOrder }) {
                           {req.partNumber && <span className="text-2xs text-text-muted font-mono">#{req.partNumber}</span>}
                         </div>
                         <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                          <span className="text-2xs font-mono text-orange">{ro.id}</span>
+                          <span className="text-2xs font-mono text-orange">{roLabel(ro)}</span>
                           <span className="text-2xs text-text-muted">·</span>
                           <span className="text-2xs text-text-muted truncate">{ro.vehicle}</span>
                         </div>
@@ -902,7 +902,7 @@ function PayTab({ techROs, tech, timeEntries, now }) {
                 <div key={ro.id} className="flex items-center gap-3 px-5 py-3.5">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-mono text-orange">{ro.id}</span>
+                      <span className="text-xs font-mono text-orange">{roLabel(ro)}</span>
                       <span className="text-2xs px-1.5 py-0.5 rounded bg-status-green/10 text-status-green font-medium">Paid</span>
                     </div>
                     <div className="text-xs text-text-muted truncate">{ro.vehicle} · {ro.customerName}</div>
@@ -931,7 +931,7 @@ function PayTab({ techROs, tech, timeEntries, now }) {
                 <div key={ro.id} className="flex items-center gap-3 px-5 py-3.5">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-mono text-orange">{ro.id}</span>
+                      <span className="text-xs font-mono text-orange">{roLabel(ro)}</span>
                       <span className="text-2xs text-text-muted">{ro.stage}</span>
                     </div>
                     <div className="text-xs text-text-muted truncate">{ro.vehicle}</div>
@@ -1004,7 +1004,7 @@ function QuickInspectionModal({ ro, onClose, onSave }) {
         <div className="flex items-start justify-between px-5 py-4 border-b border-border flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-text-primary">Quick Inspection</h2>
-            <p className="text-xs text-text-muted mt-0.5">{ro.vehicle} · {ro.id}</p>
+            <p className="text-xs text-text-muted mt-0.5">{ro.vehicle} · {roLabel(ro)}</p>
           </div>
           <div className="text-right">
             <div className="text-xs text-text-muted">{completed}/{items.length} checked</div>

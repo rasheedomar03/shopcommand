@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { cn } from '@/lib/utils'
+import { cn, roLabel } from '@/lib/utils'
 
 const ALERT_CONFIG = {
   warning: { icon: AlertTriangle, bg: 'bg-status-yellow-subtle', text: 'text-status-yellow', label: 'Warning' },
@@ -177,6 +177,7 @@ export function AlertsModal({ open, onClose }) {
 }
 
 function NotifItem({ notif }) {
+  const { repairOrders } = useData()
   const timeStr = new Date(notif.createdAt).toLocaleString('en-US', {
     month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
   })
@@ -230,7 +231,7 @@ function NotifItem({ notif }) {
           {notif.vehicle && <span className="text-text-muted"> · {notif.vehicle}</span>}
         </p>
         {notif.customerName && (
-          <p className="text-2xs text-text-muted mt-0.5">{notif.customerName} · <span className="font-mono text-orange">{notif.roId}</span></p>
+          <p className="text-2xs text-text-muted mt-0.5">{notif.customerName} · <span className="font-mono text-orange">{roLabel(repairOrders.find(r => r.id === notif.roId || r.roNumber === notif.roId)) || notif.roId}</span></p>
         )}
         <p className="text-2xs text-text-muted mt-0.5">{timeStr}</p>
       </div>

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { NewROModal } from '@/components/modals/NewROModal'
-import { cn } from '@/lib/utils'
+import { cn, roLabel } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/Tooltip'
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -184,7 +184,7 @@ export default function Appointments() {
                       )}
                     >
                       <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="text-2xs font-mono text-orange">{ro.id}</span>
+                        <span className="text-2xs font-mono text-orange">{roLabel(ro)}</span>
                         <span className="text-2xs text-text-muted">{formatTime(ro.scheduledAt)}</span>
                       </div>
                       <div className="text-xs font-medium text-text-primary truncate leading-snug">{ro.customerName}</div>

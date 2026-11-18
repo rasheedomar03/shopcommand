@@ -6,7 +6,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
-import { formatCurrency, RO_STAGES } from '@/lib/utils'
+import { formatCurrency, roLabel, RO_STAGES } from '@/lib/utils'
 import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X, Package, Link2, Check, Clock, PlayCircle, Flag, Zap, Square, StopCircle, Shield, Trash2, Paperclip, Mail, QrCode } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { api } from '@/lib/api'
@@ -1968,7 +1968,7 @@ export function RODetailModal({ open, onClose, ro }) {
       <Modal
         open={open}
         onClose={handleClose}
-        title={ro.id}
+        title={roLabel(ro)}
         subtitle={`${ro.vehicle} · ${ro.customerName}`}
         size="xl"
       >

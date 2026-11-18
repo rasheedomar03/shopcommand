@@ -9,7 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
 import { Tooltip } from '@/components/ui/Tooltip'
-import { cn, sanitizeField } from '@/lib/utils'
+import { cn, roLabel, sanitizeField } from '@/lib/utils'
 
 function SearchDropdown({ query, onClose }) {
   const { repairOrders, customers } = useData()
@@ -18,7 +18,7 @@ function SearchDropdown({ query, onClose }) {
 
   const matchedROs = repairOrders
     .filter(ro =>
-      ro.id.toLowerCase().includes(q) ||
+      roLabel(ro).toLowerCase().includes(q) ||
       ro.customerName.toLowerCase().includes(q) ||
       ro.vehicle.toLowerCase().includes(q)
     )
@@ -50,7 +50,7 @@ function SearchDropdown({ query, onClose }) {
                   onClick={() => go('/repair-orders')}
                   className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-border/50 transition-colors text-left"
                 >
-                  <span className="text-xs font-mono text-orange w-16 flex-shrink-0">{ro.id}</span>
+                  <span className="text-xs font-mono text-orange min-w-16 flex-shrink-0">{roLabel(ro)}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-text-primary truncate">{ro.customerName}</div>
                     <div className="text-2xs text-text-muted truncate">{ro.vehicle}</div>

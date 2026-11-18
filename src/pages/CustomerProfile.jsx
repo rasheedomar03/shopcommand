@@ -6,7 +6,7 @@ import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { NewROModal } from '@/components/modals/NewROModal'
-import { formatCurrency, formatDate, formatRelativeTime } from '@/lib/utils'
+import { formatCurrency, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 const STATUS_CONFIG = {
@@ -279,7 +279,7 @@ export default function CustomerProfile() {
                     <div className="flex items-start gap-3 min-w-0">
                       {/* RO number */}
                       <div className="flex-shrink-0 pt-0.5">
-                        <div className="text-xs font-mono text-orange">{ro.id}</div>
+                        <div className="text-xs font-mono text-orange">{roLabel(ro)}</div>
                         <div className="text-2xs text-text-muted mt-0.5">{formatDate(ro.updated)}</div>
                       </div>
 

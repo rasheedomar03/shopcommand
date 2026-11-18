@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
-import { formatCurrency, formatDate, formatRelativeTime } from '@/lib/utils'
+import { formatCurrency, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
 
@@ -44,6 +44,7 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
   const [paying, setPaying] = useState(false)
   const [emailState, setEmailState] = useState('idle') // idle | sending | sent
   const [emailError, setEmailError] = useState(null)
+  const { repairOrders } = useData()
 
   // Reset edit state when a different invoice opens (or the modal closes)
   useEffect(() => {
@@ -140,7 +141,8 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
           <StatusBadge status={invoice.status} />
           <div className="text-right">
             <div className="text-xs text-text-muted">{shop?.name}</div>
-            <div className="text-xs text-text-muted">RO: {invoice.roId}</div>
+            {/* invoice.roId may be the RO's database id or its number; show the number */}
+            <div className="text-xs text-text-muted">RO: {roLabel(repairOrders.find(r => r.id === invoice.roId || r.roNumber === invoice.roId)) || invoice.roId}</div>
           </div>
         </div>
 

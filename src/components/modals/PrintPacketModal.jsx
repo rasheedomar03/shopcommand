@@ -1,7 +1,7 @@
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, roLabel } from '@/lib/utils'
 import { Printer } from 'lucide-react'
 
 const TAX_RATE = 0.085
@@ -80,7 +80,7 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
 
   // ── Preview ───────────────────────────────────────────────────────────────
   return (
-    <Modal open={open} onClose={onClose} title="Service Packet" subtitle={`${ro.id} · ${ro.customerName}`} size="lg">
+    <Modal open={open} onClose={onClose} title="Service Packet" subtitle={`${roLabel(ro)} · ${ro.customerName}`} size="lg">
       <div className="p-5 space-y-4">
 
         {/* White document preview */}
@@ -96,7 +96,7 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xl font-bold text-orange-500">{ro.id}</div>
+              <div className="text-xl font-bold text-orange-500">{roLabel(ro)}</div>
               <div className="text-xs text-slate-500 mt-0.5">{roDate}</div>
             </div>
           </div>
@@ -352,7 +352,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>${esc(ro.id)} — Service Packet</title>
+  <title>${esc(roLabel(ro))} — Service Packet</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #0f172a; background: #fff; padding: 44px; max-width: 720px; margin: 0 auto; font-size: 13px; }
@@ -386,7 +386,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       <div class="shop-sub">${esc(shop.address || '')}<br>${esc(shop.phone || '')}</div>
     </div>
     <div>
-      <div class="ro-number">${esc(ro.id)}</div>
+      <div class="ro-number">${esc(roLabel(ro))}</div>
       <div class="ro-date">${esc(roDate)}</div>
     </div>
   </div>

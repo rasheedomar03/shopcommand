@@ -9,7 +9,7 @@ import { StageBadge } from '@/components/ui/Badge'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { useData } from '@/contexts/DataContext'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, roLabel } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Tooltip as AppTooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
@@ -509,7 +509,7 @@ export default function Dashboard() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xs font-mono text-text-muted">{ro.id}</span>
+                    <span className="text-xs font-mono text-text-muted">{roLabel(ro)}</span>
                     <StageBadge stage={ro.stage} />
                   </div>
                   <div className="text-sm text-text-primary truncate">{ro.customerName} · {ro.vehicle}</div>

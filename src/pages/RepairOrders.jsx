@@ -9,7 +9,7 @@ import { StageBadge } from '@/components/ui/Badge'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
-import { formatCurrency, formatRelativeTime, RO_STAGES } from '@/lib/utils'
+import { formatCurrency, formatRelativeTime, roLabel, RO_STAGES } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 export default function RepairOrders() {
@@ -43,7 +43,7 @@ export default function RepairOrders() {
   const filtered = scopedROs.filter(ro => {
     const q = search.toLowerCase()
     const matchesSearch = !q ||
-      ro.id.toLowerCase().includes(q) ||
+      roLabel(ro).toLowerCase().includes(q) ||
       ro.customerName.toLowerCase().includes(q) ||
       ro.vehicle.toLowerCase().includes(q) ||
       ro.techName?.toLowerCase().includes(q)
@@ -129,7 +129,7 @@ export default function RepairOrders() {
           >
             <div className="flex items-start justify-between gap-2 mb-2">
               <div>
-                <div className="text-xs font-mono text-orange">{ro.id}</div>
+                <div className="text-xs font-mono text-orange">{roLabel(ro)}</div>
                 <div className="text-sm font-semibold text-text-primary mt-0.5">{ro.customerName}</div>
                 <div className="text-xs text-text-muted">{ro.vehicle}</div>
               </div>
@@ -190,7 +190,7 @@ export default function RepairOrders() {
                 return (
                   <Tr key={ro.id} onClick={() => setSelectedRO(ro)}>
                     <Td>
-                      <span className="text-xs font-mono text-text-muted">{ro.id}</span>
+                      <span className="text-xs font-mono text-text-muted">{roLabel(ro)}</span>
                     </Td>
                     <Td>
                       <div className="font-medium text-text-primary">{ro.customerName}</div>

@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, roLabel } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
@@ -682,7 +682,7 @@ export default function Parts() {
                               </>
                             ) : (
                               <>
-                                <span className="font-mono text-orange">{ro.id}</span>
+                                <span className="font-mono text-orange">{roLabel(ro)}</span>
                                 <span>·</span>
                                 <span>{ro.vehicle}</span>
                                 <span>·</span>

@@ -5,6 +5,16 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * The repair order label people should see: the RO number (RO-20261117-0001).
+ * Falls back to the id for demo data, whose id is already a short RO number.
+ * Never show the raw database UUID, and keep using ro.id for keys, timers,
+ * and lookups.
+ */
+export function roLabel(ro) {
+  return String(ro?.roNumber || ro?.id || '')
+}
+
 export function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

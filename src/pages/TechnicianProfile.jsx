@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Wrench, Clock, TrendingUp, CheckCircle2, Star, Award
 import { useData } from '@/contexts/DataContext'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { RODetailModal } from '@/components/modals/RODetailModal'
-import { formatCurrency, formatDate, computeHoursMs, formatHours, startOfToday, startOfWeek } from '@/lib/utils'
+import { formatCurrency, formatDate, computeHoursMs, formatHours, roLabel, startOfToday, startOfWeek } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 const LEVEL_CONFIG = {
@@ -280,7 +280,7 @@ function RORow({ ro, onClick }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <div className="flex-shrink-0 pt-0.5">
-            <div className="text-xs font-mono text-orange">{ro.id}</div>
+            <div className="text-xs font-mono text-orange">{roLabel(ro)}</div>
             <div className="text-2xs text-text-muted mt-0.5">{formatDate(ro.updated)}</div>
           </div>
           <div className="min-w-0">

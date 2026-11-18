@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
-import { cn } from '@/lib/utils'
+import { cn, roLabel } from '@/lib/utils'
 import { Inbox, GripVertical } from 'lucide-react'
 
 const DISPATCH_STAGES = ['Estimate', 'Approved', 'Waiting Parts', 'In Progress']
@@ -23,7 +23,7 @@ function DispatchCard({ ro, isDragging, onDragStart, onDragEnd }) {
     >
       <div className="flex items-center gap-1.5 mb-1.5">
         <GripVertical size={12} className="text-text-muted flex-shrink-0 -ml-0.5" />
-        <span className="text-xs font-mono text-orange">{ro.id}</span>
+        <span className="text-xs font-mono text-orange">{roLabel(ro)}</span>
         <StageBadge stage={ro.stage} />
       </div>
       <div className="text-sm font-medium text-text-primary leading-snug truncate">{ro.vehicle}</div>
