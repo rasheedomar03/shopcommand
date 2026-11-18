@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { StageBadge } from '@/components/ui/Badge'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { RODetailModal } from '@/components/modals/RODetailModal'
-import { formatCurrency, roLabel } from '@/lib/utils'
+import { formatCurrency, formatMoney, roLabel } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 export default function ShopDetail() {
@@ -107,7 +107,7 @@ export default function ShopDetail() {
                     </div>
                     <div className="text-sm text-text-primary truncate">{ro.customerName} · {ro.vehicle}</div>
                   </div>
-                  {ro.total > 0 && <span className="text-sm tabular-nums text-text-primary">{formatCurrency(ro.total)}</span>}
+                  {ro.total > 0 && <span className="text-sm tabular-nums text-text-primary">{formatMoney(ro.total)}</span>}
                 </div>
               ))}
             </div>

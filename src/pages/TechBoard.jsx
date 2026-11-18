@@ -11,7 +11,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { StageBadge } from '@/components/ui/Badge'
-import { formatCurrency, formatDate, computeHoursMs, formatHours, roLabel, startOfToday, startOfWeek } from '@/lib/utils'
+import { formatCurrency, formatMoney, formatDate, computeHoursMs, formatHours, roLabel, startOfToday, startOfWeek } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
@@ -558,7 +558,7 @@ function StoreCustomers({ shopId, repairOrders, onOpenRO, customers = [] }) {
                               </div>
                               <div className="text-right flex-shrink-0">
                                 {ro.total > 0
-                                  ? <div className="text-xs font-semibold text-text-primary tabular-nums">{formatCurrency(ro.total)}</div>
+                                  ? <div className="text-xs font-semibold text-text-primary tabular-nums">{formatMoney(ro.total)}</div>
                                   : <div className="text-2xs text-text-muted">Pending</div>
                                 }
                                 <div className="text-2xs text-text-muted mt-0.5">{formatDate(ro.updated)}</div>

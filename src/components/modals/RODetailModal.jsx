@@ -6,7 +6,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { PrintPacketModal } from '@/components/modals/PrintPacketModal'
-import { formatCurrency, roLabel, RO_STAGES } from '@/lib/utils'
+import { formatMoney, roLabel, RO_STAGES } from '@/lib/utils'
 import { CheckCircle, MessageSquare, Phone, ChevronRight, ChevronDown, FileText, Plus, X, Package, Link2, Check, Clock, PlayCircle, Flag, Zap, Square, StopCircle, Shield, Trash2, Paperclip, Mail, QrCode } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { api } from '@/lib/api'
@@ -860,7 +860,7 @@ export function RODetailModal({ open, onClose, ro }) {
                       </Tooltip>
                       {Number(svc.price) > 0 && (
                         <span className="text-text-secondary font-medium tabular-nums text-xs">
-                          {formatCurrency(Number(svc.price))}
+                          {formatMoney(Number(svc.price))}
                         </span>
                       )}
                     </div>
@@ -940,7 +940,7 @@ export function RODetailModal({ open, onClose, ro }) {
                     className="w-16 text-xs tabular-nums bg-transparent border border-border rounded px-1 py-0.5 text-text-primary text-right focus:outline-none focus:border-orange"
                   />
                 </div>
-                <span className="text-xs font-medium text-text-secondary tabular-nums flex-shrink-0 w-14 text-right">{formatCurrency((Number(p.price) || 0) * p.qty)}</span>
+                <span className="text-xs font-medium text-text-secondary tabular-nums flex-shrink-0 w-14 text-right">{formatMoney((Number(p.price) || 0) * p.qty)}</span>
                 <button onClick={() => removePart(i)} className="text-text-muted hover:text-red-400 transition-colors flex-shrink-0"><X size={11} /></button>
               </div>
             ))}
@@ -1034,7 +1034,7 @@ export function RODetailModal({ open, onClose, ro }) {
                       )}>
                         {p.qty === 0 ? 'Out' : `${p.qty} in stock`}
                       </span>
-                      <span className="text-text-muted">{formatCurrency(p.price)}</span>
+                      <span className="text-text-muted">{formatMoney(p.price)}</span>
                     </div>
                   </button>
                 ))
@@ -1463,22 +1463,22 @@ export function RODetailModal({ open, onClose, ro }) {
           {servicesSubtotal > 0 && (
             <div className="flex justify-between text-xs text-text-muted">
               <span>Labor &amp; services</span>
-              <span className="tabular-nums">{formatCurrency(servicesSubtotal)}</span>
+              <span className="tabular-nums">{formatMoney(servicesSubtotal)}</span>
             </div>
           )}
           {partsSubtotal > 0 && (
             <div className="flex justify-between text-xs text-text-muted">
               <span>Parts</span>
-              <span className="tabular-nums">{formatCurrency(partsSubtotal)}</span>
+              <span className="tabular-nums">{formatMoney(partsSubtotal)}</span>
             </div>
           )}
           <div className="flex justify-between text-xs text-text-muted">
             <span>Tax (8.5%)</span>
-            <span className="tabular-nums">{formatCurrency(taxAmount)}</span>
+            <span className="tabular-nums">{formatMoney(taxAmount)}</span>
           </div>
           <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
             <span className="text-text-primary">Total</span>
-            <span className="text-orange tabular-nums">{formatCurrency(grandTotal)}</span>
+            <span className="text-orange tabular-nums">{formatMoney(grandTotal)}</span>
           </div>
         </div>
       )}
@@ -1626,16 +1626,16 @@ export function RODetailModal({ open, onClose, ro }) {
             {services.map((svc, i) => (
               <div key={i} className="flex justify-between text-sm">
                 <span className="text-text-muted truncate mr-2">{svc.name}</span>
-                <span className="text-text-primary tabular-nums flex-shrink-0">{formatCurrency(Number(svc.price))}</span>
+                <span className="text-text-primary tabular-nums flex-shrink-0">{formatMoney(Number(svc.price))}</span>
               </div>
             ))}
             <div className="flex justify-between text-xs text-text-muted pt-2 border-t border-border">
               <span>Tax (8.5%)</span>
-              <span className="tabular-nums">{formatCurrency(taxAmount)}</span>
+              <span className="tabular-nums">{formatMoney(taxAmount)}</span>
             </div>
             <div className="flex justify-between text-sm font-semibold pt-1.5 border-t border-border">
               <span className="text-text-primary">Total</span>
-              <span className="text-orange tabular-nums">{formatCurrency(grandTotal)}</span>
+              <span className="text-orange tabular-nums">{formatMoney(grandTotal)}</span>
             </div>
           </div>
         ) : (
@@ -1689,16 +1689,16 @@ export function RODetailModal({ open, onClose, ro }) {
           {services.map((svc, i) => (
             <div key={i} className="flex justify-between text-sm">
               <span className="text-text-muted truncate mr-2">{svc.name}</span>
-              <span className="text-text-primary tabular-nums flex-shrink-0">{formatCurrency(Number(svc.price))}</span>
+              <span className="text-text-primary tabular-nums flex-shrink-0">{formatMoney(Number(svc.price))}</span>
             </div>
           ))}
           <div className="flex justify-between text-sm pt-2 border-t border-border">
             <span className="text-text-muted">Tax (8.5%)</span>
-            <span className="text-text-primary tabular-nums">{formatCurrency(taxAmount)}</span>
+            <span className="text-text-primary tabular-nums">{formatMoney(taxAmount)}</span>
           </div>
           <div className="flex justify-between items-baseline pt-2 border-t border-border">
             <span className="text-sm font-semibold text-text-primary">Total due</span>
-            <span className="text-2xl font-bold text-orange tabular-nums">{formatCurrency(grandTotal)}</span>
+            <span className="text-2xl font-bold text-orange tabular-nums">{formatMoney(grandTotal)}</span>
           </div>
         </div>
       </div>
@@ -1747,7 +1747,7 @@ export function RODetailModal({ open, onClose, ro }) {
           <CheckCircle size={22} className="text-status-green" />
         </div>
         <div className="text-lg font-bold text-status-green mb-1">
-          {formatCurrency(grandTotal)} received
+          {formatMoney(grandTotal)} received
         </div>
         <div className="text-xs text-text-muted">
           {METHOD_LABELS[payment?.method] || 'Paid'} · {paidAt}
@@ -1797,12 +1797,12 @@ export function RODetailModal({ open, onClose, ro }) {
           {services.map((svc, i) => (
             <div key={i} className="flex justify-between text-sm">
               <span className="text-text-muted truncate mr-2">{svc.name}</span>
-              <span className="text-text-primary tabular-nums flex-shrink-0">{formatCurrency(Number(svc.price))}</span>
+              <span className="text-text-primary tabular-nums flex-shrink-0">{formatMoney(Number(svc.price))}</span>
             </div>
           ))}
           <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
             <span className="text-text-primary">Estimate</span>
-            <span className="text-orange tabular-nums">{formatCurrency(grandTotal)}</span>
+            <span className="text-orange tabular-nums">{formatMoney(grandTotal)}</span>
           </div>
         </div>
       )}
@@ -1826,18 +1826,18 @@ export function RODetailModal({ open, onClose, ro }) {
           {services.map((svc, i) => (
             <div key={i} className="flex justify-between text-sm">
               <span className="text-text-muted truncate mr-2">{svc.name}</span>
-              <span className="text-text-primary tabular-nums flex-shrink-0">{formatCurrency(Number(svc.price))}</span>
+              <span className="text-text-primary tabular-nums flex-shrink-0">{formatMoney(Number(svc.price))}</span>
             </div>
           ))}
           {partsSubtotal > 0 && (
             <div className="flex justify-between text-xs text-text-muted">
               <span>Parts</span>
-              <span className="tabular-nums">{formatCurrency(partsSubtotal)}</span>
+              <span className="tabular-nums">{formatMoney(partsSubtotal)}</span>
             </div>
           )}
           <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
             <span className="text-text-primary">Total</span>
-            <span className="text-orange tabular-nums">{formatCurrency(grandTotal)}</span>
+            <span className="text-orange tabular-nums">{formatMoney(grandTotal)}</span>
           </div>
         </div>
       )}
@@ -1935,18 +1935,18 @@ export function RODetailModal({ open, onClose, ro }) {
           {services.map((svc, i) => (
             <div key={i} className="flex justify-between text-sm">
               <span className="text-text-muted truncate mr-2">{svc.name}</span>
-              <span className="text-text-primary tabular-nums flex-shrink-0">{formatCurrency(Number(svc.price))}</span>
+              <span className="text-text-primary tabular-nums flex-shrink-0">{formatMoney(Number(svc.price))}</span>
             </div>
           ))}
           {partsSubtotal > 0 && (
             <div className="flex justify-between text-xs text-text-muted">
               <span>Parts</span>
-              <span className="tabular-nums">{formatCurrency(partsSubtotal)}</span>
+              <span className="tabular-nums">{formatMoney(partsSubtotal)}</span>
             </div>
           )}
           <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
             <span className="text-text-primary">Estimate total</span>
-            <span className="text-orange tabular-nums">{formatCurrency(grandTotal)}</span>
+            <span className="text-orange tabular-nums">{formatMoney(grandTotal)}</span>
           </div>
         </div>
       )}

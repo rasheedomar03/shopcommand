@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
-import { formatCurrency, formatDate, roLabel } from '@/lib/utils'
+import { formatMoney, formatDate, roLabel } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
@@ -858,7 +858,7 @@ export default function Parts() {
                 <span>{part.category} · {shop?.name}</span>
                 <div className="flex items-center gap-3">
                   <span>Qty: <span className={cn('font-semibold tabular-nums', part.qty <= part.minQty ? 'text-status-red' : 'text-text-primary')}>{part.qty}</span></span>
-                  <span className="font-medium text-text-primary tabular-nums">{formatCurrency(part.price)}</span>
+                  <span className="font-medium text-text-primary tabular-nums">{formatMoney(part.price)}</span>
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
@@ -962,8 +962,8 @@ export default function Parts() {
                       <QtyCell part={part} onUpdate={qty => updatePart(part.id, { qty })} />
                     </Td>
                     <Td className="text-right tabular-nums text-text-muted">{part.minQty}</Td>
-                    <Td className="text-right tabular-nums text-text-secondary">{formatCurrency(part.cost)}</Td>
-                    <Td className="text-right tabular-nums text-text-primary font-medium">{formatCurrency(part.price)}</Td>
+                    <Td className="text-right tabular-nums text-text-secondary">{formatMoney(part.cost)}</Td>
+                    <Td className="text-right tabular-nums text-text-primary font-medium">{formatMoney(part.price)}</Td>
                     <Td className="text-text-muted text-xs">{shop?.name}</Td>
                     <Td className="text-text-muted text-xs">{formatDate(part.lastOrdered)}</Td>
                     <Td>

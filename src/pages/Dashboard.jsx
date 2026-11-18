@@ -9,7 +9,7 @@ import { StageBadge } from '@/components/ui/Badge'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { useData } from '@/contexts/DataContext'
-import { formatCurrency, roLabel } from '@/lib/utils'
+import { formatCurrency, formatMoney, roLabel } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Tooltip as AppTooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
@@ -517,7 +517,7 @@ export default function Dashboard() {
                 </div>
                 {!isAdvisor && ro.total > 0 && (
                   <div className="text-sm font-semibold tabular-nums text-text-primary flex-shrink-0">
-                    {formatCurrency(ro.total)}
+                    {formatMoney(ro.total)}
                   </div>
                 )}
               </div>

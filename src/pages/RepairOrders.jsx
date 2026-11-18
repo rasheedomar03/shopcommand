@@ -9,7 +9,7 @@ import { StageBadge } from '@/components/ui/Badge'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
-import { formatCurrency, formatRelativeTime, roLabel, RO_STAGES } from '@/lib/utils'
+import { formatMoney, formatRelativeTime, roLabel, RO_STAGES } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 export default function RepairOrders() {
@@ -137,7 +137,7 @@ export default function RepairOrders() {
             </div>
             <div className="flex items-center justify-between text-xs text-text-muted">
               <span>{ro.techName || 'Unassigned'}</span>
-              <span className="font-medium text-text-primary tabular-nums">{ro.total ? formatCurrency(ro.total) : '—'}</span>
+              <span className="font-medium text-text-primary tabular-nums">{ro.total ? formatMoney(ro.total) : '—'}</span>
             </div>
           </button>
         ))}
@@ -201,7 +201,7 @@ export default function RepairOrders() {
                     <Td className="text-text-muted text-xs">{shop?.name}</Td>
                     <Td className="text-right tabular-nums">
                       {ro.total > 0 ? (
-                        <span className="text-text-primary font-medium">{formatCurrency(ro.total)}</span>
+                        <span className="text-text-primary font-medium">{formatMoney(ro.total)}</span>
                       ) : (
                         <span className="text-text-muted">Pending</span>
                       )}

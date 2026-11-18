@@ -1,7 +1,7 @@
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
-import { formatCurrency, roLabel } from '@/lib/utils'
+import { formatMoney, roLabel } from '@/lib/utils'
 import { Printer } from 'lucide-react'
 
 const TAX_RATE = 0.085
@@ -150,7 +150,7 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
                     <span className="text-green-500 font-bold text-base leading-none">✓</span>
                     <span className="text-slate-800">{svc.name}</span>
                   </div>
-                  <span className="font-semibold text-slate-900 tabular-nums">{formatCurrency(svc.price)}</span>
+                  <span className="font-semibold text-slate-900 tabular-nums">{formatMoney(svc.price)}</span>
                 </div>
               ))}
             </div>
@@ -158,15 +158,15 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
             <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
               <div className="flex justify-between text-xs text-slate-500">
                 <span>Subtotal</span>
-                <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+                <span className="tabular-nums">{formatMoney(subtotal)}</span>
               </div>
               <div className="flex justify-between text-xs text-slate-500">
                 <span>Tax (8.5%)</span>
-                <span className="tabular-nums">{formatCurrency(taxAmount)}</span>
+                <span className="tabular-nums">{formatMoney(taxAmount)}</span>
               </div>
               <div className="flex justify-between items-baseline pt-2 border-t-2 border-slate-900 mt-2">
                 <span className="font-bold text-slate-900 text-sm">Total</span>
-                <span className="font-bold text-orange-500 text-lg tabular-nums">{formatCurrency(grandTotal)}</span>
+                <span className="font-bold text-orange-500 text-lg tabular-nums">{formatMoney(grandTotal)}</span>
               </div>
             </div>
           </div>
@@ -176,7 +176,7 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3">
               <span className="text-green-600 text-lg font-bold">✓</span>
               <div>
-                <div className="font-semibold text-green-800 text-sm">Paid — {formatCurrency(grandTotal)}</div>
+                <div className="font-semibold text-green-800 text-sm">Paid — {formatMoney(grandTotal)}</div>
                 <div className="text-xs text-green-700 mt-0.5">
                   {METHOD_LABELS[payment.method]} · {paidDate} at {paidTime}
                 </div>
@@ -270,7 +270,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;color:#0f172a;">
         <span style="color:#22c55e;margin-right:8px;font-weight:700;">✓</span>${esc(svc.name)}
       </td>
-      <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:600;color:#0f172a;">${formatCurrency(svc.price)}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:600;color:#0f172a;">${formatMoney(svc.price)}</td>
     </tr>
   `).join('')
 
@@ -321,7 +321,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:center;">
         <span style="color:#16a34a;font-size:18px;font-weight:700;">✓</span>
         <div>
-          <div style="font-size:13px;font-weight:700;color:#15803d;">Paid — ${formatCurrency(grandTotal)}</div>
+          <div style="font-size:13px;font-weight:700;color:#15803d;">Paid — ${formatMoney(grandTotal)}</div>
           <div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(METHOD_LABELS[payment.method])} · ${esc(paidDate)} at ${esc(paidTime)}</div>
         </div>
       </div>
@@ -420,9 +420,9 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
       <tbody>${serviceRows}</tbody>
     </table>
     <div style="margin-top:12px;">
-      <div class="totals-row"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
-      <div class="totals-row"><span>Tax (8.5%)</span><span>${formatCurrency(taxAmount)}</span></div>
-      <div class="total-final"><span>Total</span><span class="total-amount">${formatCurrency(grandTotal)}</span></div>
+      <div class="totals-row"><span>Subtotal</span><span>${formatMoney(subtotal)}</span></div>
+      <div class="totals-row"><span>Tax (8.5%)</span><span>${formatMoney(taxAmount)}</span></div>
+      <div class="total-final"><span>Total</span><span class="total-amount">${formatMoney(grandTotal)}</span></div>
     </div>
   </div>
 

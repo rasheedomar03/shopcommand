@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Wrench, Clock, TrendingUp, CheckCircle2, Star, Award
 import { useData } from '@/contexts/DataContext'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { RODetailModal } from '@/components/modals/RODetailModal'
-import { formatCurrency, formatDate, computeHoursMs, formatHours, roLabel, startOfToday, startOfWeek } from '@/lib/utils'
+import { formatCurrency, formatMoney, formatDate, computeHoursMs, formatHours, roLabel, startOfToday, startOfWeek } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 const LEVEL_CONFIG = {
@@ -295,7 +295,7 @@ function RORow({ ro, onClick }) {
         <div className="flex-shrink-0 text-right">
           {ro.total > 0 ? (
             <div className="text-sm font-semibold text-text-primary tabular-nums">
-              {formatCurrency(ro.total)}
+              {formatMoney(ro.total)}
             </div>
           ) : (
             <div className="text-xs text-text-muted">Pending</div>

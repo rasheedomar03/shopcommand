@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
-import { formatCurrency, formatRelativeTime } from '@/lib/utils'
+import { formatMoney, formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 // Estimates are repair orders in the Estimate/Approved stages — one system,
@@ -147,7 +147,7 @@ export default function Estimates() {
                   <Td><StatusBadge status={estimateStatus(ro)} /></Td>
                   <Td className="text-right">
                     <span className="text-sm font-medium text-text-primary tabular-nums">
-                      {total > 0 ? formatCurrency(total) : '—'}
+                      {total > 0 ? formatMoney(total) : '—'}
                     </span>
                   </Td>
                 </Tr>

@@ -6,7 +6,7 @@ import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { NewROModal } from '@/components/modals/NewROModal'
-import { formatCurrency, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
+import { formatCurrency, formatMoney, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 const STATUS_CONFIG = {
@@ -320,7 +320,7 @@ export default function CustomerProfile() {
                     <div className="flex-shrink-0 text-right">
                       {ro.total > 0 ? (
                         <div className="text-sm font-semibold text-text-primary tabular-nums">
-                          {formatCurrency(ro.total)}
+                          {formatMoney(ro.total)}
                         </div>
                       ) : (
                         <div className="text-xs text-text-muted">Pending</div>
@@ -407,7 +407,7 @@ export default function CustomerProfile() {
                         <div className="text-sm text-text-primary leading-snug">{s.name}</div>
                         <div className="text-2xs text-text-muted mt-0.5">{s.vehicle} · {formatDate(s.when)}</div>
                       </div>
-                      <span className="text-sm font-medium text-text-secondary tabular-nums flex-shrink-0">{formatCurrency(s.price)}</span>
+                      <span className="text-sm font-medium text-text-secondary tabular-nums flex-shrink-0">{formatMoney(s.price)}</span>
                     </div>
                   </div>
                 ))}
