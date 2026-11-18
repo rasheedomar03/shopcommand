@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn, sanitizeField } from '@/lib/utils'
-import { startCheckout, getBillingStatus, openBillingPortal } from '@/lib/billing'
+import { startCheckout, getBillingStatus, getTrialStatus, openBillingPortal } from '@/lib/billing'
 import { Tooltip } from '@/components/ui/Tooltip'
 
 const ALL_SECTIONS = [
@@ -31,10 +31,14 @@ export default function Settings() {
   // Billing status (owner, non-demo only)
   const [billing, setBilling] = useState(null)
   const [billingLoading, setBillingLoading] = useState(false)
+  const [trial, setTrial] = useState(null)
   useEffect(() => {
     if (!isOwner || session?.demo) return
     let cancelled = false
     setBillingLoading(true)
+    getTrialStatus()
+      .then(data => { if (!cancelled) setTrial(data) })
+      .catch(() => { if (!cancelled) setTrial(null) })
     getBillingStatus()
       .then(data => { if (!cancelled) setBilling(data) })
       .catch(() => { if (!cancelled) setBilling(null) })
@@ -218,8 +222,19 @@ export default function Settings() {
                     </div>
                   )
                 }
+                const trialEnd = trial?.trialEndsAt ? new Date(trial.trialEndsAt) : null
+                const trialLine = trial && !trial.paid && trialEnd && !isNaN(trialEnd)
+                  ? (trial.daysLeft > 0
+                      ? `Your free trial ends ${trialEnd.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} (${trial.daysLeft} day${trial.daysLeft === 1 ? '' : 's'} left). Nothing is charged until then.`
+                      : 'Your free trial has ended. Add a card to keep your account active.')
+                  : null
                 return (
                   <div className="rounded-xl border border-orange/20 bg-orange/[0.04] p-5">
+                    {trialLine && (
+                      <div className="mb-4 rounded-lg border border-orange/30 bg-orange/10 px-3 py-2 text-xs font-medium text-text-primary">
+                        {trialLine}
+                      </div>
+                    )}
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-8 h-8 rounded-full bg-orange/10 flex items-center justify-center flex-shrink-0">
                         <span className="text-orange font-bold text-base leading-none">✦</span>

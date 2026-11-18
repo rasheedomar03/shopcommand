@@ -864,7 +864,8 @@ export default function Parts() {
               <div className="flex items-center justify-between text-xs text-text-muted">
                 <span>{part.category} · {shop?.name}</span>
                 <div className="flex items-center gap-3">
-                  <span>Qty: <span className={cn('font-semibold tabular-nums', part.qty <= part.minQty ? 'text-status-red' : 'text-text-primary')}>{part.qty}</span></span>
+                  <span className="flex items-center gap-1.5">Qty <QtyCell part={part} onUpdate={qty => updatePart(part.id, { qty })} /></span>
+                  <span className="flex items-center gap-1.5">Min <QtyCell part={part} field="minQty" onUpdate={minQty => updatePart(part.id, { minQty })} /></span>
                   <span className="font-medium text-text-primary tabular-nums">{formatMoney(part.price)}</span>
                 </div>
               </div>

@@ -29,7 +29,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onRecordPayment, onEmail }) {
+function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPayment, onEmail }) {
   const [confirmVoid, setConfirmVoid] = useState(false)
   const [confirmUnpay, setConfirmUnpay] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -366,7 +366,7 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
                     <Pencil size={13} /> Edit
                   </Button>
                 )}
-                <Button size="sm" variant="secondary" onClick={() => onPrint(invoice)}>
+                <Button size="sm" variant="secondary" onClick={() => window.print()} title="Prints this invoice exactly as shown. Choose Save as PDF in the print window to get a PDF.">
                   <Printer size={13} /> Print / PDF
                 </Button>
                 {invoice.customerEmail && (
@@ -407,6 +407,70 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
               </>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Print-only copy of this invoice. Hidden on screen; Print / PDF prints
+          exactly what is saved here, with no separate generator screen. */}
+      <style>{`
+        #sc-invoice-print { display: none; }
+        @media print {
+          body * { visibility: hidden !important; }
+          #sc-invoice-print, #sc-invoice-print * { visibility: visible !important; }
+          #sc-invoice-print { display: block !important; position: fixed; inset: 0; padding: 36px; background: #fff; color: #0f172a; font-family: system-ui, sans-serif; font-size: 13px; }
+        }
+      `}</style>
+      <div id="sc-invoice-print">
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 24, paddingBottom: 14, borderBottom: '1px solid #cbd5e1' }}>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{shop?.name || 'Shop'}</div>
+            {shop?.address && <div style={{ color: '#64748b', marginTop: 2 }}>{shop.address}</div>}
+            {shop?.phone && <div style={{ color: '#64748b', marginTop: 2 }}>{shop.phone}</div>}
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>INVOICE</div>
+            <div style={{ marginTop: 2 }}>{invoice.id}</div>
+            <div style={{ color: '#64748b', marginTop: 2 }}>{formatDate(invoice.created)}</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 40, padding: '14px 0' }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#64748b' }}>BILL TO</div>
+            <div style={{ fontWeight: 600, marginTop: 2 }}>{invoice.customerName || '-'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#64748b' }}>VEHICLE</div>
+            <div style={{ fontWeight: 600, marginTop: 2 }}>{invoice.vehicle || '-'}</div>
+          </div>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid #cbd5e1', textAlign: 'left', fontSize: 10, letterSpacing: 1, color: '#64748b' }}>
+              <th style={{ padding: '6px 0' }}>DESCRIPTION</th>
+              <th style={{ padding: '6px 0', textAlign: 'right' }}>PARTS</th>
+              <th style={{ padding: '6px 0', textAlign: 'right' }}>LABOR</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoice.services.map((svc, i) => (
+              <tr key={i} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <td style={{ padding: '7px 0' }}>{svc.name}</td>
+                <td style={{ padding: '7px 0', textAlign: 'right' }}>{formatMoney(svc.parts)}</td>
+                <td style={{ padding: '7px 0', textAlign: 'right' }}>{formatMoney(svc.labor)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ marginLeft: 'auto', width: 240, paddingTop: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Subtotal</span><span>{formatMoney(view.subtotal)}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>{isDb ? 'Tax' : 'Tax (8.25%)'}</span><span>{formatMoney(view.tax)}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', marginTop: 4, borderTop: '1px solid #cbd5e1', fontWeight: 700, fontSize: 15 }}><span>Total</span><span>{formatMoney(view.total)}</span></div>
+          {amountPaid > 0 && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Paid</span><span>{formatMoney(amountPaid)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontWeight: 600 }}><span>Balance due</span><span>{formatMoney(balance)}</span></div>
+            </>
+          )}
         </div>
       </div>
     </Modal>
@@ -563,7 +627,6 @@ export default function Invoices() {
         invoice={selected}
         onClose={() => setSelected(null)}
         shops={shops}
-        onPrint={(inv) => { setSelected(null); setGeneratorSource(inv); setGeneratorOpen(true) }}
         onUpdate={async (id, patch) => {
           const r = await updateInvoice(id, patch)
           if (!r?.error) {

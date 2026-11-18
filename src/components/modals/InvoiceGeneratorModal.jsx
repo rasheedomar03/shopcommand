@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Plus, Trash2, Printer, Check, Save } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -12,6 +12,9 @@ import { useAuth } from '@/contexts/AuthContext'
 
 const emptyItem = { desc: '', type: 'labor', qty: '1', price: '' }
 const REVENUE_STAGES = new Set(['Complete', 'Invoiced', 'Paid'])
+
+// Device-local autosave of an unsaved from-scratch invoice
+const DRAFT_KEY = 'sc_invoice_draft_v1'
 
 function nextInvoiceNumber() {
   return `INV-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`
@@ -29,8 +32,11 @@ function itemsFromRO(ro) {
 function itemsFromInvoice(inv) {
   const items = []
   for (const s of inv.services || []) {
-    if (s.labor > 0) items.push({ desc: `${s.name} — labor`, type: 'labor', qty: '1', price: String(s.labor) })
-    if (s.parts > 0) items.push({ desc: `${s.name} — parts`, type: 'part', qty: '1', price: String(s.parts) })
+    // Only add a "labor" / "parts" suffix when one service has both amounts and
+    // the two lines would otherwise look identical.
+    const both = s.labor > 0 && s.parts > 0
+    if (s.labor > 0) items.push({ desc: both ? `${s.name} (labor)` : s.name, type: 'labor', qty: '1', price: String(s.labor) })
+    if (s.parts > 0) items.push({ desc: both ? `${s.name} (parts)` : s.name, type: 'part', qty: '1', price: String(s.parts) })
   }
   return items.length ? items : [{ ...emptyItem }]
 }
@@ -65,15 +71,36 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, vehicle, items, taxRate, taxLabor, notes })
   const [baseline, setBaseline] = useState(null)
   const [initTick, setInitTick] = useState(0)
+  const [restored, setRestored] = useState(false)
+  const restoredRef = useRef(false)
   useEffect(() => {
-    // Runs in the render after the open-time initialization has been applied
-    if (initTick > 0) setBaseline(snapshot)
+    // Runs in the render after the open-time initialization has been applied.
+    // A restored draft counts as unsaved until the user presses Save invoice.
+    if (initTick > 0) setBaseline(restoredRef.current ? '__restored_draft__' : snapshot)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initTick])
   const dirty = open && baseline !== null && snapshot !== baseline
+  const isScratch = !fromInvoice && !fromRO
+
+  // Autosave: keep a copy of an unsaved from-scratch invoice on this computer
+  // (not on the server) so closing or reloading never loses the work.
+  useEffect(() => {
+    if (!open || !dirty || !isScratch) return
+    const t = setTimeout(() => {
+      try { localStorage.setItem(DRAFT_KEY, snapshot) } catch { /* storage unavailable */ }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [open, dirty, isScratch, snapshot])
+
+  const clearDraft = () => { try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ } }
 
   const handleClose = () => {
-    if (dirty && !window.confirm('You have unsaved changes to this invoice. Close without saving?')) return
+    if (dirty) {
+      const msg = isScratch
+        ? 'You have unsaved changes. A draft is kept on this computer so you can pick up where you left off, but it is not saved as an invoice yet. Close anyway?'
+        : 'You have unsaved changes to this invoice. Close without saving?'
+      if (!window.confirm(msg)) return
+    }
     onClose()
   }
 
@@ -118,6 +145,30 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     }
     setNotes('')
     setSavedFlash(false)
+
+    // Restore an autosaved from-scratch draft, if there is one
+    restoredRef.current = false
+    setRestored(false)
+    if (!fromInvoice && !fromRO) {
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY)
+        const d = raw ? JSON.parse(raw) : null
+        if (d && Array.isArray(d.items)) {
+          setShopId(String(d.shopId ?? ''))
+          setRoId(d.roId || '')
+          setInvNumber(d.invNumber || nextInvoiceNumber())
+          setInvDate(d.invDate || new Date().toISOString().slice(0, 10))
+          setCustomer(d.customer || '')
+          setVehicle(d.vehicle || '')
+          setItems(d.items.length ? d.items : [{ ...emptyItem }])
+          setTaxRate(String(d.taxRate ?? '8.25'))
+          setTaxLabor(!!d.taxLabor)
+          setNotes(d.notes || '')
+          restoredRef.current = true
+          setRestored(true)
+        }
+      } catch { /* ignore a corrupt draft */ }
+    }
     setInitTick(t => t + 1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
@@ -257,6 +308,25 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             <textarea className={`${field} mt-1 h-16 py-2`} value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. Due on receipt. 12-month / 12,000-mile warranty." />
           </div>
 
+          {restored && (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-orange/20 bg-orange/[0.05] px-3 py-2 text-xs text-text-secondary">
+              <span>We restored the draft you were working on. It is not saved as an invoice yet.</span>
+              <button
+                onClick={() => {
+                  clearDraft()
+                  restoredRef.current = false
+                  setRestored(false)
+                  setRoId(''); setCustomer(''); setVehicle(''); setNotes('')
+                  setItems([{ ...emptyItem }]); setTaxLabor(false)
+                  setInvNumber(nextInvoiceNumber())
+                  setInitTick(t => t + 1)
+                }}
+                className="font-semibold text-orange hover:underline whitespace-nowrap"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
           {dirty && (
             <p className="text-xs font-medium text-status-yellow">
               You have unsaved changes. Press Save invoice to keep them.
@@ -269,6 +339,9 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
               className="flex-1"
               onClick={() => {
                 setBaseline(snapshot)
+                restoredRef.current = false
+                setRestored(false)
+                clearDraft()
                 const ro = repairOrders.find(r => String(r.id) === String(roId))
                 addInvoice({
                   id: invNumber,
