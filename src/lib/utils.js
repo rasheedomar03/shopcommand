@@ -24,6 +24,20 @@ export function formatCurrency(value) {
   }).format(value)
 }
 
+/**
+ * Dollars and cents ($89.99). Use this wherever an exact amount is shown,
+ * such as invoice lines and balances, because formatCurrency rounds to whole
+ * dollars and would show $89.99 as $90.
+ */
+export function formatMoney(value) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value) || 0)
+}
+
 export function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(value)
 }

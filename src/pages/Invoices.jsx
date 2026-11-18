@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
-import { formatCurrency, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
+import { formatMoney, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
@@ -244,23 +244,23 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
             invoice.services.map((svc, i) => (
               <div key={i} className={cn('grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-3 text-sm', i > 0 && 'border-t border-border')}>
                 <div className="text-text-primary">{svc.name}</div>
-                <div className="text-right text-text-secondary tabular-nums">{formatCurrency(svc.parts)}</div>
-                <div className="text-right text-text-secondary tabular-nums">{formatCurrency(svc.labor)}</div>
+                <div className="text-right text-text-secondary tabular-nums">{formatMoney(svc.parts)}</div>
+                <div className="text-right text-text-secondary tabular-nums">{formatMoney(svc.labor)}</div>
               </div>
             ))
           )}
           <div className="border-t border-border px-4 py-3 space-y-1.5 bg-background">
             <div className="flex justify-between text-sm text-text-secondary">
               <span>Subtotal</span>
-              <span className="tabular-nums">${(editing ? editSubtotal : view.subtotal).toFixed(2)}</span>
+              <span className="tabular-nums">{formatMoney(editing ? editSubtotal : view.subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm text-text-secondary">
               <span>{isDb ? 'Tax' : 'Tax (8.25%)'}</span>
-              <span className="tabular-nums">${(editing ? editTax : view.tax).toFixed(2)}</span>
+              <span className="tabular-nums">{formatMoney(editing ? editTax : view.tax)}</span>
             </div>
             <div className="flex justify-between text-sm font-semibold text-text-primary pt-1.5 border-t border-border">
               <span>Total</span>
-              <span className="text-orange tabular-nums">${(editing ? editTotal : view.total).toFixed(2)}</span>
+              <span className="text-orange tabular-nums">{formatMoney(editing ? editTotal : view.total)}</span>
             </div>
           </div>
         </div>
@@ -290,7 +290,7 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-orange/5 border border-orange/20">
             <DollarSign size={14} className="text-orange" />
             <span className="text-xs text-orange font-medium">
-              {formatCurrency(amountPaid)} paid · {formatCurrency(balance)} balance remaining
+              {formatMoney(amountPaid)} paid · {formatMoney(balance)} balance remaining
             </span>
           </div>
         )}
