@@ -455,17 +455,30 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
   const [confirmRemove, setConfirmRemove] = useState(null)
   const [saved, setSaved] = useState(false)
   const [billingMsg, setBillingMsg] = useState('')
+  const [addError, setAddError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const nextTotal = 100 + shops.length * 50
 
   const handleAdd = async () => {
-    if (!draft.name.trim() || !draft.address.trim()) return
-    const result = await onAdd({
-      name:           sanitizeField(draft.name, 100),
-      address:        sanitizeField(draft.address, 200),
-      phone:          sanitizeField(draft.phone, 30),
-      manager:        sanitizeField(draft.manager, 100),
-      bays:           Number(draft.bays) || 0,
-      monthly_target: Number(draft.monthlyTarget) || 0,
-    })
+    if (!draft.name.trim() || !draft.address.trim() || saving) return
+    setAddError('')
+    setSaving(true)
+    let result
+    try {
+      result = await onAdd({
+        name:           sanitizeField(draft.name, 100),
+        address:        sanitizeField(draft.address, 200),
+        phone:          sanitizeField(draft.phone, 30),
+        manager:        sanitizeField(draft.manager, 100),
+        bays:           Number(draft.bays) || 0,
+        monthly_target: Number(draft.monthlyTarget) || 0,
+      })
+    } catch (err) {
+      setAddError(err?.message || 'Could not add the location. Please try again.')
+      setSaving(false)
+      return
+    }
+    setSaving(false)
     setDraft(EMPTY_SHOP)
     setAdding(false)
     const b = result?.billing
@@ -484,7 +497,11 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
     const result = await onRemove(id)
     setConfirmRemove(null)
     const b = result?.billing
-    if (b?.monthlyTotal) {
+    if (b?.error) {
+      setBillingMsg('Location removed — the billing update didn\'t go through, so your plan amount has not changed yet. We\'ll sort it out on our end.')
+      setSaved(true)
+      setTimeout(() => { setSaved(false); setBillingMsg('') }, 8000)
+    } else if (b?.monthlyTotal) {
       setBillingMsg(`Location removed — your plan drops to $${b.monthlyTotal}/mo at your next renewal.`)
       setSaved(true)
       setTimeout(() => { setSaved(false); setBillingMsg('') }, 5000)
@@ -557,19 +574,27 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
               placeholder="e.g. 100000"
             />
           </div>
+          <div className="rounded-lg border border-orange/20 bg-orange/[0.04] px-3 py-2.5 text-xs text-text-secondary leading-relaxed">
+            Adding this location adds <span className="font-semibold text-text-primary">$50/mo</span> to your plan, which becomes <span className="font-semibold text-text-primary">${nextTotal}/mo</span> with {shops.length + 1} shops (founding rate, locked for life). If you're already subscribed, the prorated amount for this month appears on your next invoice. If you're still in your free trial, nothing is charged until the trial ends.
+          </div>
+          {addError && (
+            <div className="rounded-lg border border-status-red/30 bg-status-red/10 px-3 py-2 text-xs text-status-red font-medium">
+              {addError}
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-1">
             <button
-              onClick={() => { setAdding(false); setDraft(EMPTY_SHOP) }}
+              onClick={() => { setAdding(false); setDraft(EMPTY_SHOP); setAddError('') }}
               className="h-8 px-4 rounded-md border border-border text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleAdd}
-              disabled={!draft.name.trim() || !draft.address.trim()}
+              disabled={!draft.name.trim() || !draft.address.trim() || saving}
               className="h-8 px-4 rounded-md bg-orange text-white text-xs font-semibold hover:bg-orange/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              Add Location
+              {saving ? 'Adding…' : 'Add Location (+$50/mo)'}
             </button>
           </div>
         </div>

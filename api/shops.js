@@ -1,5 +1,6 @@
 import { createHandler } from './_lib/handler.js'
 import { syncShopBilling } from './_lib/billing.js'
+import { logger } from './_lib/logger.js'
 
 function validate(body, partial = false) {
   const errors = []
@@ -131,10 +132,23 @@ export default createHandler(
         VALUES (${user.orgId}, ${name.trim()}, ${address?.trim() || null}, ${phone?.trim() || null}, ${JSON.stringify(dataPatch)}::jsonb)
         RETURNING *
       `
-      // Sync subscription to new shop count (prorated charge for the added
-      // shop). Never blocks shop creation — billing errors are logged and
-      // surfaced via billing.error.
+      // Sync subscription to the new shop count (the prorated amount for the
+      // added shop lands on the next invoice). If Stripe cannot be updated we
+      // undo the shop so an owner is never left with an unbilled location.
       const billing = await syncShopBilling(sql, user.orgId, { adding: true })
+      if (billing?.error) {
+        try {
+          await sql`DELETE FROM shops WHERE id = ${row.id} AND org_id = ${user.orgId}`
+          // Realign Stripe with the shop count we just restored (best effort).
+          await syncShopBilling(sql, user.orgId, { adding: false })
+        } catch (undoErr) {
+          logger.error('Could not undo shop after billing failure', { orgId: user.orgId, error: undoErr.message })
+        }
+        return res.status(502).json({
+          error: 'We could not update your billing, so the location was not added. Nothing was charged. Please try again in a moment.',
+          code: 'billing_failed',
+        })
+      }
       return res.status(201).json({ ...row, billing })
     }
 
