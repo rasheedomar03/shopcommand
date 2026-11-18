@@ -6,7 +6,7 @@ import { createMockReq, createMockRes, MOCK_OWNER, MOCK_ADVISOR } from './helper
 
 const state = vi.hoisted(() => ({
   user: null, ownerOrg: null, invite: null, queries: [], inserted: null,
-  clerkEmails: null,
+  clerkEmails: null, orgInsert: null,
 }))
 
 const mockSql = vi.hoisted(() => vi.fn())
@@ -38,7 +38,7 @@ const past = () => new Date(Date.now() - 1000).toISOString()
 
 beforeEach(() => {
   vi.clearAllMocks()
-  Object.assign(state, { user: null, ownerOrg: null, invite: null, queries: [], inserted: null, clerkEmails: null })
+  Object.assign(state, { user: null, ownerOrg: null, invite: null, queries: [], inserted: null, clerkEmails: null, orgInsert: null })
   mockSql.mockReset()
   mockSql.mockImplementation((strings, ...vals) => {
     const q = strings.join('?').replace(/\s+/g, ' ')
@@ -52,6 +52,11 @@ beforeEach(() => {
     if (/FROM invites WHERE lower\(email\)/.test(q)) return Promise.resolve([])
     if (/FROM invites WHERE code/.test(q)) return Promise.resolve(state.invite ? [state.invite] : [])
     if (/INSERT INTO users/.test(q)) return Promise.resolve([{ id: 'new-user-id' }])
+    if (/INSERT INTO organizations/.test(q)) {
+      state.orgInsert = q
+      return Promise.resolve([{ id: 'new-org' }])
+    }
+    if (/INSERT INTO shops/.test(q)) return Promise.resolve([{ id: 'new-shop' }])
     return Promise.resolve([])
   })
 })
@@ -225,6 +230,14 @@ describe('owner onboarding (unchanged behavior)', () => {
     const res = await call({ method: 'POST', body: { role: 'owner', shopName: 'Main Street Auto' } })
     expect(res.statusCode).toBe(200)
     expect(res._body).toEqual({ orgId: 'o1', shopId: 's1' })
+  })
+  it('a new owner starts on the trial plan, never founding (paid)', async () => {
+    const res = await call({ method: 'POST', body: { role: 'owner', shopName: 'Main Street Auto' } })
+    expect(res.statusCode).toBe(201)
+    expect(state.orgInsert).toMatch(/INSERT INTO organizations \(name, owner_clerk_id, plan, trial_ends_at\)/)
+    expect(state.orgInsert).toMatch(/'trial'/)
+    expect(state.orgInsert).not.toMatch(/founding/)
+    expect(state.orgInsert).toMatch(/interval '14 days'/)
   })
   it('an existing advisor cannot register as an owner', async () => {
     state.user = { id: 'u-adv', org_id: 'o1', shop_id: 's1', role: 'advisor' }

@@ -80,7 +80,7 @@ NOT fixed yet:
 3. Cost modeling for 50 shops (see Key Decisions). Reviewed the MentionAgent cold email pointing at the Shop Tech Score guide; decided to pitch hello@shoptechscore.com ourselves (multi-location and heavy-duty angle) after verifying the site. No email sent to anyone.
 4. Test cleanup in the founder's own shop (Omar's Auto): two test members (Rick O Omar tech, Rick Owens advisor) were removed from the database with their used invite codes and 2 time entries, verified with a check query. Their Clerk users were also deleted in the Clerk dashboard. The throwaway "Main Street Auto" org (1 shop, 2 users, 2 invites, no Stripe data) was deleted from Neon and verified as zero rows left; the Clerk users were deleted too.
 
-FOUND, NOT FIXED: db/schema.sql defaults organizations.plan to 'founding', and the code treats 'founding' as paid and exempt from the trial lock (api/health.js, api/_lib/handler.js). New signups (api/onboard.js inserts no plan) therefore get plan 'founding' and their 14-day trial never expires. Fix: default new orgs to a 'trial' plan and set 'founding' only when Stripe checkout completes (api/stripe.js already does); keep J2M and the existing paying org on 'founding'. Confirm against a real new signup first; held until after the J2M call.
+FIXED (Nov 17, pending deploy): organizations.plan used to default to 'founding', which the code treats as paid and exempt from the trial lock (api/health.js, api/_lib/handler.js), so new signups' 14-day trials never expired. Now api/onboard.js inserts plan 'trial', db/schema.sql defaults to 'trial', and the live column default was changed in Neon (verified 'trial'::text). 'founding' is set only when Stripe checkout completes (api/stripe.js). No real customer was affected: the only founding orgs without a Stripe subscription were three test shops (Omar's Auto, Ray's Auto, ev center), all legacy with trial_ends_at NULL (exempt), left unchanged. Still to verify with a real new signup: the app shows a 14-day countdown, not a paid state.
 5. J2M call prep (call planned Wed Nov 18, about 10 AM Central). Trinity replied from the shop address with her number (708) 522-1155; shop line 708-522-2999. A reply email confirming the call was drafted; confirm whether it was sent. The call script is C:\Users\rashe\My Projects\docs\j2m-call-script.html (fillable, notes autosave in the browser) and .pdf (one page). It is outside the repo. Questions are written as full spoken sentences. It includes the tax question (#10), a follow-up asking whether they edited invoices, a "mention only if it fits" box (estimate link as an offer at the end, staff invites only if raised), and an Avoid list.
 6. Maher outreach: check-in email and recap email drafted earlier; referral offer is one free month per referred shop that becomes paid.
 
@@ -116,7 +116,7 @@ FOUND, NOT FIXED: db/schema.sql defaults organizations.plan to 'founding', and t
 Waiting on the user:
 - Confirm whether the Trinity reply was sent; take the J2M call and write down their answer on tax (parts only or labor too, rate) and whether they edited invoices. Then send the recap email.
 - Rick Owens and Rick O Omar were deleted from the Clerk dashboard (done).
-- Decide on fixing the trial plan default bug (see item 4 under What Was Done).
+- After the trial plan fix deploys, sign up a fresh test owner and confirm the 14-day countdown shows (then clean it up).
 - Confirm the Stripe customer portal changes were saved and the "trial over" statement descriptor toggle is on.
 - Check Vercel plan (Hobby vs Pro; Hobby commercial-use terms now that J2M pays) plus Neon, Clerk, Resend plans and usage. Confirm how many invoices exist (SELECT COUNT(*) FROM invoices;).
 - Waiting on Trinity's answer about how Maher's friend found ShopCommand. Decide the real texting add-on price and whether managers need a role.
@@ -140,7 +140,7 @@ Ranked by recommendation:
 1. J2M call (Wed Nov 18) using the call script, then record their tax answer.
 2. Per-shop tax rate setting used on estimates, the approval page, packets, and invoices, plus server-calculated RO totals (after the call).
 3. Split revenue into Billed, Collected, and Unbilled.
-4. Fix the trial plan default bug (new orgs get plan 'founding', so trials never expire).
+4. Verify the trial plan fix with a fresh signup after deploy.
 5. Plan the Clerk production instance move and a proper staging environment (Neon branch, Clerk dev instance, Stripe test keys scoped to Preview only).
 6. Send the Clutch and Adams cold emails; relaunch the prospect research agents.
 7. Pitch Shop Tech Score (multi-location and heavy-duty angle) once the site is verified.

@@ -22,7 +22,7 @@ CREATE TABLE organizations (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name        TEXT NOT NULL,
   owner_clerk_id TEXT NOT NULL UNIQUE,
-  plan        TEXT NOT NULL DEFAULT 'founding',
+  plan        TEXT NOT NULL DEFAULT 'trial', -- 'founding' only after Stripe checkout completes
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
