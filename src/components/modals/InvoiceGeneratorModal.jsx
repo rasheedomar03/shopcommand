@@ -60,6 +60,31 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   }
   const [notes, setNotes] = useState('')
 
+  // Unsaved-changes tracking. The baseline is the form as it looked right after
+  // opening (or after the last Save); anything different from it is unsaved.
+  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, vehicle, items, taxRate, taxLabor, notes })
+  const [baseline, setBaseline] = useState(null)
+  const [initTick, setInitTick] = useState(0)
+  useEffect(() => {
+    // Runs in the render after the open-time initialization has been applied
+    if (initTick > 0) setBaseline(snapshot)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initTick])
+  const dirty = open && baseline !== null && snapshot !== baseline
+
+  const handleClose = () => {
+    if (dirty && !window.confirm('You have unsaved changes to this invoice. Close without saving?')) return
+    onClose()
+  }
+
+  // Also warn if the tab or window is closed with unsaved changes
+  useEffect(() => {
+    if (!dirty) return
+    const warn = (e) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [dirty])
+
   const billableROs = repairOrders.filter(ro => REVENUE_STAGES.has(ro.stage))
 
   const applyRO = (ro) => {
@@ -93,6 +118,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     }
     setNotes('')
     setSavedFlash(false)
+    setInitTick(t => t + 1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -114,7 +140,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const field = 'w-full h-8 px-2.5 rounded-md bg-background border border-border text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40'
 
   return (
-    <Modal open={open} onClose={onClose} title="Invoice Generator" subtitle="Build, print, or save as PDF" size="full">
+    <Modal open={open} onClose={handleClose} title="Invoice Generator" subtitle="Build, print, or save as PDF" size="full">
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
@@ -231,11 +257,18 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             <textarea className={`${field} mt-1 h-16 py-2`} value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. Due on receipt. 12-month / 12,000-mile warranty." />
           </div>
 
+          {dirty && (
+            <p className="text-xs font-medium text-status-yellow">
+              You have unsaved changes. Press Save invoice to keep them.
+            </p>
+          )}
+
           <div className="flex gap-2">
             <Button
               variant="secondary"
               className="flex-1"
               onClick={() => {
+                setBaseline(snapshot)
                 const ro = repairOrders.find(r => String(r.id) === String(roId))
                 addInvoice({
                   id: invNumber,

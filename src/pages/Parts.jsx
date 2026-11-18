@@ -260,7 +260,8 @@ function QtyCell({ part, onUpdate, field = 'qty' }) {
       onClick={() => { setVal(String(current)); setEditing(true) }}
       title={isMin ? 'Click to adjust minimum quantity' : 'Click to adjust quantity'}
       className={cn(
-        'tabular-nums font-medium hover:underline decoration-dashed underline-offset-2 cursor-pointer transition-colors',
+        // Styled like a small input so it is clear the number can be edited
+        'inline-flex items-center justify-center min-w-[2.75rem] h-7 px-2 rounded-md border border-border bg-background tabular-nums font-medium cursor-text hover:border-orange focus:outline-none focus:ring-1 focus:ring-orange/40 transition-colors',
         isMin ? 'text-text-muted' : (part.qty <= part.minQty ? 'text-status-red' : 'text-text-primary')
       )}
     >
