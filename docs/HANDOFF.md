@@ -31,11 +31,11 @@ Shipped to production on Nov 17 (all on master):
 - 570baec Onboarding rework and email-bound invites (details below). f20013a "Not getting a code? Try signing in" hint under the sign-up form. 620ab78 sign-out link on the onboarding page.
 - c8b4ddf RO number (RO-20261117-0001) shown instead of the database UUID everywhere (helper roLabel in src/lib/utils.js). Keep using ro.id for keys, timers, links, and lookups.
 - de7b684 Invoice edit no longer drops sales tax (details under Money).
-- 22f68e8 and 50fe90f Exact cents on invoice lines/totals, estimate panel, RO totals, service packet, part prices (formatMoney). Aggregates (revenue, MTD, averages, tech pay) intentionally stay whole dollars (formatCurrency). 50fe90f was still building at last check. Rollback target if needed: deployment of 22f68e8 (dpl_FmaK8hHbafj7JsDERqW7j6dywsmH).
+- 22f68e8 and 50fe90f Exact cents on invoice lines/totals, estimate panel, RO totals, service packet, part prices (formatMoney). Aggregates (revenue, MTD, averages, tech pay) intentionally stay whole dollars (formatCurrency). 50fe90f is READY in production. Rollback target if needed: the 50fe90f deployment (dpl_4bkKzda3YT1ycHFfTAuVVdnw3AMi); the one before it is 22f68e8 (dpl_FmaK8hHbafj7JsDERqW7j6dywsmH).
 
 Verified live by the founder on Nov 17: onboarding tests 1 to 6 all passed (returning owner login goes straight to dashboard; new owner creates a shop; technician joins by code with no email and lands on the tech board; advisor joins with a matching-email invite; mismatched email is refused and the code stays usable; invite form email field and "Only works for" note). The approval flow worked end to end: emailed link opened, approved with a typed name, shop notification email arrived. The customer email landed in SPAM (see Deliverability).
 
-Still to verify live: invoice edit fix (edit only the number and confirm the total is unchanged; change a line and confirm tax moves), estimate total now reads $97.64 style, tech board shows RO numbers.
+Live checks of the invoice edit fix, exact cents on estimates and invoices (invoice shows $89.99 + $7.65 tax = $97.64), and RO numbers on the tech board were done by the founder late Nov 17 and all came out fine.
 
 Approval links:
 - Link /approve/{roId}/{token}. Token is 32 random bytes; only its SHA-256 hash is stored in repair_orders.data.approval. Expires in 14 days; generating a new link replaces the old one (the shop UI reuses the current link for copy/QR/email within a session). No database change.
@@ -78,7 +78,9 @@ NOT fixed yet:
 1. Invoice editing rework (Nov 12), Stripe audit and webhook fix, lifecycle webhooks, 14-day trial system, Google Search Console round one, Stripe email automation and branding, hosted Stripe MCP authorized.
 2. Nov 17: billing total fix and texting add-on helper; approval links and emails; onboarding rework and invite email rule; sign-up hint; sign-out link; RO number display; invoice edit tax fix; exact-cents display. 118 tests in /tests.
 3. Cost modeling for 50 shops (see Key Decisions). Reviewed the MentionAgent cold email pointing at the Shop Tech Score guide; decided to pitch hello@shoptechscore.com ourselves (multi-location and heavy-duty angle) after verifying the site. No email sent to anyone.
-4. Test cleanup in the founder's own shop (Omar's Auto): two test members (Rick O Omar tech, Rick Owens advisor) were removed from the database with their used invite codes and 2 time entries, verified with a check query. Their Clerk users still have to be deleted in the Clerk dashboard (confirm done). Other test accounts created tonight (a throwaway new-owner shop, plus-address accounts) still need cleanup; read-only discovery queries were given (organizations and users created on or after 2026-11-17).
+4. Test cleanup in the founder's own shop (Omar's Auto): two test members (Rick O Omar tech, Rick Owens advisor) were removed from the database with their used invite codes and 2 time entries, verified with a check query. Their Clerk users were also deleted in the Clerk dashboard. The throwaway "Main Street Auto" org (1 shop, 2 users, 2 invites, no Stripe data) was deleted from Neon and verified as zero rows left; the Clerk users were deleted too.
+
+FOUND, NOT FIXED: db/schema.sql defaults organizations.plan to 'founding', and the code treats 'founding' as paid and exempt from the trial lock (api/health.js, api/_lib/handler.js). New signups (api/onboard.js inserts no plan) therefore get plan 'founding' and their 14-day trial never expires. Fix: default new orgs to a 'trial' plan and set 'founding' only when Stripe checkout completes (api/stripe.js already does); keep J2M and the existing paying org on 'founding'. Confirm against a real new signup first; held until after the J2M call.
 5. J2M call prep (call planned Wed Nov 18, about 10 AM Central). Trinity replied from the shop address with her number (708) 522-1155; shop line 708-522-2999. A reply email confirming the call was drafted; confirm whether it was sent. The call script is C:\Users\rashe\My Projects\docs\j2m-call-script.html (fillable, notes autosave in the browser) and .pdf (one page). It is outside the repo. Questions are written as full spoken sentences. It includes the tax question (#10), a follow-up asking whether they edited invoices, a "mention only if it fits" box (estimate link as an offer at the end, staff invites only if raised), and an Avoid list.
 6. Maher outreach: check-in email and recap email drafted earlier; referral offer is one free month per referred shop that becomes paid.
 
@@ -112,9 +114,9 @@ NOT fixed yet:
 ## Open Items
 
 Waiting on the user:
-- Verify live: invoice edit fix, cents on estimate and invoice, RO numbers on the tech board. Confirm the 50fe90f deploy reached READY.
 - Confirm whether the Trinity reply was sent; take the J2M call and write down their answer on tax (parts only or labor too, rate) and whether they edited invoices. Then send the recap email.
-- Delete Rick Owens and Rick O Omar in the Clerk dashboard (development instance) if not done. Run the two discovery queries for tonight's throwaway accounts so the cleanup can be written (preview first, then delete).
+- Rick Owens and Rick O Omar were deleted from the Clerk dashboard (done).
+- Decide on fixing the trial plan default bug (see item 4 under What Was Done).
 - Confirm the Stripe customer portal changes were saved and the "trial over" statement descriptor toggle is on.
 - Check Vercel plan (Hobby vs Pro; Hobby commercial-use terms now that J2M pays) plus Neon, Clerk, Resend plans and usage. Confirm how many invoices exist (SELECT COUNT(*) FROM invoices;).
 - Waiting on Trinity's answer about how Maher's friend found ShopCommand. Decide the real texting add-on price and whether managers need a role.
@@ -138,7 +140,7 @@ Ranked by recommendation:
 1. J2M call (Wed Nov 18) using the call script, then record their tax answer.
 2. Per-shop tax rate setting used on estimates, the approval page, packets, and invoices, plus server-calculated RO totals (after the call).
 3. Split revenue into Billed, Collected, and Unbilled.
-4. Clean up tonight's test accounts and shop (Neon and Clerk), preview first.
+4. Fix the trial plan default bug (new orgs get plan 'founding', so trials never expire).
 5. Plan the Clerk production instance move and a proper staging environment (Neon branch, Clerk dev instance, Stripe test keys scoped to Preview only).
 6. Send the Clutch and Adams cold emails; relaunch the prospect research agents.
 7. Pitch Shop Tech Score (multi-location and heavy-duty angle) once the site is verified.
