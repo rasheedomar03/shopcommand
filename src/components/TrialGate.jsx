@@ -31,7 +31,7 @@ export function TrialBanner({ daysLeft }) {
         disabled={redirecting}
         className={`ml-auto flex-shrink-0 h-7 px-3 rounded-md text-white text-xs font-semibold transition-colors disabled:opacity-60 ${urgent ? 'bg-status-red hover:bg-status-red/90' : 'bg-orange hover:bg-orange-hover'}`}
       >
-        {redirecting ? 'Redirecting…' : 'Start free trial'}
+        {redirecting ? 'Redirecting…' : 'Add a card'}
       </button>
       <button
         onClick={() => { setDismissed(true); try { sessionStorage.setItem('sc_trial_banner_dismissed', '1') } catch { /* per-session nicety */ } }}
