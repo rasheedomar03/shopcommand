@@ -7,6 +7,7 @@ import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
 import { formatCurrency, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
+import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
 
@@ -95,10 +96,16 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
     setEditing(true)
   }
   const setRow = (i, field, value) => setRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r))
-  const editSubtotal = rows.reduce((sum, r) => sum + (Number(r.parts) || 0) + (Number(r.labor) || 0), 0)
-  // Local invoices carry 8.25% tax; DB-backed invoices store a tax-free total
-  const editTax = invoice.tax > 0 ? Math.round(editSubtotal * 8.25) / 100 : 0
-  const editTotal = Math.round((editSubtotal + editTax) * 100) / 100
+  // Database invoices: the amount already includes tax and must not change
+  // unless the line items do (see lib/invoiceEdit.js). Device-only invoices
+  // carry 8.25% tax computed here.
+  const isDb = !!invoice.dbId
+  const namedRows = rows.filter(r => String(r.name).trim())
+  const dbEdit = isDb && editing ? priceInvoiceEdit(invoice, namedRows) : null
+  const editSubtotal = dbEdit ? dbEdit.subtotal : rows.reduce((sum, r) => sum + (Number(r.parts) || 0) + (Number(r.labor) || 0), 0)
+  const editTax = dbEdit ? dbEdit.tax : (invoice.tax > 0 ? Math.round(editSubtotal * 8.25) / 100 : 0)
+  const editTotal = dbEdit ? dbEdit.total : Math.round((editSubtotal + editTax) * 100) / 100
+  const view = invoiceBreakdown(invoice)
 
   const saveEdit = async () => {
     const services = rows
@@ -120,11 +127,14 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
     }
     setSaving(true)
     setSaveError(null)
+    // Database invoices: only send lines and amount when the lines actually
+    // changed, so renaming or fixing the customer email can never alter the
+    // amount (it used to drop the tax).
+    const pricing = isDb ? priceInvoiceEdit(invoice, services) : null
     const r = await onUpdate(invoice.id, {
-      services,
-      subtotal: editSubtotal,
-      tax: editTax,
-      total: editTotal,
+      ...(isDb
+        ? (pricing.changed ? { services, subtotal: pricing.subtotal, tax: pricing.tax, total: pricing.total } : {})
+        : { services, subtotal: editSubtotal, tax: editTax, total: editTotal }),
       ...(newNumber !== invoice.id ? { number: newNumber } : {}),
       ...(billName.trim() !== (invoice.customerName || '') ? { customerName: billName.trim() } : {}),
       ...(newEmail !== (invoice.customerEmail || '') ? { customerEmail: newEmail } : {}),
@@ -242,15 +252,15 @@ function InvoiceDetail({ invoice, onClose, shops, onPrint, onUpdate, onVoid, onR
           <div className="border-t border-border px-4 py-3 space-y-1.5 bg-background">
             <div className="flex justify-between text-sm text-text-secondary">
               <span>Subtotal</span>
-              <span className="tabular-nums">{formatCurrency(editing ? editSubtotal : invoice.subtotal)}</span>
+              <span className="tabular-nums">${(editing ? editSubtotal : view.subtotal).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm text-text-secondary">
-              <span>Tax (8.25%)</span>
-              <span className="tabular-nums">${(editing ? editTax : invoice.tax).toFixed(2)}</span>
+              <span>{isDb ? 'Tax' : 'Tax (8.25%)'}</span>
+              <span className="tabular-nums">${(editing ? editTax : view.tax).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm font-semibold text-text-primary pt-1.5 border-t border-border">
               <span>Total</span>
-              <span className="text-orange tabular-nums">${(editing ? editTotal : invoice.total).toFixed(2)}</span>
+              <span className="text-orange tabular-nums">${(editing ? editTotal : view.total).toFixed(2)}</span>
             </div>
           </div>
         </div>

@@ -782,6 +782,9 @@ export function DataProvider({ children }) {
             await updateRepairOrder(ro.id, {
               services: patch.services.map(s => ({ name: s.name, price: (Number(s.parts) || 0) + (Number(s.labor) || 0) })),
               ...(ro.partsUsed?.length ? { partsUsed: [] } : {}),
+              // Keep the repair order total equal to the invoice amount so
+              // revenue and later invoices do not use a stale figure
+              ...(patch.total !== undefined ? { total: patch.total } : {}),
             })
           } catch (_) { /* amount persisted; service names refresh from RO on next load */ }
         }
