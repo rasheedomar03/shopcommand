@@ -56,12 +56,17 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Valid shop_id is required' })
       }
 
+      // Default minimum is 2, but an explicit 0 must stay 0.
+      const minQty = (min_qty == null || min_qty === '' || Number.isNaN(Number(min_qty)))
+        ? 2
+        : Math.max(0, Number(min_qty))
+
       const [row] = await sql`
         INSERT INTO parts (org_id, shop_id, name, sku, category, vendor, qty, min_qty, cost, price)
         VALUES (
           ${user.orgId}, ${shop_id}, ${name.trim()},
           ${(sku || '').trim()}, ${category || 'Other'}, ${(vendor || '').trim()},
-          ${Number(qty) || 0}, ${Number(min_qty) || 2},
+          ${Number(qty) || 0}, ${minQty},
           ${Number(cost) || 0}, ${Number(price) || 0}
         )
         RETURNING *

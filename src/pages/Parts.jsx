@@ -130,8 +130,10 @@ function PartModal({ part, shops, onSave, onClose }) {
     vendor:   part.vendor   || '',
     qty:      part.qty      ?? 0,
     minQty:   part.minQty   ?? 2,
-    cost:     part.cost     || '',
-    price:    part.price    || '',
+    // Keep a real $0.00 price/cost as 0 (not blank), or editing any part priced
+    // at $0 forces the user to retype the price just to save an unrelated change.
+    cost:     part.cost     ?? '',
+    price:    part.price    ?? '',
     shopId:   part.shopId   || '',
   })
   const [errors, setErrors] = useState({})
@@ -224,13 +226,17 @@ function PartModal({ part, shops, onSave, onClose }) {
   )
 }
 
-function QtyCell({ part, onUpdate }) {
+// Tap-to-edit number cell. `field` is 'qty' (default) or 'minQty'; only the
+// quantity turns red when stock is at or below the minimum.
+function QtyCell({ part, onUpdate, field = 'qty' }) {
   const [editing, setEditing] = useState(false)
-  const [val, setVal] = useState(String(part.qty))
+  const current = part[field] ?? 0
+  const [val, setVal] = useState(String(current))
+  const isMin = field === 'minQty'
 
   const commit = () => {
     const n = parseInt(val, 10)
-    if (!isNaN(n) && n >= 0 && n !== part.qty) onUpdate(n)
+    if (!isNaN(n) && n >= 0 && n !== current) onUpdate(n)
     setEditing(false)
   }
 
@@ -251,14 +257,14 @@ function QtyCell({ part, onUpdate }) {
 
   return (
     <button
-      onClick={() => { setVal(String(part.qty)); setEditing(true) }}
-      title="Click to adjust quantity"
+      onClick={() => { setVal(String(current)); setEditing(true) }}
+      title={isMin ? 'Click to adjust minimum quantity' : 'Click to adjust quantity'}
       className={cn(
         'tabular-nums font-medium hover:underline decoration-dashed underline-offset-2 cursor-pointer transition-colors',
-        part.qty <= part.minQty ? 'text-status-red' : 'text-text-primary'
+        isMin ? 'text-text-muted' : (part.qty <= part.minQty ? 'text-status-red' : 'text-text-primary')
       )}
     >
-      {part.qty}
+      {current}
     </button>
   )
 }
@@ -961,7 +967,9 @@ export default function Parts() {
                     <Td className="text-right">
                       <QtyCell part={part} onUpdate={qty => updatePart(part.id, { qty })} />
                     </Td>
-                    <Td className="text-right tabular-nums text-text-muted">{part.minQty}</Td>
+                    <Td className="text-right tabular-nums text-text-muted">
+                      <QtyCell part={part} field="minQty" onUpdate={minQty => updatePart(part.id, { minQty })} />
+                    </Td>
                     <Td className="text-right tabular-nums text-text-secondary">{formatMoney(part.cost)}</Td>
                     <Td className="text-right tabular-nums text-text-primary font-medium">{formatMoney(part.price)}</Td>
                     <Td className="text-text-muted text-xs">{shop?.name}</Td>

@@ -32,6 +32,11 @@ Shipped to production on Nov 17 (all on master):
 - c8b4ddf RO number (RO-20261117-0001) shown instead of the database UUID everywhere (helper roLabel in src/lib/utils.js). Keep using ro.id for keys, timers, links, and lookups.
 - de7b684 Invoice edit no longer drops sales tax (details under Money).
 - 22f68e8 and 50fe90f Exact cents on invoice lines/totals, estimate panel, RO totals, service packet, part prices (formatMoney). Aggregates (revenue, MTD, averages, tech pay) intentionally stay whole dollars (formatCurrency). 50fe90f is READY in production. Rollback target if needed: the 50fe90f deployment (dpl_4bkKzda3YT1ycHFfTAuVVdnw3AMi); the one before it is 22f68e8 (dpl_FmaK8hHbafj7JsDERqW7j6dywsmH).
+- e044462 New orgs start on plan 'trial' (see Money section note on the trial plan fix); schema default and the live Neon column default are 'trial'.
+- 01e36f9 Trial copy: the in-app 14-day trial starts at signup with no card; Stripe checkout only covers the days remaining (api/stripe.js trial_period_days), and an expired trial gets no Stripe trial (charged at once from the lock screen). Billing tab button now says "Add a card to keep your account"; banner button says "Add a card".
+- 5f8e89b Location billing: the Settings > Locations add form shows the +$50/mo, the new monthly total and when it is charged; the button reads "Add Location (+$50/mo)". POST /api/shops now undoes the new shop, realigns Stripe, and returns 502 billing_failed if the subscription cannot be updated (so no unbilled shop). A failed billing update when removing a shop tells the owner the amount has not changed yet. Tests in tests/shops-billing.test.js (122 tests total).
+
+How shop count and billing work: before subscribing, shops are free and untracked in Stripe; checkout counts the shops that exist at that moment. After subscribing, adding a shop is a quantity update on founding_additional_shop with create_prorations (the prorated amount goes on the next invoice, believed Stripe default, not yet verified on a real invoice); removing a shop drops the amount at next renewal with no refund; during Stripe's trial the quantity changes without charging. Locked orgs cannot add shops (402).
 
 Verified live by the founder on Nov 17: onboarding tests 1 to 6 all passed (returning owner login goes straight to dashboard; new owner creates a shop; technician joins by code with no email and lands on the tech board; advisor joins with a matching-email invite; mismatched email is refused and the code stays usable; invite form email field and "Only works for" note). The approval flow worked end to end: emailed link opened, approved with a typed name, shop notification email arrived. The customer email landed in SPAM (see Deliverability).
 
@@ -111,12 +116,27 @@ FIXED (Nov 17, pending deploy): organizations.plan used to default to 'founding'
 - Display rules: show RO numbers with roLabel(ro), never the raw id. Use formatMoney (cents) for exact amounts and formatCurrency (whole dollars) only for aggregates.
 - New logic gets tests in /tests. Do what was asked, nothing more; prefer editing existing files; do not create documentation files unless asked; read a file before editing it.
 
+## J2M feedback from the Nov 18 call (Trinity, in progress; call was paused, a text was sent asking for a callback and a photo of their paper invoice)
+
+Trinity uses only invoices, estimates and parts; she has not used repair orders. Her notes and what the code review found:
+- Parts, price blank on every edit: FIXED locally (uncommitted). The Edit Part form turned a $0 price into a blank required field (Parts.jsx). It now keeps 0.
+- Parts, minimum quantity resets: add-part turned an explicit 0 into 2 (api/health.js, `Number(min_qty) || 2`); fixed locally. The minimum also had no tap-to-edit like quantity; the Min column is now tap-to-edit (QtyCell with field="minQty"). Not confirmed this is exactly what she hit (ask: new parts or existing). Parts auto-created from RO part requests still default min to 2 (Parts.jsx, addPart minQty: 2).
+- Related, not fixed: update-part uses COALESCE with `x?.trim() || null`, so clearing SKU or vendor to empty cannot be saved.
+- Parts notes ("3/4 heater hose sold by foot"): needs a notes column on the parts table (migration), then form, API, list. Ask whether notes should print on estimates and invoices. SKU / VIN already exists as one field.
+- IMPORTANT RISK: invoices made from scratch in the Invoice Generator (what Trinity does) are saved only in the browser (localStorage key sc_invoices). POST /api/invoices requires an ro_id and invoices.ro_id is NOT NULL in the schema, so no-RO invoices cannot exist on the server. They can vanish if browser data is cleared and are invisible to other devices, to Maher, and to reports. Plan: migration making ro_id optional with customer, vehicle, lines and notes stored on the invoice; a one-time import of the browser's sc_invoices on first load after the fix (keep reading sc_invoices until the import finishes); autosave drafts. Interim advice to Trinity: same computer and browser, do not clear browsing data, press Export weekly (not yet verified that Export includes local invoices).
+- Print / PDF on a saved invoice closes the detail view and rebuilds from the original services (Invoices.jsx onPrint, InvoiceGeneratorModal itemsFromInvoice), so edits do not carry over and it looks like a new invoice. itemsFromInvoice also appends a dash plus the word "labor" or "parts" to every description, which she deletes each time. Plan: print the saved invoice directly and drop the suffix.
+- Invoice generator has one Customer and one Vehicle box. She needs company name, customer name, truck number, year/make, VIN, and a truck number bubble in the add-customer form; the schema has no company on customers and no unit/truck number on vehicles (vehicles has vin and license). She sent a photo of their paper invoice (not seen by Claude); the printed layout should match it.
+- Questions still open for her: where she makes estimates (estimates normally live as repair orders in Estimate stage), how many invoices she has, truck number meaning (their fleet number? trailer too?), how she sends estimates, how Maher's friend found us, referrals, OK to quote, follow-up date.
+
 ## Open Items
 
 Waiting on the user:
+- Reply from Trinity (text sent Nov 18 afternoon asking for a callback and a photo of the paper invoice).
 - Confirm whether the Trinity reply was sent; take the J2M call and write down their answer on tax (parts only or labor too, rate) and whether they edited invoices. Then send the recap email.
 - Rick Owens and Rick O Omar were deleted from the Clerk dashboard (done).
 - After the trial plan fix deploys, sign up a fresh test owner and confirm the 14-day countdown shows (then clean it up).
+- On a test account with no subscription, try Settings > Locations > Add Location: the price note shows and the shop is added with no charge. Do not test on J2M. The first time a real subscribed org adds a shop, check that the prorated $50 appears on their next invoice as expected.
+- Known edge, not fixed: a legacy org (no trial date) that cancels stays unlocked, because the lock needs a trial date.
 - Confirm the Stripe customer portal changes were saved and the "trial over" statement descriptor toggle is on.
 - Check Vercel plan (Hobby vs Pro; Hobby commercial-use terms now that J2M pays) plus Neon, Clerk, Resend plans and usage. Confirm how many invoices exist (SELECT COUNT(*) FROM invoices;).
 - Waiting on Trinity's answer about how Maher's friend found ShopCommand. Decide the real texting add-on price and whether managers need a role.
