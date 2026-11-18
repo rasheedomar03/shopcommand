@@ -78,6 +78,10 @@ export default function SignUpPage() {
             forceRedirectUrl="/onboarding"
             appearance={clerkAppearance}
           />
+          <p className="mt-4 text-xs text-slate-500 text-center leading-relaxed">
+            Not getting a code? You may already have an account.{' '}
+            <Link to="/sign-in" className="text-orange-500 hover:text-orange-600 font-medium whitespace-nowrap">Try signing in.</Link>
+          </p>
         </div>
 
         <p className="mt-6 text-xs text-slate-400">
