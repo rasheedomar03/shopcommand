@@ -166,6 +166,25 @@ Why: production runs on a Clerk DEVELOPMENT instance (pk_test); its emails say "
 - What J2M uses today (Clerk dev dashboard, Nov 18): ONE shared login, j2mtruckrepair@gmail.com (Maher and Trinity both appear to use it), created Oct 27, with NO password, and a Google social account linked on Nov 18 (about 12 hours before the check, the morning of the first call). So they sign in with the Google button or an emailed code, never a password, and there is no password to migrate. On production the Google button needs your own Google OAuth credentials; without them they use the emailed code with the same email, which still links to their shop. Decision pending: set up Google credentials (about 20 to 30 minutes) or remove the Google button.
 - Timing: after the server-side invoice work, at a quiet time, with J2M warned first.
 
+## Trinity feedback, round 2 (Nov 19): decisions and build plan
+
+Her points and what we found:
+- Lost quantity (money bug): the generator saves a line as ONE amount (qty x price collapsed into services parts/labor), and the invoice detail "Edit" only has Parts and Labor amount boxes with no quantity, so 4 batteries at $130 became $130 when she retyped it. Fix: store lines {desc, type, qty, price} on every invoice; open drafts in the generator (filled in), not the detail editor. Older drafts have no quantity stored and open as quantity 1.
+- "Doubled": the preview and print show Qty, Price and Total for every row, so a quantity of 1 shows the same amount twice. Decided (confirmed by her): show ONE amount when qty is 1; show unit price and line total only when qty is more than 1.
+- Tax and fee apply to parts AND labor. Today "tax on labor" is off by default and not remembered.
+- Card fee: an "Add card fee (3%)" button before printing, always 3% for everyone, of the total including tax (confirmed: 3% is the card machine's processing fee). Own labeled line. Caution: card surcharges are restricted in some states and by card-network rules; keep it an explicit button.
+- Both VIN and truck number per customer/invoice (VIN for her reference, truck number for talking to the customer).
+- Logo on printed invoices: self-serve upload in Settings (no file from us). Plan: resize in the browser, store with the shop's details (shops.data), print on invoices; print only at first (emails block embedded images).
+- Diagnostics and parts print on the invoice. A repair title ("what the repair was") and clearly labeled tax and fee lines (her wording is unclear; building both).
+- Own fleet: they repair their own trucks and invoice them but are not paid; needs its own section, not mixed with customers (internal invoices flagged, own filter, not counted as revenue or money owed). Whether she also wants a list of their own trucks is unanswered.
+- She would love a real app. Cheapest real step: make the site installable on a phone home screen; native app is much bigger.
+
+Decided: per-shop sales tax setting (Settings, Locations): rate 0 to 20 percent with up to 3 decimals (e.g. 9.025), a "tax labor" switch, and an "ask your accountant" note; no suggested rate. Until a shop sets one, keep today's 8.25 percent with a prompt "Set your tax rate in Settings". For existing shops like J2M: a "Save this rate for my shop" button beside the tax field on the invoice screen, the checklist step "Set your sales tax rate" that returns for existing shops, and set it with them (Neon SQL only after Trinity confirms the rate). Phase 2 later: estimates, the approval page (fixed 8.5 percent in api/_lib/approval.js) and packets use the shop setting.
+
+Built so far (uncommitted unless noted): src/lib/invoiceLines.js with tests/invoice-lines.test.js (16 passing): totals, 3 percent fee, qty display rule, old-draft conversion. Not built: generator rewrite, drafts opening in the generator, new fields, fee button, tax setting, logo upload, own fleet.
+
+Questions still for Trinity: what her tax rate is and whether labor is taxed (she says both); the meaning of "label what the repair was"; whether own fleet needs a list of trucks; whether Diagnostics should print on invoices (she said yes).
+
 ## Open Items
 
 Waiting on the user:
