@@ -143,6 +143,18 @@ Missy Hein signed up Oct 5, 2026 and never finished onboarding (no users row, no
 - Still the bigger risk: production runs on a Clerk DEVELOPMENT instance (emails say "[Development]" and may land in spam). Moving to a production instance remains the proper fix.
 - Seen only in the demo or by tests, never on a real account yet: the checklist card (checked in demo with a temporary override that was removed), the new onboarding fields, the alert emails (Resend only runs in production), the Billing tab trial line, Print / PDF and the blank form on a real printer.
 
+## Market research (Nov 18): competitors, tire shops, body shops, fleet shops
+
+Search snippets and vendor pages only, no demos; prices are loose and may have changed. Verify before relying on any figure.
+- Positioning: ShopCommand is for general auto and truck repair shops. Fleet features (company accounts, truck/unit number) came from J2M and also help any shop with commercial customers; they are not the only target.
+- Price: Tekmetric entry about $179 to $199/mo, Shopmonkey about $239/mo ($215 billed annually, per its own blog), Shop-Ware higher. Tekmetric multi-location needs a plan per location plus about $70/mo per shop for multi-shop management. Our $100 first shop and $50 per extra location is clearly cheaper for multi-location owners.
+- Leaders have what we lack: Tekmetric has built-in two-way texting, text-to-pay links, card, Apple Pay and Google Pay payments (processing fees not published), digital inspections at its entry tier, and QuickBooks through a third-party add-on (Accounting Link by The Back Office), which suggests an add-on or partner route could be cheaper than a native QuickBooks sync. Shopmonkey lists QuickBooks, PartsTech and CARFAX.
+- Tire shops: dedicated tools exist (TireShop, Tire Guru, Tiremaster; about $50 per user/mo up to $599 to $999/mo). Tekmetric and Shopmonkey already handle tire inventory by size, brand and vehicle with supplier stock. Nothing found on TPMS or tire storage. For us: small extension (tire size and brand fields, search by size) only when a tire shop asks; a full tire product is not worth it yet.
+- Collision shops: CCC ONE dominates (insurance assignments, estimating, parts ordering); pricing unpublished, one unverified third-party estimate of about $2,750/mo. Gated, expensive, entrenched. Skip.
+- Fleet and heavy-duty (Fullbay, ShopView, Mitchell 1 Truck Edition, Karmak): fleet billing and terms, unit-number records, multi-asset jobs, DOT paperwork, per-customer rates and markups. Customer statements and net-terms aging were not confirmed; ask a fleet shop before assuming we need them.
+- Resulting order: (1) server-side invoices with company, truck number, VIN and mileage; (2) card payments on invoices (pay link), the largest gap in the market and a bigger job; (3) QuickBooks via add-on; (4) two-way texting as a paid add-on; (5) tire fields if asked. Do not build for collision shops now.
+- Sources: Capterra (TireShop, CCC ONE, Shopmonkey vs Tekmetric), tirebase.io pricing, support.tekmetric.com Accounting Link FAQ, tekmetric.com invoices, shopmonkey.io body shop page, shopview.com heavy-duty guide, fullbay.com.
+
 ## Open Items
 
 Waiting on the user:
