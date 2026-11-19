@@ -1,5 +1,6 @@
-import { SignIn as ClerkSignIn, useUser } from '@clerk/clerk-react'
+import { SignIn as ClerkSignIn, ClerkLoading, useUser } from '@clerk/clerk-react'
 import { Link, Navigate } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 import { HexDot, HexPattern } from '@/components/Hex'
 import { clerkAppearance } from '@/lib/clerkAppearance'
 
@@ -77,6 +78,12 @@ export default function SignInPage() {
         </Link>
 
         <div className="w-full max-w-sm mx-auto">
+          <ClerkLoading>
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm min-h-[380px] flex flex-col items-center justify-center gap-3 text-slate-400">
+              <Loader2 size={22} className="animate-spin text-orange-500" />
+              <span className="text-xs">Loading sign-in...</span>
+            </div>
+          </ClerkLoading>
           <ClerkSignIn
             routing="path"
             path="/sign-in"

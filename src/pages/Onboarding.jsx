@@ -190,6 +190,9 @@ export default function Onboarding() {
             <div className="text-center mb-6">
               <h1 className="text-lg font-semibold text-text-primary">Welcome to ShopCommand</h1>
               <p className="text-xs text-text-muted mt-1">How would you like to get started?</p>
+              <p className="text-xs font-medium text-orange mt-2">
+                Setting up a shop? You get a 14-day free trial. No card needed.
+              </p>
             </div>
 
             <div className="space-y-3 mb-4">
@@ -341,9 +344,16 @@ export default function Onboarding() {
               {saving ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Join shop'}
             </button>
 
-            <p className="text-2xs text-text-muted text-center mt-4">
+            <p className="text-2xs text-text-muted text-center mt-4 leading-relaxed">
               Don't have a code? Ask your shop owner to create one from their Settings page.
             </p>
+            <button
+              type="button"
+              onClick={() => { setInviteCode(''); setError(null); setSelected('owner'); setStep('shop') }}
+              className="block mx-auto mt-3 text-xs text-orange hover:underline font-medium"
+            >
+              I own a shop. Set up my own shop instead
+            </button>
           </>
         )}
 
@@ -359,6 +369,11 @@ export default function Onboarding() {
           >
             Sign out
           </button>
+        </p>
+        <p className="text-2xs text-text-muted text-center mt-2">
+          Stuck? Email{' '}
+          <a href="mailto:hello@shopcommand.net" className="text-orange hover:underline font-medium">hello@shopcommand.net</a>
+          {' '}and you'll get the founder.
         </p>
       </div>
     </main>

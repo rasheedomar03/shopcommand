@@ -130,9 +130,18 @@ Trinity uses only invoices, estimates and parts; she has not used repair orders.
 - Shipped Nov 18 afternoon (cb7263e and earlier): price blank and minimum-0 fixes, Min tap-to-edit, Qty/Min boxes on desktop and phone, unsaved-changes warning, generator autosave of from-scratch drafts (device-local, one slot), Print / PDF prints the saved invoice directly (no generator screen), generator no longer appends a dash suffix, Billing tab shows trial end date and days left.
 - Questions still open for her: where she makes estimates (estimates normally live as repair orders in Estimate stage), how many invoices she has, truck number meaning (their fleet number? trailer too?), how she sends estimates, how Maher's friend found us, referrals, OK to quote, follow-up date.
 
+## Signup funnel (Nov 18 evening, pending push)
+
+Missy Hein signed up Oct 5, 2026 and never finished onboarding (no users row, no org); found by chance in the Clerk dashboard. A scheduled friendly email to her was set for Nov 19 9:00 AM (Zoho, by hand). Changes built after the onboarding read-through:
+- Founder alerts (api/_lib/founder-alert.js, used by api/onboard.js): a plain-text email to hello@shopcommand.net (override with env FOUNDER_ALERT_EMAIL) when (1) a new account first reaches onboarding (once per account, remembered in Clerk privateMetadata.signupAlerted, only marked after a successful send), (2) a shop is created, (3) someone joins with an invite code. If the "started onboarding" email is not followed by a "shop created" or "joined" email within a day or two, they are probably stuck: send a short note. Alerts never block or fail onboarding; they need RESEND_API_KEY, which is Production only.
+- Onboarding page: a "14-day free trial, no card needed" line, a "Stuck? Email hello@shopcommand.net" line, and an "I own a shop. Set up my own shop instead" shortcut on the invite-code step.
+- Sign-up and sign-in: a loading card while the Clerk form loads, a phone-only pitch above the sign-up form, and a "14-day free trial, no card needed" bullet on the desktop panel.
+- Still the bigger risk: production runs on a Clerk DEVELOPMENT instance (emails say "[Development]" and may land in spam). Moving to a production instance remains the proper fix.
+
 ## Open Items
 
 Waiting on the user:
+- After this deploys, sign up a fresh test owner with a plus-address and confirm you get both alert emails ("started onboarding", then "New shop created"). Then clean up that test org and delete the Clerk user.
 - Reply from Trinity (text sent Nov 18 afternoon asking for a callback and a photo of the paper invoice).
 - Confirm whether the Trinity reply was sent; take the J2M call and write down their answer on tax (parts only or labor too, rate) and whether they edited invoices. Then send the recap email.
 - Rick Owens and Rick O Omar were deleted from the Clerk dashboard (done).

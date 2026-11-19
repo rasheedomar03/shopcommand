@@ -6,12 +6,15 @@ import { createMockReq, createMockRes, MOCK_OWNER, MOCK_ADVISOR } from './helper
 
 const state = vi.hoisted(() => ({
   user: null, ownerOrg: null, invite: null, queries: [], inserted: null,
-  clerkEmails: null, orgInsert: null,
+  clerkEmails: null, orgInsert: null, privateMetadata: null,
 }))
 
 const mockSql = vi.hoisted(() => vi.fn())
+const founderAlert = vi.hoisted(() => vi.fn())
+const updateUserMetadata = vi.hoisted(() => vi.fn())
 
 vi.mock('@neondatabase/serverless', () => ({ neon: vi.fn(() => mockSql) }))
+vi.mock('../api/_lib/founder-alert.js', () => ({ sendFounderAlert: founderAlert }))
 vi.mock('@clerk/backend', () => ({
   verifyToken: vi.fn(() => Promise.resolve({ sub: 'clerk_1' })),
   createClerkClient: vi.fn(() => ({
@@ -19,8 +22,10 @@ vi.mock('@clerk/backend', () => ({
       getUser: vi.fn(() => Promise.resolve({
         firstName: 'Ann', lastName: 'Lee',
         emailAddresses: state.clerkEmails ?? [{ emailAddress: 'ann@example.com', verification: { status: 'verified' } }],
+        privateMetadata: state.privateMetadata ?? {},
       })),
       updateUser: vi.fn(() => Promise.resolve({})),
+      updateUserMetadata,
     },
   })),
 }))
@@ -38,7 +43,11 @@ const past = () => new Date(Date.now() - 1000).toISOString()
 
 beforeEach(() => {
   vi.clearAllMocks()
-  Object.assign(state, { user: null, ownerOrg: null, invite: null, queries: [], inserted: null, clerkEmails: null, orgInsert: null })
+  Object.assign(state, { user: null, ownerOrg: null, invite: null, queries: [], inserted: null, clerkEmails: null, orgInsert: null, privateMetadata: null })
+  founderAlert.mockReset()
+  founderAlert.mockResolvedValue(true)
+  updateUserMetadata.mockReset()
+  updateUserMetadata.mockResolvedValue({})
   mockSql.mockReset()
   mockSql.mockImplementation((strings, ...vals) => {
     const q = strings.join('?').replace(/\s+/g, ' ')
@@ -93,6 +102,57 @@ describe('GET ?action=check', () => {
   it('reports an unknown person as not existing', async () => {
     const res = await call({ query: { action: 'check' } })
     expect(res._body).toEqual({ exists: false })
+  })
+})
+
+// ── founder alerts: signup started / shop created / joined ────────────────
+
+describe('founder alerts', () => {
+  it('alerts the founder once when a new account first reaches onboarding', async () => {
+    const res = await call({ query: { action: 'check' } })
+    expect(res._body).toEqual({ exists: false })
+    expect(founderAlert).toHaveBeenCalledTimes(1)
+    const arg = founderAlert.mock.calls[0][0]
+    expect(arg.subject).toMatch(/signup started onboarding: Ann Lee/)
+    expect(arg.lines.join('\n')).toMatch(/ann@example\.com/)
+    expect(updateUserMetadata).toHaveBeenCalledWith('clerk_1', { privateMetadata: { signupAlerted: true } })
+  })
+  it('does not alert again for an account already flagged', async () => {
+    state.privateMetadata = { signupAlerted: true }
+    await call({ query: { action: 'check' } })
+    expect(founderAlert).not.toHaveBeenCalled()
+    expect(updateUserMetadata).not.toHaveBeenCalled()
+  })
+  it('does not alert for people who already have an account', async () => {
+    state.user = { id: 'u-adv', org_id: 'o1', shop_id: 's1', role: 'advisor' }
+    await call({ query: { action: 'check' } })
+    expect(founderAlert).not.toHaveBeenCalled()
+  })
+  it('keeps the account unflagged when the email fails, so it is retried, and still answers normally', async () => {
+    founderAlert.mockResolvedValueOnce(false)
+    const res = await call({ query: { action: 'check' } })
+    expect(res.statusCode).toBe(200)
+    expect(res._body).toEqual({ exists: false })
+    expect(updateUserMetadata).not.toHaveBeenCalled()
+  })
+  it('an alert that throws can never break the check', async () => {
+    founderAlert.mockRejectedValueOnce(new Error('resend down'))
+    const res = await call({ query: { action: 'check' } })
+    expect(res.statusCode).toBe(200)
+    expect(res._body).toEqual({ exists: false })
+  })
+  it('alerts the founder when a new shop is created', async () => {
+    const res = await call({ method: 'POST', body: { role: 'owner', shopName: 'Main Street Auto' } })
+    expect(res.statusCode).toBe(201)
+    expect(founderAlert).toHaveBeenCalledTimes(1)
+    expect(founderAlert.mock.calls[0][0].subject).toBe('New shop created: Main Street Auto')
+  })
+  it('alerts the founder when someone joins with an invite code', async () => {
+    state.invite = invite({ role: 'tech' })
+    const res = await call({ method: 'POST', body: { inviteCode: 'abcd2345' } })
+    expect(res.statusCode).toBe(201)
+    expect(founderAlert).toHaveBeenCalledTimes(1)
+    expect(founderAlert.mock.calls[0][0].subject).toMatch(/Team member joined a shop: Ann Lee/)
   })
 })
 

@@ -1,5 +1,6 @@
-import { SignUp as ClerkSignUp } from '@clerk/clerk-react'
+import { SignUp as ClerkSignUp, ClerkLoading } from '@clerk/clerk-react'
 import { Link } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 import { HexDot, HexPattern } from '@/components/Hex'
 import { clerkAppearance } from '@/lib/clerkAppearance'
 
@@ -48,6 +49,7 @@ export default function SignUpPage() {
               'Unlimited users, no per-seat fees',
               'Every location on one dashboard',
               'Founding rate locked for life',
+              '14-day free trial, no card needed',
             ].map(item => (
               <li key={item} className="flex items-center gap-2.5 text-slate-300 text-sm">
                 <HexDot size={9} />
@@ -70,7 +72,24 @@ export default function SignUpPage() {
           </span>
         </Link>
 
+        {/* Phones do not get the brand panel, so give them the pitch here */}
+        <div className="lg:hidden w-full max-w-sm mx-auto text-center mb-6 -mt-2">
+          <h1 className="font-display text-2xl font-bold text-slate-900" style={{ letterSpacing: '-0.01em' }}>
+            Set up your shop in an afternoon.
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+            14-day free trial, no card needed. Unlimited users, every location on one dashboard.
+          </p>
+        </div>
+
         <div className="w-full max-w-sm mx-auto">
+          {/* Shown until the sign-up form finishes loading, so the page is never a blank panel */}
+          <ClerkLoading>
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm min-h-[420px] flex flex-col items-center justify-center gap-3 text-slate-400">
+              <Loader2 size={22} className="animate-spin text-orange-500" />
+              <span className="text-xs">Loading sign-up...</span>
+            </div>
+          </ClerkLoading>
           <ClerkSignUp
             routing="path"
             path="/sign-up"

@@ -2,8 +2,31 @@ import { verifyToken, createClerkClient } from '@clerk/backend'
 import { neon } from '@neondatabase/serverless'
 import { rateLimit } from './_lib/rate-limit.js'
 import { authenticate, setRlsContext } from './_lib/auth.js'
+import { sendFounderAlert } from './_lib/founder-alert.js'
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
+
+// Tell the founder when someone first reaches onboarding (once per account,
+// remembered in Clerk private metadata). If the matching "shop created" email
+// never follows, that signup probably got stuck. Never blocks or fails the
+// request.
+async function alertSignupStarted(clerkId) {
+  try {
+    const cu = await clerk.users.getUser(clerkId)
+    if (cu.privateMetadata?.signupAlerted) return
+    const name = [cu.firstName, cu.lastName].filter(Boolean).join(' ') || '(no name)'
+    const email = cu.emailAddresses?.[0]?.emailAddress || '(no email)'
+    const sent = await sendFounderAlert({
+      subject: `New signup started onboarding: ${name}`,
+      lines: [
+        `${name} (${email}) just created an account and reached onboarding.`,
+        '',
+        'If you do not get a "New shop created" or "joined" email for them within a day or two, they probably got stuck. A short, friendly note asking what stopped them is worth sending.',
+      ],
+    })
+    if (sent) await clerk.users.updateUserMetadata(clerkId, { privateMetadata: { signupAlerted: true } })
+  } catch { /* alerts are best effort */ }
+}
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -122,6 +145,9 @@ export default async function handler(req, res) {
     if (existing.length > 0) {
       return res.json({ exists: true, role: 'owner', orgId: existing[0].org_id, shopId: existing[0].shop_id })
     }
+
+    // New account reaching onboarding for the first time
+    await alertSignupStarted(clerkId)
     return res.json({ exists: false })
   }
 
@@ -241,6 +267,14 @@ export default async function handler(req, res) {
         },
       })
 
+      await sendFounderAlert({
+        subject: `New shop created: ${name}`,
+        lines: [
+          `${userName} (${userEmail || 'no email'}) created the shop "${name}".`,
+          'Their 14-day free trial starts now (no card needed).',
+        ],
+      })
+
       return res.status(201).json({ orgId: org.id, shopId: shop.id })
     } catch (err) {
       if (err.code === '23505') {
@@ -322,6 +356,11 @@ export default async function handler(req, res) {
         shopId: invite.shop_id,
         techId: invite.role === 'tech' ? newUser.id : undefined,
       },
+    })
+
+    await sendFounderAlert({
+      subject: `Team member joined a shop: ${userName}`,
+      lines: [`${userName} (${userEmail || 'no email'}) joined an existing shop as a ${invite.role} with an invite code.`],
     })
 
     return res.status(201).json({
