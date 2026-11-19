@@ -155,6 +155,16 @@ Search snippets and vendor pages only, no demos; prices are loose and may have c
 - Resulting order: (1) server-side invoices with company, truck number, VIN and mileage; (2) card payments on invoices (pay link), the largest gap in the market and a bigger job; (3) QuickBooks via add-on; (4) two-way texting as a paid add-on; (5) tire fields if asked. Do not build for collision shops now.
 - Sources: Capterra (TireShop, CCC ONE, Shopmonkey vs Tekmetric), tirebase.io pricing, support.tekmetric.com Accounting Link FAQ, tekmetric.com invoices, shopmonkey.io body shop page, shopview.com heavy-duty guide, fullbay.com.
 
+## Clerk production move (researched Nov 18; not started)
+
+Why: production runs on a Clerk DEVELOPMENT instance (pk_test); its emails say "[Development]", often land in spam, and it is not meant for real customers.
+- Users do NOT carry over. Clerk's production guide: "Users don't copy over either: a production instance starts with none." SSO connections, integrations and paths do not copy either. A support thread (over a year old, unverified) suggests exporting users and recreating them with the Backend API createUser (which accepts pre-hashed passwords). With only a few real accounts (J2M, Rasheed, Ray) do not migrate passwords: people sign in on production with the same email and an emailed code.
+- Google sign-in: the sign-up page has "Continue with Google". Because SSO settings do not copy, production most likely needs your own Google OAuth credentials (Google Cloud). Not confirmed; check Clerk's guide.
+- DNS is at Namecheap (nameservers dns1/dns2.registrar-servers.com; Advanced DNS tab), not Cloudflare, so Clerk's "DNS only" proxy issue does not apply. Current records: root A to Vercel (216.198.79.1), MX to Zoho (three), SPF "v=spf1 include:zoho.com ~all", Google and Zoho verification TXT. Clerk adds a few CNAMEs on subdomains (listed on its Domains page); they sit beside the existing records. Allow up to 48 hours to propagate.
+- Code needed: when someone signs in with a verified email that matches an existing users row, attach the new Clerk id to that row (and, for owners, update organizations.owner_clerk_id), then let the existing onboarding "check" step restore their metadata and forward them. Tests required. Also swap pk_live and sk_live in Vercel, update the CSP in vercel.json (it allows only *.clerk.accounts.dev), and test on a staging setup first (Preview deployments are not safe, they use production keys).
+- J2M experience: signed out once; no shop data, invoices or subscription is affected. Their browser-only invoices (localStorage sc_invoices) survive sign-out and sign-in, because logout only clears sessionStorage. Best path: pre-create their account on production with their exact email, tell them the day and what to do (Sign in, type email, enter the emailed code, then set a password in account settings).
+- Timing: after the server-side invoice work, at a quiet time, with J2M warned first.
+
 ## Open Items
 
 Waiting on the user:
