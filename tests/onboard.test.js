@@ -6,7 +6,7 @@ import { createMockReq, createMockRes, MOCK_OWNER, MOCK_ADVISOR } from './helper
 
 const state = vi.hoisted(() => ({
   user: null, ownerOrg: null, invite: null, queries: [], inserted: null,
-  clerkEmails: null, orgInsert: null, privateMetadata: null,
+  clerkEmails: null, orgInsert: null, privateMetadata: null, shopInsert: null,
 }))
 
 const mockSql = vi.hoisted(() => vi.fn())
@@ -43,7 +43,7 @@ const past = () => new Date(Date.now() - 1000).toISOString()
 
 beforeEach(() => {
   vi.clearAllMocks()
-  Object.assign(state, { user: null, ownerOrg: null, invite: null, queries: [], inserted: null, clerkEmails: null, orgInsert: null, privateMetadata: null })
+  Object.assign(state, { user: null, ownerOrg: null, invite: null, queries: [], inserted: null, clerkEmails: null, orgInsert: null, privateMetadata: null, shopInsert: null })
   founderAlert.mockReset()
   founderAlert.mockResolvedValue(true)
   updateUserMetadata.mockReset()
@@ -65,7 +65,10 @@ beforeEach(() => {
       state.orgInsert = q
       return Promise.resolve([{ id: 'new-org' }])
     }
-    if (/INSERT INTO shops/.test(q)) return Promise.resolve([{ id: 'new-shop' }])
+    if (/INSERT INTO shops/.test(q)) {
+      state.shopInsert = vals
+      return Promise.resolve([{ id: 'new-shop' }])
+    }
     return Promise.resolve([])
   })
 })
@@ -298,6 +301,18 @@ describe('owner onboarding (unchanged behavior)', () => {
     expect(state.orgInsert).toMatch(/'trial'/)
     expect(state.orgInsert).not.toMatch(/founding/)
     expect(state.orgInsert).toMatch(/interval '14 days'/)
+  })
+  it('saves the optional shop address and phone, trimmed', async () => {
+    const res = await call({ method: 'POST', body: { role: 'owner', shopName: 'Main Street Auto', address: '  6301 W 101st St  ', phone: ' 708-522-2999 ' } })
+    expect(res.statusCode).toBe(201)
+    // INSERT values: org id, name, address, phone
+    expect(state.shopInsert).toEqual(['new-org', 'Main Street Auto', '6301 W 101st St', '708-522-2999'])
+  })
+  it('leaves address and phone empty when not given, blank, or not text', async () => {
+    await call({ method: 'POST', body: { role: 'owner', shopName: 'Main Street Auto' } })
+    expect(state.shopInsert).toEqual(['new-org', 'Main Street Auto', null, null])
+    await call({ method: 'POST', body: { role: 'owner', shopName: 'Main Street Auto', address: '   ', phone: { x: 1 } } })
+    expect(state.shopInsert).toEqual(['new-org', 'Main Street Auto', null, null])
   })
   it('an existing advisor cannot register as an owner', async () => {
     state.user = { id: 'u-adv', org_id: 'o1', shop_id: 's1', role: 'advisor' }

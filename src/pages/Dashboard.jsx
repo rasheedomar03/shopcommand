@@ -12,6 +12,7 @@ import { useData } from '@/contexts/DataContext'
 import { formatCurrency, formatMoney, roLabel } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Tooltip as AppTooltip } from '@/components/ui/Tooltip'
+import { SetupChecklist } from '@/components/SetupChecklist'
 import { cn } from '@/lib/utils'
 
 const REVENUE_STAGES = new Set(['Paid', 'Invoiced', 'Complete'])
@@ -227,6 +228,9 @@ export default function Dashboard() {
           New RO
         </Button>
       </div>
+
+      {/* First-run guidance for owners (hides itself once the basics are done) */}
+      <SetupChecklist onNewRO={() => setNewROOpen(true)} />
 
       {/* Notifications strip */}
       {allVisibleAlerts.length > 0 && (

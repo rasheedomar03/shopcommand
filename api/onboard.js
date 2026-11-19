@@ -175,7 +175,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid token', detail: err.message })
   }
 
-  const { role, shopName, inviteCode } = req.body || {}
+  const { role, shopName, inviteCode, address, phone } = req.body || {}
 
   // `role` is optional when joining with an invite code: the invite decides
   // it. Older clients still send it, and it is checked against the invite.
@@ -247,9 +247,12 @@ export default async function handler(req, res) {
         RETURNING id
       `
 
+      // Optional contact details: they print on invoices and appear in customer
+      // emails. Anything blank or not text is simply left out.
+      const cleanText = (v, max) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null)
       const [shop] = await sql`
-        INSERT INTO shops (org_id, name)
-        VALUES (${org.id}, ${name})
+        INSERT INTO shops (org_id, name, address, phone)
+        VALUES (${org.id}, ${name}, ${cleanText(address, 200)}, ${cleanText(phone, 30)})
         RETURNING id
       `
 

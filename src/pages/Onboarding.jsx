@@ -36,6 +36,8 @@ export default function Onboarding() {
   const [selected, setSelected] = useState(null)
   const [step, setStep] = useState('role')
   const [shopName, setShopName] = useState('')
+  const [shopAddress, setShopAddress] = useState('')
+  const [shopPhone, setShopPhone] = useState('')
   const [inviteCode, setInviteCode] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -100,7 +102,12 @@ export default function Onboarding() {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ role: 'owner', shopName: shopName.trim() }),
+        body: JSON.stringify({
+          role: 'owner',
+          shopName: shopName.trim(),
+          address: shopAddress.trim(),
+          phone: shopPhone.trim(),
+        }),
       })
 
       const data = await res.json()
@@ -274,6 +281,29 @@ export default function Onboarding() {
               placeholder="e.g. Main Street Auto"
               maxLength={100}
               autoFocus
+              className="w-full h-11 px-3 rounded-lg border border-border bg-surface text-sm text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/20 transition-all mb-3"
+            />
+
+            <p className="text-2xs text-text-muted mb-2">
+              Optional, but it prints on your invoices and shows in customer emails. You can add it later in Settings.
+            </p>
+            <input
+              type="text"
+              value={shopAddress}
+              onChange={e => setShopAddress(e.target.value)}
+              placeholder="Shop address"
+              maxLength={200}
+              autoComplete="street-address"
+              className="w-full h-11 px-3 rounded-lg border border-border bg-surface text-sm text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/20 transition-all mb-3"
+            />
+            <input
+              type="tel"
+              value={shopPhone}
+              onChange={e => setShopPhone(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleOwnerSubmit()}
+              placeholder="Shop phone"
+              maxLength={30}
+              autoComplete="tel"
               className="w-full h-11 px-3 rounded-lg border border-border bg-surface text-sm text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/20 transition-all mb-4"
             />
 

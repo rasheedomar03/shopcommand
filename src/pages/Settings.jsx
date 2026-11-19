@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Building2, Bell, Shield, CreditCard, Users, UserPlus, Phone, Pencil, Check, X, Clock, Calendar, Plus, Trash2, Target, Info } from 'lucide-react'
 import { useClerk } from '@clerk/clerk-react'
+import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
@@ -25,7 +26,15 @@ export default function Settings() {
   const { openUserProfile } = useClerk()
   const isOwner = session?.role === 'owner'
   const SECTIONS = ALL_SECTIONS.filter(s => !s.ownerOnly || isOwner)
-  const [active, setActive] = useState('profile')
+  // Links such as /settings?tab=locations (the setup checklist) and the return
+  // from Stripe checkout (/settings?tab=billing) open the matching section
+  const [searchParams] = useSearchParams()
+  const requestedTab = searchParams.get('tab')
+  const [active, setActive] = useState(() => (SECTIONS.some(s => s.id === requestedTab) ? requestedTab : 'profile'))
+  useEffect(() => {
+    if (requestedTab && SECTIONS.some(s => s.id === requestedTab)) setActive(requestedTab)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedTab])
   const [saved, setSaved] = useState(false)
 
   // Billing status (owner, non-demo only)
