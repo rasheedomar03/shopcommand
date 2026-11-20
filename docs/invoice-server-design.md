@@ -2,6 +2,12 @@
 
 Drafted Nov 18, 2026. Nothing here is built. It waits on Trinity's answers (see Open questions) and your go-ahead.
 
+> **Update Nov 20:** the database section below is superseded by the draft migration
+> `db/migrations/008_server_invoices_fleet_credits.sql`, which adds customer and
+> truck links, a fleet flag, a drafts status, a credits ledger and unique invoice
+> numbers. Trinity's answers (own Fleet page, customer credits, invoices never
+> deleted, revenue counted when paid) are recorded in docs/HANDOFF.md.
+
 ## Problem
 
 Invoices made from scratch in the Invoice Generator (what J2M does, since they do not use repair orders) are saved only in the browser (localStorage key `sc_invoices`). Cause: the server cannot hold them.
