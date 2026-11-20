@@ -27,7 +27,7 @@ const TYPES = ['labor', 'part', 'fee']
  * there is no labor/parts split, so the whole subtotal is taxed. The card fee
  * is 3% of subtotal plus tax.
  */
-export function computeTotals({ items = [], itemize = true, taxRate = 0, taxLabor = false, cardFee = false } = {}) {
+export function computeTotals({ items = [], itemize = true, taxRate = 0, taxLabor = false, cardFee = false, cardFeeRate = CARD_FEE_RATE * 100 } = {}) {
   const lineTotal = it => num(it.qty) * num(it.price)
   const sum = type => round2(items.filter(i => i.type === type).reduce((s, i) => s + lineTotal(i), 0))
   const labor = sum('labor')
@@ -36,7 +36,7 @@ export function computeTotals({ items = [], itemize = true, taxRate = 0, taxLabo
   const subtotal = round2(labor + parts + fees)
   const taxable = itemize ? parts + (taxLabor ? labor : 0) : subtotal
   const tax = round2(taxable * (num(taxRate) / 100))
-  const fee = cardFee ? round2((subtotal + tax) * CARD_FEE_RATE) : 0
+  const fee = cardFee ? round2((subtotal + tax) * (num(cardFeeRate) / 100)) : 0
   const total = round2(subtotal + tax + fee)
   return { labor, parts, fees, subtotal, tax, fee, total }
 }

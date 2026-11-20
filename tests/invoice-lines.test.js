@@ -56,6 +56,11 @@ describe('computeTotals', () => {
     expect(t.fee).toBe(3.3)
     expect(t.total).toBe(113.3)
   })
+  it('uses a different card fee percentage when a shop sets one', () => {
+    const items = [item({ qty: '1', price: '100' })]
+    expect(computeTotals({ items, taxRate: 0, cardFee: true, cardFeeRate: 2.5 }).fee).toBe(2.5)
+    expect(computeTotals({ items, taxRate: 0, cardFee: true, cardFeeRate: '' }).fee).toBe(0)
+  })
   it('rounds to cents so the lines always add up to the total', () => {
     const t = computeTotals({ items: [item({ qty: '3', price: '19.99' })], taxRate: 8.25, cardFee: true })
     expect(t.subtotal).toBe(59.97)

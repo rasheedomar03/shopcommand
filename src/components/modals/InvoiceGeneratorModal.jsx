@@ -6,7 +6,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   computeTotals, lineDisplay, linesFromInvoice, servicesFromItems,
-  taxSettingsFor, invoiceNumberTaken, CARD_FEE_RATE,
+  taxSettingsFor, invoiceNumberTaken,
 } from '@/lib/invoiceLines'
 
 // In-app invoice generator: create a printable invoice from scratch, from a
@@ -27,12 +27,12 @@ const TAX_PREF_KEY = 'sc_inv_tax_v1'
 function readTaxPref() {
   try {
     const p = JSON.parse(localStorage.getItem(TAX_PREF_KEY) || 'null')
-    if (p && p.rate !== undefined) return { rate: String(p.rate), labor: !!p.labor }
+    if (p && p.rate !== undefined) return { rate: String(p.rate), labor: !!p.labor, fee: String(p.fee ?? '3') }
   } catch { /* use defaults */ }
-  return { rate: '8.25', labor: false }
+  return { rate: '8.25', labor: false, fee: '3' }
 }
-function writeTaxPref(rate, labor) {
-  try { localStorage.setItem(TAX_PREF_KEY, JSON.stringify({ rate, labor })) } catch { /* per-viewer convenience */ }
+function writeTaxPref(rate, labor, fee) {
+  try { localStorage.setItem(TAX_PREF_KEY, JSON.stringify({ rate, labor, fee })) } catch { /* per-viewer convenience */ }
 }
 
 function nextInvoiceNumber() {
@@ -71,6 +71,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const [taxRate, setTaxRate] = useState(() => readTaxPref().rate)
   const [taxLabor, setTaxLabor] = useState(() => readTaxPref().labor)
   const [cardFee, setCardFee] = useState(false)
+  const [cardFeeRate, setCardFeeRate] = useState(() => readTaxPref().fee)
   // Categorize lines as labor/part/fee. Some shops bill flat line amounts
   // with no breakdown; remember the choice across sessions.
   const [itemize, setItemize] = useState(() => {
@@ -80,13 +81,14 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     setItemize(on)
     try { localStorage.setItem('sc_inv_itemize', on ? '1' : '0') } catch { /* per-viewer convenience only */ }
   }
-  const changeTaxRate = (v) => { setTaxRate(v); writeTaxPref(v, taxLabor) }
-  const changeTaxLabor = (v) => { setTaxLabor(v); writeTaxPref(taxRate, v) }
+  const changeTaxRate = (v) => { setTaxRate(v); writeTaxPref(v, taxLabor, cardFeeRate) }
+  const changeTaxLabor = (v) => { setTaxLabor(v); writeTaxPref(taxRate, v, cardFeeRate) }
+  const changeCardFeeRate = (v) => { setCardFeeRate(v); writeTaxPref(taxRate, taxLabor, v) }
   const [notes, setNotes] = useState('')
 
   // Unsaved-changes tracking. The baseline is the form as it looked right after
   // opening (or after the last Save); anything different from it is unsaved.
-  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, vehicle, unitNumber, vin, jobTitle, diagnostics, items, taxRate, taxLabor, cardFee, notes })
+  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, vehicle, unitNumber, vin, jobTitle, diagnostics, items, taxRate, taxLabor, cardFee, cardFeeRate, notes })
   const [baseline, setBaseline] = useState(null)
   const [initTick, setInitTick] = useState(0)
   const [restored, setRestored] = useState(false)
@@ -148,7 +150,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     setCustomer(''); setVehicle(''); setUnitNumber(''); setVin('')
     setJobTitle(''); setDiagnostics(''); setNotes('')
     setItems([{ ...emptyItem }])
-    setTaxRate(pref.rate); setTaxLabor(pref.labor); setCardFee(false)
+    setTaxRate(pref.rate); setTaxLabor(pref.labor); setCardFee(false); setCardFeeRate(pref.fee)
   }
 
   // Initialize when opened
@@ -173,6 +175,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
       setTaxRate(tax.taxRate)
       setTaxLabor(tax.taxLabor)
       setCardFee(!!fromInvoice.cardFee)
+      setCardFeeRate(String(fromInvoice.cardFeeRate ?? readTaxPref().fee))
       if (typeof fromInvoice.itemize === 'boolean') setItemize(fromInvoice.itemize)
     } else if (fromRO) {
       resetBlank()
@@ -205,6 +208,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           setTaxRate(String(d.taxRate ?? readTaxPref().rate))
           setTaxLabor(!!d.taxLabor)
           setCardFee(!!d.cardFee)
+          setCardFeeRate(String(d.cardFeeRate ?? readTaxPref().fee))
           setNotes(d.notes || '')
           restoredRef.current = true
           setRestored(true)
@@ -226,7 +230,8 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     setInvNumber(next)
   }
 
-  const totals = computeTotals({ items, itemize, taxRate, taxLabor, cardFee })
+  const totals = computeTotals({ items, itemize, taxRate, taxLabor, cardFee, cardFeeRate })
+  const feeLabel = `Card fee ${n(cardFeeRate)}%`
   const shown = items.filter(it => it.desc || n(it.price) > 0)
   const setItem = (idx, patch) => setItems(prev => prev.map((it, i) => i === idx ? { ...it, ...patch } : it))
 
@@ -254,7 +259,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
       // per line) is kept for the list, export and older screens.
       lines: shown.map(it => ({ desc: it.desc || 'Item', type: it.type, qty: n(it.qty), price: n(it.price) })),
       services: servicesFromItems(items),
-      taxRate: n(taxRate), taxLabor, itemize, cardFee,
+      taxRate: n(taxRate), taxLabor, itemize, cardFee, cardFeeRate: n(cardFeeRate),
       cardFeeAmount: totals.fee,
       subtotal: totals.subtotal,
       tax: totals.tax,
@@ -329,6 +334,10 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             <div>
               <label className={label}>Sales tax %</label>
               <input className={`${field} mt-1`} inputMode="decimal" value={taxRate} onChange={e => changeTaxRate(e.target.value)} />
+              <p className="mt-1 text-2xs text-text-muted">
+                Type 0 if your prices already include tax.{' '}
+                {n(taxRate) !== 0 && <button type="button" onClick={() => changeTaxRate('0')} className="font-semibold text-orange underline">No tax</button>}
+              </p>
             </div>
           </div>
 
@@ -415,9 +424,20 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
               onClick={() => setCardFee(v => !v)}
               className={`w-full h-8 rounded-md text-xs font-semibold transition-colors ${cardFee ? 'bg-orange text-white hover:bg-orange/90' : 'border border-orange/40 text-orange hover:bg-orange/10'}`}
             >
-              {cardFee ? `Card fee ${Math.round(CARD_FEE_RATE * 100)}% added (${fmt(totals.fee)}). Click to remove` : `Add card fee ${Math.round(CARD_FEE_RATE * 100)}%`}
+              {cardFee ? `${feeLabel} added (${fmt(totals.fee)}). Click to remove` : `Add ${feeLabel.toLowerCase()}`}
             </button>
-            <p className="text-2xs text-text-muted">For customers paying by card. It is {Math.round(CARD_FEE_RATE * 100)}% of the total including tax and prints as its own line. Check your state's card surcharge rules.</p>
+            <div className="flex items-center gap-2 text-2xs text-text-muted">
+              <label htmlFor="sc-card-fee-rate">Fee percent</label>
+              <input
+                id="sc-card-fee-rate"
+                className="w-16 h-7 px-2 rounded-md bg-background border border-border text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-orange/40"
+                inputMode="decimal"
+                value={cardFeeRate}
+                onChange={e => changeCardFeeRate(e.target.value)}
+              />
+              <span>Remembered for next time.</span>
+            </div>
+            <p className="text-2xs text-text-muted">For customers paying by card. It is a percent of the total including tax and prints as its own line. Check your state's card surcharge rules.</p>
           </div>
 
           <div>
@@ -568,7 +588,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
               <div className="flex justify-between text-slate-600"><span>Sales tax ({n(taxRate)}%{itemize && taxLabor ? ', parts and labor' : itemize ? ', parts' : ''})</span><span className="tabular-nums">{fmt(totals.tax)}</span></div>
             )}
             {cardFee && (
-              <div className="flex justify-between text-slate-600"><span>Card fee {Math.round(CARD_FEE_RATE * 100)}%</span><span className="tabular-nums">{fmt(totals.fee)}</span></div>
+              <div className="flex justify-between text-slate-600"><span>{feeLabel}</span><span className="tabular-nums">{fmt(totals.fee)}</span></div>
             )}
             <div className="flex justify-between pt-1.5 border-t border-slate-200 text-base font-bold"><span>Total due</span><span className="tabular-nums">{fmt(totals.total)}</span></div>
           </div>

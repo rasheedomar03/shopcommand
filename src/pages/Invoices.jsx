@@ -309,7 +309,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
             )}
             {!editing && cardFeeAmt > 0 && (
               <div className="flex justify-between text-sm text-text-secondary">
-                <span>Card fee 3%</span>
+                <span>Card fee {invoice.cardFeeRate ?? 3}%</span>
                 <span className="tabular-nums">{formatMoney(cardFeeAmt)}</span>
               </div>
             )}
@@ -585,7 +585,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
         <div style={{ marginLeft: 'auto', width: 240, paddingTop: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Subtotal</span><span>{formatMoney(view.subtotal)}</span></div>
           {showTax && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>{taxLabel}</span><span>{formatMoney(view.tax)}</span></div>}
-          {cardFeeAmt > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Card fee 3%</span><span>{formatMoney(cardFeeAmt)}</span></div>}
+          {cardFeeAmt > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Card fee {invoice.cardFeeRate ?? 3}%</span><span>{formatMoney(cardFeeAmt)}</span></div>}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', marginTop: 4, borderTop: '1px solid #cbd5e1', fontWeight: 700, fontSize: 15 }}><span>Total</span><span>{formatMoney(view.total)}</span></div>
           {amountPaid > 0 && (
             <>
