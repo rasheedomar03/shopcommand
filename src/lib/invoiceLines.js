@@ -1,3 +1,5 @@
+import { matchesSearch } from './utils'
+
 // Invoice line items for from-scratch invoices: quantity and unit price are kept
 // on every line so an invoice can be reopened and edited without losing them,
 // and totals (tax, card fee) are calculated in one place.
@@ -12,6 +14,15 @@ export function invoiceNumberTaken(invoices, number, selfId = null) {
   return (invoices || []).some(i =>
     String(i?.id ?? '').trim().toLowerCase() === wanted && String(i?.id ?? '') !== String(selfId ?? '')
   )
+}
+
+/**
+ * Does an invoice match a search? Looks at the invoice number, the customer or
+ * company, the vehicle, truck number, VIN and the repair title. Missing fields
+ * never crash it.
+ */
+export function invoiceMatchesQuery(inv, query) {
+  return matchesSearch(query, inv?.id, inv?.customerName, inv?.vehicle, inv?.unitNumber, inv?.vin, inv?.jobTitle)
 }
 
 /** Card processing fee passed on to the customer. Always 3%. */

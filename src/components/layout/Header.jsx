@@ -10,10 +10,17 @@ import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn, roLabel, matchesSearch, sanitizeField } from '@/lib/utils'
+import { invoiceMatchesQuery } from '@/lib/invoiceLines'
 
 function SearchDropdown({ query, onClose }) {
-  const { repairOrders, customers } = useData()
+  const { repairOrders, customers, invoices } = useData()
+  const { session } = useAuth()
   const navigate = useNavigate()
+  const isAdvisor = session?.role === 'advisor'
+  // Invoices by number, company, vehicle, truck number or VIN (advisors see their own shop's)
+  const matchedInvoices = invoices
+    .filter(inv => (!isAdvisor || inv.shopId === session.shopId) && invoiceMatchesQuery(inv, query))
+    .slice(0, 6)
   const matchedROs = repairOrders
     .filter(ro => matchesSearch(query, roLabel(ro), ro.customerName, ro.vehicle))
     .slice(0, 4)
@@ -23,7 +30,7 @@ function SearchDropdown({ query, onClose }) {
     .filter(c => matchesSearch(query, c.name, c.phone))
     .slice(0, 3)
 
-  const total = matchedROs.length + matchedCustomers.length
+  const total = matchedROs.length + matchedCustomers.length + matchedInvoices.length
 
   const go = (path) => {
     navigate(path)
@@ -36,8 +43,29 @@ function SearchDropdown({ query, onClose }) {
         <div className="px-4 py-6 text-center text-xs text-text-muted">No results for "{query}"</div>
       ) : (
         <>
-          {matchedROs.length > 0 && (
+          {matchedInvoices.length > 0 && (
             <div>
+              <div className="px-3 pt-2.5 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-muted">Invoices</div>
+              {matchedInvoices.map(inv => (
+                <button
+                  key={inv.id}
+                  onClick={() => go(`/invoices?open=${encodeURIComponent(inv.id)}`)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-border/50 transition-colors text-left"
+                >
+                  <span className="text-xs font-mono text-orange min-w-16 flex-shrink-0">{inv.id}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-text-primary truncate">{inv.customerName || 'No customer name'}</div>
+                    <div className="text-2xs text-text-muted truncate">
+                      {[inv.vehicle, inv.unitNumber && `Truck # ${inv.unitNumber}`, inv.vin].filter(Boolean).join(' · ')}
+                    </div>
+                  </div>
+                  <span className="text-2xs text-text-muted capitalize flex-shrink-0">{inv.status}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {matchedROs.length > 0 && (
+            <div className={cn(matchedInvoices.length > 0 && 'border-t border-border')}>
               <div className="px-3 pt-2.5 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-muted">Repair Orders</div>
               {matchedROs.map(ro => (
                 <button
@@ -56,7 +84,7 @@ function SearchDropdown({ query, onClose }) {
             </div>
           )}
           {matchedCustomers.length > 0 && (
-            <div className={cn(matchedROs.length > 0 && 'border-t border-border')}>
+            <div className={cn((matchedROs.length > 0 || matchedInvoices.length > 0) && 'border-t border-border')}>
               <div className="px-3 pt-2.5 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-muted">Customers</div>
               {matchedCustomers.map(c => (
                 <button
@@ -158,7 +186,7 @@ export function Header({ onMenuOpen }) {
             value={query}
             onChange={e => setQuery(sanitizeField(e.target.value, 100))}
             onFocus={() => setFocused(true)}
-            placeholder="Search ROs, customers, vehicles…"
+            placeholder="Search invoices, ROs, customers, trucks…"
             className={cn(
               'h-8 w-full rounded-md border border-border bg-surface pl-8 pr-8 text-xs text-text-primary',
               'placeholder:text-text-muted',

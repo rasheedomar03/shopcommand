@@ -9,7 +9,8 @@ import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal
 import { BlankFormModal } from '@/components/modals/BlankFormModal'
 import { formatMoney, formatDate, formatRelativeTime, roLabel, matchesSearch } from '@/lib/utils'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
-import { invoiceNumberTaken, lineDisplay } from '@/lib/invoiceLines'
+import { invoiceNumberTaken, invoiceMatchesQuery, lineDisplay } from '@/lib/invoiceLines'
+import { useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
 
@@ -611,13 +612,27 @@ export default function Invoices() {
   const [blankFormOpen, setBlankFormOpen] = useState(false)
   const openInGenerator = (inv) => { setGeneratorSource(inv); setGeneratorOpen(true) }
 
+  // Links from the top search box: /invoices?open=030 opens that invoice
+  // (a draft in the generator, anything else in the detail view)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const openParam = searchParams.get('open')
+  useEffect(() => {
+    if (!openParam) return
+    const target = invoices.find(i => i.id === openParam)
+    if (!target) return // data may still be loading; try again when it arrives
+    if (!target.dbId && target.status === 'draft') openInGenerator(target)
+    else setSelected(target)
+    setSearchParams({}, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openParam, invoices])
+
   const allInvoices = invoices
   const scoped = isAdvisor
     ? allInvoices.filter(inv => inv.shopId === session.shopId)
     : allInvoices
 
   const filtered = scoped.filter(inv => {
-    const matchesText = matchesSearch(search, inv.id, inv.customerName, inv.vehicle, inv.unitNumber, inv.vin)
+    const matchesText = invoiceMatchesQuery(inv, search)
     const matchesStatus = statusFilter === 'All' || inv.status === statusFilter
     return matchesText && matchesStatus
   })
@@ -703,6 +718,8 @@ export default function Invoices() {
             <Tr>
               <Th>Invoice</Th>
               <Th className="hidden sm:table-cell">Vehicle</Th>
+              <Th className="hidden sm:table-cell">Truck #</Th>
+              <Th className="hidden lg:table-cell">VIN</Th>
               <Th className="hidden md:table-cell">Shop</Th>
               <Th>Status</Th>
               <Th className="text-right">Amount</Th>
@@ -725,12 +742,18 @@ export default function Invoices() {
                   <Td className="hidden sm:table-cell">
                     <span className="text-xs text-text-secondary">{inv.vehicle}</span>
                   </Td>
+                  <Td className="hidden sm:table-cell">
+                    <span className="text-xs font-medium text-text-primary">{inv.unitNumber || ''}</span>
+                  </Td>
+                  <Td className="hidden lg:table-cell">
+                    <span className="text-2xs font-mono text-text-muted">{inv.vin || ''}</span>
+                  </Td>
                   <Td className="hidden md:table-cell">
                     <span className="text-xs text-text-muted">{shop?.name}</span>
                   </Td>
                   <Td><StatusBadge status={inv.status} /></Td>
                   <Td className="text-right">
-                    <span className="text-sm font-medium text-text-primary tabular-nums">${inv.total.toFixed(2)}</span>
+                    <span className="text-sm font-medium text-text-primary tabular-nums">{formatMoney(inv.total)}</span>
                   </Td>
                 </Tr>
               )

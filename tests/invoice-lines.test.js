@@ -1,5 +1,27 @@
 import { describe, it, expect } from 'vitest'
-import { computeTotals, lineDisplay, linesFromInvoice, servicesFromItems, taxSettingsFor, invoiceNumberTaken, CARD_FEE_RATE } from '../src/lib/invoiceLines.js'
+import { computeTotals, lineDisplay, linesFromInvoice, servicesFromItems, taxSettingsFor, invoiceNumberTaken, invoiceMatchesQuery, CARD_FEE_RATE } from '../src/lib/invoiceLines.js'
+
+describe('invoiceMatchesQuery', () => {
+  const inv = { id: '030', customerName: 'United Road', vehicle: 'NF6170', unitNumber: 'T-27', vin: '1FUJA6CV35LM12345', jobTitle: 'Brake job' }
+  it('finds an invoice by its number, even a short one like 030', () => {
+    expect(invoiceMatchesQuery(inv, '030')).toBe(true)
+    expect(invoiceMatchesQuery(inv, '30')).toBe(true)
+  })
+  it('finds it by company, vehicle, truck number, VIN or repair title', () => {
+    expect(invoiceMatchesQuery(inv, 'united')).toBe(true)
+    expect(invoiceMatchesQuery(inv, 'nf61')).toBe(true)
+    expect(invoiceMatchesQuery(inv, 't-27')).toBe(true)
+    expect(invoiceMatchesQuery(inv, 'ljm12')).toBe(false)
+    expect(invoiceMatchesQuery(inv, 'LM12345')).toBe(true)
+    expect(invoiceMatchesQuery(inv, 'brake')).toBe(true)
+  })
+  it('does not match unrelated text, and never crashes on missing fields', () => {
+    expect(invoiceMatchesQuery(inv, 'zzz')).toBe(false)
+    expect(invoiceMatchesQuery({ id: '031' }, 'united')).toBe(false)
+    expect(invoiceMatchesQuery(null, 'x')).toBe(false)
+    expect(invoiceMatchesQuery(inv, '')).toBe(true)
+  })
+})
 
 describe('invoiceNumberTaken', () => {
   const invoices = [{ id: 'INV-100' }, { id: 'INV-101' }]
