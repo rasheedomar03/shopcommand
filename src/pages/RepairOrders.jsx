@@ -9,7 +9,7 @@ import { StageBadge } from '@/components/ui/Badge'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
-import { formatMoney, formatRelativeTime, roLabel, RO_STAGES } from '@/lib/utils'
+import { formatMoney, formatRelativeTime, roLabel, matchesSearch, RO_STAGES } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 export default function RepairOrders() {
@@ -41,15 +41,10 @@ export default function RepairOrders() {
   }, [deepLinkId, repairOrders]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = scopedROs.filter(ro => {
-    const q = search.toLowerCase()
-    const matchesSearch = !q ||
-      roLabel(ro).toLowerCase().includes(q) ||
-      ro.customerName.toLowerCase().includes(q) ||
-      ro.vehicle.toLowerCase().includes(q) ||
-      ro.techName?.toLowerCase().includes(q)
+    const matchesText = matchesSearch(search, roLabel(ro), ro.customerName, ro.vehicle, ro.techName)
     const matchesStage = stageFilter === 'All' || ro.stage === stageFilter
     const matchesShop = isAdvisor || shopFilter === 'All' || String(ro.shopId) === shopFilter
-    return matchesSearch && matchesStage && matchesShop
+    return matchesText && matchesStage && matchesShop
   })
 
   const stageCounts = ['All', ...RO_STAGES].reduce((acc, s) => {

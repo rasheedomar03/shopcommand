@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { Modal } from '@/components/ui/Modal'
-import { formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime, matchesSearch } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
 
@@ -207,14 +207,9 @@ export default function Inspections() {
     : allInspections
 
   const filtered = scoped.filter(i => {
-    const q = search.toLowerCase()
-    const matchesSearch = !q ||
-      i.id.toLowerCase().includes(q) ||
-      i.customerName.toLowerCase().includes(q) ||
-      i.vehicle.toLowerCase().includes(q) ||
-      i.techName.toLowerCase().includes(q)
+    const matchesText = matchesSearch(search, i.id, i.customerName, i.vehicle, i.techName)
     const matchesStatus = statusFilter === 'All' || i.status === statusFilter
-    return matchesSearch && matchesStatus
+    return matchesText && matchesStatus
   })
 
   return (

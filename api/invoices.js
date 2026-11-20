@@ -354,11 +354,19 @@ export default createHandler(
       const [invoice] = await sql`SELECT * FROM invoices WHERE id = ${id} AND org_id = ${user.orgId}`
       if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
 
-      // Revert a paid invoice to unpaid (mistaken payment). Its recorded
-      // payments are marked refunded so the paid total resets with it.
+      // Revert to unpaid (mistaken payment): a paid invoice, or one that is only
+      // part paid. Its recorded payments are marked refunded so the paid total
+      // resets with it.
       if (status === 'unpaid') {
-        if (invoice.status !== 'paid') {
-          return res.status(409).json({ error: 'Only paid invoices can be marked unpaid' })
+        if (invoice.status === 'void') {
+          return res.status(409).json({ error: 'A voided invoice cannot be changed' })
+        }
+        const [{ n: recorded }] = await sql`
+          SELECT COUNT(*)::int AS n FROM payments
+          WHERE invoice_id = ${id} AND org_id = ${user.orgId} AND status = 'completed'
+        `
+        if (invoice.status !== 'paid' && recorded === 0) {
+          return res.status(409).json({ error: 'This invoice has no payments to remove' })
         }
         const [row] = await sql`
           UPDATE invoices SET status = 'unpaid', paid_at = NULL
@@ -366,7 +374,10 @@ export default createHandler(
           RETURNING *
         `
         await sql`UPDATE payments SET status = 'refunded' WHERE invoice_id = ${id} AND org_id = ${user.orgId} AND status = 'completed'`
-        await sql`UPDATE repair_orders SET stage = 'Invoiced' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        // Only a fully paid invoice had moved its repair order on to Paid
+        if (invoice.status === 'paid' && invoice.ro_id) {
+          await sql`UPDATE repair_orders SET stage = 'Invoiced' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        }
         return res.json({ ...row, amount_paid: 0 })
       }
 

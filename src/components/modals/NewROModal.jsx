@@ -3,7 +3,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
-import { RO_STAGES, sanitizeVin, sanitizeField } from '@/lib/utils'
+import { RO_STAGES, sanitizeVin, sanitizeField, matchesSearch } from '@/lib/utils'
 import { Search, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -213,7 +213,7 @@ export function NewROModal({
                     if (errors.customerName) setErrors(er => ({ ...er, customerName: undefined }))
                     const q = val.trim().toLowerCase()
                     if (q.length >= 1) {
-                      const matches = customers.filter(c => c.name.toLowerCase().includes(q)).slice(0, 5)
+                      const matches = customers.filter(c => matchesSearch(q, c.name)).slice(0, 5)
                       setCustSuggestions(matches)
                       setShowSuggestions(matches.length > 0)
                     } else {

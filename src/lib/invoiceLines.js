@@ -2,6 +2,18 @@
 // on every line so an invoice can be reopened and edited without losing them,
 // and totals (tax, card fee) are calculated in one place.
 
+/**
+ * True when another invoice already uses this number (ignoring case and
+ * spaces). `selfId` is the invoice being edited, which may keep its own number.
+ */
+export function invoiceNumberTaken(invoices, number, selfId = null) {
+  const wanted = String(number ?? '').trim().toLowerCase()
+  if (!wanted) return false
+  return (invoices || []).some(i =>
+    String(i?.id ?? '').trim().toLowerCase() === wanted && String(i?.id ?? '') !== String(selfId ?? '')
+  )
+}
+
 /** Card processing fee passed on to the customer. Always 3%. */
 export const CARD_FEE_RATE = 0.03
 

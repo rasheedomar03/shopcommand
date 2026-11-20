@@ -4,6 +4,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { invoiceNumberTaken } from '@/lib/invoiceLines'
 
 // In-app invoice generator: create a printable invoice from scratch, from a
 // repair order, or from an existing invoice record. The preview is rendered
@@ -42,7 +43,7 @@ function itemsFromInvoice(inv) {
 }
 
 export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromRO = null }) {
-  const { shops, repairOrders, addInvoice } = useData()
+  const { shops, repairOrders, addInvoice, invoices } = useData()
   const { session } = useAuth()
   const [savedFlash, setSavedFlash] = useState(false)
   const [savedOnServer, setSavedOnServer] = useState(false)
@@ -176,6 +177,15 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
 
   const shop = shops.find(s => String(s.id) === String(shopId))
 
+  // Two invoices can never share a number: saving over an existing number used
+  // to silently replace the earlier invoice.
+  const numberTaken = invoiceNumberTaken(invoices, invNumber, fromInvoice?.id)
+  const useNextFreeNumber = () => {
+    let next = nextInvoiceNumber()
+    for (let i = 0; i < 20 && invoiceNumberTaken(invoices, next, fromInvoice?.id); i++) next = nextInvoiceNumber()
+    setInvNumber(next)
+  }
+
   const n = v => Number(v) || 0
   const lineTotal = it => n(it.qty) * n(it.price)
   const laborSubtotal = items.filter(i => i.type === 'labor').reduce((s, i) => s + lineTotal(i), 0)
@@ -234,7 +244,13 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             </div>
             <div>
               <label className="text-2xs font-semibold text-text-muted uppercase tracking-wider">Invoice #</label>
-              <input className={`${field} mt-1`} value={invNumber} onChange={e => setInvNumber(e.target.value)} />
+              <input className={`${field} mt-1 ${numberTaken ? 'border-status-red' : ''}`} value={invNumber} onChange={e => setInvNumber(e.target.value)} />
+              {numberTaken && (
+                <p className="mt-1 text-2xs text-status-red">
+                  That number is already used by another invoice.{' '}
+                  <button type="button" onClick={useNextFreeNumber} className="font-semibold underline">Use a free number</button>
+                </p>
+              )}
             </div>
             <div>
               <label className="text-2xs font-semibold text-text-muted uppercase tracking-wider">Date</label>
@@ -338,7 +354,9 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             <Button
               variant="secondary"
               className="flex-1"
+              disabled={numberTaken || !invNumber.trim()}
               onClick={async () => {
+                if (numberTaken || !invNumber.trim()) return
                 setBaseline(snapshot)
                 restoredRef.current = false
                 setRestored(false)

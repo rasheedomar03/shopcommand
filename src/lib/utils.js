@@ -15,6 +15,17 @@ export function roLabel(ro) {
   return String(ro?.roNumber || ro?.id || '')
 }
 
+/**
+ * Search matching that cannot crash. True when the query is blank, or when any
+ * field contains it (case-insensitive). A missing field (null or undefined, for
+ * example a customer saved without a phone number) simply never matches.
+ */
+export function matchesSearch(query, ...fields) {
+  const q = String(query ?? '').trim().toLowerCase()
+  if (!q) return true
+  return fields.some(f => String(f ?? '').toLowerCase().includes(q))
+}
+
 export function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

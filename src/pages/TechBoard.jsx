@@ -11,7 +11,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { StageBadge } from '@/components/ui/Badge'
-import { formatCurrency, formatMoney, formatDate, computeHoursMs, formatHours, roLabel, startOfToday, startOfWeek } from '@/lib/utils'
+import { formatCurrency, formatMoney, formatDate, computeHoursMs, formatHours, roLabel, matchesSearch, startOfToday, startOfWeek } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
@@ -474,8 +474,7 @@ function StoreCustomers({ shopId, repairOrders, onOpenRO, customers = [] }) {
 
   const storeCustomers = customers.filter(c => c.shopId === shopId)
   const filtered = storeCustomers.filter(c => {
-    const q = search.toLowerCase()
-    return !q || c.name.toLowerCase().includes(q) || c.phone.includes(q)
+    return matchesSearch(search, c.name, c.phone)
   })
 
   return (

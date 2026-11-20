@@ -7,8 +7,9 @@ import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
 import { BlankFormModal } from '@/components/modals/BlankFormModal'
-import { formatMoney, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
+import { formatMoney, formatDate, formatRelativeTime, roLabel, matchesSearch } from '@/lib/utils'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
+import { invoiceNumberTaken } from '@/lib/invoiceLines'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
 
@@ -46,7 +47,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
   const [paying, setPaying] = useState(false)
   const [emailState, setEmailState] = useState('idle') // idle | sending | sent
   const [emailError, setEmailError] = useState(null)
-  const { repairOrders } = useData()
+  const { repairOrders, invoices: allInvoices } = useData()
 
   // Reset edit state when a different invoice opens (or the modal closes)
   useEffect(() => {
@@ -119,6 +120,10 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
     const newNumber = numDraft.trim()
     if (!newNumber || newNumber.length > 30) {
       setSaveError('Invoice number must be 1-30 characters')
+      return
+    }
+    if (invoiceNumberTaken(allInvoices, newNumber, invoice.id)) {
+      setSaveError('That invoice number is already used by another invoice. Choose a different one.')
       return
     }
     const newEmail = billEmail.trim()
@@ -388,6 +393,11 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
                       : <><Send size={13} /> {emailState === 'sending' ? 'Sending...' : 'Email to customer'}</>}
                   </Button>
                 )}
+                {!isDb && invoice.status === 'sent' && amountPaid === 0 && (
+                  <Button size="sm" variant="secondary" onClick={() => onUpdate(invoice.id, { status: 'draft' })} title="Undo Mark as sent. The invoice goes back to a draft.">
+                    Mark as draft
+                  </Button>
+                )}
                 {invoice.status === 'draft' && (
                   <Button size="sm" onClick={() => onUpdate(invoice.id, { status: 'sent' })}>
                     <Send size={13} /> Mark as sent
@@ -398,16 +408,25 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
                     <DollarSign size={13} /> Record payment
                   </Button>
                 )}
-                {invoice.status === 'paid' && (
+                {(invoice.status === 'paid' || (invoice.status === 'partial' && amountPaid > 0)) && (
                   confirmUnpay ? (
                     <span className="flex items-center gap-2 text-xs">
-                      <span className="text-text-secondary">Move back to unpaid?</span>
+                      <span className="text-text-secondary">
+                        {invoice.status === 'partial'
+                          ? `Remove the ${formatMoney(amountPaid)} recorded so far?`
+                          : 'Move back to unpaid?'}
+                      </span>
                       <button onClick={() => { setConfirmUnpay(false); onUpdate(invoice.id, { status: 'unpaid' }) }} className="font-semibold text-orange hover:underline">Yes</button>
                       <button onClick={() => setConfirmUnpay(false)} className="text-text-muted hover:text-text-primary">Cancel</button>
                     </span>
                   ) : (
-                    <Button size="sm" variant="secondary" onClick={() => setConfirmUnpay(true)}>
-                      Mark as unpaid
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setConfirmUnpay(true)}
+                      title={invoice.status === 'partial' ? 'Removes the payments recorded so far, so you can enter them again correctly' : undefined}
+                    >
+                      {invoice.status === 'partial' ? 'Undo payments' : 'Mark as unpaid'}
                     </Button>
                   )
                 )}
@@ -506,13 +525,9 @@ export default function Invoices() {
     : allInvoices
 
   const filtered = scoped.filter(inv => {
-    const q = search.toLowerCase()
-    const matchesSearch = !q ||
-      inv.id.toLowerCase().includes(q) ||
-      inv.customerName.toLowerCase().includes(q) ||
-      inv.vehicle.toLowerCase().includes(q)
+    const matchesText = matchesSearch(search, inv.id, inv.customerName, inv.vehicle, inv.unitNumber, inv.vin)
     const matchesStatus = statusFilter === 'All' || inv.status === statusFilter
-    return matchesSearch && matchesStatus
+    return matchesText && matchesStatus
   })
 
   const statusCounts = ['All', ...Object.keys(INVOICE_STATUS)].reduce((acc, s) => {

@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { NewTechModal } from '@/components/modals/NewTechModal'
-import { cn, computeHoursMs, formatHours, startOfToday, startOfWeek } from '@/lib/utils'
+import { cn, computeHoursMs, formatHours, startOfToday, startOfWeek, matchesSearch } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/Tooltip'
 
 export default function Technicians() {
@@ -21,8 +21,7 @@ export default function Technicians() {
   const [timeLogTab, setTimeLogTab] = useState('log') // 'log' | 'audit'
 
   const filtered = technicians.filter(t => {
-    const q = search.toLowerCase()
-    const matchSearch = !q || t.name.toLowerCase().includes(q) || t.specialty.toLowerCase().includes(q)
+    const matchSearch = matchesSearch(search, t.name, t.specialty)
     const matchShop = shopFilter === 'All' || String(t.shopId) === String(shopFilter)
     const isIn = clockedInTechs.has(t.id)
     const matchStatus = statusFilter === 'All'

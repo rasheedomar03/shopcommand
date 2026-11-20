@@ -9,23 +9,18 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { StageBadge } from '@/components/ui/Badge'
 import { Tooltip } from '@/components/ui/Tooltip'
-import { cn, roLabel, sanitizeField } from '@/lib/utils'
+import { cn, roLabel, matchesSearch, sanitizeField } from '@/lib/utils'
 
 function SearchDropdown({ query, onClose }) {
   const { repairOrders, customers } = useData()
   const navigate = useNavigate()
-  const q = query.toLowerCase()
-
   const matchedROs = repairOrders
-    .filter(ro =>
-      roLabel(ro).toLowerCase().includes(q) ||
-      ro.customerName.toLowerCase().includes(q) ||
-      ro.vehicle.toLowerCase().includes(q)
-    )
+    .filter(ro => matchesSearch(query, roLabel(ro), ro.customerName, ro.vehicle))
     .slice(0, 4)
 
+  // A customer saved without a phone number has phone = null; it must not crash the search
   const matchedCustomers = customers
-    .filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q))
+    .filter(c => matchesSearch(query, c.name, c.phone))
     .slice(0, 3)
 
   const total = matchedROs.length + matchedCustomers.length

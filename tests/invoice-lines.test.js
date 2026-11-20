@@ -1,5 +1,25 @@
 import { describe, it, expect } from 'vitest'
-import { computeTotals, lineDisplay, linesFromInvoice, servicesFromItems, taxSettingsFor, CARD_FEE_RATE } from '../src/lib/invoiceLines.js'
+import { computeTotals, lineDisplay, linesFromInvoice, servicesFromItems, taxSettingsFor, invoiceNumberTaken, CARD_FEE_RATE } from '../src/lib/invoiceLines.js'
+
+describe('invoiceNumberTaken', () => {
+  const invoices = [{ id: 'INV-100' }, { id: 'INV-101' }]
+  it('flags a number another invoice already uses, ignoring case and spaces', () => {
+    expect(invoiceNumberTaken(invoices, 'INV-100')).toBe(true)
+    expect(invoiceNumberTaken(invoices, '  inv-101 ')).toBe(true)
+  })
+  it('allows a free number and a blank one', () => {
+    expect(invoiceNumberTaken(invoices, 'INV-102')).toBe(false)
+    expect(invoiceNumberTaken(invoices, '')).toBe(false)
+  })
+  it('lets an invoice keep its own number but not take another invoice\'s', () => {
+    expect(invoiceNumberTaken(invoices, 'INV-100', 'INV-100')).toBe(false)
+    expect(invoiceNumberTaken(invoices, 'INV-101', 'INV-100')).toBe(true)
+  })
+  it('does not crash on missing data', () => {
+    expect(invoiceNumberTaken(undefined, 'A')).toBe(false)
+    expect(invoiceNumberTaken([{}, null], 'A')).toBe(false)
+  })
+})
 
 const item = (over = {}) => ({ desc: 'Battery', type: 'part', qty: '4', price: '130', ...over })
 

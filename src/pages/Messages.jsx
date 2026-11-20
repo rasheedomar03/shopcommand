@@ -1,7 +1,7 @@
 ﻿import { useState, useRef, useEffect } from 'react'
 import { Search, Send, ChevronLeft, Clock, Plus } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { formatRelativeTime, sanitizeField } from '@/lib/utils'
+import { formatRelativeTime, sanitizeField, matchesSearch } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
 import { Tooltip } from '@/components/ui/Tooltip'
@@ -56,8 +56,7 @@ const mockConversations = [
 
 function ConversationList({ conversations, selected, onSelect, search, shops }) {
   const filtered = conversations.filter(c => {
-    const q = search.toLowerCase()
-    return !q || c.customerName.toLowerCase().includes(q) || c.vehicle.toLowerCase().includes(q)
+    return matchesSearch(search, c.customerName, c.vehicle)
   })
 
   return (
