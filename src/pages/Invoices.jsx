@@ -9,7 +9,7 @@ import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal
 import { BlankFormModal } from '@/components/modals/BlankFormModal'
 import { formatMoney, formatDate, formatRelativeTime, roLabel, matchesSearch } from '@/lib/utils'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
-import { invoiceNumberTaken } from '@/lib/invoiceLines'
+import { invoiceNumberTaken, lineDisplay } from '@/lib/invoiceLines'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
 
@@ -31,7 +31,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPayment, onEmail }) {
+function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPayment, onEmail, onEditInGenerator }) {
   const [confirmVoid, setConfirmVoid] = useState(false)
   const [confirmUnpay, setConfirmUnpay] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -108,6 +108,11 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
   const editTax = dbEdit ? dbEdit.tax : (invoice.tax > 0 ? Math.round(editSubtotal * 8.25) / 100 : 0)
   const editTotal = dbEdit ? dbEdit.total : Math.round((editSubtotal + editTax) * 100) / 100
   const view = invoiceBreakdown(invoice)
+  // Browser-made invoices keep quantity and unit price on every line
+  const useLines = !isDb && Array.isArray(invoice.lines) && invoice.lines.length > 0
+  const cardFeeAmt = Number(invoice.cardFeeAmount) || 0
+  const taxLabel = isDb ? 'Tax' : `Sales tax (${invoice.taxRate ?? 8.25}%)`
+  const showTax = isDb || view.tax > 0
 
   const saveEdit = async () => {
     const services = rows
@@ -158,7 +163,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
           <div className="text-right">
             <div className="text-xs text-text-muted">{shop?.name}</div>
             {/* invoice.roId may be the RO's database id or its number; show the number */}
-            <div className="text-xs text-text-muted">RO: {roLabel(repairOrders.find(r => r.id === invoice.roId || r.roNumber === invoice.roId)) || invoice.roId}</div>
+            {invoice.roId && <div className="text-xs text-text-muted">RO: {roLabel(repairOrders.find(r => r.id === invoice.roId || r.roNumber === invoice.roId)) || invoice.roId}</div>}
           </div>
         </div>
 
@@ -197,12 +202,35 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
           </div>
         )}
 
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 bg-background text-xs font-medium text-text-muted uppercase tracking-wider">
-            <div>Service</div>
-            <div className="text-right">Parts</div>
-            <div className="text-right">Labor</div>
+        {!isDb && (invoice.unitNumber || invoice.vin || invoice.jobTitle || invoice.diagnostics) && (
+          <div className="rounded-lg border border-border bg-background px-4 py-3 text-sm space-y-1">
+            {invoice.jobTitle && <div className="font-semibold text-text-primary">{invoice.jobTitle}</div>}
+            {(invoice.unitNumber || invoice.vin) && (
+              <div className="text-xs text-text-secondary">
+                {invoice.unitNumber && <>Truck # <span className="font-medium text-text-primary">{invoice.unitNumber}</span></>}
+                {invoice.unitNumber && invoice.vin && ' · '}
+                {invoice.vin && <>VIN <span className="font-mono text-text-primary">{invoice.vin}</span></>}
+              </div>
+            )}
+            {invoice.diagnostics && <div className="text-xs text-text-muted whitespace-pre-wrap">Diagnostics: {invoice.diagnostics}</div>}
           </div>
+        )}
+
+        <div className="rounded-lg border border-border overflow-hidden">
+          {useLines && !editing ? (
+            <div className="grid grid-cols-[1fr_44px_76px_76px] gap-3 px-4 py-2.5 bg-background text-xs font-medium text-text-muted uppercase tracking-wider">
+              <div>Description</div>
+              <div className="text-right">Qty</div>
+              <div className="text-right">Price</div>
+              <div className="text-right">Total</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 bg-background text-xs font-medium text-text-muted uppercase tracking-wider">
+              <div>Service</div>
+              <div className="text-right">Parts</div>
+              <div className="text-right">Labor</div>
+            </div>
+          )}
           {editing ? (
             <>
               {rows.map((r, i) => (
@@ -246,6 +274,19 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
                 </button>
               </div>
             </>
+          ) : useLines ? (
+            invoice.lines.map((l, i) => {
+              const d = lineDisplay(l)
+              return (
+                <div key={i} className={cn('grid grid-cols-[1fr_44px_76px_76px] gap-3 px-4 py-3 text-sm', i > 0 && 'border-t border-border')}>
+                  <div className="text-text-primary">{l.desc}</div>
+                  <div className="text-right text-text-secondary tabular-nums">{d.qty}</div>
+                  {/* One amount when the quantity is 1; price each and line total otherwise */}
+                  <div className="text-right text-text-secondary tabular-nums">{d.showUnit ? formatMoney(d.unit) : ''}</div>
+                  <div className="text-right text-text-primary tabular-nums">{formatMoney(d.total)}</div>
+                </div>
+              )
+            })
           ) : (
             invoice.services.map((svc, i) => (
               <div key={i} className={cn('grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-3 text-sm', i > 0 && 'border-t border-border')}>
@@ -260,10 +301,18 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
               <span>Subtotal</span>
               <span className="tabular-nums">{formatMoney(editing ? editSubtotal : view.subtotal)}</span>
             </div>
-            <div className="flex justify-between text-sm text-text-secondary">
-              <span>{isDb ? 'Tax' : 'Tax (8.25%)'}</span>
-              <span className="tabular-nums">{formatMoney(editing ? editTax : view.tax)}</span>
-            </div>
+            {(editing || showTax) && (
+              <div className="flex justify-between text-sm text-text-secondary">
+                <span>{taxLabel}</span>
+                <span className="tabular-nums">{formatMoney(editing ? editTax : view.tax)}</span>
+              </div>
+            )}
+            {!editing && cardFeeAmt > 0 && (
+              <div className="flex justify-between text-sm text-text-secondary">
+                <span>Card fee 3%</span>
+                <span className="tabular-nums">{formatMoney(cardFeeAmt)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm font-semibold text-text-primary pt-1.5 border-t border-border">
               <span>Total</span>
               <span className="text-orange tabular-nums">{formatMoney(editing ? editTotal : view.total)}</span>
@@ -379,7 +428,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
             ) : (
               <>
                 {editable && (
-                  <Button size="sm" variant="secondary" onClick={startEdit}>
+                  <Button size="sm" variant="secondary" onClick={isDb || !onEditInGenerator ? startEdit : () => onEditInGenerator(invoice)}>
                     <Pencil size={13} /> Edit
                   </Button>
                 )}
@@ -473,28 +522,70 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#64748b' }}>VEHICLE</div>
             <div style={{ fontWeight: 600, marginTop: 2 }}>{invoice.vehicle || '-'}</div>
           </div>
+          {!isDb && invoice.unitNumber && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#64748b' }}>TRUCK #</div>
+              <div style={{ fontWeight: 600, marginTop: 2 }}>{invoice.unitNumber}</div>
+            </div>
+          )}
+          {!isDb && invoice.vin && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#64748b' }}>VIN</div>
+              <div style={{ fontWeight: 600, marginTop: 2, fontFamily: 'monospace' }}>{invoice.vin}</div>
+            </div>
+          )}
         </div>
+        {!isDb && invoice.jobTitle && <div style={{ fontWeight: 700, paddingBottom: 6 }}>{invoice.jobTitle}</div>}
+        {!isDb && invoice.diagnostics && (
+          <div style={{ paddingBottom: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#64748b' }}>DIAGNOSTICS</div>
+            <div style={{ whiteSpace: 'pre-wrap', color: '#334155', marginTop: 2 }}>{invoice.diagnostics}</div>
+          </div>
+        )}
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #cbd5e1', textAlign: 'left', fontSize: 10, letterSpacing: 1, color: '#64748b' }}>
               <th style={{ padding: '6px 0' }}>DESCRIPTION</th>
-              <th style={{ padding: '6px 0', textAlign: 'right' }}>PARTS</th>
-              <th style={{ padding: '6px 0', textAlign: 'right' }}>LABOR</th>
+              {useLines ? (
+                <>
+                  <th style={{ padding: '6px 0', textAlign: 'right' }}>QTY</th>
+                  <th style={{ padding: '6px 0', textAlign: 'right' }}>PRICE</th>
+                  <th style={{ padding: '6px 0', textAlign: 'right' }}>TOTAL</th>
+                </>
+              ) : (
+                <>
+                  <th style={{ padding: '6px 0', textAlign: 'right' }}>PARTS</th>
+                  <th style={{ padding: '6px 0', textAlign: 'right' }}>LABOR</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
-            {invoice.services.map((svc, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <td style={{ padding: '7px 0' }}>{svc.name}</td>
-                <td style={{ padding: '7px 0', textAlign: 'right' }}>{formatMoney(svc.parts)}</td>
-                <td style={{ padding: '7px 0', textAlign: 'right' }}>{formatMoney(svc.labor)}</td>
-              </tr>
-            ))}
+            {useLines
+              ? invoice.lines.map((l, i) => {
+                  const d = lineDisplay(l)
+                  return (
+                    <tr key={i} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '7px 0' }}>{l.desc}</td>
+                      <td style={{ padding: '7px 0', textAlign: 'right' }}>{d.qty}</td>
+                      <td style={{ padding: '7px 0', textAlign: 'right' }}>{d.showUnit ? formatMoney(d.unit) : ''}</td>
+                      <td style={{ padding: '7px 0', textAlign: 'right' }}>{formatMoney(d.total)}</td>
+                    </tr>
+                  )
+                })
+              : invoice.services.map((svc, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '7px 0' }}>{svc.name}</td>
+                    <td style={{ padding: '7px 0', textAlign: 'right' }}>{formatMoney(svc.parts)}</td>
+                    <td style={{ padding: '7px 0', textAlign: 'right' }}>{formatMoney(svc.labor)}</td>
+                  </tr>
+                ))}
           </tbody>
         </table>
         <div style={{ marginLeft: 'auto', width: 240, paddingTop: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Subtotal</span><span>{formatMoney(view.subtotal)}</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>{isDb ? 'Tax' : 'Tax (8.25%)'}</span><span>{formatMoney(view.tax)}</span></div>
+          {showTax && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>{taxLabel}</span><span>{formatMoney(view.tax)}</span></div>}
+          {cardFeeAmt > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Card fee 3%</span><span>{formatMoney(cardFeeAmt)}</span></div>}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', marginTop: 4, borderTop: '1px solid #cbd5e1', fontWeight: 700, fontSize: 15 }}><span>Total</span><span>{formatMoney(view.total)}</span></div>
           {amountPaid > 0 && (
             <>
@@ -518,6 +609,7 @@ export default function Invoices() {
   const [generatorOpen, setGeneratorOpen] = useState(false)
   const [generatorSource, setGeneratorSource] = useState(null)
   const [blankFormOpen, setBlankFormOpen] = useState(false)
+  const openInGenerator = (inv) => { setGeneratorSource(inv); setGeneratorOpen(true) }
 
   const allInvoices = invoices
   const scoped = isAdvisor
@@ -620,7 +712,12 @@ export default function Invoices() {
             {filtered.map(inv => {
               const shop = shops.find(s => s.id === inv.shopId)
               return (
-                <Tr key={inv.id} onClick={() => setSelected(inv)} className="cursor-pointer">
+                <Tr
+                  key={inv.id}
+                  // A draft opens in the invoice generator, filled in; everything else opens the detail view
+                  onClick={() => (!inv.dbId && inv.status === 'draft' ? openInGenerator(inv) : setSelected(inv))}
+                  className="cursor-pointer"
+                >
                   <Td>
                     <div className="text-sm font-medium text-text-primary">{inv.id}</div>
                     <div className="text-2xs text-text-muted">{inv.customerName}</div>
@@ -659,6 +756,7 @@ export default function Invoices() {
         invoice={selected}
         onClose={() => setSelected(null)}
         shops={shops}
+        onEditInGenerator={(inv) => { setSelected(null); openInGenerator(inv) }}
         onUpdate={async (id, patch) => {
           const r = await updateInvoice(id, patch)
           if (!r?.error) {

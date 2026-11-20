@@ -34,6 +34,15 @@ describe('computeTotals', () => {
     expect(computeTotals({ items, taxRate: 10 }).tax).toBe(10)
     expect(computeTotals({ items, taxRate: 10, taxLabor: true }).tax).toBe(15)
   })
+  it('never taxes fee lines (core charges, shop supplies), but they count in the total', () => {
+    const items = [item({ qty: '1', price: '100' }), item({ type: 'fee', desc: 'Core charge', qty: '1', price: '40' })]
+    const t = computeTotals({ items, taxRate: 10 })
+    expect(t.fees).toBe(40)
+    expect(t.parts).toBe(100)
+    expect(t.tax).toBe(10)
+    expect(t.subtotal).toBe(140)
+    expect(t.total).toBe(150)
+  })
   it('taxes the whole subtotal when lines are not categorized', () => {
     const items = [item({ type: 'labor', qty: '1', price: '200' })]
     expect(computeTotals({ items, itemize: false, taxRate: 10 }).tax).toBe(20)

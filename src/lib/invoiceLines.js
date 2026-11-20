@@ -29,14 +29,16 @@ const TYPES = ['labor', 'part', 'fee']
  */
 export function computeTotals({ items = [], itemize = true, taxRate = 0, taxLabor = false, cardFee = false } = {}) {
   const lineTotal = it => num(it.qty) * num(it.price)
-  const labor = round2(items.filter(i => i.type === 'labor').reduce((s, i) => s + lineTotal(i), 0))
-  const parts = round2(items.filter(i => i.type !== 'labor').reduce((s, i) => s + lineTotal(i), 0))
-  const subtotal = round2(labor + parts)
+  const sum = type => round2(items.filter(i => i.type === type).reduce((s, i) => s + lineTotal(i), 0))
+  const labor = sum('labor')
+  const fees = sum('fee') // core charges, shop supplies and the like: never taxed here
+  const parts = round2(items.filter(i => i.type !== 'labor' && i.type !== 'fee').reduce((s, i) => s + lineTotal(i), 0))
+  const subtotal = round2(labor + parts + fees)
   const taxable = itemize ? parts + (taxLabor ? labor : 0) : subtotal
   const tax = round2(taxable * (num(taxRate) / 100))
   const fee = cardFee ? round2((subtotal + tax) * CARD_FEE_RATE) : 0
   const total = round2(subtotal + tax + fee)
-  return { labor, parts, subtotal, tax, fee, total }
+  return { labor, parts, fees, subtotal, tax, fee, total }
 }
 
 /**
