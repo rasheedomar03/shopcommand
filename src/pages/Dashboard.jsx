@@ -13,6 +13,7 @@ import { formatCurrency, formatMoney, roLabel } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Tooltip as AppTooltip } from '@/components/ui/Tooltip'
 import { SetupChecklist } from '@/components/SetupChecklist'
+import { sumOnDay, sumInMonth, sumSince } from '@/lib/invoiceRevenue'
 import { cn } from '@/lib/utils'
 
 const REVENUE_STAGES = new Set(['Paid', 'Invoiced', 'Complete'])
@@ -25,18 +26,19 @@ function getWeekStart() {
 }
 const STAGE_COLORS = { Estimate: '#3B82F6', Approved: '#A855F7', 'In Progress': '#F97316', Complete: '#22C55E', Invoiced: '#EAB308', Paid: '#10B981', Warranty: '#EC4899' }
 
-function computeStats(repairOrders, shops, shopId = null) {
+function computeStats(repairOrders, shops, shopId = null, invoices = []) {
   const ros = shopId ? repairOrders.filter(ro => ro.shopId === shopId) : repairOrders
   const today   = new Date().toISOString().slice(0, 10)
   const month   = today.slice(0, 7)
 
+  // Repair order revenue, plus paid from-scratch invoices (see lib/invoiceRevenue.js)
   const revToday = ros
     .filter(ro => REVENUE_STAGES.has(ro.stage) && (ro.updated || '').slice(0, 10) === today)
-    .reduce((s, ro) => s + (ro.total || 0), 0)
+    .reduce((s, ro) => s + (ro.total || 0), 0) + sumOnDay(invoices, today, shopId)
 
   const revMTD = ros
     .filter(ro => REVENUE_STAGES.has(ro.stage) && (ro.updated || '').slice(0, 7) === month)
-    .reduce((s, ro) => s + (ro.total || 0), 0)
+    .reduce((s, ro) => s + (ro.total || 0), 0) + sumInMonth(invoices, month, shopId)
 
   const openROs = ros.filter(ro => !REVENUE_STAGES.has(ro.stage)).length
 
@@ -47,7 +49,7 @@ function computeStats(repairOrders, shops, shopId = null) {
   return { revToday, revMTD, openROs, avgEff }
 }
 
-function buildRevenueChart(repairOrders, shops) {
+function buildRevenueChart(repairOrders, shops, invoices = []) {
   const today = new Date()
   const PAID_STAGES = new Set(['Paid', 'Invoiced', 'Complete'])
   const totalMonthlyTarget = shops.reduce((s, sh) => s + (sh.monthlyTarget || 0), 0)
@@ -65,7 +67,7 @@ function buildRevenueChart(repairOrders, shops) {
         ro.total > 0 &&
         (ro.updated || '').slice(0, 10) === ymd
       )
-      .reduce((sum, ro) => sum + (ro.total || 0), 0)
+      .reduce((sum, ro) => sum + (ro.total || 0), 0) + sumOnDay(invoices, ymd)
 
     return { date: label, revenue, target: dailyTarget }
   })
@@ -94,7 +96,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
-  const { repairOrders, clockedInTechs, parts, shops, loading } = useData()
+  const { repairOrders, clockedInTechs, parts, shops, loading, invoices } = useData()
   const [newROOpen, setNewROOpen] = useState(false)
   const [selectedRO, setSelectedRO] = useState(null)
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set())
@@ -105,8 +107,8 @@ export default function Dashboard() {
   const advisorShop = isAdvisor ? shops.find(s => s.id === session.shopId) || shops[0] : null
   const { theme } = useTheme()
 
-  const revenueData = buildRevenueChart(repairOrders, shops)
-  const { revToday, revMTD, openROs, avgEff } = computeStats(repairOrders, shops, isAdvisor ? session?.shopId : null)
+  const revenueData = buildRevenueChart(repairOrders, shops, invoices)
+  const { revToday, revMTD, openROs, avgEff } = computeStats(repairOrders, shops, isAdvisor ? session?.shopId : null, invoices)
   const activeTechs = clockedInTechs.size || shops.reduce((s, sh) => s + (sh.activeTechs || 0), 0)
   const gridColor = theme === 'dark' ? '#1E2028' : '#E2E8F0'
   const tickColor = theme === 'dark' ? '#64748B' : '#94A3B8'
@@ -120,20 +122,20 @@ export default function Dashboard() {
     shops.forEach(shop => {
       result[shop.id] = repairOrders
         .filter(ro => REVENUE_STAGES.has(ro.stage) && ro.shopId === shop.id && (ro.updated || '').slice(0, 7) === month)
-        .reduce((s, ro) => s + (ro.total || 0), 0)
+        .reduce((s, ro) => s + (ro.total || 0), 0) + sumInMonth(invoices, month, shop.id)
     })
     return result
-  }, [repairOrders, shops, month])
+  }, [repairOrders, shops, month, invoices])
 
   const weekByShop = useMemo(() => {
     const result = {}
     shops.forEach(shop => {
       result[shop.id] = repairOrders
         .filter(ro => REVENUE_STAGES.has(ro.stage) && ro.shopId === shop.id && (ro.updated || '').slice(0, 10) >= weekStart)
-        .reduce((s, ro) => s + (ro.total || 0), 0)
+        .reduce((s, ro) => s + (ro.total || 0), 0) + sumSince(invoices, weekStart, shop.id)
     })
     return result
-  }, [repairOrders, shops, weekStart])
+  }, [repairOrders, shops, weekStart, invoices])
 
   const [lastWeekByShop] = useState(() => {
     try {

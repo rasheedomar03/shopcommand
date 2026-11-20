@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth as useClerkAuth } from '@clerk/clerk-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { api, setTokenProvider } from '@/lib/api'
 import { setUploadTokenProvider } from '@/lib/uploads'
+import { invoiceRevenueTotals } from '@/lib/invoiceRevenue'
 import {
   parts as initialParts,
   cannedServices,
@@ -504,10 +505,31 @@ export function DataProvider({ children }) {
     return merged
   }, [session?.demo])
 
-  const removeCustomer = useCallback(async (id) => {
-    await api('/api/customers', { method: 'DELETE', params: { id } })
+  // Deleting a customer with repair orders or invoices also erases them, so the
+  // server refuses (409 has_history) unless { force: true } is passed.
+  const removeCustomer = useCallback(async (id, { force = false } = {}) => {
+    if (session?.demo) {
+      const ros = repairOrders.filter(r => r.customerId === id)
+      const roIds = new Set(ros.flatMap(r => [r.id, r.roNumber]))
+      const linked = invoices.filter(i => i.customerId === id || roIds.has(i.roId)).length
+      if (linked > 0) {
+        const err = new Error(`This customer has ${linked} invoice${linked === 1 ? '' : 's'}. Invoices are never deleted with a customer. Void them first, or keep the customer.`)
+        err.status = 409
+        err.data = { code: 'has_invoices', repairOrders: ros.length, invoices: linked, vehicles: 0 }
+        throw err
+      }
+      if (ros.length > 0 && !force) {
+        const err = new Error('This customer has repair orders.')
+        err.status = 409
+        err.data = { code: 'has_history', repairOrders: ros.length, invoices: 0, vehicles: 0 }
+        throw err
+      }
+    } else {
+      await api('/api/customers', { method: 'DELETE', params: { id, ...(force ? { force: 'true' } : {}) } })
+    }
     setCustomers(prev => prev.filter(c => c.id !== id))
-  }, [])
+    if (force) setRepairOrders(prev => prev.filter(r => r.customerId !== id))
+  }, [session?.demo, repairOrders, invoices])
 
   // ── technician CRUD ──────────────────────────────────────────────────────
 
@@ -1075,12 +1097,26 @@ export function DataProvider({ children }) {
     fetchAll()
   }, [fetchAll])
 
+  // Each shop's revenue (today, month, year) also counts its paid from-scratch
+  // invoices. The server figure only covers repair orders, so a shop that bills
+  // with the invoice generator read $0 in Reports. Only the revenue figures are
+  // changed; the stored shops stay as the server sent them.
+  const shopsWithInvoiceRevenue = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    return shops.map(s => {
+      const extra = invoiceRevenueTotals(invoices, today, s.id)
+      if (!extra.today && !extra.mtd && !extra.ytd) return s
+      const base = s.revenue || { today: 0, mtd: 0, ytd: 0 }
+      return { ...s, revenue: { today: base.today + extra.today, mtd: base.mtd + extra.mtd, ytd: base.ytd + extra.ytd } }
+    })
+  }, [shops, invoices])
+
   return (
     <DataContext.Provider value={{
       customers, addCustomer, updateCustomer, removeCustomer,
       technicians, addTechnician, removeTechnician,
       repairOrders, addRepairOrder, updateRepairOrder, removeRepairOrder, sendEstimateReady, addVehicle,
-      shops, updateShop, addShop, removeShop,
+      shops: shopsWithInvoiceRevenue, updateShop, addShop, removeShop,
       parts, addPart, updatePart, deletePart, usePart, restockPart, orderPart,
       partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
       jobTimers, startJobTimer, stopJobTimer,

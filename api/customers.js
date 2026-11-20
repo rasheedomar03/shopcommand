@@ -99,10 +99,10 @@ export default createHandler(
       const [row] = await sql`
         UPDATE customers SET
           name = COALESCE(${name?.trim() || null}, name),
-          email = COALESCE(${email?.trim() || null}, email),
-          phone = COALESCE(${phone?.trim() || null}, phone),
-          address = COALESCE(${address?.trim() || null}, address),
-          notes = COALESCE(${notes?.trim() || null}, notes)
+          email = COALESCE(${typeof email === 'string' ? email.trim() : null}, email),
+          phone = COALESCE(${typeof phone === 'string' ? phone.trim() : null}, phone),
+          address = COALESCE(${typeof address === 'string' ? address.trim() : null}, address),
+          notes = COALESCE(${typeof notes === 'string' ? notes.trim() : null}, notes)
         WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `
@@ -115,6 +115,42 @@ export default createHandler(
 
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
+
+      const [existing] = await sql`SELECT id, name FROM customers WHERE id = ${id} AND org_id = ${user.orgId}`
+      if (!existing) return res.status(404).json({ error: 'Customer not found' })
+
+      // Deleting a customer also deletes their vehicles and repair orders (the
+      // database cascades). Refuse that unless the caller explicitly confirms
+      // it with ?force=true.
+      const [counts] = await sql`
+        SELECT
+          (SELECT COUNT(*) FROM repair_orders WHERE customer_id = ${id} AND org_id = ${user.orgId})::int AS repair_orders,
+          (SELECT COUNT(*) FROM invoices i JOIN repair_orders ro ON ro.id = i.ro_id
+             WHERE ro.customer_id = ${id} AND i.org_id = ${user.orgId})::int AS invoices,
+          (SELECT COUNT(*) FROM vehicles WHERE customer_id = ${id} AND org_id = ${user.orgId})::int AS vehicles
+      `
+      // Invoices are never deleted with a customer: they are accounting
+      // records and only a void removes them. There is no override for this.
+      if ((counts?.invoices || 0) > 0) {
+        return res.status(409).json({
+          error: `${existing.name} has ${counts.invoices} invoice${counts.invoices === 1 ? '' : 's'}. Invoices are never deleted with a customer. Void them first, or keep the customer.`,
+          code: 'has_invoices',
+          repairOrders: counts.repair_orders,
+          invoices: counts.invoices,
+          vehicles: counts.vehicles,
+        })
+      }
+
+      const hasHistory = (counts?.repair_orders || 0) > 0
+      if (hasHistory && req.query?.force !== 'true') {
+        return res.status(409).json({
+          error: `${existing.name} has repair orders. Deleting the customer would erase them too.`,
+          code: 'has_history',
+          repairOrders: counts.repair_orders,
+          invoices: counts.invoices,
+          vehicles: counts.vehicles,
+        })
+      }
 
       const [row] = await sql`DELETE FROM customers WHERE id = ${id} AND org_id = ${user.orgId} RETURNING id`
       if (!row) return res.status(404).json({ error: 'Customer not found' })

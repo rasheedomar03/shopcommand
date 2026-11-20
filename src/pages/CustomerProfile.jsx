@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Phone, Mail, MapPin, Plus, Star, Clock, TrendingUp, Wrench, Car, Shield } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, MapPin, Plus, Star, Clock, TrendingUp, Wrench, Car, Shield, Trash2, Pencil } from 'lucide-react'
 import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { Modal } from '@/components/ui/Modal'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { RODetailModal } from '@/components/modals/RODetailModal'
@@ -44,8 +46,20 @@ export default function CustomerProfile() {
   const [emailDraft, setEmailDraft] = useState('')
   const [emailSaving, setEmailSaving] = useState(false)
   const [emailErr, setEmailErr] = useState(null)
+  const [delOpen, setDelOpen] = useState(false)
+  const [delInfo, setDelInfo] = useState(null)
+  const [delText, setDelText] = useState('')
+  const [delBusy, setDelBusy] = useState(false)
+  const [delErr, setDelErr] = useState(null)
+  const [delBlocked, setDelBlocked] = useState(null)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', phone: '', address: '', notes: '' })
+  const [editBusy, setEditBusy] = useState(false)
+  const [editErr, setEditErr] = useState(null)
 
-  const { repairOrders, customers, shops, updateCustomer } = useData()
+  const { repairOrders, customers, shops, updateCustomer, removeCustomer } = useData()
+  const { session } = useAuth()
+  const isOwner = session?.role === 'owner'
   const customer = customers.find(c => String(c.id) === String(id))
   if (!customer) {
     return (
@@ -165,7 +179,7 @@ export default function CustomerProfile() {
                           setEmailSaving(true)
                           setEmailErr(null)
                           try {
-                            await updateCustomer(customer.id, { email: emailDraft.trim() || null })
+                            await updateCustomer(customer.id, { email: emailDraft.trim() })
                             setEditingEmail(false)
                           } catch (err) {
                             setEmailErr(err.message || 'Could not save')
@@ -223,6 +237,23 @@ export default function CustomerProfile() {
               <Plus size={13} />
               New RO
             </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setEditErr(null)
+                setEditForm({ name: customer.name || '', phone: customer.phone || '', address: customer.address || '', notes: customer.notes || '' })
+                setEditOpen(true)
+              }}
+            >
+              <Pencil size={13} />
+              Edit details
+            </Button>
+            {isOwner && (
+              <Button variant="secondary" onClick={() => { setDelErr(null); setDelInfo(null); setDelBlocked(null); setDelText(''); setDelOpen(true) }}>
+                <Trash2 size={13} />
+                Delete customer
+              </Button>
+            )}
           </div>
         </div>
 
@@ -462,6 +493,126 @@ export default function CustomerProfile() {
           ro={selectedRO}
         />
       )}
+      {/* Delete customer: a simple confirmation, then a typed one if they have history */}
+      <Modal open={delOpen} onClose={() => !delBusy && setDelOpen(false)} title={`Delete ${customer.name}?`} size="sm">
+        <div className="p-5 space-y-4">
+          {delBlocked ? (
+            <div className="rounded-lg border border-status-red/30 bg-status-red/5 px-3 py-2.5 text-sm text-text-primary space-y-1">
+              <p className="font-semibold text-status-red">This customer can't be deleted.</p>
+              <p className="text-xs text-text-secondary">{delBlocked}</p>
+            </div>
+          ) : !delInfo ? (
+            <p className="text-sm text-text-secondary">
+              This removes {customer.name} from your customers. This cannot be undone.
+            </p>
+          ) : (
+            <>
+              <div className="rounded-lg border border-status-red/30 bg-status-red/5 px-3 py-2.5 text-sm text-text-primary space-y-1">
+                <p className="font-semibold text-status-red">{customer.name} has history that will be erased too:</p>
+                <ul className="list-disc pl-5 text-xs text-text-secondary">
+                  <li>{delInfo.repairOrders} repair order{delInfo.repairOrders === 1 ? '' : 's'}</li>
+                  {delInfo.vehicles > 0 && <li>{delInfo.vehicles} vehicle{delInfo.vehicles === 1 ? '' : 's'}</li>}
+                </ul>
+                <p className="text-xs text-text-muted">Invoices are never deleted with a customer, and this customer has none.</p>
+              </div>
+              <div>
+                <label htmlFor="sc-del-confirm" className="block text-xs text-text-secondary mb-1">Type DELETE to confirm</label>
+                <input
+                  id="sc-del-confirm"
+                  value={delText}
+                  onChange={e => setDelText(e.target.value)}
+                  autoComplete="off"
+                  className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-status-red/50"
+                />
+              </div>
+            </>
+          )}
+          {delErr && <p className="text-xs text-status-red">{delErr}</p>}
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setDelOpen(false)} disabled={delBusy}>{delBlocked ? 'Close' : 'Cancel'}</Button>
+            {!delBlocked && <Button
+              size="sm"
+              disabled={delBusy || (delInfo && delText !== 'DELETE')}
+              onClick={async () => {
+                setDelBusy(true)
+                setDelErr(null)
+                try {
+                  await removeCustomer(customer.id, { force: !!delInfo })
+                  setDelOpen(false)
+                  navigate('/customers', { replace: true })
+                } catch (err) {
+                  if (err?.data?.code === 'has_invoices') setDelBlocked(err.message)
+                  else if (err?.data?.code === 'has_history') setDelInfo(err.data)
+                  else setDelErr(err?.message || 'Could not delete the customer')
+                }
+                setDelBusy(false)
+              }}
+            >
+              {delBusy ? 'Deleting...' : delInfo ? 'Delete customer and repair orders' : 'Delete customer'}
+            </Button>}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit customer details (the email is edited inline in the header) */}
+      <Modal open={editOpen} onClose={() => !editBusy && setEditOpen(false)} title="Edit customer details" size="sm">
+        <div className="p-5 space-y-3">
+          {[
+            ['name', 'Name or company', 'text'],
+            ['phone', 'Phone', 'tel'],
+            ['address', 'Address', 'text'],
+          ].map(([key, label, type]) => (
+            <div key={key}>
+              <label htmlFor={`sc-cust-${key}`} className="block text-xs text-text-secondary mb-1">{label}</label>
+              <input
+                id={`sc-cust-${key}`}
+                type={type}
+                value={editForm[key]}
+                onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+                maxLength={key === 'address' ? 300 : 100}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-orange/40"
+              />
+            </div>
+          ))}
+          <div>
+            <label htmlFor="sc-cust-notes" className="block text-xs text-text-secondary mb-1">Notes</label>
+            <textarea
+              id="sc-cust-notes"
+              value={editForm.notes}
+              onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
+              maxLength={2000}
+              rows={3}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-orange/40"
+            />
+          </div>
+          {editErr && <p className="text-xs text-status-red">{editErr}</p>}
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="secondary" size="sm" onClick={() => setEditOpen(false)} disabled={editBusy}>Cancel</Button>
+            <Button
+              size="sm"
+              disabled={editBusy || editForm.name.trim().length < 2}
+              onClick={async () => {
+                setEditBusy(true)
+                setEditErr(null)
+                try {
+                  await updateCustomer(customer.id, {
+                    name: editForm.name.trim(),
+                    phone: editForm.phone.trim(),
+                    address: editForm.address.trim(),
+                    notes: editForm.notes.trim(),
+                  })
+                  setEditOpen(false)
+                } catch (err) {
+                  setEditErr(err?.message || 'Could not save')
+                }
+                setEditBusy(false)
+              }}
+            >
+              {editBusy ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
       <NewROModal
         open={newROOpen}
         onClose={() => setNewROOpen(false)}

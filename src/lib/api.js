@@ -51,7 +51,11 @@ export async function api(path, opts = {}) {
   const data = await res.json()
 
   if (!res.ok) {
-    throw new Error(data.error || `Request failed (${res.status})`)
+    const err = new Error(data.error || `Request failed (${res.status})`)
+    // Callers that need more than the message (for example a 409 with counts)
+    err.status = res.status
+    err.data = data
+    throw err
   }
 
   return data
