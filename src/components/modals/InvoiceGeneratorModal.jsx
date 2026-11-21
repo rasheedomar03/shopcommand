@@ -51,7 +51,7 @@ const fmt = v => `$${(Number(v) || 0).toFixed(2)}`
 const n = v => Number(v) || 0
 
 export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromRO = null }) {
-  const { shops, repairOrders, addInvoice, invoices, voidInvoice } = useData()
+  const { shops, repairOrders, addInvoice, invoices, voidInvoice, customers } = useData()
   const { session } = useAuth()
   const [savedFlash, setSavedFlash] = useState(false)
   const [savedOnServer, setSavedOnServer] = useState(false)
@@ -72,6 +72,18 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const [customer, setCustomer] = useState('')
   // Optional: with an email, the invoice can be emailed to the customer from its page
   const [customerEmail, setCustomerEmail] = useState('')
+  // The customer this invoice belongs to, when the name typed is one of the shop's
+  // customers. It links the invoice to the customer's profile (and stops that
+  // customer from being deleted while they have invoices). null = just a name.
+  const [customerId, setCustomerId] = useState(null)
+  const changeCustomerName = (name) => {
+    setCustomer(name)
+    const wanted = name.trim().toLowerCase()
+    const match = wanted ? (customers || []).find(c => String(c.name || '').trim().toLowerCase() === wanted) : null
+    setCustomerId(match ? match.id : null)
+    // Fill the email from the customer, but never overwrite one already typed
+    if (match?.email && !customerEmail.trim()) setCustomerEmail(match.email)
+  }
   const [vehicle, setVehicle] = useState('')
   const [unitNumber, setUnitNumber] = useState('')
   const [vin, setVin] = useState('')
@@ -98,7 +110,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
 
   // Unsaved-changes tracking. The baseline is the form as it looked right after
   // opening (or after the last Save); anything different from it is unsaved.
-  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, customerEmail, vehicle, unitNumber, vin, jobTitle, diagnostics, items, taxRate, taxLabor, cardFee, cardFeeRate, notes })
+  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, customerId, customerEmail, vehicle, unitNumber, vin, jobTitle, diagnostics, items, taxRate, taxLabor, cardFee, cardFeeRate, notes })
   const emailInvalid = !!customerEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())
   const [baseline, setBaseline] = useState(null)
   const [initTick, setInitTick] = useState(0)
@@ -150,6 +162,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     setRoId(ro.id)
     setShopId(String(ro.shopId ?? ''))
     setCustomer(ro.customerName || '')
+    setCustomerId(ro.customerId ?? null)
     setCustomerEmail(ro.customerEmail || '')
     setVehicle(ro.vehicle || '')
     setVin(ro.vin || '')
@@ -159,7 +172,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const resetBlank = () => {
     const pref = readTaxPref()
     setRoId('')
-    setCustomer(''); setCustomerEmail(''); setVehicle(''); setUnitNumber(''); setVin('')
+    setCustomer(''); setCustomerId(null); setCustomerEmail(''); setVehicle(''); setUnitNumber(''); setVin('')
     setJobTitle(''); setDiagnostics(''); setNotes('')
     setItems([{ ...emptyItem }])
     setTaxRate(pref.rate); setTaxLabor(pref.labor); setCardFee(false); setCardFeeRate(pref.fee)
@@ -181,6 +194,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
       setRoId(fromInvoice.roId || '')
       setShopId(String(fromInvoice.shopId ?? ''))
       setCustomer(fromInvoice.customerName || '')
+      setCustomerId(fromInvoice.customerId ?? null)
       setCustomerEmail(fromInvoice.customerEmail || '')
       setVehicle(fromInvoice.vehicle || '')
       setUnitNumber(fromInvoice.unitNumber || '')
@@ -216,6 +230,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           setInvNumber(d.invNumber || nextInvoiceNumber())
           setInvDate(d.invDate || new Date().toISOString().slice(0, 10))
           setCustomer(d.customer || '')
+          setCustomerId(d.customerId ?? null)
           setCustomerEmail(d.customerEmail || '')
           setVehicle(d.vehicle || '')
           setUnitNumber(d.unitNumber || '')
@@ -285,7 +300,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
       internal: fromInvoice?.internal ?? false,
       roId: roId || null,
       shopId: shop?.id ?? null,
-      customerId: ro?.customerId ?? fromInvoice?.customerId ?? null,
+      customerId: customerId ?? ro?.customerId ?? null,
       customerName: customer,
       customerEmail: customerEmail.trim() || null,
       vehicle, unitNumber, vin, jobTitle, diagnostics, notes,
@@ -394,7 +409,11 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={label}>Customer</label>
-              <input className={`${field} mt-1`} placeholder="Customer or company" value={customer} onChange={e => setCustomer(e.target.value)} />
+              <input className={`${field} mt-1`} placeholder="Customer or company" value={customer} onChange={e => changeCustomerName(e.target.value)} list="sc-invoice-customers" autoComplete="off" />
+              <datalist id="sc-invoice-customers">
+                {(customers || []).slice(0, 300).map(c => <option key={c.id} value={c.name} />)}
+              </datalist>
+              {customerId && <p className="mt-1 text-2xs text-text-muted">Linked to this customer's profile.</p>}
             </div>
             <div>
               <label className={label}>Vehicle</label>
