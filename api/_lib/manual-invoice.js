@@ -92,8 +92,8 @@ export function cleanManualInvoice(body) {
   const itemize = b.itemize === undefined ? true : !!b.itemize
   const taxLabor = !!b.tax_labor
   const totals = computeManualTotals({ lines, itemize, taxRate, taxLabor, cardFee, cardFeeRate })
+  // A negative total is allowed on purpose: shops record credit memos this way
   if (Math.abs(totals.total) > MAX_TOTAL) return { error: 'Invoice total is out of range' }
-  if (totals.total < 0) return { error: 'Invoice total cannot be negative' }
 
   return {
     value: {
@@ -170,7 +170,8 @@ export function rowFromLocalInvoice(inv) {
   if (!number) return { error: 'missing invoice number' }
   // The stored total must be a real number: a missing one must not import as $0
   const rawTotal = inv?.total === null || inv?.total === '' ? NaN : Number(inv?.total)
-  if (!Number.isFinite(rawTotal) || rawTotal < 0 || rawTotal > MAX_TOTAL) return { error: 'invalid total' }
+  // (negative totals are real: credit memos that already exist in the browser)
+  if (!Number.isFinite(rawTotal) || Math.abs(rawTotal) > MAX_TOTAL) return { error: 'invalid total' }
   const total = round2(rawTotal)
   if (Array.isArray(inv?.lines) && inv.lines.length > MAX_LINES) return { error: 'too many lines' }
 

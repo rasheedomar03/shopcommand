@@ -102,7 +102,10 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
   // Database invoices: the amount already includes tax and must not change
   // unless the line items do (see lib/invoiceEdit.js). Device-only invoices
   // carry 8.25% tax computed here.
-  const isDb = !!invoice.dbId
+  // "Database invoice" here means one that comes from a repair order (priced and
+  // edited through its repair order). Invoices made from scratch are edited in the
+  // generator whether they are saved on the server or only on this computer.
+  const isDb = !!invoice.dbId && !!invoice.roId
   const namedRows = rows.filter(r => String(r.name).trim())
   const dbEdit = isDb && editing ? priceInvoiceEdit(invoice, namedRows) : null
   const editSubtotal = dbEdit ? dbEdit.subtotal : rows.reduce((sum, r) => sum + (Number(r.parts) || 0) + (Number(r.labor) || 0), 0)
@@ -384,12 +387,12 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
           </div>
         )}
 
-        {!isDb && (
+        {!invoice.dbId && (
           <p className="text-2xs text-text-muted">
             This invoice is saved on this computer only for now. Print / PDF prints it exactly as shown above; choose Save as PDF in the print window for a PDF file.
           </p>
         )}
-        {isDb && (
+        {invoice.dbId && (
           <p className="text-2xs text-text-muted">
             Print / PDF prints this invoice exactly as shown above. Choose Save as PDF in the print window for a PDF file.
           </p>
@@ -601,7 +604,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
 }
 
 export default function Invoices() {
-  const { shops, invoices, updateInvoice, voidInvoice, recordInvoicePayment, emailInvoice } = useData()
+  const { shops, invoices, updateInvoice, voidInvoice, recordInvoicePayment, emailInvoice, invoiceImport, dismissInvoiceImport } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
@@ -620,7 +623,7 @@ export default function Invoices() {
     if (!openParam) return
     const target = invoices.find(i => i.id === openParam)
     if (!target) return // data may still be loading; try again when it arrives
-    if (!target.dbId && target.status === 'draft') openInGenerator(target)
+    if (!target.roId && target.status === 'draft') openInGenerator(target)
     else setSelected(target)
     setSearchParams({}, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -681,6 +684,30 @@ export default function Invoices() {
         </div>
       </div>
 
+      {invoiceImport && (
+        <div className="rounded-lg border border-orange/20 bg-orange/[0.05] px-4 py-3 text-xs text-text-secondary space-y-1" role="status">
+          {invoiceImport.imported > 0 && (
+            <p>
+              <span className="font-semibold text-text-primary">
+                {invoiceImport.imported} invoice{invoiceImport.imported === 1 ? '' : 's'} moved to your account
+              </span>
+              {' '}(total {formatMoney(invoiceImport.importedTotal)}). They are now saved on the server, so they are there on any computer. A backup copy of the originals stays on this computer, and your Export file is still good.
+            </p>
+          )}
+          {invoiceImport.conflicts?.length > 0 && (
+            <p>
+              Left on this computer because the server already has that number with a different amount: {invoiceImport.conflicts.join(', ')}. Nothing was changed or deleted.
+            </p>
+          )}
+          {invoiceImport.failed?.length > 0 && (
+            <p>
+              Could not be moved yet (they stay on this computer and will be tried again): {invoiceImport.failed.join(', ')}.
+            </p>
+          )}
+          <button onClick={dismissInvoiceImport} className="font-semibold text-orange hover:underline">Dismiss</button>
+        </div>
+      )}
+
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
         {['All', ...Object.keys(INVOICE_STATUS)].map(s => (
           <button
@@ -732,7 +759,7 @@ export default function Invoices() {
                 <Tr
                   key={inv.id}
                   // A draft opens in the invoice generator, filled in; everything else opens the detail view
-                  onClick={() => (!inv.dbId && inv.status === 'draft' ? openInGenerator(inv) : setSelected(inv))}
+                  onClick={() => (!inv.roId && inv.status === 'draft' ? openInGenerator(inv) : setSelected(inv))}
                   className="cursor-pointer"
                 >
                   <Td>

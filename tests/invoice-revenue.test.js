@@ -12,7 +12,10 @@ describe('isCountedInvoice', () => {
   })
   it('leaves out invoices from a repair order or saved on the server (already counted through the repair order)', () => {
     expect(isCountedInvoice(inv({ roId: 'RO-1' }))).toBe(false)
-    expect(isCountedInvoice(inv({ dbId: 'uuid' }))).toBe(false)
+    // saved on the server but still from scratch (no repair order): counts
+    expect(isCountedInvoice(inv({ dbId: 'uuid' }))).toBe(true)
+    // saved on the server and tied to a repair order: the repair order counts it
+    expect(isCountedInvoice(inv({ dbId: 'uuid', roId: 'RO-1' }))).toBe(false)
   })
   it('leaves out internal (own fleet) invoices', () => {
     expect(isCountedInvoice(inv({ internal: true }))).toBe(false)

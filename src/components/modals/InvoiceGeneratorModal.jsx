@@ -55,6 +55,12 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const { session } = useAuth()
   const [savedFlash, setSavedFlash] = useState(false)
   const [savedOnServer, setSavedOnServer] = useState(false)
+  // After the first save the invoice exists on the server: later saves edit it
+  // (same id and number) instead of creating a second one
+  const [savedDbId, setSavedDbId] = useState(null)
+  const [savedNumber, setSavedNumber] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
 
   const [shopId, setShopId] = useState('')
   const [roId, setRoId] = useState('')
@@ -159,6 +165,9 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     setInvNumber(fromInvoice?.id || nextInvoiceNumber())
     setInvDate((fromInvoice?.created || new Date().toISOString()).slice(0, 10))
     setStatus(fromInvoice?.status || 'draft')
+    setSavedDbId(fromInvoice?.dbId ?? null)
+    setSavedNumber(null)
+    setSaveError(null)
     if (fromInvoice) {
       const lines = linesFromInvoice(fromInvoice)
       const tax = taxSettingsFor(fromInvoice, Number(readTaxPref().rate) || 8.25)
@@ -223,10 +232,11 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
 
   // Two invoices can never share a number: saving over an existing number used
   // to silently replace the earlier invoice.
-  const numberTaken = invoiceNumberTaken(invoices, invNumber, fromInvoice?.id)
+  const selfNumber = savedNumber ?? fromInvoice?.id // this invoice may keep its own number
+  const numberTaken = invoiceNumberTaken(invoices, invNumber, selfNumber)
   const useNextFreeNumber = () => {
     let next = nextInvoiceNumber()
-    for (let i = 0; i < 20 && invoiceNumberTaken(invoices, next, fromInvoice?.id); i++) next = nextInvoiceNumber()
+    for (let i = 0; i < 20 && invoiceNumberTaken(invoices, next, selfNumber); i++) next = nextInvoiceNumber()
     setInvNumber(next)
   }
 
@@ -236,15 +246,15 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const setItem = (idx, patch) => setItems(prev => prev.map((it, i) => i === idx ? { ...it, ...patch } : it))
 
   const save = async (nextStatus) => {
-    if (numberTaken || !invNumber.trim()) return
-    setBaseline(snapshot)
-    restoredRef.current = false
-    setRestored(false)
-    clearDraft()
+    if (numberTaken || !invNumber.trim() || saving) return
     const ro = repairOrders.find(r => String(r.id) === String(roId))
     const sentStatus = nextStatus || status
+    setSaving(true)
+    setSaveError(null)
     const entry = await addInvoice({
       id: invNumber,
+      dbId: savedDbId,
+      internal: fromInvoice?.internal ?? false,
       roId: roId || null,
       shopId: shop?.id ?? null,
       customerId: ro?.customerId ?? fromInvoice?.customerId ?? null,
@@ -265,9 +275,21 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
       tax: totals.tax,
       total: totals.total,
     })
+    setSaving(false)
+    // Something the user has to fix (number already used, a bad value, trial ended,
+    // no connection on an edit): nothing was saved, so keep the draft and the form.
+    if (entry?.error) {
+      setSaveError(entry.error)
+      return
+    }
+    setBaseline(snapshot)
+    restoredRef.current = false
+    setRestored(false)
+    clearDraft()
     setStatus(sentStatus)
-    // Only invoices linked to a repair order reach the server; be honest about
-    // where this one actually went.
+    setSavedDbId(entry?.dbId ?? null)
+    setSavedNumber(entry?.id ?? invNumber)
+    // Say honestly where it went: on the server, or (no connection) this computer
     setSavedOnServer(!!entry?.dbId)
     setSavedFlash(true)
     setTimeout(() => setSavedFlash(false), 3500)
@@ -473,25 +495,30 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             <Button
               variant="secondary"
               className="flex-1"
-              disabled={numberTaken || !invNumber.trim()}
+              disabled={numberTaken || !invNumber.trim() || saving}
               onClick={() => save()}
             >
-              {savedFlash
-                ? <><Check size={14} className="text-status-green" /> {savedOnServer ? 'Saved' : 'Saved on this computer'}</>
-                : <><Save size={14} /> Save invoice</>}
+              {saving
+                ? 'Saving...'
+                : savedFlash
+                  ? <><Check size={14} className="text-status-green" /> {savedOnServer ? 'Saved' : 'Saved on this computer'}</>
+                  : <><Save size={14} /> Save invoice</>}
             </Button>
             <Button className="flex-1" onClick={() => window.print()}>
               <Printer size={14} /> Print / PDF
             </Button>
           </div>
           {status === 'draft' && (
-            <Button variant="secondary" className="w-full" disabled={numberTaken || !invNumber.trim()} onClick={() => save('sent')}>
+            <Button variant="secondary" className="w-full" disabled={numberTaken || !invNumber.trim() || saving} onClick={() => save('sent')}>
               <Send size={14} /> Save and mark as sent
             </Button>
           )}
-          {!roId && (
+          {saveError && (
+            <p className="text-xs font-medium text-status-red" role="alert">{saveError}</p>
+          )}
+          {savedFlash && !savedOnServer && !session?.demo && (
             <p className="text-xs text-text-muted">
-              Invoices made from scratch are saved on this computer only for now, so keep using the same browser and press Export on the Invoices page now and then to keep a copy.
+              We could not reach the server, so this invoice is kept on this computer for now. It moves to your account automatically the next time the app connects.
             </p>
           )}
           <p className="text-2xs text-text-muted">

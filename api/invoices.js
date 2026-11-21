@@ -280,7 +280,7 @@ export default createHandler(
 
       if (id) {
         const [row] = await sql`
-          SELECT i.*, ro.ro_number, ro.total AS ro_total,
+          SELECT i.*, i.invoice_date::text AS invoice_day, ro.ro_number, ro.total AS ro_total,
             COALESCE(i.customer_name, c.name) AS customer_name,
             COALESCE(i.customer_email, c.email) AS customer_email,
             COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = i.id AND p.status = 'completed'), 0) AS amount_paid
@@ -306,7 +306,7 @@ export default createHandler(
 
       // List all invoices
       const rows = await sql`
-        SELECT i.*, ro.ro_number,
+        SELECT i.*, i.invoice_date::text AS invoice_day, ro.ro_number,
           COALESCE(i.customer_name, c.name) AS customer_name,
           COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = i.id AND p.status = 'completed'), 0) AS amount_paid
         FROM invoices i

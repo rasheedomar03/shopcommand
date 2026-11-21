@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { api, setTokenProvider } from '@/lib/api'
 import { setUploadTokenProvider } from '@/lib/uploads'
 import { invoiceRevenueTotals } from '@/lib/invoiceRevenue'
+import { invoiceFromServerRow, saveInvoiceToServer, planImport, moveLocalInvoices, remainingLocal } from '@/lib/serverInvoices'
 import {
   parts as initialParts,
   cannedServices,
@@ -45,6 +46,8 @@ function transformShop(s) {
 // display fields and line items from the already-loaded repair orders.
 function transformInvoice(row, rosById) {
   if (row.status === 'void') return null
+  // From-scratch and imported invoices carry their own lines and customer
+  if (!row.ro_id) return invoiceFromServerRow(row)
   const ro = rosById[row.ro_id]
   const displayId = row.number || (row.ro_number
     ? `INV-${String(row.ro_number).replace(/^RO-?/i, '')}`
@@ -201,9 +204,15 @@ export function DataProvider({ children }) {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
-  // Generated invoices: demo seeds from mock; real users persist to localStorage
-  // until a server-side invoices store exists
+  // Invoices: demo seeds from mock. Real accounts keep them on the server; the
+  // browser copy (sc_invoices) only holds ones not yet saved there, and is moved
+  // up once by runInvoiceImport below.
   const [invoices, setInvoices] = useState(() => load('sc_invoices', []))
+  // Result of moving this computer's invoices to the server, shown until dismissed
+  const [invoiceImport, setInvoiceImport] = useState(() => load('sc_invoice_import_report', null))
+  const [importTick, setImportTick] = useState(0)
+  const importTried = useRef(new Set())
+  const importing = useRef(false)
 
   // ── Parts state (API for real users, localStorage for demo) ──────────────
   const [parts, setParts] = useState(() => {
@@ -296,6 +305,66 @@ export function DataProvider({ children }) {
     setLoading(false)
   }, [session?.demo])
 
+  // ── One-time move of this computer's invoices to the server ──────────────
+  // Safety rules: a full copy is kept first (sc_invoices_backup_v1); a local
+  // invoice is removed ONLY after the server confirms it saved it, or already has
+  // the same number and amount; a number the server has with a DIFFERENT amount is
+  // left alone and reported; anything that fails stays local and is retried.
+  const runInvoiceImport = useCallback(async (serverRows) => {
+    if (session?.demo || session?.role === 'tech' || importing.current) return
+    // Staged rollout: the move only runs in a browser where it was switched on
+    // (localStorage sc_invoice_import = 'on'). New invoices save on the server
+    // for everyone; this keeps the old ones where they are until the move has
+    // been verified on a test account. A later release removes this check.
+    try { if (localStorage.getItem('sc_invoice_import') !== 'on') return } catch { return }
+    const local = load('sc_invoices', [])
+    if (!Array.isArray(local) || local.length === 0) return
+    const plan = planImport(local, serverRows)
+    const pending = plan.toSend.length + plan.conflicts.length + plan.duplicates.length
+    if (!pending) return
+
+    importing.current = true
+    try {
+      try {
+        if (!localStorage.getItem('sc_invoices_backup_v1')) {
+          localStorage.setItem('sc_invoices_backup_v1', localStorage.getItem('sc_invoices') || '[]')
+        }
+      } catch { /* storage full or blocked: the server copy is still confirmed before anything is removed */ }
+
+      const result = await moveLocalInvoices({
+        local,
+        serverRows,
+        tried: importTried.current,
+        post: (batch) => api('/api/invoices?action=import', { method: 'POST', body: { invoices: batch } }),
+      })
+
+      // Re-read right before writing so an invoice saved meanwhile is never lost
+      if (result.moved.size || result.duplicateKeys.size) {
+        save('sc_invoices', remainingLocal(load('sc_invoices', []), result))
+      }
+
+      if (result.moved.size || result.conflicts.length || result.failed.length) {
+        const report = {
+          at: new Date().toISOString(),
+          imported: result.moved.size,
+          importedTotal: result.movedTotal,
+          conflicts: result.conflicts,
+          failed: result.failed,
+        }
+        save('sc_invoice_import_report', report)
+        setInvoiceImport(report)
+      }
+      if (result.moved.size || result.duplicateKeys.size) setImportTick(t => t + 1) // reload so the server copies show
+    } finally {
+      importing.current = false
+    }
+  }, [session?.demo, session?.role])
+
+  const dismissInvoiceImport = useCallback(() => {
+    setInvoiceImport(null)
+    try { localStorage.removeItem('sc_invoice_import_report') } catch {}
+  }, [])
+
   // ── Fetch all data from API when session is ready ────────────────────────
   const fetchAll = useCallback(async () => {
     if (!session?.onboarded || session?.demo) return
@@ -353,6 +422,8 @@ export function DataProvider({ children }) {
         const serverIds = new Set(serverInvoices.map(i => i.id))
         const localOnly = load('sc_invoices', []).filter(i => !i.dbId && !serverIds.has(i.id))
         setInvoices([...serverInvoices, ...localOnly].sort((a, b) => new Date(b.created) - new Date(a.created)))
+        // Move any invoices still only on this computer up to the server
+        runInvoiceImport(invoicesData)
       }
 
       if (Array.isArray(partsOrdersData)) {
@@ -383,13 +454,19 @@ export function DataProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }, [session?.onboarded, session?.demo, session?.clerkId])
+  }, [session?.onboarded, session?.demo, session?.clerkId, runInvoiceImport])
 
   useEffect(() => {
     if (tokenInjected.current && session?.onboarded && !session?.demo) {
       fetchAll()
     }
   }, [fetchAll, session?.onboarded, session?.demo, session?.clerkId])
+
+  // After invoices were moved to the server, reload so the saved copies show
+  useEffect(() => {
+    if (importTick > 0 && !session?.demo) fetchAll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [importTick])
 
   // ── Auto-refresh every 30s when tab is visible (non-demo) ───────────────
   useEffect(() => {
@@ -656,6 +733,26 @@ export function DataProvider({ children }) {
         // than a lost invoice; it merges out on next successful fetch
       }
     }
+    // Real accounts + invoice made from scratch → saved on the server, which
+    // works out the totals. Returns { error } for something the user must fix
+    // (a number already used, a bad value, trial ended). Only when the server
+    // cannot be reached does a NEW invoice fall back to this computer, so it is
+    // never lost; the one-time import moves it up on a later refresh.
+    const linkedToRO = !!invoice.roId && UUID_RE.test(String(invoice.roId))
+    if (!session?.demo && !linkedToRO) {
+      const out = await saveInvoiceToServer({ api, invoice })
+      if (out.error) return { error: out.error }
+      if (out.entry) {
+        const saved = out.entry
+        setInvoices(prev => {
+          const next = [saved, ...prev.filter(i => i.id !== saved.id && i.dbId !== saved.dbId)]
+          save('sc_invoices', next.filter(i => !i.dbId))
+          return next
+        })
+        return saved
+      }
+      // out.offline: no connection and a new invoice, so keep it on this computer below
+    }
     const entry = { status: 'draft', paidAt: null, paymentMethod: null, ...invoice }
     setInvoices(prev => {
       // Same invoice number saved again replaces the earlier draft
@@ -755,6 +852,15 @@ export function DataProvider({ children }) {
 
   const updateInvoice = useCallback(async (id, patch) => {
     const target = invoices.find(i => i.id === id)
+    // From-scratch invoice saved on the server: sent and draft are server statuses
+    // ('sent' is the server's 'unpaid')
+    if (!session?.demo && target?.dbId && !target.roId && (patch.status === 'sent' || patch.status === 'draft')) {
+      try {
+        await api('/api/invoices', { method: 'PUT', params: { id: target.dbId }, body: { status: patch.status === 'sent' ? 'unpaid' : 'draft' } })
+      } catch (err) {
+        return { error: err.message || 'Failed to change the invoice status' }
+      }
+    }
     // DB-backed invoice being paid → record it server-side first
     if (!session?.demo && target?.dbId && patch.status === 'paid') {
       try {
@@ -781,7 +887,7 @@ export function DataProvider({ children }) {
     // DB-backed content edit (services/total/number, no status change) →
     // persist the new amount/number on the invoice and the edited service
     // lines on its RO, since the server stores line detail on the RO.
-    if (!session?.demo && target?.dbId && patch.status === undefined && (patch.total !== undefined || patch.number !== undefined)) {
+    if (!session?.demo && target?.dbId && target.roId && patch.status === undefined && (patch.total !== undefined || patch.number !== undefined)) {
       try {
         await api('/api/invoices', {
           method: 'PUT',
@@ -1122,6 +1228,7 @@ export function DataProvider({ children }) {
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
       invoices, addInvoice, updateInvoice, voidInvoice, recordInvoicePayment, emailInvoice,
+      invoiceImport, dismissInvoiceImport,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,
       resetData, loading, fetchAll, fetchError,

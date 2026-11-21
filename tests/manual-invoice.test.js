@@ -53,7 +53,13 @@ describe('cleanManualInvoice', () => {
     expect(cleanManualInvoice({ ...l({}), tax_rate: 50 }).error).toMatch(/tax/i)
     expect(cleanManualInvoice({ ...l({}), card_fee: true, card_fee_rate: 99 }).error).toMatch(/fee/i)
     expect(cleanManualInvoice({ customer_name: 'A', lines: Array(101).fill({ desc: 'x', qty: 1, price: 1 }) }).error).toMatch(/at most/i)
-    expect(cleanManualInvoice({ customer_name: 'A', lines: [{ desc: 'x', qty: 1, price: -50, type: 'part' }] }).error).toMatch(/negative/i)
+    expect(cleanManualInvoice({ customer_name: 'A', lines: [{ desc: 'x', qty: 1, price: -2e7, type: 'part' }] }).error).toMatch(/price/i)
+  })
+
+  it('allows a negative total (a credit memo)', () => {
+    const { value, error } = cleanManualInvoice({ customer_name: 'A', lines: [{ desc: 'Credit', qty: 1, price: -250, type: 'fee' }] })
+    expect(error).toBeUndefined()
+    expect(value.amount).toBe(-250)
   })
 
   it('validates email, dates, ids and number length', () => {
@@ -144,7 +150,11 @@ describe('rowFromLocalInvoice (browser import)', () => {
 
   it('rejects an invoice with no number, a bad total or too many lines', () => {
     expect(rowFromLocalInvoice({ customerName: 'A', total: 5 }).error).toBeTruthy()
-    expect(rowFromLocalInvoice({ id: '1', total: -5 }).error).toBeTruthy()
+    expect(rowFromLocalInvoice({ id: '1', total: -5e9 }).error).toBeTruthy()
+    // an existing credit memo imports as is, with no payment row
+    const credit = rowFromLocalInvoice({ id: '1', customerName: 'A', total: -250, status: 'paid' })
+    expect(credit.row.amount).toBe(-250)
+    expect(credit.payment).toBeNull()
     expect(rowFromLocalInvoice({ id: '1', total: 5, lines: Array(101).fill({}) }).error).toBeTruthy()
   })
 

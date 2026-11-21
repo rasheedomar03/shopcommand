@@ -103,6 +103,8 @@ describe.skipIf(!live)('live invoice API (real SQL)', () => {
     const row = list._body.find(r => r.id === made.id)
     expect(row.customer_name).toBe('Zain Trucking')
     expect(row.unit_number).toBe('236')
+    // the invoice date comes back as a plain calendar day, so no timezone can move it
+    expect(row.invoice_day).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(Number(row.amount_paid)).toBe(0)
     const one = await call({ method: 'GET', query: { id: made.id } })
     expect(one.statusCode).toBe(200)
@@ -179,21 +181,25 @@ describe.skipIf(!live)('live invoice API (real SQL)', () => {
       { id: `${tag}-i2`, customerName: 'Someone New', status: 'sent', created: '2026-10-03T12:00:00', services: [{ name: 'Brake job', labor: 200, parts: 100 }], total: 300 },
       { id: `${tag}-i3`, customerName: 'Draftee', status: 'draft', created: '2026-10-04T12:00:00', total: 50, services: [{ name: 'Wash', labor: 50, parts: 0 }] },
       { id: `${tag}-i4`, customerName: 'Part Payer', status: 'partial', amountPaid: 40, created: '2026-10-04T12:00:00', total: 90, services: [{ name: 'Tune', labor: 90, parts: 0 }] },
+      { id: `${tag}-i5`, customerName: 'Credit Memo', status: 'paid', created: '2026-10-06T12:00:00', total: -250, services: [{ name: 'Credit', labor: 0, parts: -250 }] },
       { customerName: 'No number', total: 5 },
     ]
     const first = await call({ query: { action: 'import' }, body: { invoices: list } })
     expect(first.statusCode).toBe(200)
     console.log('IMPORT RESULT', JSON.stringify(first._body))
-    expect(first._body.imported).toBe(4)
+    expect(first._body.imported).toBe(5)
     expect(first._body.failed).toHaveLength(1)
-    expect(first._body.importedTotal).toBe(510.01)
+    expect(first._body.importedTotal).toBe(260.01) // 510.01 plus a -250 credit memo
 
     const again = await call({ query: { action: 'import' }, body: { invoices: list } })
     expect(again._body.imported).toBe(0)
-    expect(again._body.skipped).toHaveLength(4)
+    expect(again._body.skipped).toHaveLength(5)
 
     const rows = await sql`SELECT * FROM invoices WHERE org_id = ${A.org} AND source = 'import' ORDER BY number`
-    expect(rows).toHaveLength(4)
+    expect(rows).toHaveLength(5)
+    const memo = rows.find(r => r.number === `${tag}-i5`)
+    expect(Number(memo.amount)).toBe(-250)
+    expect(memo.status).toBe('paid')
     const i1 = rows.find(r => r.number === `${tag}-i1`)
     expect(Number(i1.amount)).toBe(70.01) // kept exactly, not recomputed
     expect(i1.status).toBe('paid')
@@ -207,6 +213,7 @@ describe.skipIf(!live)('live invoice API (real SQL)', () => {
     expect(Number(rows.find(r => r.number === `${tag}-i2`).card_fee_amount)).toBe(0)
 
     const pays = await sql`SELECT p.amount, p.method, i.number FROM payments p JOIN invoices i ON i.id = p.invoice_id WHERE p.org_id = ${A.org} AND i.source = 'import' ORDER BY i.number`
+    // (the credit memo has no payment row)
     expect(pays.map(p => [p.number, Number(p.amount), p.method])).toEqual([
       [`${tag}-i1`, 70.01, 'visa'],
       [`${tag}-i4`, 40, 'other'],
