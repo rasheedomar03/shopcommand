@@ -696,12 +696,12 @@ export default function Invoices() {
           )}
           {invoiceImport.conflicts?.length > 0 && (
             <p>
-              Left on this computer because the server already has that number with a different amount: {invoiceImport.conflicts.join(', ')}. Nothing was changed or deleted.
+              Not moved, because your account already has an invoice with the same number but a different amount: {invoiceImport.conflicts.join(', ')}. Their full details are saved aside in this browser (and in your Export file), and nothing was changed or deleted. Send us a message and we will sort them out.
             </p>
           )}
           {invoiceImport.failed?.length > 0 && (
             <p>
-              Could not be moved yet (they stay on this computer and will be tried again): {invoiceImport.failed.join(', ')}.
+              Could not be moved yet. They are still in your list on this computer and the app will try again the next time it loads: {invoiceImport.failed.join(', ')}.
             </p>
           )}
           <button onClick={dismissInvoiceImport} className="font-semibold text-orange hover:underline">Dismiss</button>

@@ -181,7 +181,9 @@ const keyOf = i => String(i?.id ?? '').trim().toLowerCase()
 export async function moveLocalInvoices({ local, serverRows, post, tried = new Set(), batchSize = 100 }) {
   const plan = planImport(local, serverRows)
   const toSend = plan.toSend.filter(i => !tried.has(keyOf(i)))
-  const conflicts = plan.conflicts.filter(i => !tried.has(keyOf(i)))
+  // Conflicts are reported once and then set aside by the caller (see remainingLocal),
+  // so they never come back on later refreshes.
+  const conflicts = plan.conflicts
   const duplicateKeys = new Set(plan.duplicates.map(keyOf))
   const moved = new Set()
   const failed = []
@@ -202,21 +204,57 @@ export async function moveLocalInvoices({ local, serverRows, post, tried = new S
       failed.push(...batch.map(i => String(i.id)))
     }
   }
-  conflicts.forEach(i => tried.add(keyOf(i)))
-
   return {
     moved,
     movedTotal: Math.round(movedTotal * 100) / 100,
     failed: failed.filter(Boolean),
     conflicts: conflicts.map(i => String(i.id)),
+    conflictItems: conflicts, // the full invoices, to be saved aside before they leave the live list
+    conflictKeys: new Set(conflicts.map(keyOf)),
     duplicateKeys,
     attempted: toSend.length,
   }
 }
 
-/** The invoices to keep on this computer after a move: everything the server did not take. */
-export function remainingLocal(current, result) {
-  return (current || []).filter(i => !result.moved.has(keyOf(i)) && !result.duplicateKeys.has(keyOf(i)))
+/**
+ * The invoices to keep in the live list on this computer after a move: everything
+ * the server did not take. A conflict (same number as a server invoice, different
+ * amount) leaves the live list too, but ONLY when `conflictsSavedAside` is true,
+ * meaning its full details were safely written somewhere else first. Otherwise it
+ * stays, so nothing can be lost.
+ */
+export function remainingLocal(current, result, { conflictsSavedAside = false } = {}) {
+  return (current || []).filter(i =>
+    !result.moved.has(keyOf(i)) &&
+    !result.duplicateKeys.has(keyOf(i)) &&
+    !(conflictsSavedAside && result.conflictKeys?.has(keyOf(i)))
+  )
+}
+
+/**
+ * Add invoices to the set-aside list without losing earlier ones. An invoice with
+ * the same number replaces its earlier set-aside copy.
+ */
+export function mergeSetAside(existing, items) {
+  const byKey = new Map((Array.isArray(existing) ? existing : []).map(i => [keyOf(i), i]))
+  for (const i of items || []) byKey.set(keyOf(i), i)
+  return [...byKey.values()]
+}
+
+/**
+ * The message for the owner. A new result is ADDED to an unread one instead of
+ * replacing it, so the "N moved" summary is never lost when a later load adds a
+ * conflict or a retry.
+ */
+export function buildImportReport(existing, result, nowIso = new Date().toISOString()) {
+  const union = (a, b) => [...new Set([...(a || []), ...(b || [])])]
+  return {
+    at: nowIso,
+    imported: (existing?.imported || 0) + result.moved.size,
+    importedTotal: Math.round(((existing?.importedTotal || 0) + result.movedTotal) * 100) / 100,
+    conflicts: union(existing?.conflicts, result.conflicts),
+    failed: union(existing?.failed, result.failed),
+  }
 }
 
 /** Split into batches the server accepts (it takes at most 200 per request). */

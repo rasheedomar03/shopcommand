@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { api, setTokenProvider } from '@/lib/api'
 import { setUploadTokenProvider } from '@/lib/uploads'
 import { invoiceRevenueTotals } from '@/lib/invoiceRevenue'
-import { invoiceFromServerRow, saveInvoiceToServer, planImport, moveLocalInvoices, remainingLocal } from '@/lib/serverInvoices'
+import { invoiceFromServerRow, saveInvoiceToServer, planImport, moveLocalInvoices, remainingLocal, mergeSetAside, buildImportReport } from '@/lib/serverInvoices'
 import {
   parts as initialParts,
   cannedServices,
@@ -307,16 +307,15 @@ export function DataProvider({ children }) {
 
   // ── One-time move of this computer's invoices to the server ──────────────
   // Safety rules: a full copy is kept first (sc_invoices_backup_v1); a local
-  // invoice is removed ONLY after the server confirms it saved it, or already has
-  // the same number and amount; a number the server has with a DIFFERENT amount is
-  // left alone and reported; anything that fails stays local and is retried.
+  // invoice leaves the live list ONLY after the server confirms it saved it, or
+  // already has the same number and amount; a number the server has with a
+  // DIFFERENT amount is not moved, is saved in full to sc_invoice_conflicts_v1
+  // and reported; anything that fails stays in the live list and is retried.
   const runInvoiceImport = useCallback(async (serverRows) => {
     if (session?.demo || session?.role === 'tech' || importing.current) return
-    // Staged rollout: the move only runs in a browser where it was switched on
-    // (localStorage sc_invoice_import = 'on'). New invoices save on the server
-    // for everyone; this keeps the old ones where they are until the move has
-    // been verified on a test account. A later release removes this check.
-    try { if (localStorage.getItem('sc_invoice_import') !== 'on') return } catch { return }
+    // Kill switch for support: localStorage sc_invoice_import = 'off' stops the move
+    // in this browser (nothing else is needed to run it).
+    try { if (localStorage.getItem('sc_invoice_import') === 'off') return } catch { /* storage blocked: carry on, the move itself checks the server */ }
     const local = load('sc_invoices', [])
     if (!Array.isArray(local) || local.length === 0) return
     const plan = planImport(local, serverRows)
@@ -338,27 +337,30 @@ export function DataProvider({ children }) {
         post: (batch) => api('/api/invoices?action=import', { method: 'POST', body: { invoices: batch } }),
       })
 
-      // Re-read right before writing so an invoice saved meanwhile is never lost
-      if (result.moved.size || result.duplicateKeys.size) {
-        save('sc_invoices', remainingLocal(load('sc_invoices', []), result))
+      // A conflict (same number as a server invoice, different amount) is first
+      // written, in full, to its own key. Only when that write worked does it leave
+      // the live list, so no later save of the list can ever drop it.
+      let setAside = false
+      if (result.conflictItems.length) {
+        try {
+          localStorage.setItem('sc_invoice_conflicts_v1', JSON.stringify(mergeSetAside(load('sc_invoice_conflicts_v1', []), result.conflictItems)))
+          setAside = true
+        } catch { setAside = false }
       }
 
-      // A message that only repeats a known conflict must not replace the summary
-      // of what was moved (the owner may not have read it yet)
-      const hasUnreadSummary = !!load('sc_invoice_import_report', null)
-      const worthReporting = result.moved.size || result.failed.length || (result.conflicts.length && !hasUnreadSummary)
-      if (worthReporting) {
-        const report = {
-          at: new Date().toISOString(),
-          imported: result.moved.size,
-          importedTotal: result.movedTotal,
-          conflicts: result.conflicts,
-          failed: result.failed,
-        }
+      // Re-read right before writing so an invoice saved meanwhile is never lost
+      const changed = result.moved.size || result.duplicateKeys.size || (setAside && result.conflictKeys.size)
+      if (changed) {
+        save('sc_invoices', remainingLocal(load('sc_invoices', []), result, { conflictsSavedAside: setAside }))
+      }
+
+      // The message ADDS to an unread one, so the "N moved" summary is never lost
+      if (result.moved.size || result.failed.length || result.conflicts.length) {
+        const report = buildImportReport(load('sc_invoice_import_report', null), result)
         save('sc_invoice_import_report', report)
         setInvoiceImport(report)
       }
-      if (result.moved.size || result.duplicateKeys.size) setImportTick(t => t + 1) // reload so the server copies show
+      if (changed) setImportTick(t => t + 1) // reload so the server copies show
     } finally {
       importing.current = false
     }

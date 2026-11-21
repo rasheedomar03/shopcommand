@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { invoiceBreakdown } from '../src/lib/invoiceEdit.js'
-import { invoiceFromServerRow, manualBodyFromInvoice, planImport, isImportCandidate, batches, moveLocalInvoices, remainingLocal, saveInvoiceToServer } from '../src/lib/serverInvoices.js'
+import { invoiceFromServerRow, manualBodyFromInvoice, planImport, isImportCandidate, batches, moveLocalInvoices, remainingLocal, saveInvoiceToServer, mergeSetAside, buildImportReport } from '../src/lib/serverInvoices.js'
 
 const NOW = new Date('2026-11-21T12:00:00').getTime()
 const UUID = '00000000-0000-0000-0000-0000000000a1'
@@ -347,6 +347,56 @@ describe('invoiceBreakdown for server-saved invoices', () => {
   it('still works tax out as total minus lines for a repair-order invoice', () => {
     const inv = { dbId: UUID, roId: 'RO-1', total: 108.25, services: [{ name: 'x', parts: 0, labor: 100 }] }
     expect(invoiceBreakdown(inv)).toEqual({ subtotal: 100, tax: 8.25, total: 108.25 })
+  })
+})
+
+describe('conflicts are set aside, never lost', () => {
+  const L = (id, total = 100) => ({ id, total, status: 'sent', customerName: 'A' })
+  const okPost = async (batch) => ({ importedNumbers: batch.map(i => String(i.id)), importedTotal: 0, failed: [] })
+
+  it('a conflict stays in the live list unless its details were saved aside first', async () => {
+    const local = [L('032', 100)]
+    const r = await moveLocalInvoices({ local, serverRows: [{ number: '032', amount: '999' }], post: okPost })
+    expect(r.conflictItems).toEqual([local[0]]) // the full invoice, ready to be saved aside
+    expect(remainingLocal(local, r)).toHaveLength(1) // not saved aside: it stays
+    expect(remainingLocal(local, r, { conflictsSavedAside: false })).toHaveLength(1)
+    expect(remainingLocal(local, r, { conflictsSavedAside: true })).toHaveLength(0) // saved aside: it can leave
+  })
+
+  it('does not post a conflict, and reports it again only if it is still in the live list', async () => {
+    const local = [L('032', 100)]
+    let posted = 0
+    const post = async (b) => { posted++; return okPost(b) }
+    const r1 = await moveLocalInvoices({ local, serverRows: [{ number: '032', amount: '999' }], post })
+    expect(posted).toBe(0)
+    expect(r1.conflicts).toEqual(['032'])
+    // once it has left the live list there is nothing left to report
+    const left = remainingLocal(local, r1, { conflictsSavedAside: true })
+    const r2 = await moveLocalInvoices({ local: left, serverRows: [{ number: '032', amount: '999' }], post })
+    expect(r2.conflicts).toEqual([])
+  })
+
+  it('mergeSetAside keeps earlier invoices and replaces one with the same number', () => {
+    const a = { id: '032', total: 1 }, b = { id: '040', total: 2 }, a2 = { id: ' 032 ', total: 3 }
+    expect(mergeSetAside([a], [b]).map(i => i.id)).toEqual(['032', '040'])
+    const merged = mergeSetAside([a, b], [a2])
+    expect(merged).toHaveLength(2)
+    expect(merged.find(i => i.id.trim() === '032').total).toBe(3)
+    expect(mergeSetAside(null, [a])).toEqual([a])
+    expect(mergeSetAside([a], null)).toEqual([a])
+  })
+
+  it('buildImportReport adds to an unread summary instead of replacing it', () => {
+    const existing = { at: 'x', imported: 4, importedTotal: -9.5, conflicts: ['A-1'], failed: [] }
+    const result = { moved: new Set(['b-1', 'b-2']), movedTotal: 30.25, conflicts: ['A-1', 'C-3'], failed: ['D-4'] }
+    expect(buildImportReport(existing, result, 'now')).toEqual({
+      at: 'now', imported: 6, importedTotal: 20.75, conflicts: ['A-1', 'C-3'], failed: ['D-4'],
+    })
+  })
+
+  it('buildImportReport starts a fresh summary when there is none', () => {
+    const r = buildImportReport(null, { moved: new Set(['x']), movedTotal: 100, conflicts: [], failed: [] }, 'now')
+    expect(r).toEqual({ at: 'now', imported: 1, importedTotal: 100, conflicts: [], failed: [] })
   })
 })
 

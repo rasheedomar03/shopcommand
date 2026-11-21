@@ -51,7 +51,7 @@ const fmt = v => `$${(Number(v) || 0).toFixed(2)}`
 const n = v => Number(v) || 0
 
 export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromRO = null }) {
-  const { shops, repairOrders, addInvoice, invoices } = useData()
+  const { shops, repairOrders, addInvoice, invoices, voidInvoice } = useData()
   const { session } = useAuth()
   const [savedFlash, setSavedFlash] = useState(false)
   const [savedOnServer, setSavedOnServer] = useState(false)
@@ -61,6 +61,8 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const [savedNumber, setSavedNumber] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const [confirmVoid, setConfirmVoid] = useState(false)
+  const [voiding, setVoiding] = useState(false)
 
   const [shopId, setShopId] = useState('')
   const [roId, setRoId] = useState('')
@@ -68,6 +70,8 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const [invDate, setInvDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [status, setStatus] = useState('draft')
   const [customer, setCustomer] = useState('')
+  // Optional: with an email, the invoice can be emailed to the customer from its page
+  const [customerEmail, setCustomerEmail] = useState('')
   const [vehicle, setVehicle] = useState('')
   const [unitNumber, setUnitNumber] = useState('')
   const [vin, setVin] = useState('')
@@ -94,7 +98,8 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
 
   // Unsaved-changes tracking. The baseline is the form as it looked right after
   // opening (or after the last Save); anything different from it is unsaved.
-  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, vehicle, unitNumber, vin, jobTitle, diagnostics, items, taxRate, taxLabor, cardFee, cardFeeRate, notes })
+  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, customerEmail, vehicle, unitNumber, vin, jobTitle, diagnostics, items, taxRate, taxLabor, cardFee, cardFeeRate, notes })
+  const emailInvalid = !!customerEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())
   const [baseline, setBaseline] = useState(null)
   const [initTick, setInitTick] = useState(0)
   const [restored, setRestored] = useState(false)
@@ -145,6 +150,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     setRoId(ro.id)
     setShopId(String(ro.shopId ?? ''))
     setCustomer(ro.customerName || '')
+    setCustomerEmail(ro.customerEmail || '')
     setVehicle(ro.vehicle || '')
     setVin(ro.vin || '')
     setItems(itemsFromRO(ro))
@@ -153,7 +159,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const resetBlank = () => {
     const pref = readTaxPref()
     setRoId('')
-    setCustomer(''); setVehicle(''); setUnitNumber(''); setVin('')
+    setCustomer(''); setCustomerEmail(''); setVehicle(''); setUnitNumber(''); setVin('')
     setJobTitle(''); setDiagnostics(''); setNotes('')
     setItems([{ ...emptyItem }])
     setTaxRate(pref.rate); setTaxLabor(pref.labor); setCardFee(false); setCardFeeRate(pref.fee)
@@ -168,12 +174,14 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     setSavedDbId(fromInvoice?.dbId ?? null)
     setSavedNumber(null)
     setSaveError(null)
+    setConfirmVoid(false)
     if (fromInvoice) {
       const lines = linesFromInvoice(fromInvoice)
       const tax = taxSettingsFor(fromInvoice, Number(readTaxPref().rate) || 8.25)
       setRoId(fromInvoice.roId || '')
       setShopId(String(fromInvoice.shopId ?? ''))
       setCustomer(fromInvoice.customerName || '')
+      setCustomerEmail(fromInvoice.customerEmail || '')
       setVehicle(fromInvoice.vehicle || '')
       setUnitNumber(fromInvoice.unitNumber || '')
       setVin(fromInvoice.vin || '')
@@ -208,6 +216,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           setInvNumber(d.invNumber || nextInvoiceNumber())
           setInvDate(d.invDate || new Date().toISOString().slice(0, 10))
           setCustomer(d.customer || '')
+          setCustomerEmail(d.customerEmail || '')
           setVehicle(d.vehicle || '')
           setUnitNumber(d.unitNumber || '')
           setVin(d.vin || '')
@@ -245,8 +254,27 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const shown = items.filter(it => it.desc || n(it.price) > 0)
   const setItem = (idx, patch) => setItems(prev => prev.map((it, i) => i === idx ? { ...it, ...patch } : it))
 
+  // A draft that already exists (opened from the list, or saved in this window)
+  // can be voided here. Drafts open straight in this window, so without this there
+  // was no way to get rid of one. The record is kept for the books, like any void.
+  const existingId = savedNumber ?? fromInvoice?.id
+  const canVoidDraft = !!existingId && status === 'draft' && !roId
+  const discardDraft = async () => {
+    setVoiding(true)
+    setSaveError(null)
+    const r = await voidInvoice(existingId)
+    setVoiding(false)
+    if (r?.error) {
+      setSaveError(r.error)
+      setConfirmVoid(false)
+      return
+    }
+    clearDraft()
+    onClose() // straight away: the unsaved-changes prompt makes no sense for a voided draft
+  }
+
   const save = async (nextStatus) => {
-    if (numberTaken || !invNumber.trim() || saving) return
+    if (numberTaken || !invNumber.trim() || saving || emailInvalid) return
     const ro = repairOrders.find(r => String(r.id) === String(roId))
     const sentStatus = nextStatus || status
     setSaving(true)
@@ -259,7 +287,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
       shopId: shop?.id ?? null,
       customerId: ro?.customerId ?? fromInvoice?.customerId ?? null,
       customerName: customer,
-      customerEmail: fromInvoice?.customerEmail ?? ro?.customerEmail ?? null,
+      customerEmail: customerEmail.trim() || null,
       vehicle, unitNumber, vin, jobTitle, diagnostics, notes,
       status: sentStatus,
       created: `${invDate}T12:00:00`,
@@ -380,6 +408,11 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
               <label className={label}>VIN</label>
               <input className={`${field} mt-1 font-mono`} placeholder="17 characters" maxLength={17} value={vin} onChange={e => setVin(e.target.value.toUpperCase().replace(/\s/g, ''))} />
             </div>
+            <div className="col-span-2">
+              <label className={label}>Customer email (optional)</label>
+              <input type="email" className={`${field} mt-1`} placeholder="So you can email them this invoice" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} />
+              {emailInvalid && <p className="mt-1 text-2xs font-medium text-status-red">That email address does not look right.</p>}
+            </div>
           </div>
 
           <div>
@@ -495,7 +528,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             <Button
               variant="secondary"
               className="flex-1"
-              disabled={numberTaken || !invNumber.trim() || saving}
+              disabled={numberTaken || !invNumber.trim() || saving || emailInvalid}
               onClick={() => save()}
             >
               {saving
@@ -509,9 +542,24 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             </Button>
           </div>
           {status === 'draft' && (
-            <Button variant="secondary" className="w-full" disabled={numberTaken || !invNumber.trim() || saving} onClick={() => save('sent')}>
+            <Button variant="secondary" className="w-full" disabled={numberTaken || !invNumber.trim() || saving || emailInvalid} onClick={() => save('sent')}>
               <Send size={14} /> Save and mark as sent
             </Button>
+          )}
+          {canVoidDraft && (
+            confirmVoid ? (
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-status-red">Void this draft? It is kept on record for your books.</span>
+                <button onClick={discardDraft} disabled={voiding} className="font-semibold text-status-red hover:underline whitespace-nowrap">
+                  {voiding ? 'Voiding...' : 'Yes, void it'}
+                </button>
+                <button onClick={() => setConfirmVoid(false)} disabled={voiding} className="text-text-muted hover:text-text-primary">Cancel</button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmVoid(true)} className="text-xs font-medium text-status-red hover:underline">
+                Void this draft
+              </button>
+            )
           )}
           {saveError && (
             <p className="text-xs font-medium text-status-red" role="alert">{saveError}</p>
