@@ -216,8 +216,12 @@ export function rowFromLocalInvoice(inv) {
       notes: text(inv?.notes, 4000),
       lines,
       itemize: inv?.itemize === undefined ? null : !!inv.itemize,
-      tax_rate: inv?.taxRate === undefined || inv?.taxRate === null || inv?.taxRate === '' ? null : num(inv.taxRate),
-      tax_labor: inv?.taxLabor === undefined ? null : !!inv.taxLabor,
+      // No stored rate but a stored tax of exactly $0 means the invoice was not taxed:
+      // keep that as 0% so reopening it never falls back to a default rate
+      tax_rate: inv?.taxRate !== undefined && inv?.taxRate !== null && inv?.taxRate !== ''
+        ? num(inv.taxRate)
+        : (inv?.tax !== undefined && inv?.tax !== null && inv?.tax !== '' && num(inv.tax) === 0 ? 0 : null),
+      tax_labor: inv?.taxLabor === undefined ? (inv?.tax !== undefined && inv?.tax !== null && inv?.tax !== '' && num(inv.tax) === 0 ? false : null) : !!inv.taxLabor,
       card_fee_rate: inv?.cardFee ? num(inv.cardFeeRate) || 3 : null,
       card_fee_amount: round2(inv?.cardFeeAmount),
       subtotal: inv?.subtotal === undefined || inv?.subtotal === null ? null : round2(inv.subtotal),

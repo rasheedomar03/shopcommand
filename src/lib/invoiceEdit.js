@@ -47,7 +47,10 @@ export function priceInvoiceEdit(invoice, lines) {
 /** Subtotal, tax, and total to display for any invoice. */
 export function invoiceBreakdown(invoice) {
   const total = round2(invoice.total)
-  if (!invoice.dbId) {
+  // Invoices made from scratch (on the server or only on this computer) store
+  // their own subtotal and tax. Only repair-order invoices work tax out as the
+  // gap between the lines and the total, which would count a card fee as tax.
+  if (!invoice.dbId || !invoice.roId) {
     return { subtotal: round2(invoice.subtotal), tax: round2(invoice.tax), total }
   }
   const subtotal = sumLines(invoice.services)

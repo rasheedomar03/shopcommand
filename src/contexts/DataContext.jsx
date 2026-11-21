@@ -343,7 +343,11 @@ export function DataProvider({ children }) {
         save('sc_invoices', remainingLocal(load('sc_invoices', []), result))
       }
 
-      if (result.moved.size || result.conflicts.length || result.failed.length) {
+      // A message that only repeats a known conflict must not replace the summary
+      // of what was moved (the owner may not have read it yet)
+      const hasUnreadSummary = !!load('sc_invoice_import_report', null)
+      const worthReporting = result.moved.size || result.failed.length || (result.conflicts.length && !hasUnreadSummary)
+      if (worthReporting) {
         const report = {
           at: new Date().toISOString(),
           imported: result.moved.size,

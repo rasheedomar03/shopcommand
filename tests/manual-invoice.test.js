@@ -121,6 +121,17 @@ describe('rowFromLocalInvoice (browser import)', () => {
     expect(payment).toMatchObject({ amount: 67.07, method: 'visa' })
   })
 
+  it('keeps a $0-tax invoice as 0% so reopening it never falls back to a default rate', () => {
+    const { row } = rowFromLocalInvoice({ id: '1', customerName: 'A', total: 80, tax: 0, subtotal: 80, services: [{ name: 'x', labor: 0, parts: 80 }] })
+    expect(row.tax_rate).toBe(0)
+    expect(row.tax_labor).toBe(false)
+    // a taxed one without a stored rate stays unknown (worked out from its lines later)
+    const taxed = rowFromLocalInvoice({ id: '2', customerName: 'A', total: 86.6, tax: 6.6, services: [{ name: 'x', labor: 0, parts: 80 }] }).row
+    expect(taxed.tax_rate).toBeNull()
+    // an invoice that did store a rate keeps it
+    expect(rowFromLocalInvoice({ id: '3', customerName: 'A', total: 10, taxRate: 8.25, tax: 0.5 }).row.tax_rate).toBe(8.25)
+  })
+
   it('maps draft to draft, and sent or overdue to unpaid with no payment', () => {
     expect(rowFromLocalInvoice({ ...local, status: 'draft', paidAt: null }).row.status).toBe('draft')
     for (const s of ['sent', 'overdue']) {

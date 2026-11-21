@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { invoiceBreakdown } from '../src/lib/invoiceEdit.js'
 import { invoiceFromServerRow, manualBodyFromInvoice, planImport, isImportCandidate, batches, moveLocalInvoices, remainingLocal, saveInvoiceToServer } from '../src/lib/serverInvoices.js'
 
 const NOW = new Date('2026-11-21T12:00:00').getTime()
@@ -48,6 +49,14 @@ describe('invoiceFromServerRow', () => {
     expect('taxRate' in inv).toBe(false)
     expect('taxLabor' in inv).toBe(false)
     expect(inv.cardFee).toBe(false)
+  })
+
+  it('an imported invoice with $0 tax and no stored rate loads as 0%, so editing it never adds tax', () => {
+    const inv = invoiceFromServerRow(row({ tax_rate: null, tax_labor: null, tax: '0' }), NOW)
+    expect(inv.taxRate).toBe(0)
+    expect(inv.taxLabor).toBe(false)
+    // an unknown tax (never stored) stays unset
+    expect('taxRate' in invoiceFromServerRow(row({ tax_rate: null, tax_labor: null, tax: null }), NOW)).toBe(false)
   })
 
   it('falls back to year make model and never crashes on missing fields', () => {
@@ -323,6 +332,21 @@ describe('saveInvoiceToServer', () => {
     const { api } = fakeApi({ default: serverRow({ customer_id: null }) })
     const out = await saveInvoiceToServer({ api, invoice: inv({ customerId: 'c-1' }) })
     expect(out.entry.customerId).toBe('c-1')
+  })
+})
+
+describe('invoiceBreakdown for server-saved invoices', () => {
+  it('uses the stored tax for a from-scratch invoice, so a card fee is not shown as tax', () => {
+    const inv = invoiceFromServerRow({
+      id: UUID, number: '1', status: 'unpaid', amount: '206', subtotal: '200', tax: '0', card_fee_rate: '3', card_fee_amount: '6',
+      lines: [{ desc: 'Brake job', type: 'labor', qty: 2, price: 100 }], created_at: '2026-11-21T12:00:00Z',
+    })
+    expect(invoiceBreakdown(inv)).toEqual({ subtotal: 200, tax: 0, total: 206 })
+  })
+
+  it('still works tax out as total minus lines for a repair-order invoice', () => {
+    const inv = { dbId: UUID, roId: 'RO-1', total: 108.25, services: [{ name: 'x', parts: 0, labor: 100 }] }
+    expect(invoiceBreakdown(inv)).toEqual({ subtotal: 100, tax: 8.25, total: 108.25 })
   })
 })
 

@@ -35,6 +35,10 @@ export function invoiceFromServerRow(row, now = Date.now()) {
         : ageMs > 14 * 86400000 ? 'overdue' : 'sent'
   const yearMakeModel = [row.vehicle_year, row.vehicle_make, row.vehicle_model].filter(Boolean).join(' ')
   const hasTaxRate = row.tax_rate !== null && row.tax_rate !== undefined && row.tax_rate !== ''
+  // An imported invoice that never stored a rate but was saved with $0 tax had no
+  // tax: reopening it must show 0%, not this browser's default, or saving it
+  // would quietly add tax to the customer's invoice.
+  const knownNoTax = !hasTaxRate && row.tax !== null && row.tax !== undefined && row.tax !== '' && num(row.tax) === 0
   return {
     id: row.number || `INV-${String(row.id).slice(0, 8).toUpperCase()}`,
     dbId: row.id,
@@ -56,8 +60,8 @@ export function invoiceFromServerRow(row, now = Date.now()) {
     paymentMethod: null,
     lines,
     services: servicesFromItems(lines),
-    ...(hasTaxRate ? { taxRate: num(row.tax_rate) } : {}),
-    ...(typeof row.tax_labor === 'boolean' ? { taxLabor: row.tax_labor } : {}),
+    ...(hasTaxRate ? { taxRate: num(row.tax_rate) } : knownNoTax ? { taxRate: 0 } : {}),
+    ...(typeof row.tax_labor === 'boolean' ? { taxLabor: row.tax_labor } : knownNoTax ? { taxLabor: false } : {}),
     ...(typeof row.itemize === 'boolean' ? { itemize: row.itemize } : {}),
     cardFee: row.card_fee_rate !== null && row.card_fee_rate !== undefined,
     ...(row.card_fee_rate !== null && row.card_fee_rate !== undefined ? { cardFeeRate: num(row.card_fee_rate) } : {}),

@@ -5,6 +5,7 @@ import { sumLines, dbTaxFactor, priceInvoiceEdit, invoiceBreakdown, DEFAULT_TAX_
 // 90.00 of lines at 8.5% = 97.65.
 const dbInvoice = (over = {}) => ({
   dbId: 'inv-1',
+  roId: 'RO-1042', // every invoice that comes from a repair order carries its repair order
   total: 97.65,
   services: [{ name: 'Brakes', parts: 40, labor: 50 }],
   ...over,
