@@ -10,6 +10,8 @@ import { BlankFormModal } from '@/components/modals/BlankFormModal'
 import { formatMoney, formatDate, formatRelativeTime, roLabel, matchesSearch } from '@/lib/utils'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
 import { invoiceNumberTaken, invoiceMatchesQuery, lineDisplay } from '@/lib/invoiceLines'
+import { invoicesToCsv } from '@/lib/invoiceExport'
+import { logoOf } from '@/lib/shopLogo'
 import { useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
@@ -507,6 +509,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
       <div id="sc-invoice-print">
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 24, paddingBottom: 14, borderBottom: '1px solid #cbd5e1' }}>
           <div>
+            {logoOf(shop) && <img src={logoOf(shop).src} alt="" style={{ width: logoOf(shop).width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
             <div style={{ fontSize: 18, fontWeight: 700 }}>{shop?.name || 'Shop'}</div>
             {shop?.address && <div style={{ color: '#64748b', marginTop: 2 }}>{shop.address}</div>}
             {shop?.phone && <div style={{ color: '#64748b', marginTop: 2 }}>{shop.phone}</div>}
@@ -664,9 +667,9 @@ export default function Invoices() {
           New invoice
         </Button>
         <Button variant="secondary" onClick={() => {
-          const rows = scoped.map(i => [i.id, i.customerName, i.vehicle, i.status, i.total?.toFixed(2), i.created].join(','))
-          const csv = ['Invoice,Customer,Vehicle,Status,Amount,Date', ...rows].join('\n')
-          const blob = new Blob([csv], { type: 'text/csv' })
+          // A leading byte-order mark makes Excel read names with accents correctly
+          const csv = '﻿' + invoicesToCsv(scoped)
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.href = url

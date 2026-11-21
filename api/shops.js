@@ -1,6 +1,7 @@
 import { createHandler } from './_lib/handler.js'
 import { syncShopBilling } from './_lib/billing.js'
 import { logger } from './_lib/logger.js'
+import { logoErrors, logoPatch } from './_lib/shop-logo.js'
 
 function validate(body, partial = false) {
   const errors = []
@@ -41,6 +42,7 @@ function validate(body, partial = false) {
       errors.push('Schedule too large (max 4000 characters serialized)')
     }
   }
+  errors.push(...logoErrors(body))
   return errors
 }
 
@@ -52,6 +54,7 @@ function buildDataPatch(body) {
   if ('manager' in body && body.manager != null) patch.manager = String(body.manager).trim()
   if ('monthly_target' in body && body.monthly_target != null) patch.monthly_target = body.monthly_target
   if ('schedule' in body && body.schedule != null) patch.schedule = body.schedule
+  Object.assign(patch, logoPatch(body))
   return patch
 }
 

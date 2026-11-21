@@ -39,6 +39,9 @@ function transformShop(s) {
     manager: s.data?.manager || '',
     monthlyTarget: Number(s.data?.monthly_target) || 0,
     schedule: s.data?.schedule || null,
+    // Printed on invoices: a small picture (data URL) and the width it prints at
+    logo: s.data?.logo || null,
+    logoWidth: Number(s.data?.logo_width) || 0,
   }
 }
 
@@ -521,6 +524,7 @@ export function DataProvider({ children }) {
       const local = { ...patch }
       if ('monthly_target' in local) { local.monthlyTarget = Number(local.monthly_target) || 0; delete local.monthly_target }
       if ('bays' in local) local.bays = Number(local.bays) || 0
+      if ('logo_width' in local) { local.logoWidth = Number(local.logo_width) || 0; delete local.logo_width }
       setShops(prev => prev.map(s => s.id === id ? { ...s, ...local } : s))
       return { id, ...local }
     }

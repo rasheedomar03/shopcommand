@@ -9,6 +9,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { cn, sanitizeField } from '@/lib/utils'
 import { startCheckout, getBillingStatus, getTrialStatus, openBillingPortal } from '@/lib/billing'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { LogoEditor } from '@/components/LogoEditor'
+import { clampLogoSize } from '@/lib/shopLogo'
 
 const ALL_SECTIONS = [
   { id: 'profile', label: 'Account', icon: Users },
@@ -679,6 +681,9 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
     manager: shop.manager || '',
     bays: shop.bays != null && shop.bays !== 0 ? String(shop.bays) : '',
     monthlyTarget: shop.monthlyTarget ? String(shop.monthlyTarget) : '',
+    logo: shop.logo || null,
+    logoWidth: shop.logoWidth || 0,
+    logoChanged: false,
   })
   const [form, setForm] = useState(initialForm)
   const [saving, setSaving] = useState(false)
@@ -692,6 +697,10 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
       manager: sanitizeField(form.manager, 100),
       bays: Number(form.bays) || 0,
       monthly_target: Number(form.monthlyTarget) || 0,
+      // The picture is only sent when it changed (it is the largest field);
+      // the size is small and goes along whenever there is a logo.
+      ...(form.logoChanged ? { logo: form.logo } : {}),
+      ...(form.logo ? { logo_width: clampLogoSize(form.logoWidth) } : {}),
     })
     setSaving(false)
     setEditing(false)
@@ -744,6 +753,11 @@ function ShopLocationCard({ shop, onUpdate, onRemove }) {
                   placeholder="e.g. 100000"
                 />
               </div>
+              <LogoEditor
+                logo={form.logo}
+                width={form.logoWidth}
+                onChange={v => setForm(f => ({ ...f, logo: v.logo, logoWidth: v.logoWidth, logoChanged: f.logoChanged || v.logoChanged }))}
+              />
               <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={handleSave}

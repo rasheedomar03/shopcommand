@@ -4,6 +4,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { logoOf } from '@/lib/shopLogo'
 import {
   computeTotals, lineDisplay, linesFromInvoice, servicesFromItems,
   taxSettingsFor, invoiceNumberTaken,
@@ -597,6 +598,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
         <div id="sc-invoice-paper" className="rounded-xl border border-border bg-white text-slate-900 p-7 shadow-sm min-h-[480px]">
           <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
             <div>
+              {logoOf(shop) && <img src={logoOf(shop).src} alt="" style={{ width: logoOf(shop).width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
               <div className="text-base font-bold text-slate-900">{shop?.name || 'Shop'}</div>
               {shop?.address && <div className="text-xs text-slate-500 mt-0.5">{shop.address}</div>}
               {shop?.phone && <div className="text-xs text-slate-500 mt-0.5">{shop.phone}</div>}
