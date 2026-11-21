@@ -260,10 +260,21 @@ describe('POST ?action=import', () => {
 
   it('writes a payment for paid invoices and none for sent ones', async () => {
     await send({ query: { action: 'import' }, body: { invoices: [local('040', { status: 'paid', paidAt: '2026-10-05T10:00:00', paymentMethod: 'Cash' }), local('041')] } })
-    const payments = state.calls.filter(c => /INSERT INTO payments/.test(c.q))
-    expect(payments.length).toBe(1)
-    expect(payments[0].values).toContain('cash')
-    expect(payments[0].values).toContain(100)
+    // the invoice and its payment are ONE statement, so they are saved together or not at all
+    const stmts = state.calls.filter(c => /INSERT INTO invoices/.test(c.q) && /INSERT INTO payments/.test(c.q))
+    expect(stmts.length).toBe(2)
+    const paid = stmts.find(c => c.values.includes('cash'))
+    expect(paid.values).toContain(100)
+    expect(paid.values).toContain(true) // has a payment
+    const sent = stmts.find(c => !c.values.includes('cash'))
+    expect(sent.values).toContain(false) // no payment for a sent invoice
+    expect(ran(/^INSERT INTO payments/)).toBe(false)
+  })
+
+  it('gives a payment the org\'s shop even when the browser invoice has no usable shop', async () => {
+    await send({ query: { action: 'import' }, body: { invoices: [local('070', { status: 'paid', paymentMethod: 'Cash', shopId: undefined })] } })
+    const stmt = call(/INSERT INTO payments/)
+    expect(stmt.values).toContain(SHOP)
   })
 
   it('reports invalid invoices as failed without stopping the rest', async () => {

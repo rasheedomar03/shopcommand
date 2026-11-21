@@ -1,4 +1,5 @@
 import { cleanManualInvoice, generateInvoiceNumber, rowFromLocalInvoice } from './manual-invoice.js'
+import { logger } from './logger.js'
 
 // Database side of from-scratch invoices. Every query is scoped with
 // org_id = user.orgId: tenant isolation depends on it (there is no RLS safety net).
@@ -131,36 +132,50 @@ export async function importLocalInvoices({ sql, user, list }) {
     const { row, payment, error } = rowFromLocalInvoice(local)
     if (error) { failed.push({ number: String(local?.id ?? ''), error }); continue }
     try {
-      const shopId = local?.shopId && shopIds.has(String(local.shopId)) ? local.shopId : null
+      // A browser invoice's shop id only counts if it is one of this org's shops;
+      // otherwise use the org's only shop. A payment always needs a shop, so it
+      // falls back to the org's first one.
+      const ownShop = local?.shopId && shopIds.has(String(local.shopId)) ? local.shopId : null
+      const shopId = ownShop || (shops.length === 1 ? shops[0].id : null)
+      const paymentShopId = shopId || shops[0]?.id || null
       const customerId = byName.get(String(row.customer_name).toLowerCase()) || null
+      const pay = payment || { amount: null, method: null, paid_at: null }
+      // ONE statement: the invoice and its payment are saved together or not at
+      // all, so a failure can never leave an invoice without its payment (a
+      // retry would then skip it as "already imported").
       const [inserted] = await sql`
-        INSERT INTO invoices (
-          org_id, ro_id, amount, status, source, number, invoice_date, created_at, paid_at, shop_id, customer_id,
-          customer_name, customer_email, vehicle_text, unit_number, vin, job_title, diagnostics, notes,
-          lines, itemize, subtotal, tax, tax_rate, tax_labor, card_fee_rate, card_fee_amount
-        ) VALUES (
-          ${user.orgId}, NULL, ${row.amount}, ${row.status}, 'import', ${row.number}, ${row.invoice_date},
-          COALESCE(${row.created_at}::timestamptz, now()), ${row.paid_at}, ${shopId}, ${customerId},
-          ${row.customer_name}, ${row.customer_email}, ${row.vehicle_text}, ${row.unit_number}, ${row.vin},
-          ${row.job_title}, ${row.diagnostics}, ${row.notes},
-          ${JSON.stringify(row.lines)}::jsonb, ${row.itemize}, ${row.subtotal}, ${row.tax}, ${row.tax_rate}, ${row.tax_labor},
-          ${row.card_fee_rate}, ${row.card_fee_amount}
+        WITH ins AS (
+          INSERT INTO invoices (
+            org_id, ro_id, amount, status, source, number, invoice_date, created_at, paid_at, shop_id, customer_id,
+            customer_name, customer_email, vehicle_text, unit_number, vin, job_title, diagnostics, notes,
+            lines, itemize, subtotal, tax, tax_rate, tax_labor, card_fee_rate, card_fee_amount
+          ) VALUES (
+            ${user.orgId}, NULL, ${row.amount}, ${row.status}, 'import', ${row.number}, ${row.invoice_date},
+            COALESCE(${row.created_at}::timestamptz, now()), ${row.paid_at}, ${shopId}, ${customerId},
+            ${row.customer_name}, ${row.customer_email}, ${row.vehicle_text}, ${row.unit_number}, ${row.vin},
+            ${row.job_title}, ${row.diagnostics}, ${row.notes},
+            ${JSON.stringify(row.lines)}::jsonb, ${row.itemize}, ${row.subtotal}, ${row.tax}, ${row.tax_rate}, ${row.tax_labor},
+            ${row.card_fee_rate}, ${row.card_fee_amount}
+          )
+          ON CONFLICT (org_id, lower(number)) WHERE number IS NOT NULL DO NOTHING
+          RETURNING id
+        ), pay AS (
+          INSERT INTO payments (org_id, invoice_id, shop_id, amount, method, customer_name, status, created_at)
+          SELECT ${user.orgId}::uuid, ins.id, ${paymentShopId}::uuid, ${pay.amount}::numeric, ${pay.method}::text,
+                 ${row.customer_name}::text, 'completed', COALESCE(${pay.paid_at}::timestamptz, now())
+          FROM ins WHERE ${!!payment}::boolean
+          RETURNING id
         )
-        ON CONFLICT (org_id, lower(number)) WHERE number IS NOT NULL DO NOTHING
-        RETURNING id
+        SELECT id FROM ins
       `
       if (!inserted) { skipped.push(row.number); continue }
-      if (payment) {
-        await sql`
-          INSERT INTO payments (org_id, invoice_id, shop_id, amount, method, customer_name, status, created_at)
-          VALUES (${user.orgId}, ${inserted.id}, ${shopId}, ${payment.amount}, ${payment.method}, ${row.customer_name}, 'completed',
-                  COALESCE(${payment.paid_at}::timestamptz, now()))
-        `
-      }
       imported.push(row.number)
       importedTotal += row.amount
     } catch (err) {
-      failed.push({ number: row.number, error: 'could not be saved' })
+      // Nothing was saved for this invoice (single statement). The code, not the
+      // message, goes back to the browser; the message goes to the server log.
+      logger.warn('Invoice import failed', { number: row.number, code: err?.code, error: err?.message })
+      failed.push({ number: row.number, error: 'could not be saved', code: err?.code || null })
     }
   }
 

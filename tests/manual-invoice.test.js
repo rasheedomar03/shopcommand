@@ -148,6 +148,24 @@ describe('rowFromLocalInvoice (browser import)', () => {
     expect(rowFromLocalInvoice({ id: '1', total: 5, lines: Array(101).fill({}) }).error).toBeTruthy()
   })
 
+  it('never produces NaN: missing fee, subtotal, tax or amountPaid become 0 or null', () => {
+    const { row, payment } = rowFromLocalInvoice({ id: '1', total: 50, status: 'sent', customerName: 'A', services: [{ name: 'x', labor: 50, parts: 0 }] })
+    expect(row.card_fee_amount).toBe(0)
+    expect(row.subtotal).toBeNull()
+    expect(row.tax).toBeNull()
+    expect(payment).toBeNull()
+    for (const v of Object.values(row)) if (typeof v === 'number') expect(Number.isNaN(v)).toBe(false)
+    for (const l of row.lines) { expect(Number.isNaN(l.qty)).toBe(false); expect(Number.isNaN(l.price)).toBe(false) }
+  })
+
+  it('refuses a missing or non-numeric total instead of importing it as $0', () => {
+    expect(rowFromLocalInvoice({ id: '1', customerName: 'A' }).error).toBeTruthy()
+    expect(rowFromLocalInvoice({ id: '1', customerName: 'A', total: 'abc' }).error).toBeTruthy()
+    expect(rowFromLocalInvoice({ id: '1', customerName: 'A', total: null }).error).toBeTruthy()
+    expect(rowFromLocalInvoice({ id: '1', customerName: 'A', total: '' }).error).toBeTruthy()
+    expect(rowFromLocalInvoice({ id: '1', customerName: 'A', total: 0 }).row.amount).toBe(0)
+  })
+
   it('falls back to a placeholder customer name instead of failing', () => {
     expect(rowFromLocalInvoice({ id: '9', total: 10 }).row.customer_name).toBe('Customer')
   })

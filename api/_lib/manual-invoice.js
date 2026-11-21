@@ -5,7 +5,8 @@
 // checks they agree): tax applies to parts, and to labor only when taxLabor is on;
 // fee lines are never taxed; the card fee is cardFeeRate% of subtotal + tax.
 
-const round2 = v => Math.round((Number(v) + Number.EPSILON) * 100) / 100
+// Missing or non-numeric input becomes 0, never NaN (Postgres would store NaN in a numeric column)
+const round2 = v => { const x = Number(v); return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 100) / 100 : 0 }
 const num = v => { const x = Number(v); return Number.isFinite(x) ? x : 0 }
 
 export const LINE_TYPES = ['labor', 'part', 'fee']
@@ -167,8 +168,10 @@ const isoDay = v => {
 export function rowFromLocalInvoice(inv) {
   const number = text(inv?.id, 30)
   if (!number) return { error: 'missing invoice number' }
-  const total = round2(inv?.total)
-  if (!Number.isFinite(total) || total < 0 || total > MAX_TOTAL) return { error: 'invalid total' }
+  // The stored total must be a real number: a missing one must not import as $0
+  const rawTotal = inv?.total === null || inv?.total === '' ? NaN : Number(inv?.total)
+  if (!Number.isFinite(rawTotal) || rawTotal < 0 || rawTotal > MAX_TOTAL) return { error: 'invalid total' }
+  const total = round2(rawTotal)
   if (Array.isArray(inv?.lines) && inv.lines.length > MAX_LINES) return { error: 'too many lines' }
 
   // Prefer the stored lines (quantity and unit price); older invoices only kept
@@ -192,6 +195,7 @@ export function rowFromLocalInvoice(inv) {
 
   const status = inv?.status === 'paid' ? 'paid' : inv?.status === 'draft' ? 'draft' : 'unpaid'
   const amountPaid = status === 'paid' ? total : Math.min(total, Math.max(0, round2(inv?.amountPaid)))
+  // (round2 never returns NaN, so a missing amountPaid is simply 0)
   const created = isoDay(inv?.created) || isoDay(new Date().toISOString())
 
   return {
