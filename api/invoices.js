@@ -120,7 +120,7 @@ export default createHandler(
           COALESCE(v.year, i.vehicle_year) AS vehicle_year,
           COALESCE(v.make, i.vehicle_make) AS vehicle_make,
           COALESCE(v.model, i.vehicle_model, i.vehicle_text) AS vehicle_model,
-          i.unit_number,
+          i.unit_number, i.vin, i.job_title,
           COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = i.id AND p.status = 'completed'), 0) AS amount_paid
         FROM invoices i
         LEFT JOIN repair_orders ro ON ro.id = i.ro_id
@@ -206,7 +206,7 @@ export default createHandler(
   <table style="width:100%;font-size:13px;color:#64748b;margin-bottom:16px;">
     <tr>
       <td><strong style="color:#0f172a;">Invoice ${esc(invNumber)}</strong><br>${new Date(inv.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
-      <td style="text-align:right;">${esc(inv.customer_name || '')}${vehicle ? `<br>${esc(vehicle)}` : ''}</td>
+      <td style="text-align:right;">${esc(inv.customer_name || '')}${vehicle ? `<br>${esc(vehicle)}` : ''}${inv.unit_number ? `<br>Truck # ${esc(inv.unit_number)}` : ''}${inv.vin ? `<br>VIN ${esc(inv.vin)}` : ''}</td>
     </tr>
   </table>
   <table style="width:100%;font-size:14px;border-collapse:collapse;">
@@ -223,6 +223,8 @@ export default createHandler(
       const text = [
         `Invoice ${invNumber} from ${shopName}`,
         vehicle ? `Vehicle: ${vehicle}` : null,
+        inv.unit_number ? `Truck #: ${inv.unit_number}` : null,
+        inv.vin ? `VIN: ${inv.vin}` : null,
         '',
         ...services.map(s => `${s.name}: ${money(s.price)}`),
         ...extras.map(x => `${x.name}: ${money(x.price)}`),

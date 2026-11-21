@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createMockReq, createMockRes, MOCK_OWNER, MOCK_TECH, VALID_UUID } from './helpers.js'
 
 // From-scratch invoices on the server: create, edit, draft/sent, pay, import.
@@ -18,11 +18,11 @@ const { authenticate } = await import('../api/_lib/auth.js')
 const { default: handler } = await import('../api/invoices.js')
 
 const SHOP = '00000000-0000-0000-0000-0000000000a1'
-const state = { queries: [], calls: [], invoice: null, shopOk: true, customerOk: true, recorded: 0, existingNumbers: new Set(), insertErrors: [] }
+const state = { queries: [], calls: [], invoice: null, emailInv: null, shopOk: true, customerOk: true, recorded: 0, existingNumbers: new Set(), insertErrors: [] }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  Object.assign(state, { queries: [], calls: [], invoice: null, shopOk: true, customerOk: true, recorded: 0, existingNumbers: new Set(), insertErrors: [] })
+  Object.assign(state, { queries: [], calls: [], invoice: null, emailInv: null, shopOk: true, customerOk: true, recorded: 0, existingNumbers: new Set(), insertErrors: [] })
   mockSql.mockReset()
   mockSql.mockImplementation((strings, ...values) => {
     const q = strings.join('?').replace(/\s+/g, ' ')
@@ -34,6 +34,7 @@ beforeEach(() => {
     if (/FROM customers WHERE org_id/.test(q)) return Promise.resolve([{ id: 'cust-1', name: 'zain trucking' }])
     if (/SELECT COUNT\(\*\)::int AS n FROM payments/.test(q)) return Promise.resolve([{ n: state.recorded }])
     if (/SELECT \* FROM invoices WHERE id/.test(q)) return Promise.resolve(state.invoice ? [state.invoice] : [])
+    if (/SELECT i\.id, i\.number, i\.status/.test(q)) return Promise.resolve(state.emailInv ? [state.emailInv] : [])
     if (/SELECT i\.id, i\.ro_id, i\.amount/.test(q)) return Promise.resolve(state.invoice ? [state.invoice] : [])
     if (/SELECT COALESCE\(SUM\(amount\)/.test(q)) return Promise.resolve([{ paid_so_far: 0 }])
     if (/INSERT INTO invoices/.test(q)) {
@@ -232,6 +233,75 @@ describe('draft, sent, void and pay without a repair order', () => {
       expect(res.statusCode).toBe(409)
     }
     expect(ran(/INSERT INTO payments/)).toBe(false)
+  })
+})
+
+describe('POST ?action=email for a from-scratch invoice', () => {
+  const emailInv = (o = {}) => ({
+    id: VALID_UUID, number: 'INV-1', status: 'unpaid', amount: '206', created_at: '2026-11-21T12:00:00Z', ro_id: null,
+    lines: [{ desc: 'Brake job', type: 'labor', qty: 2, price: 100 }], tax: '0', card_fee_amount: '6',
+    customer_name: 'Zain Trucking', customer_email: 'z@example.com', shop_name: "Ray's Auto", shop_address: '1 Main St', shop_phone: '555-0100',
+    vehicle_model: '2019 Freightliner', unit_number: '236', vin: '1FUJGLDR5CLBP8834', amount_paid: '0', ...o,
+  })
+  let sent
+  beforeEach(() => {
+    process.env.RESEND_API_KEY = 'test-key'
+    sent = null
+    vi.stubGlobal('fetch', vi.fn(async (_url, opts) => { sent = JSON.parse(opts.body); return { ok: true } }))
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    delete process.env.RESEND_API_KEY
+  })
+
+  it('prints the truck number and VIN in the html and the plain text, with the lines, card fee and total', async () => {
+    state.emailInv = emailInv()
+    const res = await send({ query: { action: 'email' }, body: { invoice_id: VALID_UUID } })
+    expect(res.statusCode).toBe(200)
+    expect(sent.to).toBe('z@example.com')
+    expect(sent.html).toContain('Truck # 236')
+    expect(sent.html).toContain('VIN 1FUJGLDR5CLBP8834')
+    expect(sent.text).toContain('Truck #: 236')
+    expect(sent.text).toContain('VIN: 1FUJGLDR5CLBP8834')
+    expect(sent.text).toContain('Brake job (2 x $100.00): $200.00')
+    expect(sent.text).toContain('Card fee: $6.00')
+    expect(sent.text).toContain('Total due: $206.00')
+    expect(sent.html).not.toMatch(/Sales tax|>Tax</) // no tax on this invoice, so no tax row
+  })
+
+  it('leaves the truck and VIN lines out when the invoice has none', async () => {
+    state.emailInv = emailInv({ unit_number: null, vin: null })
+    await send({ query: { action: 'email' }, body: { invoice_id: VALID_UUID } })
+    expect(sent.html).not.toContain('Truck #')
+    expect(sent.html).not.toContain('VIN')
+    expect(sent.text).not.toContain('Truck #')
+    expect(sent.text).not.toContain('VIN')
+  })
+
+  it('escapes html in the truck number and VIN so they cannot break the email', async () => {
+    state.emailInv = emailInv({ unit_number: '<script>alert(1)</script>', vin: '"><img src=x>' })
+    await send({ query: { action: 'email' }, body: { invoice_id: VALID_UUID } })
+    expect(sent.html).not.toContain('<script>')
+    expect(sent.html).not.toContain('<img')
+    expect(sent.html).toContain('&lt;script&gt;')
+  })
+
+  it('refuses a customer with no email, a voided invoice, and technicians', async () => {
+    state.emailInv = emailInv({ customer_email: null })
+    expect((await send({ query: { action: 'email' }, body: { invoice_id: VALID_UUID } })).statusCode).toBe(400)
+    state.emailInv = emailInv({ status: 'void' })
+    expect((await send({ query: { action: 'email' }, body: { invoice_id: VALID_UUID } })).statusCode).toBe(409)
+    state.emailInv = emailInv()
+    expect((await send({ query: { action: 'email' }, body: { invoice_id: VALID_UUID }, user: MOCK_TECH })).statusCode).toBe(403)
+    expect(sent).toBeNull()
+  })
+
+  it('never emails an invoice from another organization', async () => {
+    state.emailInv = null // the query is scoped to the caller's org, so another org's invoice is not found
+    const res = await send({ query: { action: 'email' }, body: { invoice_id: VALID_UUID } })
+    expect(res.statusCode).toBe(404)
+    expect(call(/SELECT i\.id, i\.number, i\.status/).values).toContain(MOCK_OWNER.orgId)
+    expect(sent).toBeNull()
   })
 })
 
