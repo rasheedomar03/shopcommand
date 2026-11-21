@@ -1,4 +1,5 @@
 import { createHandler } from './_lib/handler.js'
+import { createManualInvoice, updateManualInvoice, importLocalInvoices } from './_lib/manual-invoice-db.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -48,7 +49,9 @@ export default createHandler(
       }
 
       const [invoice] = await sql`
-        SELECT i.*, ro.customer_id, ro.shop_id, c.name AS customer_name
+        SELECT i.id, i.ro_id, i.amount, i.status,
+          COALESCE(ro.shop_id, i.shop_id) AS shop_id,
+          COALESCE(i.customer_name, c.name) AS customer_name
         FROM invoices i
         LEFT JOIN repair_orders ro ON ro.id = i.ro_id
         LEFT JOIN customers c ON c.id = ro.customer_id
@@ -56,6 +59,8 @@ export default createHandler(
       `
       if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
       if (invoice.status === 'paid') return res.status(409).json({ error: 'Invoice already paid' })
+      if (invoice.status === 'void') return res.status(409).json({ error: 'A voided invoice cannot take payments' })
+      if (invoice.status === 'draft') return res.status(409).json({ error: 'Mark the invoice as sent before recording a payment' })
 
       // Partial payments: sum what's already been paid and cap this one at
       // the remaining balance
@@ -84,7 +89,9 @@ export default createHandler(
 
       if (fullyPaid) {
         await sql`UPDATE invoices SET status = 'paid', paid_at = now() WHERE id = ${invoice_id} AND org_id = ${user.orgId}`
-        await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        if (invoice.ro_id) {
+          await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        }
       }
 
       return res.status(201).json({ ...payment, amount_paid: totalPaid, invoice_paid: fullyPaid })
@@ -105,16 +112,21 @@ export default createHandler(
       }
 
       const [inv] = await sql`
-        SELECT i.*, ro.ro_number, ro.data AS ro_data,
-          c.name AS customer_name, c.email AS customer_email,
+        SELECT i.id, i.number, i.status, i.amount, i.created_at, i.lines, i.tax, i.card_fee_amount, i.source,
+          ro.ro_number, ro.data AS ro_data,
+          COALESCE(i.customer_name, c.name) AS customer_name,
+          COALESCE(i.customer_email, c.email) AS customer_email,
           s.name AS shop_name, s.address AS shop_address, s.phone AS shop_phone,
-          v.year AS vehicle_year, v.make AS vehicle_make, v.model AS vehicle_model,
+          COALESCE(v.year, i.vehicle_year) AS vehicle_year,
+          COALESCE(v.make, i.vehicle_make) AS vehicle_make,
+          COALESCE(v.model, i.vehicle_model, i.vehicle_text) AS vehicle_model,
+          i.unit_number,
           COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = i.id AND p.status = 'completed'), 0) AS amount_paid
         FROM invoices i
         LEFT JOIN repair_orders ro ON ro.id = i.ro_id
-        LEFT JOIN customers c ON c.id = ro.customer_id
-        LEFT JOIN shops s ON s.id = ro.shop_id
-        LEFT JOIN vehicles v ON v.id = ro.vehicle_id
+        LEFT JOIN customers c ON c.id = COALESCE(ro.customer_id, i.customer_id)
+        LEFT JOIN shops s ON s.id = COALESCE(ro.shop_id, i.shop_id)
+        LEFT JOIN vehicles v ON v.id = COALESCE(ro.vehicle_id, i.vehicle_id)
         WHERE i.id = ${invoice_id} AND i.org_id = ${user.orgId}
       `
       if (!inv) return res.status(404).json({ error: 'Invoice not found' })
@@ -138,27 +150,45 @@ export default createHandler(
         name: `${p.name || 'Part'}${Number(p.qty) > 1 ? ` (x${Number(p.qty)})` : ''}`,
         price: (Number(p.price) || 0) * (Number(p.qty) || 1),
       }))
-      const services = roServices.length + roParts.length > 0
-        ? [...roServices, ...roParts]
-        : [{ name: 'Repair services', price: Number(inv.amount) || 0 }]
       const total = Number(inv.amount) || 0
       const paid = Number(inv.amount_paid) || 0
       const balance = Math.max(0, Math.round((total - paid) * 100) / 100)
 
-      // The invoice amount can exceed the line items (tax rolled into the RO
-      // total); show that gap as its own line so the math reads clean.
-      const linesSum = services.reduce((sum, s) => sum + (Number(s.price) || 0), 0)
-      const taxGap = Math.round((total - linesSum) * 100) / 100
+      // From-scratch invoices carry their own lines, tax and card fee; show each
+      // exactly as stored. Repair-order invoices keep the older behaviour: the
+      // gap between the lines and the total is shown as tax.
+      const manualLines = !inv.ro_id && Array.isArray(inv.lines) ? inv.lines : []
+      let services
+      let extras = []
+      if (manualLines.length > 0) {
+        services = manualLines.map(l => {
+          const qty = Number(l.qty) || 0
+          const unit = Number(l.price) || 0
+          return {
+            name: `${l.desc || 'Item'}${qty !== 1 ? ` (${qty} x ${money(unit)})` : ''}`,
+            price: Math.round(qty * unit * 100) / 100,
+          }
+        })
+        if (Number(inv.tax) > 0.005) extras.push({ name: 'Tax', price: Number(inv.tax) })
+        if (Number(inv.card_fee_amount) > 0.005) extras.push({ name: 'Card fee', price: Number(inv.card_fee_amount) })
+      } else {
+        services = roServices.length + roParts.length > 0
+          ? [...roServices, ...roParts]
+          : [{ name: 'Repair services', price: Number(inv.amount) || 0 }]
+        const linesSum = services.reduce((sum, s) => sum + (Number(s.price) || 0), 0)
+        const taxGap = Math.round((total - linesSum) * 100) / 100
+        if (taxGap > 0.005) extras.push({ name: 'Tax', price: taxGap })
+      }
 
       const rowsHtml = services.map(s => `
         <tr>
           <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#0f172a;">${esc(s.name)}</td>
           <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#334155;text-align:right;white-space:nowrap;">${money(s.price)}</td>
-        </tr>`).join('') + (taxGap > 0.005 ? `
+        </tr>`).join('') + extras.map(x => `
         <tr>
-          <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#64748b;">Tax</td>
-          <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#334155;text-align:right;white-space:nowrap;">${money(taxGap)}</td>
-        </tr>` : '')
+          <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#64748b;">${esc(x.name)}</td>
+          <td style="padding:8px 0;border-top:1px solid #e2e8f0;color:#334155;text-align:right;white-space:nowrap;">${money(x.price)}</td>
+        </tr>`).join('')
 
       const statusLine = inv.status === 'paid'
         ? `<p style="margin:16px 0 0;color:#16a34a;font-weight:600;">Paid in full. Thank you!</p>`
@@ -195,7 +225,7 @@ export default createHandler(
         vehicle ? `Vehicle: ${vehicle}` : null,
         '',
         ...services.map(s => `${s.name}: ${money(s.price)}`),
-        ...(taxGap > 0.005 ? [`Tax: ${money(taxGap)}`] : []),
+        ...extras.map(x => `${x.name}: ${money(x.price)}`),
         `Total${inv.status === 'paid' ? '' : ' due'}: ${money(total)}`,
         inv.status === 'paid' ? 'Paid in full. Thank you!' : paid > 0 ? `Paid so far: ${money(paid)} · Balance due: ${money(balance)}` : null,
         '',
@@ -251,11 +281,12 @@ export default createHandler(
       if (id) {
         const [row] = await sql`
           SELECT i.*, ro.ro_number, ro.total AS ro_total,
-            c.name AS customer_name, c.email AS customer_email,
+            COALESCE(i.customer_name, c.name) AS customer_name,
+            COALESCE(i.customer_email, c.email) AS customer_email,
             COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = i.id AND p.status = 'completed'), 0) AS amount_paid
           FROM invoices i
           LEFT JOIN repair_orders ro ON ro.id = i.ro_id
-          LEFT JOIN customers c ON c.id = ro.customer_id
+          LEFT JOIN customers c ON c.id = COALESCE(ro.customer_id, i.customer_id)
           WHERE i.id = ${id} AND i.org_id = ${user.orgId}
         `
         if (!row) return res.status(404).json({ error: 'Invoice not found' })
@@ -276,14 +307,14 @@ export default createHandler(
       // List all invoices
       const rows = await sql`
         SELECT i.*, ro.ro_number,
-          c.name AS customer_name,
+          COALESCE(i.customer_name, c.name) AS customer_name,
           COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = i.id AND p.status = 'completed'), 0) AS amount_paid
         FROM invoices i
         LEFT JOIN repair_orders ro ON ro.id = i.ro_id
-        LEFT JOIN customers c ON c.id = ro.customer_id
+        LEFT JOIN customers c ON c.id = COALESCE(ro.customer_id, i.customer_id)
         WHERE i.org_id = ${user.orgId}
         ORDER BY i.created_at DESC
-        LIMIT 200
+        LIMIT 500
       `
       return res.json(rows)
     }
@@ -291,6 +322,18 @@ export default createHandler(
     if (req.method === 'POST') {
       if (user.role === 'tech') {
         return res.status(403).json({ error: 'Technicians cannot create invoices' })
+      }
+
+      // One-time move of browser-only invoices: POST /api/invoices?action=import
+      if (action === 'import') {
+        const out = await importLocalInvoices({ sql, user, list: req.body?.invoices })
+        return res.status(out.status).json(out.body)
+      }
+
+      // From-scratch invoice (no repair order); the server computes the totals
+      if (req.body?.manual === true) {
+        const out = await createManualInvoice({ sql, user, body: req.body })
+        return res.status(out.status).json(out.body)
       }
 
       const { ro_id } = req.body || {}
@@ -336,13 +379,21 @@ export default createHandler(
       const id = req.query?.id
       if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' })
 
+      // Edit the contents of a from-scratch invoice; the server recomputes totals
+      if (req.body?.manual === true) {
+        const [existing] = await sql`SELECT * FROM invoices WHERE id = ${id} AND org_id = ${user.orgId}`
+        if (!existing) return res.status(404).json({ error: 'Invoice not found' })
+        const out = await updateManualInvoice({ sql, user, id, body: req.body, invoice: existing })
+        return res.status(out.status).json(out.body)
+      }
+
       const { status, amount, number } = req.body || {}
 
       if (status === undefined && amount === undefined && number === undefined) {
         return res.status(400).json({ error: 'Provide status, amount, or number to update' })
       }
-      if (status !== undefined && !['paid', 'void', 'unpaid'].includes(status)) {
-        return res.status(400).json({ error: 'Status must be "paid", "void", or "unpaid"' })
+      if (status !== undefined && !['paid', 'void', 'unpaid', 'draft'].includes(status)) {
+        return res.status(400).json({ error: 'Status must be "paid", "void", "unpaid", or "draft"' })
       }
       if (amount !== undefined && (!Number.isFinite(Number(amount)) || Number(amount) < 0 || Number(amount) > 10_000_000)) {
         return res.status(400).json({ error: 'Amount must be a non-negative number' })
@@ -353,6 +404,25 @@ export default createHandler(
 
       const [invoice] = await sql`SELECT * FROM invoices WHERE id = ${id} AND org_id = ${user.orgId}`
       if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
+
+      // Draft <-> sent for from-scratch invoices. A draft is marked sent by
+      // moving to unpaid; a sent invoice with no payments can go back to draft.
+      if (status === 'draft') {
+        if (invoice.ro_id) return res.status(409).json({ error: 'Invoices from a repair order cannot be drafts' })
+        if (invoice.status === 'draft') return res.json(invoice)
+        if (invoice.status !== 'unpaid') return res.status(409).json({ error: 'Only a sent invoice can go back to draft' })
+        const [{ n: recorded }] = await sql`
+          SELECT COUNT(*)::int AS n FROM payments
+          WHERE invoice_id = ${id} AND org_id = ${user.orgId} AND status = 'completed'
+        `
+        if (recorded > 0) return res.status(409).json({ error: 'Undo the payments before moving this invoice back to draft' })
+        const [row] = await sql`UPDATE invoices SET status = 'draft' WHERE id = ${id} AND org_id = ${user.orgId} RETURNING *`
+        return res.json(row)
+      }
+      if (invoice.status === 'draft' && status === 'unpaid') {
+        const [row] = await sql`UPDATE invoices SET status = 'unpaid' WHERE id = ${id} AND org_id = ${user.orgId} RETURNING *`
+        return res.json(row)
+      }
 
       // Revert to unpaid (mistaken payment): a paid invoice, or one that is only
       // part paid. Its recorded payments are marked refunded so the paid total
@@ -381,20 +451,27 @@ export default createHandler(
         return res.json({ ...row, amount_paid: 0 })
       }
 
-      if (invoice.status !== 'unpaid') {
+      // A draft can only be sent (above) or voided
+      if (invoice.status !== 'unpaid' && !(invoice.status === 'draft' && status === 'void')) {
         return res.status(409).json({ error: 'Only unpaid invoices can be updated' })
       }
 
       // Content edit (no status change): reprice and/or renumber an unpaid invoice
       if (status === undefined) {
-        const [row] = await sql`
-          UPDATE invoices SET
-            amount = COALESCE(${amount !== undefined ? Number(amount) : null}, amount),
-            number = COALESCE(${number !== undefined ? number.trim() : null}, number)
-          WHERE id = ${id} AND org_id = ${user.orgId}
-          RETURNING *
-        `
-        return res.json(row)
+        try {
+          const [row] = await sql`
+            UPDATE invoices SET
+              amount = COALESCE(${amount !== undefined ? Number(amount) : null}, amount),
+              number = COALESCE(${number !== undefined ? number.trim() : null}, number)
+            WHERE id = ${id} AND org_id = ${user.orgId}
+            RETURNING *
+          `
+          return res.json(row)
+        } catch (err) {
+          // invoice numbers are unique per organization (migration 008)
+          if (err?.code === '23505') return res.status(409).json({ error: 'That invoice number is already used', code: 'number_taken' })
+          throw err
+        }
       }
 
       if (status === 'paid') {
@@ -405,7 +482,9 @@ export default createHandler(
         `
 
         // Move RO to Paid stage
-        await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        if (invoice.ro_id) {
+          await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        }
 
         return res.json(row)
       }
@@ -418,7 +497,9 @@ export default createHandler(
         `
 
         // Move RO back to Complete
-        await sql`UPDATE repair_orders SET stage = 'Complete' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        if (invoice.ro_id) {
+          await sql`UPDATE repair_orders SET stage = 'Complete' WHERE id = ${invoice.ro_id} AND org_id = ${user.orgId}`
+        }
 
         return res.json(row)
       }
