@@ -819,6 +819,16 @@ export function DataProvider({ children }) {
     return entry
   }, [session?.demo])
 
+  // After an undo or a void the server hands back any credit the invoice had used,
+  // so reload that customer's balance (a failure here is harmless: the next load fixes it).
+  const refreshCreditBalance = useCallback(async (customerId) => {
+    if (!customerId) return
+    try {
+      const res = await api('/api/customers', { params: { action: 'credit', id: customerId } })
+      setCreditBalance(customerId, res.balance)
+    } catch { /* ignore */ }
+  }, [setCreditBalance])
+
   const voidInvoice = useCallback(async (id) => {
     const target = invoices.find(i => i.id === id)
     if (!target) return { error: 'Invoice not found' }
@@ -830,6 +840,7 @@ export function DataProvider({ children }) {
       } catch (err) {
         return { error: err.message || 'Failed to void invoice' }
       }
+      if (Number(target.creditApplied) > 0) refreshCreditBalance(target.customerId)
     }
     setInvoices(prev => {
       const next = prev.filter(i => i.id !== id)
@@ -845,7 +856,7 @@ export function DataProvider({ children }) {
       ))
     }
     return { ok: true }
-  }, [session?.demo, invoices])
+  }, [session?.demo, invoices, refreshCreditBalance])
 
   // Record a payment against an invoice; partial amounts leave a balance.
   // Returns { ok } or { error }.
@@ -968,9 +979,10 @@ export function DataProvider({ children }) {
         } catch (err) {
           return { error: err.message || 'Failed to mark unpaid' }
         }
+        if (Number(target.creditApplied) > 0) refreshCreditBalance(target.customerId)
       }
       // 'unpaid' is a server status; locally the invoice goes back to sent
-      patch = { ...patch, status: 'sent', paidAt: null, amountPaid: 0, paymentMethod: null }
+      patch = { ...patch, status: 'sent', paidAt: null, amountPaid: 0, creditApplied: 0, paymentMethod: null }
     }
     // DB-backed content edit (services/total/number, no status change) →
     // persist the new amount/number on the invoice and the edited service
@@ -1026,7 +1038,7 @@ export function DataProvider({ children }) {
       return next
     })
     return { ok: true }
-  }, [session?.demo, invoices, repairOrders, updateRepairOrder, updateCustomer])
+  }, [session?.demo, invoices, repairOrders, updateRepairOrder, updateCustomer, refreshCreditBalance])
 
   // ── clock in/out ─────────────────────────────────────────────────────────
 
