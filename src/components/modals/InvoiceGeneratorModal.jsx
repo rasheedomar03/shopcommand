@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoOf } from '@/lib/shopLogo'
+import { truckName, truckLabel } from '@/lib/trucks'
+import { useCustomerTrucks } from '@/lib/useCustomerTrucks'
 import {
   computeTotals, lineDisplay, linesFromInvoice, servicesFromItems,
   taxSettingsFor, invoiceNumberTaken,
@@ -88,6 +90,25 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const [vehicle, setVehicle] = useState('')
   const [unitNumber, setUnitNumber] = useState('')
   const [vin, setVin] = useState('')
+  // The truck this invoice is for (picked from the customer's saved trucks, or
+  // added when the invoice is saved). null = no truck link, just the typed text.
+  const [vehicleId, setVehicleId] = useState(null)
+  const { trucks, ensureTruck } = useCustomerTrucks(customerId, { demo: !!session?.demo })
+  const pickTruck = (id) => {
+    const t = trucks.find(x => String(x.id) === String(id))
+    if (!t) { setVehicleId(null); return }
+    setVehicleId(t.id)
+    setVehicle(truckName(t))
+    setUnitNumber(t.unitNumber)
+    setVin(t.vin)
+  }
+  // Typing a different truck number or VIN means it is no longer the picked truck
+  useEffect(() => {
+    if (!vehicleId) return
+    const t = trucks.find(x => x.id === vehicleId)
+    if (t && (unitNumber.trim() !== t.unitNumber || vin.trim() !== t.vin)) setVehicleId(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unitNumber, vin])
   const [jobTitle, setJobTitle] = useState('')
   const [diagnostics, setDiagnostics] = useState('')
   const [items, setItems] = useState([{ ...emptyItem }])
@@ -111,7 +132,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
 
   // Unsaved-changes tracking. The baseline is the form as it looked right after
   // opening (or after the last Save); anything different from it is unsaved.
-  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, customerId, customerEmail, vehicle, unitNumber, vin, jobTitle, diagnostics, items, taxRate, taxLabor, cardFee, cardFeeRate, notes })
+  const snapshot = JSON.stringify({ shopId, roId, invNumber, invDate, customer, customerId, vehicleId, customerEmail, vehicle, unitNumber, vin, jobTitle, diagnostics, items, taxRate, taxLabor, cardFee, cardFeeRate, notes })
   const emailInvalid = !!customerEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())
   const [baseline, setBaseline] = useState(null)
   const [initTick, setInitTick] = useState(0)
@@ -167,13 +188,14 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     setCustomerEmail(ro.customerEmail || '')
     setVehicle(ro.vehicle || '')
     setVin(ro.vin || '')
+    setVehicleId(ro.vehicleId ?? null)
     setItems(itemsFromRO(ro))
   }
 
   const resetBlank = () => {
     const pref = readTaxPref()
     setRoId('')
-    setCustomer(''); setCustomerId(null); setCustomerEmail(''); setVehicle(''); setUnitNumber(''); setVin('')
+    setCustomer(''); setCustomerId(null); setCustomerEmail(''); setVehicle(''); setUnitNumber(''); setVin(''); setVehicleId(null)
     setJobTitle(''); setDiagnostics(''); setNotes('')
     setItems([{ ...emptyItem }])
     setTaxRate(pref.rate); setTaxLabor(pref.labor); setCardFee(false); setCardFeeRate(pref.fee)
@@ -200,6 +222,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
       setVehicle(fromInvoice.vehicle || '')
       setUnitNumber(fromInvoice.unitNumber || '')
       setVin(fromInvoice.vin || '')
+      setVehicleId(fromInvoice.vehicleId ?? null)
       setJobTitle(fromInvoice.jobTitle || '')
       setDiagnostics(fromInvoice.diagnostics || '')
       setNotes(fromInvoice.notes || '')
@@ -236,6 +259,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           setVehicle(d.vehicle || '')
           setUnitNumber(d.unitNumber || '')
           setVin(d.vin || '')
+          setVehicleId(d.vehicleId ?? null)
           setJobTitle(d.jobTitle || '')
           setDiagnostics(d.diagnostics || '')
           setItems(d.items.length ? d.items : [{ ...emptyItem }])
@@ -295,10 +319,21 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
     const sentStatus = nextStatus || status
     setSaving(true)
     setSaveError(null)
+    // A truck typed on the invoice for a known customer is found (or added) so it
+    // is in their list next time. This never blocks saving the invoice.
+    let truckId = vehicleId
+    if (!truckId && customerId && !roId) {
+      truckId = await ensureTruck({ unitNumber, vin, vehicleText: vehicle })
+      if (truckId) setVehicleId(truckId)
+    }
+    // The shop's own trucks are billed to the fleet customer: those invoices carry
+    // prices but are not revenue (an internal invoice).
+    const forFleet = (customers || []).find(c => String(c.id) === String(customerId))?.is_fleet === true
     const entry = await addInvoice({
       id: invNumber,
       dbId: savedDbId,
-      internal: fromInvoice?.internal ?? false,
+      internal: forFleet || (fromInvoice?.internal ?? false),
+      vehicleId: truckId ?? null,
       roId: roId || null,
       shopId: shop?.id ?? null,
       customerId: customerId ?? ro?.customerId ?? null,
@@ -415,6 +450,15 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
                 {(customers || []).slice(0, 300).map(c => <option key={c.id} value={c.name} />)}
               </datalist>
               {customerId && <p className="mt-1 text-2xs text-text-muted">Linked to this customer's profile.</p>}
+              {trucks.length > 0 && (
+                <div className="mt-2">
+                  <label className={label}>Saved trucks</label>
+                  <select className={`${field} mt-1`} value={vehicleId || ''} onChange={e => pickTruck(e.target.value)}>
+                    <option value="">Pick a saved truck (or type one below)</option>
+                    {trucks.map(t => <option key={t.id} value={t.id}>{truckLabel(t)}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
             <div>
               <label className={label}>Vehicle</label>

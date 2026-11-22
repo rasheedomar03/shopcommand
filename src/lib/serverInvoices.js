@@ -45,6 +45,7 @@ export function invoiceFromServerRow(row, now = Date.now()) {
     roId: null,
     shopId: row.shop_id ?? null,
     customerId: row.customer_id ?? null,
+    vehicleId: row.vehicle_id ?? null, // the truck this invoice is for (Fleet page and truck history)
     customerName: row.customer_name || '',
     customerEmail: row.customer_email || null,
     vehicle: row.vehicle_text || yearMakeModel,
@@ -86,6 +87,7 @@ export function manualBodyFromInvoice(inv) {
     invoice_date: String(inv?.created ?? '').slice(0, 10) || undefined,
     shop_id: isUuid(inv?.shopId) ? inv.shopId : undefined,
     customer_id: isUuid(inv?.customerId) ? inv.customerId : undefined,
+    vehicle_id: isUuid(inv?.vehicleId) ? inv.vehicleId : undefined,
     customer_name: String(inv?.customerName ?? '').trim() || 'Customer',
     customer_email: EMAIL_RE.test(email) ? email : undefined,
     vehicle_text: inv?.vehicle || undefined,

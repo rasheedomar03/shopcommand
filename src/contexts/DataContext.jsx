@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { api, setTokenProvider } from '@/lib/api'
 import { setUploadTokenProvider } from '@/lib/uploads'
 import { invoiceRevenueTotals } from '@/lib/invoiceRevenue'
+import { DEMO_TRUCKS } from '@/lib/trucks'
 import { invoiceFromServerRow, saveInvoiceToServer, planImport, moveLocalInvoices, remainingLocal, mergeSetAside, buildImportReport } from '@/lib/serverInvoices'
 import {
   parts as initialParts,
@@ -64,6 +65,7 @@ function transformInvoice(row, rosById) {
     roId: ro?.roNumber || ro?.id || row.ro_id,
     shopId: ro?.shopId ?? null,
     customerId: ro?.customerId ?? null,
+    vehicleId: ro?.vehicleId ?? null,
     customerName: row.customer_name || ro?.customerName || '',
     customerEmail: ro?.customerEmail || null,
     vehicle: ro?.vehicle || '',
@@ -278,7 +280,8 @@ export function DataProvider({ children }) {
     setShops(mockShops)
     setTechnicians(mockTechnicians)
     setRepairOrders(demoROs)
-    setInvoices(mockInvoices)
+    // Give the first demo invoices to the demo fleet trucks, so the Fleet page has history
+    setInvoices(mockInvoices.map((inv, i) => (i < 6 ? { ...inv, vehicleId: DEMO_TRUCKS[i % DEMO_TRUCKS.length].id } : inv)))
     // Re-base stale lastVisit dates so demo customers look recently active
     setCustomers(mockCustomers.map((c, i) => {
       const d = new Date(today)

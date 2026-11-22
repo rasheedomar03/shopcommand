@@ -26,6 +26,14 @@ describe('invoiceFromServerRow', () => {
     expect(inv.services).toHaveLength(2) // older screens still get one amount per line
   })
 
+  it('carries the truck the invoice is for, and sends it back when saving', () => {
+    const truck = '00000000-0000-0000-0000-0000000000b1'
+    expect(invoiceFromServerRow(row({ vehicle_id: truck }), NOW).vehicleId).toBe(truck)
+    expect(invoiceFromServerRow(row(), NOW).vehicleId).toBeNull()
+    expect(manualBodyFromInvoice({ id: '1', customerName: 'A', lines: [], vehicleId: truck }).vehicle_id).toBe(truck)
+    expect(manualBodyFromInvoice({ id: '1', customerName: 'A', lines: [], vehicleId: 'demo-truck-1' }).vehicle_id).toBeUndefined()
+  })
+
   it('uses the invoice date as a calendar day, so no timezone can move it', () => {
     expect(invoiceFromServerRow(row({ invoice_day: '2026-10-02', created_at: '2026-10-02T02:00:00Z' }), NOW).created).toBe('2026-10-02T12:00:00')
     expect(invoiceFromServerRow(row({ invoice_day: null, created_at: '2026-10-02T02:00:00Z' }), NOW).created).toBe('2026-10-02T02:00:00Z')

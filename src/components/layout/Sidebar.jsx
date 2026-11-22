@@ -16,6 +16,7 @@ import {
   Receipt,
   MessageSquare,
   ClipboardCheck,
+  Truck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HexAvatar } from '@/components/Hex'
@@ -63,6 +64,7 @@ const navGroups = [
       { to: '/dispatch',       label: 'Dispatch',       icon: ArrowRightLeft },
       { to: '/technicians',    label: 'Technicians',    icon: Users          },
       { to: '/customers',      label: 'Customers',      icon: UserCircle     },
+      { to: '/fleet',          label: 'Fleet',          icon: Truck          },
       { to: '/messages',       label: 'Messages',       icon: MessageSquare  },
       { to: '/parts',          label: 'Parts',          icon: Package        },
     ],

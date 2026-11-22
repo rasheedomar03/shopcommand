@@ -98,6 +98,7 @@ const ShopDetail = lazy(() => import('@/pages/ShopDetail'))
 const RepairOrders = lazy(() => import('@/pages/RepairOrders'))
 const Technicians = lazy(() => import('@/pages/Technicians'))
 const Customers = lazy(() => import('@/pages/Customers'))
+const Fleet = lazy(() => import('@/pages/Fleet'))
 const CustomerProfile = lazy(() => import('@/pages/CustomerProfile'))
 const TechnicianProfile = lazy(() => import('@/pages/TechnicianProfile'))
 const TechBoard = lazy(() => import('@/pages/TechBoard'))
@@ -247,6 +248,7 @@ function AppShell() {
             <Route path="/technicians/:id" element={<RequireOwnerOnly><TechnicianProfile /></RequireOwnerOnly>} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/customers/:id" element={<CustomerProfile />} />
+            <Route path="/fleet" element={<Fleet />} />
             <Route path="/parts" element={<Parts />} />
             <Route path="/reports" element={<RequireOwnerOnly><Reports /></RequireOwnerOnly>} />
             <Route path="/settings" element={<Settings />} />

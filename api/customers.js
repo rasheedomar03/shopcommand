@@ -29,6 +29,10 @@ function validate(body, partial = false) {
       errors.push('Notes must be under 2000 characters')
     }
   }
+  // The shop's own fleet is a customer flagged is_fleet (their trucks and their invoices)
+  if ('is_fleet' in body && body.is_fleet != null && typeof body.is_fleet !== 'boolean') {
+    errors.push('is_fleet must be true or false')
+  }
   return errors
 }
 
@@ -41,7 +45,7 @@ export default createHandler(
       if (search) {
         const pattern = `%${search}%`
         rows = await sql`
-          SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.created_at, c.updated_at,
+          SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.is_fleet, c.created_at, c.updated_at,
             COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
               WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId} AND ro.stage = 'Paid'
             ), 0)::float8 AS total_spent,
@@ -58,7 +62,7 @@ export default createHandler(
         `
       } else {
         rows = await sql`
-          SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.created_at, c.updated_at,
+          SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.is_fleet, c.created_at, c.updated_at,
             COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
               WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId} AND ro.stage = 'Paid'
             ), 0)::float8 AS total_spent,
@@ -80,9 +84,13 @@ export default createHandler(
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
       const { name, email, phone, address, notes } = req.body
+      // Only an owner can mark a customer as the shop's own fleet
+      if (req.body.is_fleet === true && user.role !== 'owner') {
+        return res.status(403).json({ error: 'Only owners can set up the fleet' })
+      }
       const [row] = await sql`
-        INSERT INTO customers (org_id, name, email, phone, address, notes)
-        VALUES (${user.orgId}, ${name.trim()}, ${email?.trim() || null}, ${phone?.trim() || null}, ${address?.trim() || null}, ${notes?.trim() || null})
+        INSERT INTO customers (org_id, name, email, phone, address, notes, is_fleet)
+        VALUES (${user.orgId}, ${name.trim()}, ${email?.trim() || null}, ${phone?.trim() || null}, ${address?.trim() || null}, ${notes?.trim() || null}, ${req.body.is_fleet === true})
         RETURNING *
       `
       return res.status(201).json(row)
@@ -96,8 +104,12 @@ export default createHandler(
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
       const { name, email, phone, address, notes } = req.body
+      if (typeof req.body.is_fleet === 'boolean' && user.role !== 'owner') {
+        return res.status(403).json({ error: 'Only owners can change the fleet setting' })
+      }
       const [row] = await sql`
         UPDATE customers SET
+          is_fleet = COALESCE(${typeof req.body.is_fleet === 'boolean' ? req.body.is_fleet : null}, is_fleet),
           name = COALESCE(${name?.trim() || null}, name),
           email = COALESCE(${typeof email === 'string' ? email.trim() : null}, email),
           phone = COALESCE(${typeof phone === 'string' ? phone.trim() : null}, phone),
