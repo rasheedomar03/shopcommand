@@ -46,6 +46,7 @@ export function invoiceFromServerRow(row, now = Date.now()) {
     shopId: row.shop_id ?? null,
     customerId: row.customer_id ?? null,
     vehicleId: row.vehicle_id ?? null, // the truck this invoice is for (Fleet page and truck history)
+    creditApplied: num(row.credit_applied), // customer credit used on it (it is also part of amountPaid)
     customerName: row.customer_name || '',
     customerEmail: row.customer_email || null,
     vehicle: row.vehicle_text || yearMakeModel,

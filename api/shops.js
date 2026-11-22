@@ -43,6 +43,9 @@ function validate(body, partial = false) {
     }
   }
   errors.push(...logoErrors(body))
+  if ('fleet_enabled' in body && body.fleet_enabled != null && typeof body.fleet_enabled !== 'boolean') {
+    errors.push('fleet_enabled must be true or false')
+  }
   return errors
 }
 
@@ -55,6 +58,9 @@ function buildDataPatch(body) {
   if ('monthly_target' in body && body.monthly_target != null) patch.monthly_target = body.monthly_target
   if ('schedule' in body && body.schedule != null) patch.schedule = body.schedule
   Object.assign(patch, logoPatch(body))
+  // Fleet features (the Fleet page in the sidebar) are opt-in: a mechanic's shop does
+  // not need them. A shop turns them on in Settings.
+  if (typeof body.fleet_enabled === 'boolean') patch.fleet_enabled = body.fleet_enabled
   return patch
 }
 

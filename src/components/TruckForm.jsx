@@ -26,7 +26,8 @@ export function TruckForm({ open, truck, onClose, onSave }) {
   }, [open, truck])
 
   const submit = async () => {
-    if (!v.unitNumber.trim()) { setError('Give the truck a number, so you can find it later.'); return }
+    // The number is optional, but the truck needs something to identify it
+    if (!v.unitNumber.trim() && !v.vehicle.trim() && !v.vin.trim()) { setError('Add a truck number, a year/make/model, or a VIN, so you can find it later.'); return }
     setSaving(true)
     setError(null)
     const r = await onSave(v)
@@ -38,7 +39,7 @@ export function TruckForm({ open, truck, onClose, onSave }) {
     <Modal open={open} onClose={onClose} title={truck ? 'Edit truck' : 'Add a truck'} subtitle="One of your own trucks" size="sm">
       <div className="p-5 space-y-3">
         <div>
-          <label className={label}>Truck #</label>
+          <label className={label}>Truck # (optional)</label>
           <input className={`${field} mt-1`} value={v.unitNumber} onChange={e => setV(s => ({ ...s, unitNumber: e.target.value }))} placeholder="e.g. 5500" autoFocus />
         </div>
         <div>

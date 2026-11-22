@@ -559,7 +559,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
               <input className={`${field} mt-1`} placeholder="2019 Freightliner Cascadia" value={vehicle} onChange={e => setVehicle(e.target.value)} />
             </div>
             <div>
-              <label className={label}>Truck #</label>
+              <label className={label}>Truck # (optional)</label>
               <input className={`${field} mt-1`} placeholder="Unit or truck number" value={unitNumber} onChange={e => setUnitNumber(e.target.value)} />
             </div>
             <div>

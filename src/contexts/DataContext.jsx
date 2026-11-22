@@ -43,6 +43,8 @@ function transformShop(s) {
     // Printed on invoices: a small picture (data URL) and the width it prints at
     logo: s.data?.logo || null,
     logoWidth: Number(s.data?.logo_width) || 0,
+    // The shop tracks its own trucks (shows the Fleet page); off by default
+    fleetEnabled: s.data?.fleet_enabled === true,
   }
 }
 
@@ -66,6 +68,7 @@ function transformInvoice(row, rosById) {
     shopId: ro?.shopId ?? null,
     customerId: ro?.customerId ?? null,
     vehicleId: ro?.vehicleId ?? null,
+    creditApplied: Number(row.credit_applied) || 0,
     customerName: row.customer_name || ro?.customerName || '',
     customerEmail: ro?.customerEmail || null,
     vehicle: ro?.vehicle || '',
@@ -166,6 +169,8 @@ function transformCustomer(c) {
     totalSpent,
     roCount,
     lastVisit: c.last_visit || null,
+    // Money the customer has paid ahead (a deposit or overpayment), used up as invoices come due
+    creditBalance: Number(c.credit_balance || 0),
     vehicles: Number(c.vehicle_count || c.vehicles || 0),
     status: c.status || (totalSpent >= 5000 ? 'vip' : roCount <= 1 ? 'new' : 'regular'),
   }
@@ -216,6 +221,8 @@ export function DataProvider({ children }) {
   // Result of moving this computer's invoices to the server, shown until dismissed
   const [invoiceImport, setInvoiceImport] = useState(() => load('sc_invoice_import_report', null))
   const [importTick, setImportTick] = useState(0)
+  // Demo only: the customer credit ledger (real accounts keep it on the server)
+  const [demoLedger, setDemoLedger] = useState({})
   const importTried = useRef(new Set())
   const importing = useRef(false)
 
@@ -277,7 +284,7 @@ export function DataProvider({ children }) {
       const ymd = d.toISOString().slice(0, 19)
       return { ...ro, created: ymd, updated: ymd }
     })
-    setShops(mockShops)
+    setShops(mockShops.map(s => ({ ...s, fleetEnabled: true }))) // the demo shows the Fleet page
     setTechnicians(mockTechnicians)
     setRepairOrders(demoROs)
     // Give the first demo invoices to the demo fleet trucks, so the Fleet page has history
@@ -528,6 +535,7 @@ export function DataProvider({ children }) {
       if ('monthly_target' in local) { local.monthlyTarget = Number(local.monthly_target) || 0; delete local.monthly_target }
       if ('bays' in local) local.bays = Number(local.bays) || 0
       if ('logo_width' in local) { local.logoWidth = Number(local.logo_width) || 0; delete local.logo_width }
+      if ('fleet_enabled' in local) { local.fleetEnabled = local.fleet_enabled === true; delete local.fleet_enabled }
       setShops(prev => prev.map(s => s.id === id ? { ...s, ...local } : s))
       return { id, ...local }
     }
@@ -620,6 +628,41 @@ export function DataProvider({ children }) {
     setCustomers(prev => prev.filter(c => c.id !== id))
     if (force) setRepairOrders(prev => prev.filter(r => r.customerId !== id))
   }, [session?.demo, repairOrders, invoices])
+
+  // ── customer credit (prepaid balances, deposits, overpayments) ────────────
+  // A ledger: every change is an entry and the balance is their sum. A deposit is
+  // not revenue until it is applied to an invoice, where it counts as a payment.
+
+  const setCreditBalance = useCallback((customerId, balance) => {
+    setCustomers(prev => prev.map(c => (String(c.id) === String(customerId) ? { ...c, creditBalance: balance } : c)))
+  }, [])
+
+  /** { balance, entries } for one customer, newest entry first. */
+  const loadCustomerCredit = useCallback(async (customerId) => {
+    if (session?.demo) {
+      const entries = demoLedger[customerId] || []
+      return { balance: Math.round(entries.reduce((s, e) => s + e.amount, 0) * 100) / 100, entries }
+    }
+    return api('/api/customers', { params: { action: 'credit', id: customerId } })
+  }, [session?.demo, demoLedger])
+
+  /** Add a deposit or refund some credit. Returns { balance } or throws with a message. */
+  const addCustomerCredit = useCallback(async (customerId, { kind, amount, note }) => {
+    const amt = Math.round((Number(amount) || 0) * 100) / 100
+    if (!(amt > 0)) throw new Error('Enter an amount more than zero')
+    if (session?.demo) {
+      const have = (demoLedger[customerId] || []).reduce((s, e) => s + e.amount, 0)
+      if (kind === 'refund' && amt > have + 0.005) throw new Error('That is more than the credit the customer has')
+      const entry = { id: `demo-${Date.now()}-${Math.random()}`, kind, amount: kind === 'refund' ? -amt : amt, note: note || null, created_at: new Date().toISOString(), invoice_number: null }
+      const balance = Math.round((have + entry.amount) * 100) / 100
+      setDemoLedger(prev => ({ ...prev, [customerId]: [entry, ...(prev[customerId] || [])] }))
+      setCreditBalance(customerId, balance)
+      return { balance }
+    }
+    const res = await api('/api/customers', { method: 'POST', params: { action: 'credit' }, body: { customer_id: customerId, kind, amount: amt, note: note || undefined } })
+    setCreditBalance(customerId, res.balance)
+    return res
+  }, [session?.demo, demoLedger, setCreditBalance])
 
   // ── technician CRUD ──────────────────────────────────────────────────────
 
@@ -842,6 +885,38 @@ export function DataProvider({ children }) {
     })
     return { ok: true, paid: full }
   }, [session?.demo, invoices])
+
+  // Use a customer's credit on an invoice. The server does the whole change in one
+  // step (ledger entry, payment, invoice). Returns { ok } or { error }.
+  const applyInvoiceCredit = useCallback(async (id, amount) => {
+    const target = invoices.find(i => i.id === id)
+    if (!target) return { error: 'Invoice not found' }
+    const amt = Math.round((Number(amount) || 0) * 100) / 100
+    if (!(amt > 0)) return { error: 'Enter an amount more than zero' }
+    if (session?.demo) {
+      const cust = customers.find(c => String(c.id) === String(target.customerId)) || customers.find(c => c.name === target.customerName)
+      if (!cust) return { error: 'This invoice has no customer on file' }
+      const have = (demoLedger[cust.id] || []).reduce((s, e) => s + e.amount, 0)
+      const due = Math.round(((Number(target.total) || 0) - (Number(target.amountPaid) || 0)) * 100) / 100
+      if (amt > due + 0.005) return { error: `That is more than the invoice still owes ($${due.toFixed(2)})` }
+      if (amt > have + 0.005) return { error: `That is more than the customer's credit ($${have.toFixed(2)})` }
+      const entry = { id: `demo-${Date.now()}-${Math.random()}`, kind: 'applied', amount: -amt, note: 'Applied to an invoice', created_at: new Date().toISOString(), invoice_number: target.id }
+      setDemoLedger(prev => ({ ...prev, [cust.id]: [entry, ...(prev[cust.id] || [])] }))
+      setCreditBalance(cust.id, Math.round((have - amt) * 100) / 100)
+      const paid = (Number(target.amountPaid) || 0) + amt
+      const full = paid >= (Number(target.total) || 0) - 0.005
+      setInvoices(prev => prev.map(i => (i.id === id ? { ...i, amountPaid: paid, creditApplied: (Number(i.creditApplied) || 0) + amt, status: full ? 'paid' : 'partial', paidAt: full ? new Date().toISOString() : i.paidAt, customerId: i.customerId ?? cust.id } : i)))
+      return { ok: true, paid: full }
+    }
+    if (!target.dbId) return { error: 'Save this invoice to your account first' }
+    try {
+      const res = await api('/api/invoices', { method: 'POST', params: { action: 'apply-credit' }, body: { invoice_id: target.dbId, amount: amt } })
+      await fetchAll() // the invoice, its payments and the customer's balance all changed
+      return { ok: true, paid: res.paid }
+    } catch (err) {
+      return { error: err?.message || 'Could not apply the credit' }
+    }
+  }, [session?.demo, invoices, customers, demoLedger, setCreditBalance, fetchAll])
 
   // Email the invoice to the customer from {Shop} <invoices@shopcommand.net>.
   // Demo and local-only invoices simulate the send (nothing actually goes out).
@@ -1233,6 +1308,7 @@ export function DataProvider({ children }) {
   return (
     <DataContext.Provider value={{
       customers, addCustomer, updateCustomer, removeCustomer,
+      loadCustomerCredit, addCustomerCredit, applyInvoiceCredit,
       technicians, addTechnician, removeTechnician,
       repairOrders, addRepairOrder, updateRepairOrder, removeRepairOrder, sendEstimateReady, addVehicle,
       shops: shopsWithInvoiceRevenue, updateShop, addShop, removeShop,

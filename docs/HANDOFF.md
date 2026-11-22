@@ -78,6 +78,14 @@ NOT fixed yet:
 - Revenue (MTD) sums repair_orders.total (tax-inclusive) for Complete, Invoiced, Paid by updated_at, so it includes tax, counts unbilled Complete work, and edits to old ROs move them into the current month.
 - Plan, in order: (1) per-shop tax rate setting used everywhere, after asking J2M how they charge tax (question 10 on the call script); (2) derive RO total on the server whenever lines change; (3) split revenue into Billed (before tax, by invoice date), Collected (payments table), and Unbilled work.
 
+## Fleet opt-in and customer credits (Nov 21; built, NOT committed or deployed at the time of writing)
+
+Fleet is now opt-in: Settings, Locations, "Track my own trucks (Fleet)" (stored as shops.data.fleet_enabled; the sidebar also shows Fleet if any customer is already flagged is_fleet, so J2M keeps it). The Truck # field was left as is.
+
+Credits (Trinity: Zain overpaid about $1,000, 2 Brothers prepaid $1,600): ledger table customer_credits (migration 008, already run), append-only. A deposit is NOT revenue until applied to an invoice, where it becomes a payment with method "credit". Undo-paid and void return the credit. A refund can never exceed the balance. Server: api/_lib/credits.js, customers?action=credit (GET history, POST add/refund), invoices?action=apply-credit. Screen: "Credit on account" panel on the customer profile (add, refund, history, printable statement); "Use credit" on an unpaid invoice; printed invoices show "Credit applied" and "Credit remaining on account". Tests: tests/credits-api.test.js. Demo checked by hand. Known limit: two simultaneous applications could both pass the balance check (no lock).
+
+STILL TO DO: live check on the test account after deploy (deposit, apply, undo returns credit, void returns credit, oversized refund refused); then look up Trinity's $588.26 credit and the $0 or negative invoices by amount after her import.
+
 ## What Was Done
 
 1. Invoice editing rework (Nov 12), Stripe audit and webhook fix, lifecycle webhooks, 14-day trial system, Google Search Console round one, Stripe email automation and branding, hosted Stripe MCP authorized.

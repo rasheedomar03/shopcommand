@@ -10,6 +10,7 @@ import { cn, sanitizeField } from '@/lib/utils'
 import { startCheckout, getBillingStatus, getTrialStatus, openBillingPortal } from '@/lib/billing'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { LogoEditor } from '@/components/LogoEditor'
+import { FleetToggle } from '@/components/FleetToggle'
 import { clampLogoSize } from '@/lib/shopLogo'
 
 const ALL_SECTIONS = [
@@ -631,6 +632,8 @@ function LocationsPanel({ shops, onUpdate, onAdd, onRemove }) {
           ✓ {billingMsg || 'Location added successfully'}
         </div>
       )}
+
+      <FleetToggle shops={shops} onUpdate={onUpdate} />
 
       {/* Shop list */}
       <div className="divide-y divide-border">

@@ -35,7 +35,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPayment, onEmail, onEditInGenerator }) {
+function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPayment, onApplyCredit, onEmail, onEditInGenerator }) {
   const [confirmVoid, setConfirmVoid] = useState(false)
   const [confirmUnpay, setConfirmUnpay] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -51,7 +51,11 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
   const [paying, setPaying] = useState(false)
   const [emailState, setEmailState] = useState('idle') // idle | sending | sent
   const [emailError, setEmailError] = useState(null)
-  const { repairOrders, invoices: allInvoices } = useData()
+  const [creditOpen, setCreditOpen] = useState(false)
+  const [creditAmount, setCreditAmount] = useState('')
+  const [creditError, setCreditError] = useState(null)
+  const [applying, setApplying] = useState(false)
+  const { repairOrders, invoices: allInvoices, customers } = useData()
 
   // Reset edit state when a different invoice opens (or the modal closes)
   useEffect(() => {
@@ -61,6 +65,8 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
     setSaveError(null)
     setPayOpen(false)
     setPayError(null)
+    setCreditOpen(false)
+    setCreditError(null)
     setEmailState('idle')
     setEmailError(null)
   }, [invoice?.id])
@@ -71,6 +77,13 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
   const amountPaid = Number(invoice.amountPaid) || 0
   const balance = Math.max(0, Math.round((invoice.total - amountPaid) * 100) / 100)
   const canTakePayment = ['sent', 'overdue', 'partial'].includes(invoice.status)
+  // Credit on account (prepaid or overpaid). Matched by customer id; the demo has no ids, so by name.
+  const creditCustomer = customers.find(c => invoice.customerId != null && String(c.id) === String(invoice.customerId))
+    || (invoice.customerId == null ? customers.find(c => c.name && c.name === invoice.customerName) : null)
+  const creditAvailable = Math.max(0, Number(creditCustomer?.creditBalance) || 0)
+  const creditUsed = Number(invoice.creditApplied) || 0
+  const creditLeft = creditAvailable
+  const canUseCredit = canTakePayment && creditAvailable > 0 && balance > 0 && (!!invoice.dbId || !!invoice.customerId || creditCustomer)
 
   const sendEmail = async () => {
     setEmailState('sending')
@@ -91,6 +104,15 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
     setPaying(false)
     if (r?.error) setPayError(r.error)
     else { setPayOpen(false); setPayAmount('') }
+  }
+
+  const submitCredit = async () => {
+    setApplying(true)
+    setCreditError(null)
+    const r = await onApplyCredit(invoice.id, Number(creditAmount))
+    setApplying(false)
+    if (r?.error) setCreditError(r.error)
+    else { setCreditOpen(false); setCreditAmount('') }
   }
 
   const startEdit = () => {
@@ -357,6 +379,44 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
           </div>
         )}
 
+        {creditUsed > 0 && (
+          <div className="text-xs text-text-secondary px-1">
+            {formatMoney(creditUsed)} of this invoice was paid with credit on account{creditCustomer ? ` · ${formatMoney(creditLeft)} credit left` : ''}.
+          </div>
+        )}
+
+        {creditOpen && canUseCredit && (
+          <div className="px-3 py-3 rounded-lg bg-background border border-border space-y-2">
+            <div className="text-xs font-medium text-text-secondary">Use credit on account ({formatMoney(creditAvailable)} available)</div>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-text-muted">$</span>
+                <input
+                  autoFocus
+                  type="number" min="0.01" step="0.01" inputMode="decimal"
+                  value={creditAmount}
+                  onChange={e => setCreditAmount(e.target.value)}
+                  placeholder={Math.min(balance, creditAvailable).toFixed(2)}
+                  className="w-full h-8 pl-6 pr-2.5 rounded-md bg-surface border border-border text-sm text-text-primary tabular-nums focus:outline-none focus:ring-1 focus:ring-orange/40"
+                />
+              </div>
+              <button
+                onClick={() => setCreditAmount(Math.min(balance, creditAvailable).toFixed(2))}
+                className="text-xs text-orange hover:underline underline-offset-2 whitespace-nowrap"
+              >
+                As much as fits
+              </button>
+              <Button size="sm" onClick={submitCredit} disabled={applying || !(Number(creditAmount) > 0)}>
+                {applying ? 'Applying...' : 'Apply'}
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => { setCreditOpen(false); setCreditError(null) }} disabled={applying}>
+                Cancel
+              </Button>
+            </div>
+            {creditError && <div className="text-xs text-status-red">{creditError}</div>}
+          </div>
+        )}
+
         {payOpen && canTakePayment && (
           <div className="px-3 py-3 rounded-lg bg-background border border-border space-y-2">
             <div className="text-xs font-medium text-text-secondary">Record a payment</div>
@@ -462,6 +522,11 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
                 {canTakePayment && (
                   <Button size="sm" onClick={() => { setPayOpen(v => !v); setPayAmount(''); setPayError(null) }}>
                     <DollarSign size={13} /> Record payment
+                  </Button>
+                )}
+                {canUseCredit && (
+                  <Button size="sm" variant="secondary" onClick={() => { setCreditOpen(v => !v); setCreditAmount(''); setCreditError(null) }}>
+                    <DollarSign size={13} /> Use credit ({formatMoney(creditAvailable)})
                   </Button>
                 )}
                 {(invoice.status === 'paid' || (invoice.status === 'partial' && amountPaid > 0)) && (
@@ -590,9 +655,13 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', marginTop: 4, borderTop: '1px solid #cbd5e1', fontWeight: 700, fontSize: 15 }}><span>Total</span><span>{formatMoney(view.total)}</span></div>
           {amountPaid > 0 && (
             <>
+              {creditUsed > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Credit applied</span><span>{formatMoney(creditUsed)}</span></div>}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}><span>Paid</span><span>{formatMoney(amountPaid)}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontWeight: 600 }}><span>Balance due</span><span>{formatMoney(balance)}</span></div>
             </>
+          )}
+          {creditCustomer && (creditUsed > 0 || creditAvailable > 0) && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0 2px', marginTop: 6, borderTop: '1px dashed #cbd5e1', fontWeight: 600 }}><span>Credit remaining on account</span><span>{formatMoney(creditLeft)}</span></div>
           )}
         </div>
       </PrintPortal>
@@ -601,7 +670,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
 }
 
 export default function Invoices() {
-  const { shops, invoices, updateInvoice, voidInvoice, recordInvoicePayment, emailInvoice, invoiceImport, dismissInvoiceImport } = useData()
+  const { shops, invoices, updateInvoice, voidInvoice, recordInvoicePayment, applyInvoiceCredit, emailInvoice, invoiceImport, dismissInvoiceImport } = useData()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
@@ -809,7 +878,7 @@ export default function Invoices() {
           if (!r?.error) {
             // 'unpaid' is the server transition; locally the invoice shows as sent
             let display = patch.status === 'unpaid'
-              ? { ...patch, status: 'sent', paidAt: null, amountPaid: 0, paymentMethod: null }
+              ? { ...patch, status: 'sent', paidAt: null, amountPaid: 0, creditApplied: 0, paymentMethod: null }
               : patch
             // A new number becomes the display id
             if (display.number !== undefined) display = { ...display, id: display.number }
@@ -830,6 +899,25 @@ export default function Invoices() {
                 status: full ? 'paid' : 'partial',
                 paidAt: full ? new Date().toISOString() : prev.paidAt,
                 paymentMethod: full ? (prev.paymentMethod || 'Recorded manually') : prev.paymentMethod,
+              }
+            })
+          }
+          return r
+        }}
+        onApplyCredit={async (id, amount) => {
+          const r = await applyInvoiceCredit(id, amount)
+          if (!r?.error) {
+            setSelected(prev => {
+              if (!prev) return prev
+              const newPaid = (Number(prev.amountPaid) || 0) + amount
+              const full = r.paid || newPaid >= prev.total - 0.005
+              return {
+                ...prev,
+                amountPaid: newPaid,
+                creditApplied: (Number(prev.creditApplied) || 0) + amount,
+                status: full ? 'paid' : 'partial',
+                paidAt: full ? new Date().toISOString() : prev.paidAt,
+                paymentMethod: full ? (prev.paymentMethod || 'Credit on account') : prev.paymentMethod,
               }
             })
           }

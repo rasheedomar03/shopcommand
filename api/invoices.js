@@ -1,5 +1,6 @@
 import { createHandler } from './_lib/handler.js'
 import { createManualInvoice, updateManualInvoice, importLocalInvoices } from './_lib/manual-invoice-db.js'
+import { cleanAmount, applyCredit, returnInvoiceCredit } from './_lib/credits.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -326,6 +327,32 @@ export default createHandler(
         return res.status(403).json({ error: 'Technicians cannot create invoices' })
       }
 
+      // Use the customer's credit on an invoice: POST /api/invoices?action=apply-credit
+      if (action === 'apply-credit') {
+        const { invoice_id, amount } = req.body || {}
+        if (!invoice_id || !UUID_RE.test(invoice_id)) return res.status(400).json({ error: 'Valid invoice_id is required' })
+        const a = cleanAmount(amount)
+        if (a.error) return res.status(400).json({ error: a.error })
+        const out = await applyCredit(sql, { orgId: user.orgId, userId: user.userId, invoiceId: invoice_id, amount: a.amount })
+        if (out.applied) {
+          // a repair-order invoice paid in full moves its repair order to Paid, like a payment does
+          if (out.paid && out.roId) {
+            await sql`UPDATE repair_orders SET stage = 'Paid' WHERE id = ${out.roId} AND org_id = ${user.orgId}`
+          }
+          return res.status(201).json({ applied: a.amount, paid: out.paid, balance: out.balance })
+        }
+        const messages = {
+          not_found: [404, 'Invoice not found'],
+          draft: [409, 'Mark the invoice as sent before applying credit'],
+          not_unpaid: [409, 'Credit can only be applied to an unpaid invoice'],
+          no_customer: [409, 'This invoice has no customer on file. Pick the customer on the invoice first.'],
+          over_due: [400, `That is more than the invoice still owes ($${(out.due ?? 0).toFixed(2)})`],
+          over_credit: [400, `That is more than the customer's credit ($${(out.balance ?? 0).toFixed(2)})`],
+        }
+        const [status, error] = messages[out.reason] || [409, 'Could not apply the credit']
+        return res.status(status).json({ error, code: out.reason })
+      }
+
       // One-time move of browser-only invoices: POST /api/invoices?action=import
       if (action === 'import') {
         const out = await importLocalInvoices({ sql, user, list: req.body?.invoices })
@@ -445,6 +472,8 @@ export default createHandler(
           WHERE id = ${id} AND org_id = ${user.orgId}
           RETURNING *
         `
+        // credit that was used on it goes back to the customer (before the payments are refunded)
+        await returnInvoiceCredit(sql, { orgId: user.orgId, invoiceId: id })
         await sql`UPDATE payments SET status = 'refunded' WHERE invoice_id = ${id} AND org_id = ${user.orgId} AND status = 'completed'`
         // Only a fully paid invoice had moved its repair order on to Paid
         if (invoice.status === 'paid' && invoice.ro_id) {
@@ -492,6 +521,8 @@ export default createHandler(
       }
 
       if (status === 'void') {
+        // credit used on it goes back to the customer (one ledger row, no money lost)
+        await returnInvoiceCredit(sql, { orgId: user.orgId, invoiceId: id })
         const [row] = await sql`
           UPDATE invoices SET status = 'void'
           WHERE id = ${id} AND org_id = ${user.orgId}

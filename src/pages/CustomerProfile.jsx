@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Modal } from '@/components/ui/Modal'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { CustomerCredit } from '@/components/CustomerCredit'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { formatCurrency, formatMoney, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
@@ -371,6 +372,8 @@ export default function CustomerProfile() {
 
         {/* Sidebar */}
         <div className="space-y-4">
+
+          <CustomerCredit customer={customer} canEdit={session?.role !== 'tech'} shopName={shops?.[0]?.name} />
 
           {/* Vehicles */}
           <div className="bg-surface border border-border rounded-xl overflow-hidden">

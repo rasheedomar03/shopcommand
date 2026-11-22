@@ -1,5 +1,7 @@
 import { createHandler } from './_lib/handler.js'
+import { cleanCreditBody, creditBalance, creditHistory, addCredit } from './_lib/credits.js'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function validate(body, partial = false) {
@@ -39,6 +41,30 @@ function validate(body, partial = false) {
 export default createHandler(
   { methods: ['GET', 'POST', 'PUT', 'DELETE'] },
   async ({ req, res, sql, user }) => {
+    // ── Customer credit history: GET /api/customers?action=credit&id= ─────────
+    if (req.method === 'GET' && req.query?.action === 'credit') {
+      if (user.role === 'tech') return res.status(403).json({ error: 'Technicians cannot see customer credit' })
+      const id = req.query?.id
+      if (!id || !UUID_RE.test(id)) return res.status(400).json({ error: 'Valid ?id= is required' })
+      const [c] = await sql`SELECT id FROM customers WHERE id = ${id} AND org_id = ${user.orgId}`
+      if (!c) return res.status(404).json({ error: 'Customer not found' })
+      return res.json({ balance: await creditBalance(sql, user.orgId, id), entries: await creditHistory(sql, user.orgId, id) })
+    }
+
+    // ── Add or refund credit: POST /api/customers?action=credit ───────────────
+    if (req.method === 'POST' && req.query?.action === 'credit') {
+      if (user.role === 'tech') return res.status(403).json({ error: 'Technicians cannot change customer credit' })
+      const { customer_id } = req.body || {}
+      if (!customer_id || !UUID_RE.test(customer_id)) return res.status(400).json({ error: 'Valid customer_id is required' })
+      const { error, value } = cleanCreditBody(req.body)
+      if (error) return res.status(400).json({ error })
+      const [c] = await sql`SELECT id FROM customers WHERE id = ${customer_id} AND org_id = ${user.orgId}`
+      if (!c) return res.status(404).json({ error: 'Customer not found' })
+      const row = await addCredit(sql, { orgId: user.orgId, userId: user.userId, customerId: customer_id, kind: value.kind, amount: value.amount, noteText: value.note })
+      if (!row) return res.status(409).json({ error: 'That is more than the credit the customer has', code: 'over_balance' })
+      return res.status(201).json({ ...row, balance: await creditBalance(sql, user.orgId, customer_id) })
+    }
+
     if (req.method === 'GET') {
       const search = req.query?.search?.trim()
       let rows
@@ -46,6 +72,7 @@ export default createHandler(
         const pattern = `%${search}%`
         rows = await sql`
           SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.is_fleet, c.created_at, c.updated_at,
+            (SELECT COALESCE(SUM(cc.amount), 0) FROM customer_credits cc WHERE cc.customer_id = c.id AND cc.org_id = ${user.orgId})::float8 AS credit_balance,
             COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
               WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId} AND ro.stage = 'Paid'
             ), 0)::float8 AS total_spent,
@@ -63,6 +90,7 @@ export default createHandler(
       } else {
         rows = await sql`
           SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.is_fleet, c.created_at, c.updated_at,
+            (SELECT COALESCE(SUM(cc.amount), 0) FROM customer_credits cc WHERE cc.customer_id = c.id AND cc.org_id = ${user.orgId})::float8 AS credit_balance,
             COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
               WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId} AND ro.stage = 'Paid'
             ), 0)::float8 AS total_spent,

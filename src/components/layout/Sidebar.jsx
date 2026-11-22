@@ -76,7 +76,10 @@ const ADVISOR_HIDDEN = new Set(['/shops', '/technicians', '/reports'])
 export function Sidebar({ open, onClose }) {
   const { theme } = useTheme()
   const { logout, session } = useAuth()
-  const { parts, shops } = useData()
+  const { parts, shops, customers } = useData()
+  // The Fleet page is opt-in (Settings > Locations), and stays visible for a shop
+  // that already has a fleet set up, so nobody loses a page they were using
+  const fleetOn = shops.some(s => s.fleetEnabled) || (customers || []).some(c => c.is_fleet === true)
   const navigate = useNavigate()
   const hexBg = '#0D0E14'
   const isAdvisor = session?.role === 'advisor'
@@ -131,7 +134,8 @@ export function Sidebar({ open, onClose }) {
         <nav aria-label="Sidebar navigation" className="flex-1 px-3 py-4 overflow-y-auto">
           <div className="space-y-4">
             {navGroups.map(({ label, items }) => {
-              const visibleItems = isAdvisor ? items.filter(i => !ADVISOR_HIDDEN.has(i.to)) : items
+              const allowed = fleetOn ? items : items.filter(i => i.to !== '/fleet')
+              const visibleItems = isAdvisor ? allowed.filter(i => !ADVISOR_HIDDEN.has(i.to)) : allowed
               if (visibleItems.length === 0) return null
               return (
               <div key={label}>
