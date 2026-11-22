@@ -4,6 +4,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { logoOf } from '@/lib/shopLogo'
 
 // A blank paper work order the shop can print ahead of time and fill in by
 // hand, so work can continue if the system is ever unavailable. Layout follows
@@ -76,6 +77,7 @@ export function BlankFormModal({ open, onClose }) {
         <div id="sc-blank-form" className="bg-white text-slate-900" style={{ border: '1px solid #1e293b', fontFamily: 'system-ui, sans-serif' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #1e293b' }}>
             <div style={{ width: '40%', padding: '12px 14px', borderRight: '1px solid #1e293b' }}>
+              {logoOf(shop) && <img src={logoOf(shop).src} alt="" style={{ width: logoOf(shop).width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
               <div style={{ fontSize: 17, fontWeight: 800, textTransform: 'uppercase' }}>{shop?.name || 'Shop name'}</div>
               {shop?.address && <div style={{ fontSize: 11, color: '#334155', marginTop: 4 }}>{shop.address}</div>}
               {shop?.phone && <div style={{ fontSize: 11, color: '#334155', marginTop: 2 }}>{shop.phone}</div>}

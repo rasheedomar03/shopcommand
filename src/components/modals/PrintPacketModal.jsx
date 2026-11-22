@@ -2,6 +2,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
 import { formatMoney, roLabel } from '@/lib/utils'
+import { logoOf } from '@/lib/shopLogo'
 import { Printer } from 'lucide-react'
 
 const TAX_RATE = 0.085
@@ -89,6 +90,7 @@ export function PrintPacketModal({ open, onClose, ro, payment }) {
           {/* Header */}
           <div className="flex justify-between items-start pb-4 border-b-2 border-slate-900">
             <div>
+              {logoOf(shop) && <img src={logoOf(shop).src} alt="" style={{ width: logoOf(shop).width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
               <div className="text-lg font-bold text-slate-900">{shop.name}</div>
               <div className="text-xs text-slate-500 mt-1 leading-relaxed">
                 {shop.address}<br />
@@ -382,6 +384,7 @@ function buildHTML({ ro, shop, subtotal, taxAmount, grandTotal, roDate, paidDate
 
   <div class="header">
     <div>
+      ${logoOf(shop) ? `<img src="${esc(logoOf(shop).src)}" alt="" style="width:${logoOf(shop).width}px;max-width:100%;height:auto;margin-bottom:6px;display:block">` : ''}
       <div class="shop-name">${esc(shop.name || 'ShopCommand')}</div>
       <div class="shop-sub">${esc(shop.address || '')}<br>${esc(shop.phone || '')}</div>
     </div>
