@@ -12,6 +12,7 @@ import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
 import { invoiceNumberTaken, invoiceMatchesQuery, lineDisplay } from '@/lib/invoiceLines'
 import { invoicesToCsv } from '@/lib/invoiceExport'
 import { logoOf } from '@/lib/shopLogo'
+import { PrintPortal } from '@/components/PrintPortal'
 import { useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
@@ -496,17 +497,10 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
         </div>
       </div>
 
-      {/* Print-only copy of this invoice. Hidden on screen; Print / PDF prints
-          exactly what is saved here, with no separate generator screen. */}
-      <style>{`
-        #sc-invoice-print { display: none; }
-        @media print {
-          body * { visibility: hidden !important; }
-          #sc-invoice-print, #sc-invoice-print * { visibility: visible !important; }
-          #sc-invoice-print { display: block !important; position: fixed; inset: 0; padding: 36px; background: #fff; color: #0f172a; font-family: system-ui, sans-serif; font-size: 13px; }
-        }
-      `}</style>
-      <div id="sc-invoice-print">
+      {/* Print-only copy of this invoice, placed directly in the page (not in this
+          window) so it prints on whole pages. Print / PDF prints exactly what is
+          saved here, with no separate generator screen. */}
+      <PrintPortal padding={36}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 24, paddingBottom: 14, borderBottom: '1px solid #cbd5e1' }}>
           <div>
             {logoOf(shop) && <img src={logoOf(shop).src} alt="" style={{ width: logoOf(shop).width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
@@ -601,7 +595,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
             </>
           )}
         </div>
-      </div>
+      </PrintPortal>
     </Modal>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { createPortal } from 'react-dom'
+import { PrintPortal } from '@/components/PrintPortal'
 import { useNavigate } from 'react-router-dom'
 import { Printer, Pencil } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
@@ -9,22 +9,6 @@ import { logoOf } from '@/lib/shopLogo'
 import { truckName, billedForTruck, truckStats, truckYears, describeWork } from '@/lib/trucks'
 
 const STATUS_LABEL = { paid: 'Paid', partial: 'Part paid', sent: 'Sent', overdue: 'Overdue' }
-
-// Printing: the pop-up window squeezes and splits long content, so the page prints
-// a separate copy placed directly in the page body. Everything else is removed
-// from the printed page (display none, so it takes no space and adds no blank
-// pages), and the table flows across pages with its heading repeated.
-const PRINT_CSS = `
-  #sc-truck-print { display: none; }
-  @media print {
-    body > *:not(#sc-truck-print):not(style) { display: none !important; }
-    #sc-truck-print { display: block !important; padding: 28px; background: #fff; color: #0f172a; font-family: system-ui, sans-serif; font-size: 13px; }
-    #sc-truck-print table { width: 100%; border-collapse: collapse; }
-    #sc-truck-print thead { display: table-header-group; }
-    #sc-truck-print tr { break-inside: avoid; page-break-inside: avoid; }
-    @page { margin: 12mm; }
-  }
-`
 
 /** The paper: shop header, the truck, the invoice table and the total. Used on screen and for printing. */
 function TruckPaper({ truck, shop, rows, period, spent, year, printing, onOpenInvoice }) {
@@ -143,13 +127,7 @@ export function TruckProfile({ open, truck, invoices, shop, onClose, onEdit }) {
       </div>
 
       {/* The print copy lives outside this window, directly in the page */}
-      {open && createPortal(
-        <>
-          <style>{PRINT_CSS}</style>
-          <div id="sc-truck-print"><TruckPaper {...paper} printing /></div>
-        </>,
-        document.body,
-      )}
+      {open && <PrintPortal padding={28}><TruckPaper {...paper} printing /></PrintPortal>}
     </Modal>
   )
 }

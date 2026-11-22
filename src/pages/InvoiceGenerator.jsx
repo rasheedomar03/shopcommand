@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, ArrowRight, Plus, Trash2, Printer, Calculator } from 'lucide-react'
 import { PublicNav } from '@/components/PublicNav'
+import { PrintPortal } from '@/components/PrintPortal'
 import { usePageMeta } from '@/lib/seo'
 
 const CONTACT_EMAIL = 'hello@shopcommand.net'
@@ -109,19 +110,90 @@ export default function InvoiceGenerator() {
   const input = 'w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm outline-none focus:border-orange-400 transition-colors'
   const label = 'text-xs font-semibold text-slate-500 uppercase tracking-wider'
 
+  // The invoice paper: shown in the page and again as the print copy
+  const paperInner = (
+    <>
+              <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200">
+                <div>
+                  <div className="text-lg font-bold text-slate-900">{shop.name || 'Your Shop Name'}</div>
+                  {shop.address && <div className="text-xs text-slate-500 mt-0.5">{shop.address}</div>}
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {[shop.phone, shop.email].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Invoice</div>
+                  <div className="text-sm font-semibold text-slate-900">{invNumber}</div>
+                  <div className="text-xs text-slate-500">{new Date(invDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-4 border-b border-slate-200 text-sm">
+                <div>
+                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Bill to</div>
+                  <div className="font-medium text-slate-900">{customer.name || '—'}</div>
+                  {customer.phone && <div className="text-xs text-slate-500">{customer.phone}</div>}
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Vehicle</div>
+                  <div className="font-medium text-slate-900">{vehicleLabel || '—'}</div>
+                  <div className="text-xs text-slate-500">
+                    {[vehicle.vin && `VIN ${vehicle.vin}`, vehicle.mileage && `${vehicle.mileage} mi`].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+              </div>
+
+              <table className="w-full text-sm mt-4">
+                <thead>
+                  <tr className="text-xs text-slate-400 uppercase tracking-wider">
+                    <th className="text-left font-semibold pb-2">Description</th>
+                    <th className="text-right font-semibold pb-2 w-12">Qty</th>
+                    <th className="text-right font-semibold pb-2 w-20">Price</th>
+                    <th className="text-right font-semibold pb-2 w-20">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.filter(it => it.desc || n(it.price) > 0).map((it, i) => (
+                    <tr key={i} className="border-t border-slate-100">
+                      <td className="py-2 text-slate-900">
+                        {it.desc || '—'}
+                        {itemize && <span className="ml-2 text-[10px] uppercase tracking-wider text-slate-400">{it.type}</span>}
+                      </td>
+                      <td className="py-2 text-right tabular-nums text-slate-600">{n(it.qty)}</td>
+                      <td className="py-2 text-right tabular-nums text-slate-600">{fmt(n(it.price))}</td>
+                      <td className="py-2 text-right tabular-nums font-medium text-slate-900">{fmt(lineTotal(it))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="mt-4 pt-4 border-t border-slate-200 space-y-1.5 text-sm">
+                {itemize ? (
+                  <>
+                    <div className="flex justify-between text-slate-600"><span>Labor</span><span className="tabular-nums">{fmt(laborSubtotal)}</span></div>
+                    <div className="flex justify-between text-slate-600"><span>Parts</span><span className="tabular-nums">{fmt(partsSubtotal)}</span></div>
+                    {feesSubtotal > 0 && <div className="flex justify-between text-slate-600"><span>Fees</span><span className="tabular-nums">{fmt(feesSubtotal)}</span></div>}
+                  </>
+                ) : (
+                  <div className="flex justify-between text-slate-600"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
+                )}
+                <div className="flex justify-between text-slate-600"><span>Tax ({n(taxRate)}%{!itemize ? '' : taxLabor ? ', incl. labor' : ', parts & fees'})</span><span className="tabular-nums">{fmt(tax)}</span></div>
+                <div className="flex justify-between pt-2 border-t border-slate-200 text-base font-bold text-slate-900"><span>Total due</span><span className="tabular-nums">{fmt(total)}</span></div>
+              </div>
+
+              {notes && <div className="mt-5 pt-4 border-t border-slate-100 text-xs text-slate-500 whitespace-pre-wrap">{notes}</div>}
+              <div className="mt-6 text-center text-[10px] text-slate-300">Generated free at shopcommand.net/tools/invoice-generator</div>
+    </>
+  )
+
   return (
     <div className="min-h-screen bg-white">
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          #invoice-print, #invoice-print * { visibility: visible !important; }
-          #invoice-print { position: absolute !important; left: 0; top: 0; width: 100%; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
-        }
-      `}</style>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-orange-500 focus:text-white focus:rounded-lg">
         Skip to main content
       </a>
 
+      {/* The print copy lives directly in the page, so it prints on whole pages with nothing else */}
+      <PrintPortal padding={24}>{paperInner}</PrintPortal>
       <PublicNav />
 
       <main id="main-content">
@@ -255,77 +327,8 @@ export default function InvoiceGenerator() {
             </div>
 
             {/* Live preview */}
-            <div id="invoice-print" className="rounded-lg border border-slate-200 shadow-sm p-8 bg-white lg:sticky lg:top-20">
-              <div className="flex items-start justify-between gap-4 pb-5 border-b border-slate-200">
-                <div>
-                  <div className="text-lg font-bold text-slate-900">{shop.name || 'Your Shop Name'}</div>
-                  {shop.address && <div className="text-xs text-slate-500 mt-0.5">{shop.address}</div>}
-                  <div className="text-xs text-slate-500 mt-0.5">
-                    {[shop.phone, shop.email].filter(Boolean).join(' · ')}
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Invoice</div>
-                  <div className="text-sm font-semibold text-slate-900">{invNumber}</div>
-                  <div className="text-xs text-slate-500">{new Date(invDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 py-4 border-b border-slate-200 text-sm">
-                <div>
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Bill to</div>
-                  <div className="font-medium text-slate-900">{customer.name || '—'}</div>
-                  {customer.phone && <div className="text-xs text-slate-500">{customer.phone}</div>}
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Vehicle</div>
-                  <div className="font-medium text-slate-900">{vehicleLabel || '—'}</div>
-                  <div className="text-xs text-slate-500">
-                    {[vehicle.vin && `VIN ${vehicle.vin}`, vehicle.mileage && `${vehicle.mileage} mi`].filter(Boolean).join(' · ')}
-                  </div>
-                </div>
-              </div>
-
-              <table className="w-full text-sm mt-4">
-                <thead>
-                  <tr className="text-xs text-slate-400 uppercase tracking-wider">
-                    <th className="text-left font-semibold pb-2">Description</th>
-                    <th className="text-right font-semibold pb-2 w-12">Qty</th>
-                    <th className="text-right font-semibold pb-2 w-20">Price</th>
-                    <th className="text-right font-semibold pb-2 w-20">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.filter(it => it.desc || n(it.price) > 0).map((it, i) => (
-                    <tr key={i} className="border-t border-slate-100">
-                      <td className="py-2 text-slate-900">
-                        {it.desc || '—'}
-                        {itemize && <span className="ml-2 text-[10px] uppercase tracking-wider text-slate-400">{it.type}</span>}
-                      </td>
-                      <td className="py-2 text-right tabular-nums text-slate-600">{n(it.qty)}</td>
-                      <td className="py-2 text-right tabular-nums text-slate-600">{fmt(n(it.price))}</td>
-                      <td className="py-2 text-right tabular-nums font-medium text-slate-900">{fmt(lineTotal(it))}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="mt-4 pt-4 border-t border-slate-200 space-y-1.5 text-sm">
-                {itemize ? (
-                  <>
-                    <div className="flex justify-between text-slate-600"><span>Labor</span><span className="tabular-nums">{fmt(laborSubtotal)}</span></div>
-                    <div className="flex justify-between text-slate-600"><span>Parts</span><span className="tabular-nums">{fmt(partsSubtotal)}</span></div>
-                    {feesSubtotal > 0 && <div className="flex justify-between text-slate-600"><span>Fees</span><span className="tabular-nums">{fmt(feesSubtotal)}</span></div>}
-                  </>
-                ) : (
-                  <div className="flex justify-between text-slate-600"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
-                )}
-                <div className="flex justify-between text-slate-600"><span>Tax ({n(taxRate)}%{!itemize ? '' : taxLabor ? ', incl. labor' : ', parts & fees'})</span><span className="tabular-nums">{fmt(tax)}</span></div>
-                <div className="flex justify-between pt-2 border-t border-slate-200 text-base font-bold text-slate-900"><span>Total due</span><span className="tabular-nums">{fmt(total)}</span></div>
-              </div>
-
-              {notes && <div className="mt-5 pt-4 border-t border-slate-100 text-xs text-slate-500 whitespace-pre-wrap">{notes}</div>}
-              <div className="mt-6 text-center text-[10px] text-slate-300">Generated free at shopcommand.net/tools/invoice-generator</div>
+            <div className="rounded-lg border border-slate-200 shadow-sm p-8 bg-white lg:sticky lg:top-20">
+              {paperInner}
             </div>
           </div>
         </section>

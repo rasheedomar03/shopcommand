@@ -166,9 +166,11 @@ html.light .\[\&\>option\]\:bg-surface > option { background-color: #FFFFFF; col
 @media print {
   body { background: white !important; color: black !important; }
   nav, header, aside, [role="complementary"],
-  .demo-banner, button, .skip-link { display: none !important; }
+  .demo-banner, button:not(.sc-print-root *), .skip-link { display: none !important; }
   [data-radix-portal] > div:first-child { display: none !important; }
   [role="dialog"] { position: static !important; background: white !important; box-shadow: none !important; border: none !important; max-height: none !important; overflow: visible !important; }
-  * { color: black !important; background: white !important; border-color: #ccc !important; }
+  /* Everything except a document made for printing (see PrintPortal) goes plain
+     black on white; a print copy keeps its own colors, logo and shading. */
+  *:not(.sc-print-root):not(.sc-print-root *) { color: black !important; background: white !important; border-color: #ccc !important; }
   .text-orange { color: #F97316 !important; }
 }

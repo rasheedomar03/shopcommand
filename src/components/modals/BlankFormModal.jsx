@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
+import { PrintPortal } from '@/components/PrintPortal'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoOf } from '@/lib/shopLogo'
@@ -35,6 +36,55 @@ function RuledColumn({ title }) {
   )
 }
 
+/** The form itself. Shown on screen in the window and again as the print copy. */
+function BlankFormPaper({ shop }) {
+  return (
+    <div className="bg-white text-slate-900" style={{ border: '1px solid #1e293b', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid #1e293b' }}>
+        <div style={{ width: '40%', padding: '12px 14px', borderRight: '1px solid #1e293b' }}>
+          {logoOf(shop) && <img src={logoOf(shop).src} alt="" style={{ width: logoOf(shop).width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
+          <div style={{ fontSize: 17, fontWeight: 800, textTransform: 'uppercase' }}>{shop?.name || 'Shop name'}</div>
+          {shop?.address && <div style={{ fontSize: 11, color: '#334155', marginTop: 4 }}>{shop.address}</div>}
+          {shop?.phone && <div style={{ fontSize: 11, color: '#334155', marginTop: 2 }}>{shop.phone}</div>}
+          {shop?.email && <div style={{ fontSize: 11, color: '#334155', marginTop: 2 }}>{shop.email}</div>}
+        </div>
+        <div style={{ flex: 1, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: 6, fontSize: 10, fontWeight: 700 }}>
+            DATE:
+            <span style={{ width: 38, borderBottom: '1px solid #1e293b', height: 14 }} />/
+            <span style={{ width: 38, borderBottom: '1px solid #1e293b', height: 14 }} />/
+            <span style={{ width: 52, borderBottom: '1px solid #1e293b', height: 14 }} />
+          </div>
+          <Field label="COMPANY NAME:" />
+          <Field label="CUSTOMER NAME:" />
+          <Field label="PHONE #:" />
+          <div style={{ display: 'flex', gap: 14 }}>
+            <Field label="YEAR:" />
+            <Field label="TRUCK #:" />
+          </div>
+          <Field label="MAKE / MODEL:" />
+          <Field label="VIN #:" />
+          <Field label="MILEAGE:" />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex' }}>
+        <RuledColumn title="DIAGNOSTICS" />
+        <RuledColumn title="PARTS" />
+      </div>
+
+      <div style={{ borderTop: '1px solid #1e293b', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 24 }}>
+          <Field label="TECHNICIAN:" />
+          <Field label="CUSTOMER SIGNATURE:" flex={1.4} />
+        </div>
+        <Field label="NOTES:" />
+        <div style={{ borderBottom: '1px solid #1e293b', height: 14 }} />
+      </div>
+    </div>
+  )
+}
+
 export function BlankFormModal({ open, onClose }) {
   const { shops } = useData()
   const { session } = useAuth()
@@ -45,16 +95,6 @@ export function BlankFormModal({ open, onClose }) {
 
   return (
     <Modal open={open} onClose={onClose} title="Print blank work order" subtitle="A paper form to fill in by hand, for when the system is down" size="xl">
-      <style>{`
-        @page { size: letter; margin: 0.4in; }
-        @media print {
-          body * { visibility: hidden !important; }
-          #sc-blank-form, #sc-blank-form * { visibility: visible !important; }
-          #sc-blank-form { position: fixed !important; inset: 0 !important; width: auto !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
-          #sc-blank-form .sc-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
-      `}</style>
-
       <div className="p-5 space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           {shops.length > 1 && (
@@ -74,50 +114,16 @@ export function BlankFormModal({ open, onClose }) {
         </div>
 
         {/* Paper: always light, print-faithful */}
-        <div id="sc-blank-form" className="bg-white text-slate-900" style={{ border: '1px solid #1e293b', fontFamily: 'system-ui, sans-serif' }}>
-          <div style={{ display: 'flex', borderBottom: '1px solid #1e293b' }}>
-            <div style={{ width: '40%', padding: '12px 14px', borderRight: '1px solid #1e293b' }}>
-              {logoOf(shop) && <img src={logoOf(shop).src} alt="" style={{ width: logoOf(shop).width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
-              <div style={{ fontSize: 17, fontWeight: 800, textTransform: 'uppercase' }}>{shop?.name || 'Shop name'}</div>
-              {shop?.address && <div style={{ fontSize: 11, color: '#334155', marginTop: 4 }}>{shop.address}</div>}
-              {shop?.phone && <div style={{ fontSize: 11, color: '#334155', marginTop: 2 }}>{shop.phone}</div>}
-              {shop?.email && <div style={{ fontSize: 11, color: '#334155', marginTop: 2 }}>{shop.email}</div>}
-            </div>
-            <div style={{ flex: 1, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 9 }}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: 6, fontSize: 10, fontWeight: 700 }}>
-                DATE:
-                <span style={{ width: 38, borderBottom: '1px solid #1e293b', height: 14 }} />/
-                <span style={{ width: 38, borderBottom: '1px solid #1e293b', height: 14 }} />/
-                <span style={{ width: 52, borderBottom: '1px solid #1e293b', height: 14 }} />
-              </div>
-              <Field label="COMPANY NAME:" />
-              <Field label="CUSTOMER NAME:" />
-              <Field label="PHONE #:" />
-              <div style={{ display: 'flex', gap: 14 }}>
-                <Field label="YEAR:" />
-                <Field label="TRUCK #:" />
-              </div>
-              <Field label="MAKE / MODEL:" />
-              <Field label="VIN #:" />
-              <Field label="MILEAGE:" />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex' }}>
-            <RuledColumn title="DIAGNOSTICS" />
-            <RuledColumn title="PARTS" />
-          </div>
-
-          <div style={{ borderTop: '1px solid #1e293b', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', gap: 24 }}>
-              <Field label="TECHNICIAN:" />
-              <Field label="CUSTOMER SIGNATURE:" flex={1.4} />
-            </div>
-            <Field label="NOTES:" />
-            <div style={{ borderBottom: '1px solid #1e293b', height: 14 }} />
-          </div>
-        </div>
+        <div id="sc-blank-form"><BlankFormPaper shop={shop} /></div>
       </div>
+
+      {/* The print copy lives outside this window, directly in the page: one letter page */}
+      {open && (
+        <PrintPortal>
+          <style>{'@page { size: letter; margin: 0.4in; }'}</style>
+          <BlankFormPaper shop={shop} />
+        </PrintPortal>
+      )}
     </Modal>
   )
 }
