@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Printer, Pencil } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
@@ -8,6 +9,89 @@ import { logoOf } from '@/lib/shopLogo'
 import { truckName, billedForTruck, truckStats, truckYears, describeWork } from '@/lib/trucks'
 
 const STATUS_LABEL = { paid: 'Paid', partial: 'Part paid', sent: 'Sent', overdue: 'Overdue' }
+
+// Printing: the pop-up window squeezes and splits long content, so the page prints
+// a separate copy placed directly in the page body. Everything else is removed
+// from the printed page (display none, so it takes no space and adds no blank
+// pages), and the table flows across pages with its heading repeated.
+const PRINT_CSS = `
+  #sc-truck-print { display: none; }
+  @media print {
+    body > *:not(#sc-truck-print):not(style) { display: none !important; }
+    #sc-truck-print { display: block !important; padding: 28px; background: #fff; color: #0f172a; font-family: system-ui, sans-serif; font-size: 13px; }
+    #sc-truck-print table { width: 100%; border-collapse: collapse; }
+    #sc-truck-print thead { display: table-header-group; }
+    #sc-truck-print tr { break-inside: avoid; page-break-inside: avoid; }
+    @page { margin: 12mm; }
+  }
+`
+
+/** The paper: shop header, the truck, the invoice table and the total. Used on screen and for printing. */
+function TruckPaper({ truck, shop, rows, period, spent, year, printing, onOpenInvoice }) {
+  const logo = logoOf(shop)
+  return (
+    <>
+      <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-300">
+        <div>
+          {logo && <img src={logo.src} alt="" style={{ width: logo.width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
+          <div className="text-base font-bold">{shop?.name || 'Shop'}</div>
+          {shop?.address && <div className="text-xs text-slate-500 mt-0.5">{shop.address}</div>}
+          {shop?.phone && <div className="text-xs text-slate-500 mt-0.5">{shop.phone}</div>}
+        </div>
+        <div className="text-right text-sm">
+          <div className="text-xs uppercase tracking-wider text-slate-500">Truck history</div>
+          <div className="font-bold text-lg">Truck {truck.unitNumber || ''}</div>
+          <div className="text-slate-700">{truckName(truck)}</div>
+          {truck.vin && <div className="text-xs font-mono text-slate-500">VIN {truck.vin}</div>}
+          {truck.mileage != null && <div className="text-xs text-slate-500">Last mileage {Number(truck.mileage).toLocaleString('en-US')}</div>}
+          <div className="text-xs text-slate-500 mt-1">{period}</div>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="py-10 text-center text-sm text-slate-500">No invoices for this truck{year === 'all' ? ' yet' : ` in ${year}`}. Pick this truck when you make an invoice and it shows up here.</p>
+      ) : (
+        <table className="w-full text-sm mt-3">
+          <thead>
+            <tr className="text-left text-2xs uppercase tracking-wider text-slate-500 border-b border-slate-300">
+              <th className="py-2 pr-3 font-semibold">Date</th>
+              <th className="py-2 pr-3 font-semibold">Invoice</th>
+              <th className="py-2 pr-3 font-semibold">What was done</th>
+              <th className="py-2 pr-3 font-semibold">Parts</th>
+              <th className="py-2 text-right font-semibold">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(inv => {
+              const w = describeWork(inv)
+              return (
+                <tr key={inv.id} className="border-b border-slate-200 align-top">
+                  <td className="py-2 pr-3 whitespace-nowrap">{formatDate(inv.created)}</td>
+                  <td className="py-2 pr-3 whitespace-nowrap">
+                    {printing
+                      ? <span className="font-medium">{inv.id}</span>
+                      : <button onClick={() => onOpenInvoice(inv.id)} className="font-medium text-orange hover:underline">{inv.id}</button>}
+                    <div className="text-2xs text-slate-500">{STATUS_LABEL[inv.status] || inv.status}</div>
+                  </td>
+                  <td className="py-2 pr-3">{w.work || <span className="text-slate-400">Not described</span>}</td>
+                  <td className="py-2 pr-3 text-slate-700">{w.parts || <span className="text-slate-400">None</span>}</td>
+                  <td className="py-2 text-right tabular-nums whitespace-nowrap">{formatMoney(inv.total)}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={4} className="pt-3 pr-3 text-right font-bold">Total ({rows.length} invoice{rows.length === 1 ? '' : 's'}, {period})</td>
+              <td className="pt-3 text-right font-bold tabular-nums whitespace-nowrap">{formatMoney(spent)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      )}
+      <p className="mt-4 text-2xs text-slate-500">Drafts and voided invoices are not included.</p>
+    </>
+  )
+}
 
 /**
  * One truck's history: every invoice with the date, what was done, the parts and
@@ -31,18 +115,12 @@ export function TruckProfile({ open, truck, invoices, shop, onClose, onEdit }) {
     .filter(i => year === 'all' || Number(String(i.created).slice(0, 4)) === yearArg)
     .sort((a, b) => String(a.created).localeCompare(String(b.created)))
   const { spent } = truckStats(truck, invoices, yearArg)
-  const logo = logoOf(shop)
   const period = year === 'all' ? 'All years' : year
+  const paper = { truck, shop, rows, period, spent, year }
+  const openInvoice = (id) => { onClose(); navigate(`/invoices?open=${encodeURIComponent(id)}`) }
 
   return (
     <Modal open={open} onClose={onClose} title={`Truck ${truck.unitNumber || ''}`.trim()} subtitle={truckName(truck) || 'Truck history'} size="full">
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          #sc-truck-paper, #sc-truck-paper * { visibility: visible !important; }
-          #sc-truck-paper { position: fixed !important; inset: 0 !important; width: 100% !important; border: none !important; box-shadow: none !important; }
-        }
-      `}</style>
       <div className="p-5 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
           <label className="text-xs text-text-muted">
@@ -60,64 +138,18 @@ export function TruckProfile({ open, truck, invoices, shop, onClose, onEdit }) {
         </div>
 
         <div id="sc-truck-paper" className="rounded-xl border border-border bg-white text-slate-900 p-7">
-          <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-300">
-            <div>
-              {logo && <img src={logo.src} alt="" style={{ width: logo.width, maxWidth: '100%', height: 'auto', marginBottom: 6 }} />}
-              <div className="text-base font-bold">{shop?.name || 'Shop'}</div>
-              {shop?.address && <div className="text-xs text-slate-500 mt-0.5">{shop.address}</div>}
-              {shop?.phone && <div className="text-xs text-slate-500 mt-0.5">{shop.phone}</div>}
-            </div>
-            <div className="text-right text-sm">
-              <div className="text-xs uppercase tracking-wider text-slate-500">Truck history</div>
-              <div className="font-bold text-lg">Truck {truck.unitNumber || ''}</div>
-              <div className="text-slate-700">{truckName(truck)}</div>
-              {truck.vin && <div className="text-xs font-mono text-slate-500">VIN {truck.vin}</div>}
-              {truck.mileage != null && <div className="text-xs text-slate-500">Last mileage {Number(truck.mileage).toLocaleString('en-US')}</div>}
-              <div className="text-xs text-slate-500 mt-1">{period}</div>
-            </div>
-          </div>
-
-          {rows.length === 0 ? (
-            <p className="py-10 text-center text-sm text-slate-500">No invoices for this truck{year === 'all' ? ' yet' : ` in ${year}`}. Pick this truck when you make an invoice and it shows up here.</p>
-          ) : (
-            <table className="w-full text-sm mt-3">
-              <thead>
-                <tr className="text-left text-2xs uppercase tracking-wider text-slate-500 border-b border-slate-300">
-                  <th className="py-2 pr-3 font-semibold">Date</th>
-                  <th className="py-2 pr-3 font-semibold">Invoice</th>
-                  <th className="py-2 pr-3 font-semibold">What was done</th>
-                  <th className="py-2 pr-3 font-semibold">Parts</th>
-                  <th className="py-2 text-right font-semibold">Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(inv => {
-                  const w = describeWork(inv)
-                  return (
-                    <tr key={inv.id} className="border-b border-slate-200 align-top">
-                      <td className="py-2 pr-3 whitespace-nowrap">{formatDate(inv.created)}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">
-                        <button onClick={() => { onClose(); navigate(`/invoices?open=${encodeURIComponent(inv.id)}`) }} className="font-medium text-orange hover:underline print:no-underline print:text-slate-900">{inv.id}</button>
-                        <div className="text-2xs text-slate-500">{STATUS_LABEL[inv.status] || inv.status}</div>
-                      </td>
-                      <td className="py-2 pr-3">{w.work || <span className="text-slate-400">Not described</span>}</td>
-                      <td className="py-2 pr-3 text-slate-700">{w.parts || <span className="text-slate-400">None</span>}</td>
-                      <td className="py-2 text-right tabular-nums">{formatMoney(inv.total)}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={4} className="pt-3 pr-3 text-right font-bold">Total ({rows.length} invoice{rows.length === 1 ? '' : 's'}, {period})</td>
-                  <td className="pt-3 text-right font-bold tabular-nums">{formatMoney(spent)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          )}
-          <p className="mt-4 text-2xs text-slate-500">Drafts and voided invoices are not included.</p>
+          <TruckPaper {...paper} printing={false} onOpenInvoice={openInvoice} />
         </div>
       </div>
+
+      {/* The print copy lives outside this window, directly in the page */}
+      {open && createPortal(
+        <>
+          <style>{PRINT_CSS}</style>
+          <div id="sc-truck-print"><TruckPaper {...paper} printing /></div>
+        </>,
+        document.body,
+      )}
     </Modal>
   )
 }
