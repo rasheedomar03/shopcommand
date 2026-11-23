@@ -3,7 +3,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { useData } from '@/contexts/DataContext'
-import { RO_STAGES, sanitizeVin, sanitizeField, matchesSearch } from '@/lib/utils'
+import { sanitizeVin, sanitizeField, matchesSearch } from '@/lib/utils'
 import { Search, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -161,7 +161,6 @@ export function NewROModal({
         customerEmail: cleanEmail || null,
         vehicleId,
         vehicle: [cleanYear, cleanMake, cleanModel].filter(Boolean).join(' '),
-        stage: form.stage,
         techId: form.techId || null,
         complaint: cleanComplaint,
         scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
@@ -209,14 +208,12 @@ export function NewROModal({
 
           {/* Shop & Stage — hidden when tech is locked to a shop */}
           {!isLocked && (
-            <div className="grid grid-cols-2 gap-4">
+            {/* Every order starts as an Estimate: that is the stage where services and
+                parts are priced. (A stage picker here let an order start where it cannot be priced.) */}
+            <div className="grid grid-cols-1 gap-4">
               <Select label="Shop *" value={form.shopId} onChange={set('shopId')} error={errors.shopId}>
                 <option value="">Select shop…</option>
                 {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </Select>
-              <Select label="Initial Stage" value={form.stage} onChange={set('stage')}>
-                {/* Invoiced and Paid only come from invoicing and paying */}
-                {RO_STAGES.filter(s => s !== 'Invoiced' && s !== 'Paid').map(s => <option key={s} value={s}>{s}</option>)}
               </Select>
             </div>
           )}
