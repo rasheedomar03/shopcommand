@@ -73,18 +73,35 @@ Fixed: de7b684. Database invoices store amount = repair order total, which INCLU
 Verified: the tech board's "Revenue (MTD) $98" was a Paid test RO (RO-20261111-0001, $97.64). Approved ROs are not counted.
 
 NOT fixed yet:
-- repair_orders.total is only written by "Save estimate", markPaid, and invoice edits. Lines changed after the last save, or an RO approved with the "Customer approved estimate" button without ever clicking Save estimate (total stays 0), can produce a stale or $0 invoice. The invoice email shows the gap as a "Tax" line.
+- (Mostly fixed Nov 23, see "Walkthrough fixes" below: the RO total is now stored on approve and on every stage advance, and the server works it out from the lines when an unsaved RO is invoiced. Still true: lines changed after the last stage change are only stored by the next save or advance.) repair_orders.total is written by "Save estimate", stage advances, approval, markPaid and invoice edits. The invoice email shows any gap between lines and total as a "Tax" line.
 - Tax rate is hard-coded 8.5% (RO modal, service packet, approval page) but 8.25% on the invoice screen for device-only invoices and the free invoice tools. No per-shop tax setting. Tax rules for parts vs labor vary by state; ask each shop's accountant.
 - Revenue (MTD) sums repair_orders.total (tax-inclusive) for Complete, Invoiced, Paid by updated_at, so it includes tax, counts unbilled Complete work, and edits to old ROs move them into the current month.
 - Plan, in order: (1) per-shop tax rate setting used everywhere, after asking J2M how they charge tax (question 10 on the call script); (2) derive RO total on the server whenever lines change; (3) split revenue into Billed (before tax, by invoice date), Collected (payments table), and Unbilled work.
 
-## Fleet opt-in and customer credits (Nov 21; built, NOT committed or deployed at the time of writing)
+## Fleet opt-in and customer credits (Nov 21; shipped in 6dafa60e and dc770a41; live-tested Nov 22)
 
 Fleet is now opt-in: Settings, Locations, "Track my own trucks (Fleet)" (stored as shops.data.fleet_enabled; the sidebar also shows Fleet if any customer is already flagged is_fleet, so J2M keeps it). The Truck # field was left as is.
 
 Credits (Trinity: Zain overpaid about $1,000, 2 Brothers prepaid $1,600): ledger table customer_credits (migration 008, already run), append-only. A deposit is NOT revenue until applied to an invoice, where it becomes a payment with method "credit". Undo-paid and void return the credit. A refund can never exceed the balance. Server: api/_lib/credits.js, customers?action=credit (GET history, POST add/refund), invoices?action=apply-credit. Screen: "Credit on account" panel on the customer profile (add, refund, history, printable statement); "Use credit" on an unpaid invoice; printed invoices show "Credit applied" and "Credit remaining on account". Tests: tests/credits-api.test.js. Demo checked by hand. Known limit: two simultaneous applications could both pass the balance check (no lock).
 
-STILL TO DO: live check on the test account after deploy (deposit, apply, undo returns credit, void returns credit, oversized refund refused); then look up Trinity's $588.26 credit and the $0 or negative invoices by amount after her import.
+Live-tested on the Ray's Auto test account (Nov 22-23): deposit, apply, over-apply refused, oversized refund refused, undo returns the credit, void returns the credit, print lines. A bug found there (screen kept the old balance after undo or void) is fixed in dc770a41. Not yet seen live: the Fleet link hiding in the sidebar when the switch is off on a fresh account (the test account has a fleet customer, so Fleet always shows there).
+
+STILL TO DO: look up Trinity's $588.26 credit and the $0 or negative invoices by amount after her import.
+
+## Walkthrough fixes (Nov 22-23; shipped in 852746a0, 915e5696, ec0f7038, 9dfab51a)
+
+Two full live walkthroughs (as a mechanic, as a fleet shop) on the Ray's Auto test account found the items below; all are fixed and checked live unless noted.
+
+- RO "Mark as paid" never saved: markPaid threw `setPaymentPending is not defined` (left over from commit 739900a7, Sep 21) before the save. Now it pays the RO's invoice first (the server marks the invoice and the RO Paid together, and stores the payment), and nothing shows "received" unless it was saved. Card is recorded as method "other" on the invoice (the payments table has no card method); the RO keeps payment.method "card" for display.
+- $0 invoices: the RO total is stored on approve and every stage advance; POST /api/invoices works the total out from the RO's lines (api/_lib/ro-total.js, services + parts x qty + 8.5%) when the stored total is 0.
+- Dates: `localYmd()` in src/lib/utils.js gives the shop's own day (the old `toISOString().slice(0,10)` is UTC, tomorrow in the US evening). Used by the invoice generator (date and number), dashboard today/month/week, invoice revenue day, CSV file name. `formatDate` reads a plain YYYY-MM-DD as that day. RO numbers use the browser's date (`local_date` in the POST, accepted only within a day of the server's UTC date; the sequence now counts by number prefix). Unit-tested; not visible live at midday.
+- New RO: the server's reply had no names, so the new row looked empty, and every RO update blanked names in lists until a reload; both fixed by merging names client-side (DataContext addRepairOrder, updateRepairOrder). The shop is preselected when there is one location. Mileage is now sent as `last_mileage` (it was never saved). The "Initial Stage" picker was ignored; honoring it let an order start where services cannot be added, so the picker was REMOVED (every RO starts as an Estimate). The server still accepts an optional starting stage up to Complete (unused by the app).
+- Ownership: creating an RO checks that the shop, customer, vehicle, tech and advisor belong to the organization; updates check tech, advisor and vehicle.
+- Appointments: the header button now has a date field (the day "+" always did), times are the shop's local time, the week shows Monday to Sunday.
+- Customers: "Add customer" button (NewCustomerModal); the invoice generator offers "Add 'name' as a customer" for a typed name that is not one yet; the customer profile has an Invoices card (all their invoices, invoiced and unpaid totals) and lists saved trucks under Vehicles; Lifetime Spend, Total Visits, Last Visit and Avg Ticket now include paid/non-void invoices made without a repair order (api/customers.js; RO-linked invoices are not counted twice; the numbers are server values, so a same-session payment shows after a reload).
+- Smaller: Parts line (and tax) added to the RO estimate and invoice summaries; internal (own-fleet) invoices get a "not counted as revenue" note, no "Use credit", and are left out of the outstanding total; the generator shows a lasting "Saved as ..." line; the search stage badge no longer wraps; the RO price box is wider; the app reloads once after a deploy when an old page file is gone (`vite:preloadError` in src/main.jsx); `worker-src 'self' blob:` added to the CSP in vercel.json (Clerk uses a blob worker; the blocked-worker console errors are gone).
+- Tests: 409 passing (new: tests/dates-and-totals.test.js, an ownership test, a customers spend/visits test). Lesson: run `npm run build` before pushing; one push (a44c4293) failed to deploy because of a JSX comment placed inside a conditional, fixed in ec0f7038 (production kept serving the previous build).
+- Test-account data left on Ray's Auto: customers Tom Baker, Pat Rivera, Lena Ortiz, Sara Lopez, Dave Miller, Mike Torres, Haul Brothers Trucking (holds a $500 credit), Ray's Auto Fleet ($100 credit); several test ROs and invoices (two duplicate Zain Freight LLC invoices, voided test invoices). Safe to delete.
 
 ## What Was Done
 
@@ -237,7 +254,18 @@ DROPPED: the "label what the repair was" question (the "What was the repair?" fi
 
 ## Open Items
 
+Build work still open (from the Nov 22-23 walkthroughs; start Monday with proper revenue, then labor hours x rate, then the tax setting, since the three are linked):
+- Proper revenue: Billed, Collected, Unbilled, counting when an invoice is marked paid. The dashboard and Reports still add up repair orders in Complete, Invoiced and Paid, so unpaid work counts.
+- Labor as hours x rate on the RO estimate (today each service is one flat price; the invoice generator already has hours and rate).
+- One shared tax and line model and a per-shop tax rate and card fee (RO screens 8.5% hard-coded, generator 8.25% per browser).
+- Truck edit cannot blank a field (the API keeps the old value). Neutral "Truck #" label or hiding it unless Fleet is on, for car shops. No way to add a truck to an ordinary customer by hand (trucks arrive through invoices and the Fleet page).
+- The invoice generator file is about 700 lines (limit 500). Four `422` console errors never traced; Clerk's telemetry call is blocked by the CSP (harmless).
+- Not yet tested: the customer approval page, CSV export and printing (this round); Fleet hiding when the switch is off on a fresh account; the evening date fix live.
+- Demo only: undoing a payment does not return credit in the sample ledger; demo repair orders show no shop name.
+- Fleet database test (tests/live/fleet-live.test.js) is written but never run; needs a Neon branch connection string from the user.
+
 Waiting on the user:
+- Trinity's move: her 46 invoices move automatically when she opens the app; she should press Export first and compare the banner's count and total with it, and tell us before she keeps working if anything is off. Send the J2M update message: mention Fleet (opt-in), the truck picker, the logo, the print fixes, credits, Add customer, and the repair-order payment fix. After her import, look up her $588.26 credit and the $0 or negative invoices by amount and send her the invoice numbers.
 - Confirm ab5784d reached READY, then sign up a fresh test owner with a plus-address and check: both alert emails arrive ("started onboarding", then "New shop created"); the shop-name step shows the optional address and phone; the dashboard shows "Finish setting up" starting with the address and phone step if skipped; its links work and the card disappears when the basics are done; the 14-day trial banner counts down. Then ask Claude to write the cleanup for that test org and delete the Clerk user.
 - Reply from Trinity (text sent Nov 18 afternoon asking for a callback and a photo of the paper invoice).
 - Confirm whether the Trinity reply was sent; take the J2M call and write down their answer on tax (parts only or labor too, rate) and whether they edited invoices. Then send the recap email.
