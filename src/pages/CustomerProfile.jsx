@@ -8,6 +8,8 @@ import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { CustomerCredit } from '@/components/CustomerCredit'
 import { CustomerInvoices } from '@/components/CustomerInvoices'
+import { useCustomerTrucks } from '@/lib/useCustomerTrucks'
+import { truckName } from '@/lib/trucks'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { formatCurrency, formatMoney, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
@@ -63,6 +65,9 @@ export default function CustomerProfile() {
   const { session } = useAuth()
   const isOwner = session?.role === 'owner'
   const customer = customers.find(c => String(c.id) === String(id))
+  // The trucks and vehicles saved for this customer (from invoices and the Fleet page),
+  // not only the ones that came through a repair order
+  const { trucks: savedTrucks } = useCustomerTrucks(customer?.id, { demo: !!session?.demo })
   if (!customer) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -110,6 +115,19 @@ export default function CustomerProfile() {
         vehicleMap[ro.vehicle].activeWarranties.push({ ...svc, roId: ro.id })
       }
     })
+  })
+  // Add the saved trucks: fill in the truck number on one a repair order already
+  // showed (matched by VIN or by name), otherwise list it as its own vehicle
+  savedTrucks.forEach(t => {
+    const name = truckName(t) || (t.unitNumber ? `Truck ${t.unitNumber}` : 'Vehicle')
+    const known = Object.values(vehicleMap).find(v => (t.vin && v.vin === t.vin) || v.name === name)
+    if (known) {
+      known.unitNumber = known.unitNumber || t.unitNumber
+      known.vin = known.vin || t.vin
+      known.lastOdometer = known.lastOdometer || t.mileage
+    } else {
+      vehicleMap[`truck:${t.id}`] = { name, vin: t.vin, unitNumber: t.unitNumber, lastOdometer: t.mileage, roCount: 0, totalSpent: 0, activeWarranties: [] }
+    }
   })
   const vehicles = Object.values(vehicleMap)
 
@@ -389,14 +407,17 @@ export default function CustomerProfile() {
               <div className="px-5 py-6 text-sm text-text-muted text-center">No vehicles on record</div>
             ) : (
               <div className="divide-y divide-border">
-                {vehicles.map(v => (
-                  <div key={v.name} className="px-5 py-3.5">
+                {vehicles.map((v, vi) => (
+                  <div key={`${v.name}-${vi}`} className="px-5 py-3.5">
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-md bg-border flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Car size={14} className="text-text-muted" />
                       </div>
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-text-primary leading-snug">{v.name}</div>
+                        {v.unitNumber && (
+                          <div className="text-2xs text-text-secondary mt-0.5">Truck # {v.unitNumber}</div>
+                        )}
                         {v.vin && (
                           <div className="text-2xs font-mono text-text-muted mt-0.5 tracking-wide">{v.vin}</div>
                         )}

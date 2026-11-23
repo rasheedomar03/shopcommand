@@ -129,6 +129,7 @@ describe('POST /api/repair-orders', () => {
   it('creates RO with valid data', async () => {
     authenticate.mockResolvedValueOnce(MOCK_OWNER)
     const newRo = { id: VALID_UUID, ro_number: 'RO-20260602-0001', stage: 'Estimate' }
+    mockSql.mockResolvedValueOnce([{ shop: 1, customer: 1 }]) // the shop and customer belong to this organization
     mockSql.mockResolvedValueOnce([{ cnt: 0 }]) // sequence count
     mockSql.mockResolvedValueOnce([newRo]) // insert
 

@@ -22,15 +22,16 @@ const { authenticate } = await import('../api/_lib/auth.js')
 const { default: invoices } = await import('../api/invoices.js')
 const { default: repairOrders } = await import('../api/repair-orders.js')
 
-const state = { ro: null, calls: [] }
+const state = { ro: null, calls: [], owned: { shop: 1, customer: 1, vehicle: 1, tech: 1, advisor: 1 } }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  Object.assign(state, { ro: null, calls: [] })
+  Object.assign(state, { ro: null, calls: [], owned: { shop: 1, customer: 1, vehicle: 1, tech: 1, advisor: 1 } })
   mockSql.mockReset()
   mockSql.mockImplementation((strings, ...values) => {
     const q = strings.join('?').replace(/\s+/g, ' ')
     state.calls.push({ q, values })
+    if (/SELECT \(SELECT COUNT\(\*\) FROM shops WHERE id/.test(q)) return Promise.resolve([state.owned])
     if (/SELECT \* FROM repair_orders WHERE id/.test(q)) return Promise.resolve(state.ro ? [state.ro] : [])
     if (/SELECT id FROM invoices WHERE ro_id/.test(q)) return Promise.resolve([])
     if (/INSERT INTO invoices \(org_id, ro_id, amount\)/.test(q)) return Promise.resolve([{ id: 'inv1', amount: values[2] }])
@@ -141,6 +142,32 @@ describe('creating a repair order', () => {
     const yesterday = d.toISOString().slice(0, 10).replace(/-/g, '')
     await create({ local_date: yesterday })
     expect(ran(/INSERT INTO repair_orders/)[0].values[6]).toBe(`RO-${yesterday}-0003`)
+  })
+
+  it('refuses a shop, customer, vehicle or technician from another organization', async () => {
+    for (const key of ['shop', 'customer', 'vehicle', 'tech', 'advisor']) {
+      state.calls.length = 0
+      state.owned = { shop: 1, customer: 1, vehicle: 1, tech: 1, advisor: 1, [key]: 0 }
+      const res = await create({ vehicle_id: VALID_UUID, tech_id: VALID_UUID, advisor_id: VALID_UUID })
+      expect(res.statusCode).toBe(404)
+      expect(res._body.error).toContain(key)
+      expect(ran(/INSERT INTO repair_orders/)).toHaveLength(0)
+    }
+  })
+
+  it('only checks the ids that were sent', async () => {
+    state.owned = { shop: 1, customer: 1, vehicle: 0, tech: 0, advisor: 0 }
+    const res = await create({})
+    expect(res.statusCode).toBe(201)
+  })
+
+  it('refuses a technician from another organization on an update', async () => {
+    authenticate.mockResolvedValueOnce(MOCK_OWNER)
+    state.owned = { tech: 0 }
+    const res = createMockRes()
+    await repairOrders(createMockReq({ method: 'PUT', query: { id: VALID_UUID }, body: { tech_id: VALID_UUID } }), res)
+    expect(res.statusCode).toBe(404)
+    expect(ran(/UPDATE repair_orders SET/)).toHaveLength(0)
   })
 
   it('ignores a date that is far off or not a date', async () => {

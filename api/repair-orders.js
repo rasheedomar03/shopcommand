@@ -9,6 +9,21 @@ const VALID_STAGES = [
   'Complete', 'Invoiced', 'Paid',
 ]
 
+// The ids in a request come from the browser, so check that each one belongs to this
+// organization before using it. Returns the names of the ones that do not
+// (empty when all are fine). Only the ids that were sent are checked.
+async function foreignRefs(sql, orgId, ids) {
+  const [r] = await sql`
+    SELECT
+      (SELECT COUNT(*) FROM shops WHERE id = ${ids.shop_id || null} AND org_id = ${orgId})::int AS shop,
+      (SELECT COUNT(*) FROM customers WHERE id = ${ids.customer_id || null} AND org_id = ${orgId})::int AS customer,
+      (SELECT COUNT(*) FROM vehicles WHERE id = ${ids.vehicle_id || null} AND org_id = ${orgId})::int AS vehicle,
+      (SELECT COUNT(*) FROM users WHERE id = ${ids.tech_id || null} AND org_id = ${orgId})::int AS tech,
+      (SELECT COUNT(*) FROM users WHERE id = ${ids.advisor_id || null} AND org_id = ${orgId})::int AS advisor
+  `
+  return ['shop', 'customer', 'vehicle', 'tech', 'advisor'].filter(k => ids[`${k}_id`] && !(r?.[k] > 0))
+}
+
 // Stages a new order may start in
 const START_STAGES = ['Estimate', 'Approved', 'Waiting Parts', 'In Progress', 'Complete']
 
@@ -272,6 +287,9 @@ export default createHandler(
       }
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
+      const foreign = await foreignRefs(sql, user.orgId, { shop_id, customer_id, vehicle_id, tech_id, advisor_id })
+      if (foreign.length) return res.status(404).json({ error: `Not found: ${foreign.join(', ')}` })
+
       // Generate RO number: RO-YYYYMMDD-XXXX
       // The date in the number is the shop's own day when the browser sends it
       // (the server clock is UTC, which is already tomorrow in the evening in the US).
@@ -316,6 +334,11 @@ export default createHandler(
       }
       if (typeof notes === 'string' && notes.length > 5000) errors.push('Notes must be under 5000 characters')
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
+
+      if (tech_id || advisor_id || vehicle_id) {
+        const foreign = await foreignRefs(sql, user.orgId, { tech_id, advisor_id, vehicle_id })
+        if (foreign.length) return res.status(404).json({ error: `Not found: ${foreign.join(', ')}` })
+      }
 
       // Techs can only update stage to In Progress or Complete
       if (user.role === 'tech' && stage) {
