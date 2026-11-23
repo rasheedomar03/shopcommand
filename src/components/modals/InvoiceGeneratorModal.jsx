@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoOf } from '@/lib/shopLogo'
+import { localYmd } from '@/lib/utils'
 import { PrintPortal } from '@/components/PrintPortal'
 import { truckName, truckLabel } from '@/lib/trucks'
 import { useCustomerTrucks } from '@/lib/useCustomerTrucks'
@@ -40,7 +41,7 @@ function writeTaxPref(rate, labor, fee) {
 }
 
 function nextInvoiceNumber() {
-  return `INV-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`
+  return `INV-${localYmd().slice(2).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`
 }
 
 // Map an RO's services into invoice line items
@@ -55,7 +56,7 @@ const fmt = v => `$${(Number(v) || 0).toFixed(2)}`
 const n = v => Number(v) || 0
 
 export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromRO = null }) {
-  const { shops, repairOrders, addInvoice, invoices, voidInvoice, customers } = useData()
+  const { shops, repairOrders, addInvoice, invoices, voidInvoice, customers, addCustomer } = useData()
   const { session } = useAuth()
   const [savedFlash, setSavedFlash] = useState(false)
   const [savedOnServer, setSavedOnServer] = useState(false)
@@ -71,7 +72,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const [shopId, setShopId] = useState('')
   const [roId, setRoId] = useState('')
   const [invNumber, setInvNumber] = useState(nextInvoiceNumber)
-  const [invDate, setInvDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [invDate, setInvDate] = useState(() => localYmd())
   const [status, setStatus] = useState('draft')
   const [customer, setCustomer] = useState('')
   // Optional: with an email, the invoice can be emailed to the customer from its page
@@ -82,11 +83,30 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   const [customerId, setCustomerId] = useState(null)
   const changeCustomerName = (name) => {
     setCustomer(name)
+    setAddCustomerError(null)
     const wanted = name.trim().toLowerCase()
     const match = wanted ? (customers || []).find(c => String(c.name || '').trim().toLowerCase() === wanted) : null
     setCustomerId(match ? match.id : null)
     // Fill the email from the customer, but never overwrite one already typed
     if (match?.email && !customerEmail.trim()) setCustomerEmail(match.email)
+  }
+  // A name that is not one of the shop's customers yet can be added right here, so the
+  // invoice is linked to a real customer (profile, credit on account, history)
+  const [addingCustomer, setAddingCustomer] = useState(false)
+  const [addCustomerError, setAddCustomerError] = useState(null)
+  const addTypedCustomer = async () => {
+    const name = customer.trim()
+    if (name.length < 2 || addingCustomer) return
+    setAddingCustomer(true)
+    setAddCustomerError(null)
+    try {
+      const email = customerEmail.trim()
+      const c = await addCustomer({ name, ...(email ? { email } : {}) })
+      setCustomerId(c.id)
+    } catch (err) {
+      setAddCustomerError(err.message || 'Could not add the customer')
+    }
+    setAddingCustomer(false)
   }
   const [vehicle, setVehicle] = useState('')
   const [unitNumber, setUnitNumber] = useState('')
@@ -206,7 +226,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
   useEffect(() => {
     if (!open) return
     setInvNumber(fromInvoice?.id || nextInvoiceNumber())
-    setInvDate((fromInvoice?.created || new Date().toISOString()).slice(0, 10))
+    setInvDate(localYmd(fromInvoice?.created || new Date()))
     setStatus(fromInvoice?.status || 'draft')
     setSavedDbId(fromInvoice?.dbId ?? null)
     setSavedNumber(null)
@@ -253,7 +273,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           setShopId(String(d.shopId ?? ''))
           setRoId(d.roId || '')
           setInvNumber(d.invNumber || nextInvoiceNumber())
-          setInvDate(d.invDate || new Date().toISOString().slice(0, 10))
+          setInvDate(d.invDate || localYmd())
           setCustomer(d.customer || '')
           setCustomerId(d.customerId ?? null)
           setCustomerEmail(d.customerEmail || '')
@@ -544,6 +564,16 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
                 {(customers || []).slice(0, 300).map(c => <option key={c.id} value={c.name} />)}
               </datalist>
               {customerId && <p className="mt-1 text-2xs text-text-muted">Linked to this customer's profile.</p>}
+              {!customerId && customer.trim().length >= 2 && (
+                <p className="mt-1 text-2xs text-text-muted">
+                  Not in your customers yet.{' '}
+                  <button type="button" onClick={addTypedCustomer} disabled={addingCustomer} className="font-semibold text-orange underline disabled:opacity-50">
+                    {addingCustomer ? 'Adding…' : `Add "${customer.trim()}" as a customer`}
+                  </button>
+                  {' '}so you can see their invoices and keep credit on account.
+                </p>
+              )}
+              {addCustomerError && <p className="mt-1 text-2xs font-medium text-status-red">{addCustomerError}</p>}
               {trucks.length > 0 && (
                 <div className="mt-2">
                   <label className={label}>Saved trucks</label>
@@ -679,6 +709,11 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
           {dirty && (
             <p className="text-xs font-medium text-status-yellow">
               You have unsaved changes. Press Save invoice to keep them.
+            </p>
+          )}
+          {!dirty && savedNumber && (
+            <p className="text-xs font-medium text-status-green">
+              Saved as {savedNumber}{status === 'draft' ? ' (draft)' : ''}. It is on your Invoices page; close this window when you are done.
             </p>
           )}
 

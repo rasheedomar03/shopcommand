@@ -7,7 +7,7 @@ import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
 import { BlankFormModal } from '@/components/modals/BlankFormModal'
-import { formatMoney, formatDate, formatRelativeTime, roLabel, matchesSearch } from '@/lib/utils'
+import { formatMoney, formatDate, formatRelativeTime, roLabel, matchesSearch, localYmd } from '@/lib/utils'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
 import { invoiceNumberTaken, invoiceMatchesQuery, lineDisplay } from '@/lib/invoiceLines'
 import { invoicesToCsv } from '@/lib/invoiceExport'
@@ -83,7 +83,8 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
   const creditAvailable = Math.max(0, Number(creditCustomer?.creditBalance) || 0)
   const creditUsed = Number(invoice.creditApplied) || 0
   const creditLeft = creditAvailable
-  const canUseCredit = canTakePayment && creditAvailable > 0 && balance > 0 && (!!invoice.dbId || !!invoice.customerId || creditCustomer)
+  // Credit on account is money a customer paid ahead; an invoice for your own fleet has no customer to owe it
+  const canUseCredit = canTakePayment && !invoice.internal && creditAvailable > 0 && balance > 0 && (!!invoice.dbId || !!invoice.customerId || creditCustomer)
 
   const sendEmail = async () => {
     setEmailState('sending')
@@ -228,6 +229,12 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
                 className="w-full h-8 px-2.5 rounded-md bg-background border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-orange/40"
               />
             </div>
+          </div>
+        )}
+
+        {invoice.internal && (
+          <div className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-text-secondary">
+            Your own fleet. This invoice tracks the cost of a truck you run and is not counted as revenue or as money owed to you.
           </div>
         )}
 
@@ -711,8 +718,10 @@ export default function Invoices() {
     return acc
   }, {})
 
+  // Money customers still owe you: sent, overdue and part-paid invoices. Drafts are not
+  // counted, and neither are invoices for your own fleet (nobody owes you that).
   const totalOutstanding = scoped
-    .filter(inv => ['sent', 'overdue', 'partial'].includes(inv.status))
+    .filter(inv => ['sent', 'overdue', 'partial'].includes(inv.status) && !inv.internal)
     .reduce((sum, inv) => sum + (inv.total - (Number(inv.amountPaid) || 0)), 0)
 
   return (
@@ -736,7 +745,7 @@ export default function Invoices() {
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.href = url
-          a.download = `invoices-${new Date().toISOString().slice(0,10)}.csv`
+          a.download = `invoices-${localYmd()}.csv`
           a.click()
           URL.revokeObjectURL(url)
         }}>

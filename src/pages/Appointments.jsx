@@ -27,6 +27,13 @@ function addDays(date, n) {
   return d
 }
 
+// A day's default appointment time, in the shop's own time
+function atNineAm(day) {
+  const d = new Date(day)
+  d.setHours(9, 0, 0, 0)
+  return d
+}
+
 function sameDay(a, b) {
   return a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
@@ -67,7 +74,9 @@ export default function Appointments() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const days = Array.from({ length: 5 }, (_, i) => addDays(weekStart, i))
+  // The whole week, Monday to Sunday: shops are open Saturdays, and an appointment
+  // on a day that is not shown would be invisible
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
   const scheduledROs = repairOrders.filter(ro =>
     ro.scheduledAt && (!isAdvisor || ro.shopId === session.shopId)
@@ -83,7 +92,7 @@ export default function Appointments() {
   const goToday  = () => setWeekStart(getWeekStart(new Date()))
 
   const weekLabel = () => {
-    const end = addDays(weekStart, 4)
+    const end = addDays(weekStart, 6)
     if (weekStart.getMonth() === end.getMonth()) {
       return `${MONTH_NAMES[weekStart.getMonth()]} ${weekStart.getFullYear()}`
     }
@@ -101,7 +110,7 @@ export default function Appointments() {
           <p className="text-xs text-text-muted mt-0.5">{totalThisWeek} scheduled this week</p>
         </div>
         <button
-          onClick={() => { setNewRODate(null); setNewROOpen(true) }}
+          onClick={() => { setNewRODate(atNineAm(new Date()).toISOString()); setNewROOpen(true) }}
           className="flex items-center gap-1.5 h-8 sm:h-9 px-3 sm:px-4 rounded-lg bg-orange text-white text-xs sm:text-sm font-semibold hover:bg-orange/90 active:scale-[0.98] transition-all duration-150 flex-shrink-0"
         >
           <Plus size={14} />
@@ -129,8 +138,8 @@ export default function Appointments() {
         <span className="text-sm font-medium text-text-primary">{weekLabel()}</span>
       </div>
 
-      {/* Calendar — vertical list on mobile, 5-col grid on md+ */}
-      <div className="flex flex-col md:grid md:grid-cols-5 gap-3 flex-1 min-h-0">
+      {/* Calendar — vertical list on mobile, 4 columns on md, 7 (a full week) on lg+ */}
+      <div className="flex flex-col md:grid md:grid-cols-4 lg:grid-cols-7 gap-3 flex-1 min-h-0 md:content-start overflow-y-auto">
         {days.map((day, i) => {
           const isToday = sameDay(day, today)
           const isPast  = day < today
@@ -159,7 +168,7 @@ export default function Appointments() {
                 </div>
                 <Tooltip content="Add appointment">
                   <button
-                    onClick={() => { setNewRODate(day.toISOString()); setNewROOpen(true) }}
+                    onClick={() => { setNewRODate(atNineAm(day).toISOString()); setNewROOpen(true) }}
                     className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-orange hover:bg-orange/10 transition-colors"
                   >
                     <Plus size={13} />

@@ -78,7 +78,7 @@ function SearchDropdown({ query, onClose }) {
                     <div className="text-xs font-medium text-text-primary truncate">{ro.customerName}</div>
                     <div className="text-2xs text-text-muted truncate">{ro.vehicle}</div>
                   </div>
-                  <StageBadge stage={ro.stage} />
+                  <span className="flex-shrink-0 whitespace-nowrap"><StageBadge stage={ro.stage} /></span>
                 </button>
               ))}
             </div>

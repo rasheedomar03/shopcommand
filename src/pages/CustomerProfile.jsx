@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Badge, StageBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { CustomerCredit } from '@/components/CustomerCredit'
+import { CustomerInvoices } from '@/components/CustomerInvoices'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { formatCurrency, formatMoney, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
@@ -280,6 +281,7 @@ export default function CustomerProfile() {
       {/* Body: RO history + sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5 items-start">
 
+        <div className="space-y-5 min-w-0">
         {/* RO History */}
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
@@ -368,6 +370,9 @@ export default function CustomerProfile() {
               ))}
             </div>
           )}
+        </div>
+
+        <CustomerInvoices customer={customer} />
         </div>
 
         {/* Sidebar */}

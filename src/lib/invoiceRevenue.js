@@ -10,6 +10,8 @@
 // when no paid date was recorded. Internal (own fleet) invoices never count.
 // This is a quick fix; revenue from invoices and payments replaces it later.
 
+import { localYmd } from './utils.js'
+
 /**
  * Paid, made from scratch (no repair order), billed to a customer (not a shop's
  * own fleet). Counts whether it is saved on the server or only on this computer.
@@ -20,7 +22,8 @@ export function isCountedInvoice(inv) {
 
 /** YYYY-MM-DD the invoice counts on: the paid date, else the invoice date. */
 export function revenueDay(inv) {
-  return String(inv?.paidAt || inv?.created || '').slice(0, 10)
+  // In the shop's own time zone, so an invoice paid at 9 PM counts today, not tomorrow
+  return localYmd(inv?.paidAt || inv?.created || '')
 }
 
 function sumWhere(invoices, shopId, test) {

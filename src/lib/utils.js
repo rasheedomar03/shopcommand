@@ -58,9 +58,32 @@ export function formatPercent(value, decimals = 1) {
   return `${Number(value).toFixed(decimals)}%`
 }
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * A day as YYYY-MM-DD in the viewer's own time zone. `new Date().toISOString()`
+ * gives the UTC day, which in the evening in the US is already tomorrow. A value
+ * that is already a plain YYYY-MM-DD day is returned as it is.
+ */
+export function localYmd(...args) {
+  // No argument means today. A missing value (undefined, null, blank) is not today:
+  // it means "no date", and must not be counted as one.
+  const value = args.length ? args[0] : new Date()
+  if (value === undefined || value === null || value === '') return ''
+  if (typeof value === 'string' && DATE_ONLY.test(value)) return value
+  const d = value instanceof Date ? value : new Date(value)
+  if (isNaN(d.getTime())) return ''
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
 export function formatDate(dateStr) {
   if (!dateStr) return '—'
-  const date = new Date(dateStr)
+  // A plain day (2026-11-22) is that day everywhere; new Date() would read it as
+  // midnight UTC, which shows as the day before in the US
+  const date = typeof dateStr === 'string' && DATE_ONLY.test(dateStr)
+    ? new Date(+dateStr.slice(0, 4), +dateStr.slice(5, 7) - 1, +dateStr.slice(8, 10))
+    : new Date(dateStr)
   if (isNaN(date.getTime())) return '—'
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',

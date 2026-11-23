@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
@@ -6,6 +6,15 @@ import { useData } from '@/contexts/DataContext'
 import { RO_STAGES, sanitizeVin, sanitizeField, matchesSearch } from '@/lib/utils'
 import { Search, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+// A date and time for the "datetime-local" box, which is read as the shop's own time.
+// (toISOString() would give UTC and shift the time and sometimes the day.)
+function toLocalInput(value) {
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return ''
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
+}
 
 export function NewROModal({
   open,
@@ -35,7 +44,7 @@ export function NewROModal({
     techId: preTechId || '',
     complaint: '',
     stage: preTechId ? 'In Progress' : 'Estimate',
-    scheduledAt: defaultDate ? new Date(defaultDate).toISOString().slice(0, 16) : '',
+    scheduledAt: defaultDate ? toLocalInput(defaultDate) : '',
   })
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
@@ -43,6 +52,11 @@ export function NewROModal({
   const [vinError, setVinError] = useState('')
   const [custSuggestions, setCustSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+
+  // A shop with one location should not have to pick it every time
+  useEffect(() => {
+    if (open && !form.shopId && shops.length === 1) setForm(f => ({ ...f, shopId: shops[0].id }))
+  }, [open, shops, form.shopId])
 
   const availableTechs = technicians.filter(t => String(t.shopId) === String(form.shopId))
 
@@ -129,7 +143,11 @@ export function NewROModal({
           model: cleanModel,
           trim: cleanTrim || null,
           vin: cleanVin,
-          mileage: form.mileage ? Number(form.mileage.replace(/,/g, '')) : null,
+          // The API calls it last_mileage; a mileage that is not a whole number is skipped
+          // rather than failing the whole order
+          last_mileage: /^\d+$/.test(String(form.mileage || '').replace(/[,\s]/g, ''))
+            ? Number(String(form.mileage).replace(/[,\s]/g, ''))
+            : null,
         })
         vehicleId = veh.id
       }
@@ -138,8 +156,12 @@ export function NewROModal({
       const newRO = await addRepairOrder({
         shopId: form.shopId,
         customerId,
+        customerName: cleanName,
+        customerPhone: cleanPhone || null,
+        customerEmail: cleanEmail || null,
         vehicleId,
         vehicle: [cleanYear, cleanMake, cleanModel].filter(Boolean).join(' '),
+        stage: form.stage,
         techId: form.techId || null,
         complaint: cleanComplaint,
         scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
@@ -193,7 +215,8 @@ export function NewROModal({
                 {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </Select>
               <Select label="Initial Stage" value={form.stage} onChange={set('stage')}>
-                {RO_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                {/* Invoiced and Paid only come from invoicing and paying */}
+                {RO_STAGES.filter(s => s !== 'Invoiced' && s !== 'Paid').map(s => <option key={s} value={s}>{s}</option>)}
               </Select>
             </div>
           )}

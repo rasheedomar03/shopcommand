@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, UserCircle } from 'lucide-react'
+import { Search, UserCircle, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { NewCustomerModal } from '@/components/modals/NewCustomerModal'
 import { EmptyState } from '@/components/EmptyState'
 import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
@@ -23,6 +25,7 @@ export default function Customers() {
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [newCustomerOpen, setNewCustomerOpen] = useState(false)
 
   const scopedCustomers = isAdvisor
     ? customers.filter(c => c.shopId === session.shopId)
@@ -37,10 +40,20 @@ export default function Customers() {
 
   return (
     <div className="p-5 lg:p-6 space-y-5 animate-fade-in">
-      <div>
-        <h1 className="font-display text-xl font-semibold text-text-primary">Customers</h1>
-        <p className="text-xs text-text-muted mt-0.5">{scopedCustomers.length} customers{isAdvisor ? ' at your location' : ' across all locations'}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-xl font-semibold text-text-primary">Customers</h1>
+          <p className="text-xs text-text-muted mt-0.5">{scopedCustomers.length} customers{isAdvisor ? ' at your location' : ' across all locations'}</p>
+        </div>
+        <Button size="sm" onClick={() => setNewCustomerOpen(true)}>
+          <Plus size={14} /> Add customer
+        </Button>
       </div>
+      <NewCustomerModal
+        open={newCustomerOpen}
+        onClose={() => setNewCustomerOpen(false)}
+        onCreated={(c) => navigate(`/customers/${c.id}`)}
+      />
 
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

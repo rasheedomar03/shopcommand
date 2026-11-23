@@ -9,6 +9,19 @@ const VALID_STAGES = [
   'Complete', 'Invoiced', 'Paid',
 ]
 
+// Stages a new order may start in
+const START_STAGES = ['Estimate', 'Approved', 'Waiting Parts', 'In Progress', 'Complete']
+
+// YYYYMMDD for a repair order number: the shop's own day if the browser sent a
+// sane one (within a day of the server's UTC date), else the server's UTC date.
+function shopDay(local) {
+  const utc = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  if (typeof local !== 'string' || !/^\d{8}$/.test(local)) return utc
+  const toMs = (s) => Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8))
+  const days = Math.abs(toMs(local) - toMs(utc)) / 86_400_000
+  return days <= 1 ? local : utc
+}
+
 function getResend() {
   if (!process.env.RESEND_API_KEY) return null
   return new Resend(process.env.RESEND_API_KEY)
@@ -238,9 +251,14 @@ export default createHandler(
         return res.status(403).json({ error: 'Technicians cannot create repair orders' })
       }
 
-      const { shop_id, customer_id, vehicle_id, tech_id, advisor_id, notes, scheduled_at } = req.body || {}
+      const { shop_id, customer_id, vehicle_id, tech_id, advisor_id, notes, scheduled_at, stage, local_date } = req.body || {}
       const errors = []
 
+      // An order can start at any stage up to Complete. Invoiced and Paid only come
+      // from invoicing and paying, never from creating the order.
+      if (stage !== undefined && stage !== null && !START_STAGES.includes(stage)) {
+        errors.push('Invalid starting stage')
+      }
       if (!shop_id || !UUID_RE.test(shop_id)) errors.push('Valid shop_id is required')
       if (!customer_id || !UUID_RE.test(customer_id)) errors.push('Valid customer_id is required')
       if (vehicle_id && !UUID_RE.test(vehicle_id)) errors.push('Invalid vehicle_id format')
@@ -255,20 +273,23 @@ export default createHandler(
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
       // Generate RO number: RO-YYYYMMDD-XXXX
-      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+      // The date in the number is the shop's own day when the browser sends it
+      // (the server clock is UTC, which is already tomorrow in the evening in the US).
+      const today = shopDay(local_date)
       const [seq] = await sql`
         SELECT COUNT(*) AS cnt FROM repair_orders
         WHERE org_id = ${user.orgId}
-          AND created_at::date = CURRENT_DATE
+          AND ro_number LIKE ${'RO-' + today + '-%'}
       `
       const roNumber = 'RO-' + today + '-' + String(Number(seq.cnt) + 1).padStart(4, '0')
 
       const [row] = await sql`
-        INSERT INTO repair_orders (org_id, shop_id, customer_id, vehicle_id, tech_id, advisor_id, ro_number, notes, scheduled_at)
+        INSERT INTO repair_orders (org_id, shop_id, customer_id, vehicle_id, tech_id, advisor_id, ro_number, notes, scheduled_at, stage)
         VALUES (
           ${user.orgId}, ${shop_id}, ${customer_id},
           ${vehicle_id || null}, ${tech_id || null}, ${advisor_id || null},
-          ${roNumber}, ${notes?.trim() || null}, ${scheduled_at ? new Date(scheduled_at).toISOString() : null}
+          ${roNumber}, ${notes?.trim() || null}, ${scheduled_at ? new Date(scheduled_at).toISOString() : null},
+          ${stage || 'Estimate'}
         )
         RETURNING *
       `

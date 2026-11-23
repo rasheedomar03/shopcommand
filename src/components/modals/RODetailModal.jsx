@@ -133,7 +133,7 @@ export function RODetailModal({ open, onClose, ro }) {
   const { session } = useAuth()
   const isTech    = session?.role === 'tech'
   const isAdvisor = session?.role === 'advisor'
-  const { updateRepairOrder, removeRepairOrder, addInvoice, technicians, parts: allParts, addPart: addPartToInventory, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
+  const { updateRepairOrder, removeRepairOrder, addInvoice, invoices, recordInvoicePayment, technicians, parts: allParts, addPart: addPartToInventory, usePart, restockPart, jobTimers, startJobTimer, stopJobTimer, repairOrders, addNotification, cannedServices } = useData()
   const [apiError, setApiError] = useState(null)
   const [stage, setStage] = useState(ro?.stage || 'Estimate')
   const [services, setServices] = useState(ro?.services || [])
@@ -542,6 +542,9 @@ export function RODetailModal({ open, onClose, ro }) {
         ...(invoicingViaApi ? {} : { stage: nextStage }),
         services,
         partsUsed,
+        // Always store the total with the lines, so an order that was never saved by
+        // hand cannot be invoiced (or reported) as $0
+        total: grandTotal,
         mpi: { ...(ro.mpi || {}), items: mpiItems },
       })
       // "Generate Invoice" previously only changed the stage — now an actual
@@ -608,26 +611,40 @@ export function RODetailModal({ open, onClose, ro }) {
       authorizedVia: authMethod,
       services,
       partsUsed,
+      total: grandTotal,
     })
     setSaving(false)
     setAuthStep(null)
     setAuthMethod(null)
   }
 
+  // The invoice is what records the money, so pay it first: the server then marks the
+  // invoice and this repair order Paid together. Nothing shows as paid on screen
+  // unless it was really saved.
   const markPaid = async (method) => {
     setSaving(true)
-    await new Promise(r => setTimeout(r, 300))
+    setApiError(null)
     const paidPayment = { method, paidAt: new Date().toISOString() }
-    setPayment(paidPayment)
-    setStage('Paid')
-    setPaymentPending(null)
-    updateRepairOrder(ro.id, {
-      stage: 'Paid',
-      payment: paidPayment,
-      services,
-      partsUsed,
-      total: grandTotal,
-    })
+    try {
+      const invoice = invoices.find(i => i.roId === ro.id && i.status !== 'void' && i.status !== 'paid')
+      const owed = invoice ? Math.round(((Number(invoice.total) || 0) - (Number(invoice.amountPaid) || 0)) * 100) / 100 : 0
+      if (invoice && owed > 0) {
+        const r = await recordInvoicePayment(invoice.id, owed, method)
+        if (r?.error) throw new Error(r.error)
+      }
+      await updateRepairOrder(ro.id, {
+        stage: 'Paid',
+        payment: paidPayment,
+        services,
+        partsUsed,
+        // An existing invoice keeps its own total (it may have been edited)
+        ...(invoice ? {} : { total: grandTotal }),
+      })
+      setPayment(paidPayment)
+      setStage('Paid')
+    } catch (err) {
+      setApiError(err.message || 'Could not record the payment')
+    }
     setSaving(false)
   }
 
@@ -1385,7 +1402,7 @@ export function RODetailModal({ open, onClose, ro }) {
                 onChange={e => updateService(i, 'name', e.target.value)}
                 className="flex-1 min-w-0 text-sm bg-surface border border-border rounded px-2 py-1.5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-orange transition-colors"
               />
-              <div className="relative w-[72px] flex-shrink-0">
+              <div className="relative w-[96px] flex-shrink-0">
                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-xs pointer-events-none">$</span>
                 <input
                   type="number"
@@ -1629,6 +1646,12 @@ export function RODetailModal({ open, onClose, ro }) {
                 <span className="text-text-primary tabular-nums flex-shrink-0">{formatMoney(Number(svc.price))}</span>
               </div>
             ))}
+            {partsSubtotal > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-text-muted">Parts</span>
+                <span className="text-text-primary tabular-nums">{formatMoney(partsSubtotal)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-xs text-text-muted pt-2 border-t border-border">
               <span>Tax (8.5%)</span>
               <span className="tabular-nums">{formatMoney(taxAmount)}</span>
@@ -1692,6 +1715,12 @@ export function RODetailModal({ open, onClose, ro }) {
               <span className="text-text-primary tabular-nums flex-shrink-0">{formatMoney(Number(svc.price))}</span>
             </div>
           ))}
+          {partsSubtotal > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-text-muted">Parts</span>
+              <span className="text-text-primary tabular-nums">{formatMoney(partsSubtotal)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-sm pt-2 border-t border-border">
             <span className="text-text-muted">Tax (8.5%)</span>
             <span className="text-text-primary tabular-nums">{formatMoney(taxAmount)}</span>
@@ -1800,7 +1829,17 @@ export function RODetailModal({ open, onClose, ro }) {
               <span className="text-text-primary tabular-nums flex-shrink-0">{formatMoney(Number(svc.price))}</span>
             </div>
           ))}
-          <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
+          {partsSubtotal > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-text-muted">Parts</span>
+              <span className="text-text-primary tabular-nums">{formatMoney(partsSubtotal)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-xs text-text-muted pt-2 border-t border-border">
+            <span>Tax (8.5%)</span>
+            <span className="tabular-nums">{formatMoney(taxAmount)}</span>
+          </div>
+          <div className="flex justify-between text-sm font-semibold pt-1.5 border-t border-border">
             <span className="text-text-primary">Estimate</span>
             <span className="text-orange tabular-nums">{formatMoney(grandTotal)}</span>
           </div>

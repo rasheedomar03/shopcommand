@@ -9,7 +9,7 @@ import { StageBadge } from '@/components/ui/Badge'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { useData } from '@/contexts/DataContext'
-import { formatCurrency, formatMoney, roLabel } from '@/lib/utils'
+import { formatCurrency, formatMoney, roLabel, localYmd } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Tooltip as AppTooltip } from '@/components/ui/Tooltip'
 import { SetupChecklist } from '@/components/SetupChecklist'
@@ -22,22 +22,22 @@ function getWeekStart() {
   const d = new Date()
   const day = d.getDay()
   d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day))
-  return d.toISOString().slice(0, 10)
+  return localYmd(d)
 }
 const STAGE_COLORS = { Estimate: '#3B82F6', Approved: '#A855F7', 'In Progress': '#F97316', Complete: '#22C55E', Invoiced: '#EAB308', Paid: '#10B981', Warranty: '#EC4899' }
 
 function computeStats(repairOrders, shops, shopId = null, invoices = []) {
   const ros = shopId ? repairOrders.filter(ro => ro.shopId === shopId) : repairOrders
-  const today   = new Date().toISOString().slice(0, 10)
+  const today   = localYmd()
   const month   = today.slice(0, 7)
 
   // Repair order revenue, plus paid from-scratch invoices (see lib/invoiceRevenue.js)
   const revToday = ros
-    .filter(ro => REVENUE_STAGES.has(ro.stage) && (ro.updated || '').slice(0, 10) === today)
+    .filter(ro => REVENUE_STAGES.has(ro.stage) && localYmd(ro.updated) === today)
     .reduce((s, ro) => s + (ro.total || 0), 0) + sumOnDay(invoices, today, shopId)
 
   const revMTD = ros
-    .filter(ro => REVENUE_STAGES.has(ro.stage) && (ro.updated || '').slice(0, 7) === month)
+    .filter(ro => REVENUE_STAGES.has(ro.stage) && localYmd(ro.updated).slice(0, 7) === month)
     .reduce((s, ro) => s + (ro.total || 0), 0) + sumInMonth(invoices, month, shopId)
 
   const openROs = ros.filter(ro => !REVENUE_STAGES.has(ro.stage)).length
@@ -59,13 +59,13 @@ function buildRevenueChart(repairOrders, shops, invoices = []) {
     const d = new Date(today)
     d.setDate(d.getDate() - (10 - i))
     const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    const ymd = d.toISOString().slice(0, 10)
+    const ymd = localYmd(d)
 
     const revenue = repairOrders
       .filter(ro =>
         PAID_STAGES.has(ro.stage) &&
         ro.total > 0 &&
-        (ro.updated || '').slice(0, 10) === ymd
+        localYmd(ro.updated) === ymd
       )
       .reduce((sum, ro) => sum + (ro.total || 0), 0) + sumOnDay(invoices, ymd)
 
@@ -115,13 +115,13 @@ export default function Dashboard() {
   const targetStroke = theme === 'dark' ? '#2A2D3A' : '#CBD5E1'
 
   const weekStart = useMemo(() => getWeekStart(), [])
-  const month = new Date().toISOString().slice(0, 7)
+  const month = localYmd().slice(0, 7)
 
   const mtdByShop = useMemo(() => {
     const result = {}
     shops.forEach(shop => {
       result[shop.id] = repairOrders
-        .filter(ro => REVENUE_STAGES.has(ro.stage) && ro.shopId === shop.id && (ro.updated || '').slice(0, 7) === month)
+        .filter(ro => REVENUE_STAGES.has(ro.stage) && ro.shopId === shop.id && localYmd(ro.updated).slice(0, 7) === month)
         .reduce((s, ro) => s + (ro.total || 0), 0) + sumInMonth(invoices, month, shop.id)
     })
     return result
@@ -131,7 +131,7 @@ export default function Dashboard() {
     const result = {}
     shops.forEach(shop => {
       result[shop.id] = repairOrders
-        .filter(ro => REVENUE_STAGES.has(ro.stage) && ro.shopId === shop.id && (ro.updated || '').slice(0, 10) >= weekStart)
+        .filter(ro => REVENUE_STAGES.has(ro.stage) && ro.shopId === shop.id && localYmd(ro.updated) >= weekStart)
         .reduce((s, ro) => s + (ro.total || 0), 0) + sumSince(invoices, weekStart, shop.id)
     })
     return result

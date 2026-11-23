@@ -1,6 +1,7 @@
 import { createHandler } from './_lib/handler.js'
 import { createManualInvoice, updateManualInvoice, importLocalInvoices } from './_lib/manual-invoice-db.js'
 import { cleanAmount, applyCredit, returnInvoiceCredit } from './_lib/credits.js'
+import { roTotalFromData } from './_lib/ro-total.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -388,9 +389,19 @@ export default createHandler(
         return res.status(409).json({ error: 'An unpaid invoice already exists for this repair order' })
       }
 
+      // An order approved or finished without pressing "Save estimate" still has a
+      // stored total of 0. Work it out from its saved lines so the invoice is not $0.
+      let invoiceTotal = Number(ro.total) || 0
+      if (invoiceTotal <= 0) {
+        invoiceTotal = roTotalFromData(ro.data)
+        if (invoiceTotal > 0) {
+          await sql`UPDATE repair_orders SET total = ${invoiceTotal} WHERE id = ${ro_id} AND org_id = ${user.orgId}`
+        }
+      }
+
       const [row] = await sql`
         INSERT INTO invoices (org_id, ro_id, amount)
-        VALUES (${user.orgId}, ${ro_id}, ${Number(ro.total)})
+        VALUES (${user.orgId}, ${ro_id}, ${invoiceTotal})
         RETURNING *
       `
 

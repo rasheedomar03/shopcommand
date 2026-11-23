@@ -5,6 +5,7 @@ import { api, setTokenProvider } from '@/lib/api'
 import { setUploadTokenProvider } from '@/lib/uploads'
 import { invoiceRevenueTotals } from '@/lib/invoiceRevenue'
 import { DEMO_TRUCKS } from '@/lib/trucks'
+import { localYmd } from '@/lib/utils'
 import { invoiceFromServerRow, saveInvoiceToServer, planImport, moveLocalInvoices, remainingLocal, mergeSetAside, buildImportReport } from '@/lib/serverInvoices'
 import {
   parts as initialParts,
@@ -569,7 +570,7 @@ export function DataProvider({ children }) {
         vehicles: 0,
         totalSpent: 0,
         roCount: 0,
-        lastVisit: new Date().toISOString().slice(0, 10),
+        lastVisit: localYmd(),
         status: 'new',
       }
       setCustomers(prev => [demoCust, ...prev])
@@ -708,7 +709,7 @@ export function DataProvider({ children }) {
         vehicle: ro.vehicle || '',
         techId: tech?.id || null,
         techName: tech?.name || 'Unassigned',
-        stage: 'Estimate',
+        stage: ro.stage && ro.stage !== 'Invoiced' && ro.stage !== 'Paid' ? ro.stage : 'Estimate',
         complaint: ro.complaint || '',
         scheduledAt: ro.scheduledAt || null,
         services: [],
@@ -729,9 +730,23 @@ export function DataProvider({ children }) {
       advisor_id: ro.advisorId || ro.advisor_id || null,
       notes: ro.complaint || ro.notes || null,
       scheduled_at: ro.scheduledAt || ro.scheduled_at || null,
+      ...(ro.stage && ro.stage !== 'Estimate' ? { stage: ro.stage } : {}),
+      // The shop's own day, for the date in the repair order number
+      local_date: localYmd().replace(/-/g, ''),
     }
     const row = await api('/api/repair-orders', { method: 'POST', body })
-    const transformed = transformRO(row)
+    // The server sends back the bare row; fill in the names the list shows so the
+    // new order does not look empty until the next reload
+    const techId = ro.techId || ro.tech_id
+    const transformed = {
+      ...transformRO(row),
+      customerName: ro.customerName || customers.find(c => String(c.id) === String(body.customer_id))?.name || '',
+      customerEmail: ro.customerEmail || null,
+      customerPhone: ro.customerPhone || null,
+      vehicle: ro.vehicle || '',
+      techName: technicians.find(t => String(t.id) === String(techId))?.name || 'Unassigned',
+      shopName: shops.find(s => String(s.id) === String(body.shop_id))?.name || '',
+    }
     setRepairOrders(prev => [transformed, ...prev])
     return transformed
   }, [session?.demo, shops, customers, technicians, repairOrders.length])
@@ -744,9 +759,22 @@ export function DataProvider({ children }) {
     }
     const row = await api('/api/repair-orders', { method: 'PUT', params: { id }, body: patch })
     const transformed = transformRO(row)
-    setRepairOrders(prev => prev.map(r => r.id === id ? transformed : r))
+    // The server sends back the bare row, without the customer, vehicle, technician
+    // and shop names. Keep the ones already on screen (a technician change is the
+    // one that must follow the patch).
+    const newTechId = patch.tech_id || patch.techId
+    setRepairOrders(prev => prev.map(r => {
+      if (r.id !== id) return r
+      const merged = {
+        ...transformed,
+        customerName: r.customerName, customerEmail: r.customerEmail, customerPhone: r.customerPhone,
+        vehicle: r.vehicle, advisorName: r.advisorName, shopName: r.shopName,
+        techName: newTechId ? (technicians.find(t => String(t.id) === String(newTechId))?.name || r.techName) : r.techName,
+      }
+      return merged
+    }))
     return transformed
-  }, [session?.demo])
+  }, [session?.demo, technicians])
 
   const sendEstimateReady = useCallback(() => {
     // placeholder — SMS integration not built yet
@@ -860,7 +888,7 @@ export function DataProvider({ children }) {
 
   // Record a payment against an invoice; partial amounts leave a balance.
   // Returns { ok } or { error }.
-  const recordInvoicePayment = useCallback(async (id, amount) => {
+  const recordInvoicePayment = useCallback(async (id, amount, method = 'other') => {
     const target = invoices.find(i => i.id === id)
     if (!target) return { error: 'Invoice not found' }
     const total = Number(target.total) || 0
@@ -874,7 +902,8 @@ export function DataProvider({ children }) {
       try {
         await api('/api/invoices?action=pay', {
           method: 'POST',
-          body: { invoice_id: target.dbId, method: 'other', amount: pay },
+          // The server knows cash and check; a card payment is recorded as "other"
+          body: { invoice_id: target.dbId, method: ['cash', 'check'].includes(method) ? method : 'other', amount: pay },
         })
       } catch (err) {
         return { error: err.message || 'Failed to record payment' }
@@ -888,7 +917,7 @@ export function DataProvider({ children }) {
         amountPaid: newPaid,
         status: full ? 'paid' : 'partial',
         paidAt: full ? new Date().toISOString() : i.paidAt,
-        paymentMethod: full ? (i.paymentMethod || 'Recorded manually') : i.paymentMethod,
+        paymentMethod: full ? (i.paymentMethod || (method !== 'other' ? method : 'Recorded manually')) : i.paymentMethod,
       } : i)
       if (!session?.demo) save('sc_invoices', next.filter(i => !i.dbId))
       else save('sc_invoices', next)
@@ -1195,7 +1224,7 @@ export function DataProvider({ children }) {
   }, [session?.demo])
 
   const orderPart = useCallback((partId) => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localYmd()
     setParts(prev => {
       const next = prev.map(p => p.id === partId ? { ...p, lastOrdered: today } : p)
       save('sc_parts', next)
@@ -1308,7 +1337,7 @@ export function DataProvider({ children }) {
   // with the invoice generator read $0 in Reports. Only the revenue figures are
   // changed; the stored shops stay as the server sent them.
   const shopsWithInvoiceRevenue = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localYmd()
     return shops.map(s => {
       const extra = invoiceRevenueTotals(invoices, today, s.id)
       if (!extra.today && !extra.mtd && !extra.ytd) return s

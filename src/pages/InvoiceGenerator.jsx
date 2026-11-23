@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Mail, ArrowRight, Plus, Trash2, Printer, Calculator } from 'lucide-react'
 import { PublicNav } from '@/components/PublicNav'
 import { PrintPortal } from '@/components/PrintPortal'
+import { localYmd } from '@/lib/utils'
 import { usePageMeta } from '@/lib/seo'
 
 const CONTACT_EMAIL = 'hello@shopcommand.net'
@@ -39,8 +40,8 @@ export default function InvoiceGenerator() {
   const [shop, setShop] = useState(() => load('sc_inv_shop', { name: '', address: '', phone: '', email: '' }))
   const [customer, setCustomer] = useState({ name: '', phone: '' })
   const [vehicle, setVehicle] = useState({ year: '', make: '', model: '', vin: '', mileage: '' })
-  const [invNumber, setInvNumber] = useState(() => `INV-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-1`)
-  const [invDate, setInvDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [invNumber, setInvNumber] = useState(() => `INV-${localYmd().slice(2).replace(/-/g, '')}-1`)
+  const [invDate, setInvDate] = useState(() => localYmd())
   const [items, setItems] = useState([{ ...emptyItem, desc: '', type: 'labor' }])
   const [taxRate, setTaxRate] = useState('8.25')
   const [taxLabor, setTaxLabor] = useState(false)
