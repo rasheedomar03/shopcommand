@@ -61,7 +61,7 @@ export default function CustomerProfile() {
   const [editBusy, setEditBusy] = useState(false)
   const [editErr, setEditErr] = useState(null)
 
-  const { repairOrders, customers, shops, updateCustomer, removeCustomer } = useData()
+  const { repairOrders, customers, shops, updateCustomer, removeCustomer, invoices } = useData()
   const { session } = useAuth()
   const isOwner = session?.role === 'owner'
   const customer = customers.find(c => String(c.id) === String(id))
@@ -132,8 +132,12 @@ export default function CustomerProfile() {
   const vehicles = Object.values(vehicleMap)
 
   const paidROs = customerROs.filter(ro => ro.stage === 'Paid')
-  const totalVerified = paidROs.reduce((sum, ro) => sum + ro.total, 0)
-  const avgTicket = paidROs.length > 0 ? Math.round(totalVerified / paidROs.length) : 0
+  // Paid invoices made without a repair order count too (as in Lifetime Spend), so the
+  // average is spend divided by the number of paid jobs of either kind
+  const paidInvoices = (invoices || []).filter(i => String(i.customerId) === String(customer.id) && !i.roId && i.status === 'paid')
+  const totalVerified = paidROs.reduce((sum, ro) => sum + ro.total, 0) + paidInvoices.reduce((sum, i) => sum + (Number(i.total) || 0), 0)
+  const paidJobs = paidROs.length + paidInvoices.length
+  const avgTicket = paidJobs > 0 ? Math.round(totalVerified / paidJobs) : 0
   const activeROs = customerROs.filter(ro => !['Paid', 'Invoiced'].includes(ro.stage))
 
   // Work this customer declined — follow-up opportunities

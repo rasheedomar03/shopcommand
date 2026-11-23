@@ -66,6 +66,10 @@ export default createHandler(
     }
 
     if (req.method === 'GET') {
+      // total_spent = paid repair orders + paid invoices made without a repair order
+      // (an invoice that comes from a repair order is not added twice).
+      // ro_count (shown as visits) = repair orders + invoices made without one; drafts
+      // and voided invoices do not count.
       const search = req.query?.search?.trim()
       let rows
       if (search) {
@@ -73,14 +77,21 @@ export default createHandler(
         rows = await sql`
           SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.is_fleet, c.created_at, c.updated_at,
             (SELECT COALESCE(SUM(cc.amount), 0) FROM customer_credits cc WHERE cc.customer_id = c.id AND cc.org_id = ${user.orgId})::float8 AS credit_balance,
-            COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
+            (COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
               WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId} AND ro.stage = 'Paid'
-            ), 0)::float8 AS total_spent,
-            (SELECT COUNT(*) FROM repair_orders ro
+            ), 0) + COALESCE((SELECT SUM(i.amount) FROM invoices i
+              WHERE i.customer_id = c.id AND i.org_id = ${user.orgId} AND i.ro_id IS NULL AND i.status = 'paid'
+            ), 0))::float8 AS total_spent,
+            ((SELECT COUNT(*) FROM repair_orders ro
               WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}
-            )::int AS ro_count,
-            (SELECT MAX(ro.created_at) FROM repair_orders ro
-              WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}
+            ) + (SELECT COUNT(*) FROM invoices i
+              WHERE i.customer_id = c.id AND i.org_id = ${user.orgId} AND i.ro_id IS NULL AND i.status NOT IN ('draft', 'void')
+            ))::int AS ro_count,
+            GREATEST(
+              (SELECT MAX(ro.created_at) FROM repair_orders ro
+                WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}),
+              (SELECT MAX(i.created_at) FROM invoices i
+                WHERE i.customer_id = c.id AND i.org_id = ${user.orgId} AND i.ro_id IS NULL AND i.status NOT IN ('draft', 'void'))
             ) AS last_visit
           FROM customers c
           WHERE c.org_id = ${user.orgId} AND (c.name ILIKE ${pattern} OR c.email ILIKE ${pattern} OR c.phone ILIKE ${pattern})
@@ -91,14 +102,21 @@ export default createHandler(
         rows = await sql`
           SELECT c.id, c.org_id, c.name, c.email, c.phone, c.address, c.notes, c.is_fleet, c.created_at, c.updated_at,
             (SELECT COALESCE(SUM(cc.amount), 0) FROM customer_credits cc WHERE cc.customer_id = c.id AND cc.org_id = ${user.orgId})::float8 AS credit_balance,
-            COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
+            (COALESCE((SELECT SUM(ro.total) FROM repair_orders ro
               WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId} AND ro.stage = 'Paid'
-            ), 0)::float8 AS total_spent,
-            (SELECT COUNT(*) FROM repair_orders ro
+            ), 0) + COALESCE((SELECT SUM(i.amount) FROM invoices i
+              WHERE i.customer_id = c.id AND i.org_id = ${user.orgId} AND i.ro_id IS NULL AND i.status = 'paid'
+            ), 0))::float8 AS total_spent,
+            ((SELECT COUNT(*) FROM repair_orders ro
               WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}
-            )::int AS ro_count,
-            (SELECT MAX(ro.created_at) FROM repair_orders ro
-              WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}
+            ) + (SELECT COUNT(*) FROM invoices i
+              WHERE i.customer_id = c.id AND i.org_id = ${user.orgId} AND i.ro_id IS NULL AND i.status NOT IN ('draft', 'void')
+            ))::int AS ro_count,
+            GREATEST(
+              (SELECT MAX(ro.created_at) FROM repair_orders ro
+                WHERE ro.customer_id = c.id AND ro.org_id = ${user.orgId}),
+              (SELECT MAX(i.created_at) FROM invoices i
+                WHERE i.customer_id = c.id AND i.org_id = ${user.orgId} AND i.ro_id IS NULL AND i.status NOT IN ('draft', 'void'))
             ) AS last_visit
           FROM customers c
           WHERE c.org_id = ${user.orgId} ORDER BY c.created_at DESC LIMIT 200
