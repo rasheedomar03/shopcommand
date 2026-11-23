@@ -206,10 +206,9 @@ export function NewROModal({
       <form onSubmit={handleSubmit} noValidate>
         <div className="p-5 space-y-5">
 
-          {/* Shop & Stage — hidden when tech is locked to a shop */}
+          {/* Shop — hidden when tech is locked to a shop. Every order starts as an Estimate:
+              that is the stage where services and parts are priced, so there is no stage picker. */}
           {!isLocked && (
-            {/* Every order starts as an Estimate: that is the stage where services and
-                parts are priced. (A stage picker here let an order start where it cannot be priced.) */}
             <div className="grid grid-cols-1 gap-4">
               <Select label="Shop *" value={form.shopId} onChange={set('shopId')} error={errors.shopId}>
                 <option value="">Select shop…</option>
