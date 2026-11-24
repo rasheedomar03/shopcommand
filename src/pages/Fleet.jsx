@@ -89,7 +89,20 @@ export default function Fleet() {
       return undefined
     }
     try {
-      if (existing) await api('/api/vehicles', { method: 'PUT', params: { id: existing.id }, body })
+      // Editing sends every field the form shows, blank ones included, so clearing a
+      // field clears it. (Adding a truck only sends what was filled in.)
+      const editBody = {
+        unit_number: v.unitNumber.trim(),
+        year: parsed.year ?? null,
+        make: parsed.make || null,
+        model: parsed.model || null,
+        // The description box already shows the trim as part of the model, so it is
+        // saved there (and cleared here) instead of being repeated
+        trim: null,
+        vin: v.vin.trim() || null,
+        last_mileage: v.mileage ? Number(v.mileage) : null,
+      }
+      if (existing) await api('/api/vehicles', { method: 'PUT', params: { id: existing.id }, body: editBody })
       else await api('/api/vehicles', { method: 'POST', body: { customer_id: fleet.id, ...body } })
       await load()
       setForm(null)

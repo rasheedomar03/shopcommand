@@ -101,6 +101,7 @@ Two full live walkthroughs (as a mechanic, as a fleet shop) on the Ray's Auto te
 - Customers: "Add customer" button (NewCustomerModal); the invoice generator offers "Add 'name' as a customer" for a typed name that is not one yet; the customer profile has an Invoices card (all their invoices, invoiced and unpaid totals) and lists saved trucks under Vehicles; Lifetime Spend, Total Visits, Last Visit and Avg Ticket now include paid/non-void invoices made without a repair order (api/customers.js; RO-linked invoices are not counted twice; the numbers are server values, so a same-session payment shows after a reload).
 - Smaller: Parts line (and tax) added to the RO estimate and invoice summaries; internal (own-fleet) invoices get a "not counted as revenue" note, no "Use credit", and are left out of the outstanding total; the generator shows a lasting "Saved as ..." line; the search stage badge no longer wraps; the RO price box is wider; the app reloads once after a deploy when an old page file is gone (`vite:preloadError` in src/main.jsx); `worker-src 'self' blob:` added to the CSP in vercel.json (Clerk uses a blob worker; the blocked-worker console errors are gone).
 - Tests: 409 passing (new: tests/dates-and-totals.test.js, an ownership test, a customers spend/visits test). Lesson: run `npm run build` before pushing; one push (a44c4293) failed to deploy because of a JSX comment placed inside a conditional, fixed in ec0f7038 (production kept serving the previous build).
+- Nov 23 evening small fixes (shipped after this section was written): header search opens the specific RO (`/repair-orders?ro=<id>`); a truck edit now clears a field that is saved blank (api/vehicles.js PUT: a field left out is kept, a field sent blank is cleared; the Fleet edit form sends every field, and clears trim because the description box already includes it); `unitLabelFor` in src/lib/trucks.js picks "Truck #" or "Vehicle ID" (used by the invoice generator, Invoices page and header search; the emailed invoice, CSV and Fleet pages still say "Truck #").
 - Test-account data left on Ray's Auto: customers Tom Baker, Pat Rivera, Lena Ortiz, Sara Lopez, Dave Miller, Mike Torres, Haul Brothers Trucking (holds a $500 credit), Ray's Auto Fleet ($100 credit); several test ROs and invoices (two duplicate Zain Freight LLC invoices, voided test invoices). Safe to delete.
 
 ## What Was Done
@@ -258,8 +259,8 @@ Build work still open (from the Nov 22-23 walkthroughs; start Monday with proper
 - Proper revenue: Billed, Collected, Unbilled, counting when an invoice is marked paid. The dashboard and Reports still add up repair orders in Complete, Invoiced and Paid, so unpaid work counts.
 - Labor as hours x rate on the RO estimate (today each service is one flat price; the invoice generator already has hours and rate).
 - One shared tax and line model and a per-shop tax rate and card fee (RO screens 8.5% hard-coded, generator 8.25% per browser).
-- Truck edit cannot blank a field (the API keeps the old value). Neutral "Truck #" label or hiding it unless Fleet is on, for car shops. No way to add a truck to an ordinary customer by hand (trucks arrive through invoices and the Fleet page).
-- The invoice generator file is about 700 lines (limit 500). Four `422` console errors never traced; Clerk's telemetry call is blocked by the CSP (harmless).
+- No way to add a truck to an ordinary customer by hand (trucks arrive through invoices and the Fleet page). (Done Nov 23 (evening): truck edit can now clear a field, and the "Truck #" label shows as "Vehicle ID" for a shop with no fleet setup and no invoice numbers; see "Nov 23 evening small fixes" under Walkthrough fixes. Quirk: once a car shop types a number on an invoice, its label becomes "Truck #".)
+- The invoice generator file is about 700 lines (limit 500). Four `422` console errors seen after long test sessions could not be reproduced on Nov 23 (a full page tour plus 20 idle seconds gave zero failed requests and no console errors); likely Clerk, revisit only if they come back. Clerk's telemetry call is blocked by the CSP (harmless).
 - Not yet tested: the customer approval page, CSV export and printing (this round); Fleet hiding when the switch is off on a fresh account; the evening date fix live.
 - Demo only: undoing a payment does not return credit in the sample ledger; demo repair orders show no shop name.
 - Fleet database test (tests/live/fleet-live.test.js) is written but never run; needs a Neon branch connection string from the user.
@@ -275,7 +276,7 @@ Waiting on the user:
 - Known edge, not fixed: a legacy org (no trial date) that cancels stays unlocked, because the lock needs a trial date.
 - Confirm the Stripe customer portal changes were saved and the "trial over" statement descriptor toggle is on.
 - Check Vercel plan (Hobby vs Pro; Hobby commercial-use terms now that J2M pays) plus Neon, Clerk, Resend plans and usage. Confirm how many invoices exist (SELECT COUNT(*) FROM invoices;).
-- Waiting on Trinity's answer about how Maher's friend found ShopCommand. Decide the real texting add-on price and whether managers need a role.
+- How Maher found us: answered Nov 23 (via Trinity): through a friend who runs K.N.A TRUCK REPAIR in Summit, Illinois. Claude found no record of any email or outreach to them (not in this repo, the earlier session transcripts, or the connected Gmail); if the founder sent something, it was from elsewhere. Worth a thank-you and the referral offer (one free month if they become a paying shop); K.N.A is also a prospect (truck repair, Chicago area). Decide the real texting add-on price and whether managers need a role.
 
 Prospects (cold emails drafted earlier, subject "six locations, one screen"): Clutch Automotive (Matthew Schwab, about 6 Houston-area locations), Adams Automotive (Perry Adams, about 3 locations), Ripley's Total Car Care (needs verification). Two research agents (Texas multi-location independents; truck and diesel shops with a Fullbay angle, excluding J2M) should be relaunched.
 
@@ -286,16 +287,15 @@ Parked:
 - Public support address on Stripe is the founder's home address; consider a virtual business address.
 - Revisit trial length only with evidence (3 or more lock-outs that did not convert).
 - Onboarding hardening: one transaction for org, shop, and user creation, remove the ALTER TABLE from the signup request, secure random invite codes, rename "Owner / Manager" to "Shop owner", invite links by email.
-- Header search results open the RO list, not the specific RO (could use the ?ro= deep link).
 - Remaining Search Console pages: alternatives/mitchell1, alternatives/shop-ware, alternatives/ro-writer, and remaining resource articles.
 
 ## Next Options
 
-Ranked by recommendation:
+Ranked by recommendation (refreshed Nov 23):
 
-1. J2M call (Wed Nov 18) using the call script, then record their tax answer.
-2. Per-shop tax rate setting used on estimates, the approval page, packets, and invoices, plus server-calculated RO totals (after the call).
-3. Split revenue into Billed, Collected, and Unbilled.
+1. Proper revenue: Billed, Collected, Unbilled, counting when paid (see Open Items; Trinity said revenue was wrong on every screen).
+2. Labor as hours x rate on the RO estimate.
+3. Per-shop tax rate and card fee setting used on estimates, the approval page, packets and invoices (ask J2M how they charge tax: parts only or labor too, and the rate). These three are linked; do them in this order.
 4. Verify the trial plan fix with a fresh signup after deploy.
 5. Plan the Clerk production instance move and a proper staging environment (Neon branch, Clerk dev instance, Stripe test keys scoped to Preview only).
 6. Send the Clutch and Adams cold emails; relaunch the prospect research agents.

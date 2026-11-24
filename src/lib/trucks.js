@@ -132,3 +132,16 @@ export const DEMO_TRUCKS = [
   { id: 'demo-truck-2', customerId: 'demo-fleet', customerName: 'Our Fleet', year: 2021, make: 'Kenworth', model: 'T680', trim: '', vin: '1XKYD49X5MJ442517', unitNumber: '236', mileage: 268500, license: '' },
   { id: 'demo-truck-3', customerId: 'demo-fleet', customerName: 'Our Fleet', year: 2017, make: 'Peterbilt', model: '579', trim: '', vin: '', unitNumber: 'AZ4688', mileage: null, license: '' },
 ]
+
+/**
+ * What to call the shop's own number for a vehicle. A truck shop (one that tracks its
+ * own fleet, has a fleet customer, or already puts numbers on invoices) calls it
+ * "Truck #". A car shop that has never used it sees the neutral "Vehicle ID".
+ */
+export function unitLabelFor({ shops = [], customers = [], invoices = [] } = {}) {
+  const isTruckShop =
+    shops.some(s => s?.fleetEnabled) ||
+    customers.some(c => c?.is_fleet === true) ||
+    invoices.some(i => i?.unitNumber)
+  return isTruckShop ? 'Truck #' : 'Vehicle ID'
+}

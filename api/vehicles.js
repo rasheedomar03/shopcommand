@@ -119,16 +119,19 @@ export default createHandler(
       if (errors.length) return res.status(400).json({ error: errors.join(', ') })
 
       const { year, make, model, vin, license } = req.body
+      // A field that is left out of the request stays as it is. A field that is sent
+      // blank (empty text or null) is cleared, so an edit can remove a VIN or a mileage.
+      const sent = (k) => k in req.body
       const [row] = await sql`
         UPDATE vehicles SET
-          year = COALESCE(${year ? Number(year) : null}, year),
-          make = COALESCE(${make?.trim() || null}, make),
-          model = COALESCE(${model?.trim() || null}, model),
-          vin = COALESCE(${vin?.trim().toUpperCase() || null}, vin),
-          license = COALESCE(${license?.trim() || null}, license),
-          unit_number = COALESCE(${clean(req.body.unit_number, 40)}, unit_number),
-          trim = COALESCE(${clean(req.body.trim, 60)}, trim),
-          last_mileage = COALESCE(${mileage(req.body.last_mileage)}, last_mileage)
+          year = CASE WHEN ${sent('year')} THEN ${year ? Number(year) : null} ELSE year END,
+          make = CASE WHEN ${sent('make')} THEN ${make?.trim() || null} ELSE make END,
+          model = CASE WHEN ${sent('model')} THEN ${model?.trim() || null} ELSE model END,
+          vin = CASE WHEN ${sent('vin')} THEN ${vin?.trim().toUpperCase() || null} ELSE vin END,
+          license = CASE WHEN ${sent('license')} THEN ${license?.trim() || null} ELSE license END,
+          unit_number = CASE WHEN ${sent('unit_number')} THEN ${clean(req.body.unit_number, 40)} ELSE unit_number END,
+          trim = CASE WHEN ${sent('trim')} THEN ${clean(req.body.trim, 60)} ELSE trim END,
+          last_mileage = CASE WHEN ${sent('last_mileage')} THEN ${mileage(req.body.last_mileage)} ELSE last_mileage END
         WHERE id = ${id} AND org_id = ${user.orgId}
         RETURNING *
       `

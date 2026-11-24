@@ -102,6 +102,27 @@ describe('PUT and DELETE /api/vehicles', () => {
     expect(upd.values).toContain(MOCK_OWNER.orgId)
   })
 
+  // values in the UPDATE, in order: [year?, year, make?, make, model?, model, vin?, vin,
+  // license?, license, unit?, unit, trim?, trim, mileage?, mileage, id, org]
+  it('a field sent blank is cleared; a field left out is kept', async () => {
+    const res = await run(vehicles, { method: 'PUT', query: { id: VALID_UUID }, body: { vin: '', last_mileage: null, unit_number: '5500' } })
+    expect(res.statusCode).toBe(200)
+    const upd = call(/UPDATE vehicles/)
+    expect(upd.q).toContain('vin = CASE WHEN ? THEN ? ELSE vin END')
+    const [yearSent, , makeSent, , modelSent, , vinSent, vinVal, licenseSent, , unitSent, unitVal, trimSent, , mileSent, mileVal] = upd.values
+    // sent (blank) -> flagged as sent with an empty value, so the column is set to NULL
+    expect(vinSent).toBe(true); expect(vinVal).toBeNull()
+    expect(mileSent).toBe(true); expect(mileVal).toBeNull()
+    expect(unitSent).toBe(true); expect(unitVal).toBe('5500')
+    // left out -> not flagged, so the column keeps what it had
+    for (const flag of [yearSent, makeSent, modelSent, licenseSent, trimSent]) expect(flag).toBe(false)
+  })
+
+  it('still refuses a bad VIN, but accepts a blank one', async () => {
+    expect((await run(vehicles, { method: 'PUT', query: { id: VALID_UUID }, body: { vin: 'BAD' } })).statusCode).toBe(400)
+    expect((await run(vehicles, { method: 'PUT', query: { id: VALID_UUID }, body: { vin: '' } })).statusCode).toBe(200)
+  })
+
   it('a truck with invoices cannot be deleted (409, not a crash)', async () => {
     state.deleteError = Object.assign(new Error('fk'), { code: '23503' })
     const res = await run(vehicles, { method: 'DELETE', query: { id: VALID_UUID } })

@@ -2,6 +2,7 @@ import { Bell, Menu, Search, Sun, Moon, X, Plus, LogOut, Settings } from 'lucide
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useData } from '@/contexts/DataContext'
+import { useUnitLabel } from '@/lib/unitLabel'
 import { AlertsModal } from '@/components/modals/AlertsModal'
 import { HexAvatar } from '@/components/Hex'
 import { NewROModal } from '@/components/modals/NewROModal'
@@ -14,6 +15,7 @@ import { invoiceMatchesQuery } from '@/lib/invoiceLines'
 
 function SearchDropdown({ query, onClose }) {
   const { repairOrders, customers, invoices } = useData()
+  const unitLabel = useUnitLabel()
   const { session } = useAuth()
   const navigate = useNavigate()
   const isAdvisor = session?.role === 'advisor'
@@ -56,7 +58,7 @@ function SearchDropdown({ query, onClose }) {
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-text-primary truncate">{inv.customerName || 'No customer name'}</div>
                     <div className="text-2xs text-text-muted truncate">
-                      {[inv.vehicle, inv.unitNumber && `Truck # ${inv.unitNumber}`, inv.vin].filter(Boolean).join(' · ')}
+                      {[inv.vehicle, inv.unitNumber && `${unitLabel} ${inv.unitNumber}`, inv.vin].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                   <span className="text-2xs text-text-muted capitalize flex-shrink-0">{inv.status}</span>
@@ -70,7 +72,7 @@ function SearchDropdown({ query, onClose }) {
               {matchedROs.map(ro => (
                 <button
                   key={ro.id}
-                  onClick={() => go('/repair-orders')}
+                  onClick={() => go(`/repair-orders?ro=${encodeURIComponent(ro.id)}`)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-border/50 transition-colors text-left"
                 >
                   <span className="text-xs font-mono text-orange min-w-16 flex-shrink-0">{roLabel(ro)}</span>

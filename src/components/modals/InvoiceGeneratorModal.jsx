@@ -6,6 +6,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoOf } from '@/lib/shopLogo'
 import { localYmd } from '@/lib/utils'
+import { useUnitLabel } from '@/lib/unitLabel'
 import { PrintPortal } from '@/components/PrintPortal'
 import { truckName, truckLabel } from '@/lib/trucks'
 import { useCustomerTrucks } from '@/lib/useCustomerTrucks'
@@ -57,6 +58,7 @@ const n = v => Number(v) || 0
 
 export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromRO = null }) {
   const { shops, repairOrders, addInvoice, invoices, voidInvoice, customers, addCustomer } = useData()
+  const unitLabel = useUnitLabel() // "Truck #" for a truck shop, "Vehicle ID" otherwise
   const { session } = useAuth()
   const [savedFlash, setSavedFlash] = useState(false)
   const [savedOnServer, setSavedOnServer] = useState(false)
@@ -427,7 +429,7 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
             </div>
             {unitNumber && (
               <div>
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Truck #</div>
+                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{unitLabel}</div>
                 <div className="font-medium">{unitNumber}</div>
               </div>
             )}
@@ -589,8 +591,8 @@ export function InvoiceGeneratorModal({ open, onClose, fromInvoice = null, fromR
               <input className={`${field} mt-1`} placeholder="2019 Freightliner Cascadia" value={vehicle} onChange={e => setVehicle(e.target.value)} />
             </div>
             <div>
-              <label className={label}>Truck # (optional)</label>
-              <input className={`${field} mt-1`} placeholder="Unit or truck number" value={unitNumber} onChange={e => setUnitNumber(e.target.value)} />
+              <label className={label}>{unitLabel} (optional)</label>
+              <input className={`${field} mt-1`} placeholder={unitLabel === 'Truck #' ? 'Unit or truck number' : 'Unit, stock or fleet number'} value={unitNumber} onChange={e => setUnitNumber(e.target.value)} />
             </div>
             <div>
               <label className={label}>VIN</label>

@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
 import { BlankFormModal } from '@/components/modals/BlankFormModal'
 import { formatMoney, formatDate, formatRelativeTime, roLabel, matchesSearch, localYmd } from '@/lib/utils'
+import { useUnitLabel } from '@/lib/unitLabel'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
 import { invoiceNumberTaken, invoiceMatchesQuery, lineDisplay } from '@/lib/invoiceLines'
 import { invoicesToCsv } from '@/lib/invoiceExport'
@@ -56,6 +57,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
   const [creditError, setCreditError] = useState(null)
   const [applying, setApplying] = useState(false)
   const { repairOrders, invoices: allInvoices, customers } = useData()
+  const unitLabel = useUnitLabel()
 
   // Reset edit state when a different invoice opens (or the modal closes)
   useEffect(() => {
@@ -243,7 +245,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
             {invoice.jobTitle && <div className="font-semibold text-text-primary">{invoice.jobTitle}</div>}
             {(invoice.unitNumber || invoice.vin) && (
               <div className="text-xs text-text-secondary">
-                {invoice.unitNumber && <>Truck # <span className="font-medium text-text-primary">{invoice.unitNumber}</span></>}
+                {invoice.unitNumber && <>{unitLabel} <span className="font-medium text-text-primary">{invoice.unitNumber}</span></>}
                 {invoice.unitNumber && invoice.vin && ' · '}
                 {invoice.vin && <>VIN <span className="font-mono text-text-primary">{invoice.vin}</span></>}
               </div>
@@ -678,6 +680,7 @@ function InvoiceDetail({ invoice, onClose, shops, onUpdate, onVoid, onRecordPaym
 
 export default function Invoices() {
   const { shops, invoices, updateInvoice, voidInvoice, recordInvoicePayment, applyInvoiceCredit, emailInvoice, invoiceImport, dismissInvoiceImport } = useData()
+  const unitLabel = useUnitLabel()
   const { session } = useAuth()
   const isAdvisor = session?.role === 'advisor'
   const [search, setSearch] = useState('')
@@ -820,7 +823,7 @@ export default function Invoices() {
             <Tr>
               <Th>Invoice</Th>
               <Th className="hidden sm:table-cell">Vehicle</Th>
-              <Th className="hidden sm:table-cell">Truck #</Th>
+              <Th className="hidden sm:table-cell">{unitLabel}</Th>
               <Th className="hidden lg:table-cell">VIN</Th>
               <Th className="hidden md:table-cell">Shop</Th>
               <Th>Status</Th>

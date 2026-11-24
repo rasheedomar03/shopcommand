@@ -143,3 +143,17 @@ describe('fleetCustomers', () => {
     expect(fleetCustomers(null)).toEqual([])
   })
 })
+
+import { unitLabelFor } from '../src/lib/trucks.js'
+
+describe('unitLabelFor (Truck # for truck shops, Vehicle ID for car shops)', () => {
+  it('a shop with nothing set up sees the neutral label', () => {
+    expect(unitLabelFor({})).toBe('Vehicle ID')
+    expect(unitLabelFor({ shops: [{ fleetEnabled: false }], customers: [{ is_fleet: false }], invoices: [{ unitNumber: '' }] })).toBe('Vehicle ID')
+  })
+  it('the Fleet switch, a fleet customer, or any invoice with a number gives Truck #', () => {
+    expect(unitLabelFor({ shops: [{ fleetEnabled: true }] })).toBe('Truck #')
+    expect(unitLabelFor({ customers: [{ is_fleet: true }] })).toBe('Truck #')
+    expect(unitLabelFor({ invoices: [{ unitNumber: '236' }] })).toBe('Truck #')
+  })
+})
