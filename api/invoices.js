@@ -1,5 +1,5 @@
 import { createHandler } from './_lib/handler.js'
-import { createManualInvoice, updateManualInvoice, importLocalInvoices } from './_lib/manual-invoice-db.js'
+import { createManualInvoice, updateManualInvoice, importLocalInvoices, releaseVoidedNumber } from './_lib/manual-invoice-db.js'
 import { cleanAmount, applyCredit, returnInvoiceCredit } from './_lib/credits.js'
 import { roTotalFromData } from './_lib/ro-total.js'
 
@@ -500,19 +500,26 @@ export default createHandler(
 
       // Content edit (no status change): reprice and/or renumber an unpaid invoice
       if (status === undefined) {
-        try {
-          const [row] = await sql`
-            UPDATE invoices SET
-              amount = COALESCE(${amount !== undefined ? Number(amount) : null}, amount),
-              number = COALESCE(${number !== undefined ? number.trim() : null}, number)
-            WHERE id = ${id} AND org_id = ${user.orgId}
-            RETURNING *
-          `
-          return res.json(row)
-        } catch (err) {
-          // invoice numbers are unique per organization (migration 008)
-          if (err?.code === '23505') return res.status(409).json({ error: 'That invoice number is already used', code: 'number_taken' })
-          throw err
+        let released = false
+        while (true) {
+          try {
+            const [row] = await sql`
+              UPDATE invoices SET
+                amount = COALESCE(${amount !== undefined ? Number(amount) : null}, amount),
+                number = COALESCE(${number !== undefined ? number.trim() : null}, number)
+              WHERE id = ${id} AND org_id = ${user.orgId}
+              RETURNING *
+            `
+            return res.json(row)
+          } catch (err) {
+            // invoice numbers are unique per organization (migration 008)
+            if (err?.code === '23505') {
+              // Only a voided invoice holds the number: free it once and try again
+              if (!released && number !== undefined && await releaseVoidedNumber(sql, user.orgId, number.trim())) { released = true; continue }
+              return res.status(409).json({ error: 'That invoice number is already used', code: 'number_taken' })
+            }
+            throw err
+          }
         }
       }
 

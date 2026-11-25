@@ -24,6 +24,37 @@ async function checkOwnership(sql, orgId, v) {
   return null
 }
 
+/**
+ * A voided invoice keeps its number on record, which used to block a new invoice from
+ * using it (void 37, and 37 could never be used again). When a number is wanted that
+ * only a VOIDED invoice holds, rename that voided invoice to "37-VOID" (or "37-VOID-2"
+ * if that is taken too) so both stay in the books and the number is free again.
+ * A live (draft, unpaid, partial, paid) invoice is never renamed.
+ * Returns true if a voided invoice was renamed.
+ */
+export async function releaseVoidedNumber(sql, orgId, number) {
+  const [holder] = await sql`
+    SELECT id, number FROM invoices
+    WHERE org_id = ${orgId} AND lower(number) = lower(${number}) AND status = 'void'
+    LIMIT 1
+  `
+  if (!holder) return false
+  for (let k = 1; k <= 50; k++) {
+    const label = k === 1 ? `${holder.number}-VOID` : `${holder.number}-VOID-${k}`
+    try {
+      const [r] = await sql`
+        UPDATE invoices SET number = ${label}
+        WHERE id = ${holder.id} AND org_id = ${orgId} AND status = 'void'
+        RETURNING id
+      `
+      return !!r
+    } catch (err) {
+      if (err?.code !== UNIQUE_VIOLATION) throw err // that label is taken too: try the next
+    }
+  }
+  return false
+}
+
 /** POST /api/invoices with { manual: true, ... }. Returns { status, body }. */
 export async function createManualInvoice({ sql, user, body }) {
   const { error, value: v } = cleanManualInvoice(body)
@@ -33,6 +64,7 @@ export async function createManualInvoice({ sql, user, body }) {
 
   const status = body?.draft ? 'draft' : 'unpaid'
   const supplied = v.number
+  let released = false
   for (let attempt = 0; attempt < 6; attempt++) {
     const number = supplied || generateInvoiceNumber()
     try {
@@ -56,7 +88,11 @@ export async function createManualInvoice({ sql, user, body }) {
       return { status: 201, body: { ...row, amount_paid: 0 } }
     } catch (err) {
       if (err?.code !== UNIQUE_VIOLATION) throw err
-      if (supplied) return { status: 409, body: { error: `Invoice number ${supplied} is already used`, code: 'number_taken' } }
+      if (supplied) {
+        // Only a voided invoice holds it: free the number once and try again
+        if (!released && await releaseVoidedNumber(sql, user.orgId, supplied)) { released = true; continue }
+        return { status: 409, body: { error: `Invoice number ${supplied} is already used`, code: 'number_taken' } }
+      }
       // generated number collided: try another
     }
   }
@@ -83,6 +119,8 @@ export async function updateManualInvoice({ sql, user, id, body, invoice }) {
   if (bad) return { status: 404, body: { error: bad } }
 
   const number = v.number || invoice.number
+  let released = false
+  while (true) {
   try {
     const [row] = await sql`
       UPDATE invoices SET
@@ -102,9 +140,12 @@ export async function updateManualInvoice({ sql, user, id, body, invoice }) {
     return { status: 200, body: { ...row, amount_paid: 0 } }
   } catch (err) {
     if (err?.code === UNIQUE_VIOLATION) {
+      // Only a voided invoice holds the number: free it once and try again
+      if (!released && v.number && await releaseVoidedNumber(sql, user.orgId, number)) { released = true; continue }
       return { status: 409, body: { error: `Invoice number ${number} is already used`, code: 'number_taken' } }
     }
     throw err
+  }
   }
 }
 
