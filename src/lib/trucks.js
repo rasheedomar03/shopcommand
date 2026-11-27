@@ -104,15 +104,18 @@ export function truckBodyFromForm(v) {
 /**
  * A customer profile's vehicle list: the vehicles its repair orders showed, plus
  * its saved trucks. A saved truck fills in a listed vehicle with the same VIN, or
- * the same name when neither the number nor the VIN says it is a different one.
+ * one with the same name when either side has no number and no VIN (each repair
+ * order saves its own copy of a vehicle) or both carry the same number. Two that
+ * are identified but share nothing stay apart.
  */
 export function mergeSavedTrucks(vehicles, trucks) {
   const out = vehicles.map(v => ({ ...v }))
-  const differs = (a, b) => !!a && !!b && String(a).trim().toLowerCase() !== String(b).trim().toLowerCase()
+  const sameVin = (a, b) => !!a.vin && !!b.vin && String(a.vin).toUpperCase() === String(b.vin).toUpperCase()
+  const bare = x => !x.vin && !x.unitNumber
   ;(trucks || []).forEach(t => {
     const name = truckName(t) || (t.unitNumber ? `Truck ${t.unitNumber}` : 'Vehicle')
-    const known = out.find(v => t.vin && v.vin === t.vin)
-      || out.find(v => v.name === name && !differs(v.vin, t.vin) && !differs(v.unitNumber, t.unitNumber))
+    const known = out.find(v => sameVin(v, t))
+      || out.find(v => v.name === name && (bare(v) || bare(t) || (sameUnit(v.unitNumber, t.unitNumber) && !(v.vin && t.vin))))
     if (known) {
       known.unitNumber = known.unitNumber || t.unitNumber
       known.vin = known.vin || t.vin

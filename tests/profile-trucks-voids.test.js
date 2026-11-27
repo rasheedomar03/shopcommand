@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mergeSavedTrucks, truckBodyFromForm, findSameTruck } from '../src/lib/trucks.js'
 import { voidedInvoiceRows } from '../src/lib/serverInvoices.js'
-import { returnedCreditEntry, withShopNames } from '../src/lib/demoData.js'
+import { returnedCreditEntry, withShopNames, localDateTime } from '../src/lib/demoData.js'
 
 const truck = (over) => ({ id: 't1', year: 2019, make: 'Freightliner', model: 'Cascadia', trim: '', vin: '', unitNumber: '', mileage: null, ...over })
 
@@ -20,6 +20,16 @@ describe('mergeSavedTrucks (customer profile)', () => {
     expect(out).toHaveLength(1)
     expect(out[0]).toMatchObject({ unitNumber: '5500', lastOdometer: 10, roCount: 2 })
     expect(fromRo[0].unitNumber).toBeUndefined()
+  })
+  it('does not fold a truck known by VIN into one known only by number', () => {
+    const fromRo = [{ name: '2019 Freightliner Cascadia', roCount: 1, totalSpent: 0, activeWarranties: [] }]
+    const out = mergeSavedTrucks(fromRo, [truck({ id: 't2', unitNumber: '12' }), truck({ vin: '1FUJGLDR5CLBP8834' })])
+    expect(out.map(v => [v.unitNumber || '', v.vin || ''])).toEqual([['12', ''], ['', '1FUJGLDR5CLBP8834']])
+  })
+  it('still folds copies of one vehicle that have nothing to tell them apart', () => {
+    // every new repair order saves its own vehicle record
+    expect(mergeSavedTrucks([], [truck({}), truck({ id: 't2' })])).toHaveLength(1)
+    expect(mergeSavedTrucks([], [truck({ vin: '1FUJGLDR5CLBP8834' }), truck({ id: 't2' })])).toHaveLength(1)
   })
   it('names a truck that only has a number', () => {
     expect(mergeSavedTrucks([], [truck({ year: null, make: '', model: '', unitNumber: '77' })])[0].name).toBe('Truck 77')
@@ -64,6 +74,11 @@ describe('voidedInvoiceRows', () => {
 })
 
 describe('demo helpers', () => {
+  it('writes a time that reads back as the same moment, not hours ahead', () => {
+    const d = new Date(2026, 10, 26, 18, 5, 9)
+    expect(localDateTime(d)).toBe('2026-11-26T18:05:09')
+    expect(new Date(localDateTime(d)).getTime()).toBe(d.getTime())
+  })
   it('returns the credit an invoice used, and nothing when it used none', () => {
     expect(returnedCreditEntry({ id: 'INV-1', creditApplied: 25 })).toMatchObject({ kind: 'adjustment', amount: 25, invoice_number: 'INV-1' })
     expect(returnedCreditEntry({ id: 'INV-2' })).toBeNull()

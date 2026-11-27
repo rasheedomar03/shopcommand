@@ -7,7 +7,7 @@ import { invoiceRevenueTotals } from '@/lib/invoiceRevenue'
 import { DEMO_TRUCKS } from '@/lib/trucks'
 import { localYmd } from '@/lib/utils'
 import { invoiceFromServerRow, saveInvoiceToServer, planImport, moveLocalInvoices, remainingLocal, mergeSetAside, buildImportReport, voidedInvoiceRows } from '@/lib/serverInvoices'
-import { returnedCreditEntry, withShopNames } from '@/lib/demoData'
+import { returnedCreditEntry, withShopNames, localDateTime } from '@/lib/demoData'
 import {
   parts as initialParts,
   cannedServices,
@@ -285,7 +285,7 @@ export function DataProvider({ children }) {
       const offset = i % 11
       const d = new Date(today)
       d.setDate(d.getDate() - offset)
-      const ymd = d.toISOString().slice(0, 19)
+      const ymd = localDateTime(d)
       return { ...ro, created: ymd, updated: ymd }
     })
     setShops(mockShops.map(s => ({ ...s, fleetEnabled: true }))) // the demo shows the Fleet page
