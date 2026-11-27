@@ -4,20 +4,24 @@ import { Mail, ArrowRight, ArrowUpDown, Calculator } from 'lucide-react'
 import { PublicNav } from '@/components/PublicNav'
 import { usePageMeta } from '@/lib/seo'
 import {
-  STATE_WAGES, BLS_RELEASE, BLS_SOURCE_URL, MULTIPLIER_LOW, MULTIPLIER_HIGH,
+  STATE_WAGES, NATIONAL_MEAN_WAGE, BLS_RELEASE, BLS_SOURCE_URL, MULTIPLIER_LOW, MULTIPLIER_HIGH,
+  SURVEY_SOURCE_URL, SURVEY_FINDING, estimateRange,
 } from '@/data/laborRates'
 
 const CONTACT_EMAIL = 'hello@shopcommand.net'
 const YEAR = new Date().getFullYear()
 
-// Round estimated rates to the nearest $5 — these are ranges, not precision claims
-const lo = w => Math.round((w * MULTIPLIER_LOW) / 5) * 5
-const hi = w => Math.round((w * MULTIPLIER_HIGH) / 5) * 5
+const range = wage => estimateRange(wage).map(v => `$${v}`).join('–')
+const US_RANGE = range(NATIONAL_MEAN_WAGE)
+const BY_WAGE = [...STATE_WAGES].sort((a, b) => b.wage - a.wage)
+const HIGHEST = BY_WAGE[0]
+const LOWEST = BY_WAGE[BY_WAGE.length - 1]
+const inText = st => (st.code === 'DC' ? 'the District of Columbia' : st.name)
 
 const faqs = [
   {
-    q: 'What is the average auto repair labor rate in the US?',
-    a: `Based on Bureau of Labor Statistics wage data (${BLS_RELEASE}) and typical shop cost structures, most US auto repair shops charge between $${lo(Math.min(...STATE_WAGES.map(s => s.wage)))} and $${hi(Math.max(...STATE_WAGES.map(s => s.wage)))} per labor hour, with most independent shops falling in the $120–$180 range. Dealerships typically charge 20–40% more than independent shops in the same market.`,
+    q: `What is the average auto repair shop labor rate in ${YEAR}?`,
+    a: `We estimate most US shops charge about ${US_RANGE} per labor hour. By state, the estimates run from ${range(LOWEST.wage)} in ${inText(LOWEST)} to ${range(HIGHEST.wage)} in ${inText(HIGHEST)}. For comparison, AAA reports that ${SURVEY_FINDING}, citing the 2025 PartsTech report. Dealerships usually charge more than independent shops in the same market.`,
   },
   {
     q: 'Why do labor rates vary so much by state?',
@@ -25,7 +29,7 @@ const faqs = [
   },
   {
     q: 'How are these labor rate estimates calculated?',
-    a: `Each state's estimated range is the BLS mean hourly wage for automotive service technicians (occupation 49-3023, ${BLS_RELEASE}) multiplied by ${MULTIPLIER_LOW}–${MULTIPLIER_HIGH}. That multiplier reflects the industry-standard relationship between what a shop pays its technicians and what it must charge to cover bays, equipment, insurance, service writers, and profit. Actual posted rates at individual shops will vary.`,
+    a: `Each state's estimated range is the BLS mean hourly wage for automotive service technicians (occupation 49-3023, ${BLS_RELEASE}) multiplied by ${MULTIPLIER_LOW}–${MULTIPLIER_HIGH}. We chose that range so the estimates line up with published figures for what shops actually charge. It is not a survey of shops, and posted rates at individual shops will vary.`,
   },
   {
     q: 'What labor rate should my shop charge?',
@@ -36,10 +40,12 @@ const faqs = [
 export default function LaborRatesByState() {
   const [sortBy, setSortBy] = useState('name')
   const [dir, setDir] = useState(1)
+  const [code, setCode] = useState('')
+  const picked = STATE_WAGES.find(s => s.code === code)
 
   usePageMeta({
-    title: `Auto Repair Labor Rates by State (${YEAR}) | ShopCommand`,
-    description: `Average auto repair shop labor rates for all 50 states, estimated from BLS ${BLS_RELEASE} technician wage data with a transparent methodology. See how your state compares.`,
+    title: `Auto Repair Labor Rates by State (${YEAR}): All 50 States`,
+    description: `What auto repair shops charge per labor hour in ${YEAR}: about ${US_RANGE} across the US. Find your state's estimate and see how it is calculated.`,
     path: '/tools/labor-rates-by-state',
     schema: [
       {
@@ -76,10 +82,6 @@ export default function LaborRatesByState() {
     else { setSortBy(col); setDir(col === 'name' ? 1 : -1) }
   }
 
-  const wages = STATE_WAGES.map(s => s.wage)
-  const natLow = lo(wages.reduce((s, w) => s + w, 0) / wages.length)
-  const natHigh = hi(wages.reduce((s, w) => s + w, 0) / wages.length)
-
   return (
     <div className="min-h-screen bg-white">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-orange-500 focus:text-white focus:rounded-lg">
@@ -97,12 +99,23 @@ export default function LaborRatesByState() {
               Average Auto Repair Labor Rates by State ({YEAR})
             </h1>
             <p className="text-slate-500 leading-relaxed max-w-xl mx-auto mb-6">
-              Estimated shop labor rates for all 50 states and DC, built from Bureau of Labor Statistics
-              technician wage data ({BLS_RELEASE}) — with the methodology shown, not hidden.
+              Most US shops charge about {US_RANGE} per labor hour. Estimates run from {range(LOWEST.wage)} in{' '}
+              {inText(LOWEST)} to {range(HIGHEST.wage)} in {inText(HIGHEST)}.
             </p>
-            <div className="inline-flex items-baseline gap-2 px-5 py-3 rounded-lg bg-orange-50 border border-orange-200">
-              <span className="text-sm text-slate-600">Typical US shop rate:</span>
-              <span className="text-2xl font-bold text-slate-900 tabular-nums">${natLow}–${natHigh}</span>
+            <label className="block max-w-xs mx-auto mb-4 text-left">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Find your state</span>
+              <select
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                className="mt-1.5 w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 text-[15px] outline-none focus:border-orange-400 transition-colors"
+              >
+                <option value="">United States</option>
+                {STATE_WAGES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+              </select>
+            </label>
+            <div aria-live="polite" className="inline-flex flex-wrap justify-center items-baseline gap-2 px-5 py-3 rounded-lg bg-orange-50 border border-orange-200">
+              <span className="text-sm text-slate-600">{picked ? `${picked.name} shop rate:` : 'Typical US shop rate:'}</span>
+              <span className="text-2xl font-bold text-slate-900 tabular-nums">{picked ? range(picked.wage) : US_RANGE}</span>
               <span className="text-sm text-slate-500">/hr (est.)</span>
             </div>
           </div>
@@ -137,7 +150,7 @@ export default function LaborRatesByState() {
                         <td className="px-5 py-3 font-medium text-slate-900">{s.name}</td>
                         <td className="px-5 py-3 text-right tabular-nums text-slate-600">${s.wage.toFixed(2)}/hr</td>
                         <td className="px-5 py-3 text-right tabular-nums font-semibold text-slate-900">
-                          ${lo(s.wage)}–${hi(s.wage)}<span className="text-slate-400 font-normal">/hr</span>
+                          {range(s.wage)}<span className="text-slate-400 font-normal">/hr</span>
                         </td>
                       </tr>
                     ))}
@@ -193,15 +206,21 @@ export default function LaborRatesByState() {
                 release for {BLS_RELEASE}.
               </p>
               <p>
-                <strong className="text-slate-900">Rate estimate:</strong> a shop's posted labor rate typically runs
-                {' '}{MULTIPLIER_LOW}–{MULTIPLIER_HIGH}× what it pays technicians — the difference covers rent, bays,
-                equipment, insurance, service advisors, unbillable time, and profit. We apply that multiplier to each
-                state's wage and round to the nearest $5.
+                <strong className="text-slate-900">Rate estimate:</strong> we multiply each state's wage by
+                {' '}{MULTIPLIER_LOW}–{MULTIPLIER_HIGH} and round to the nearest $5. The gap between wage and shop rate
+                covers rent, bays, equipment, insurance, service advisors, unbillable time, and profit.
               </p>
               <p>
-                <strong className="text-slate-900">Limits:</strong> these are estimated ranges for independent shops.
-                Dealership rates run higher; rural shops run lower; specialty work (European, diesel, EV) commands a
-                premium. Data updates annually when BLS publishes new wage figures.
+                <strong className="text-slate-900">Outside check:</strong>{' '}
+                <a href={SURVEY_SOURCE_URL} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">
+                  AAA reports
+                </a>{' '}
+                that {SURVEY_FINDING}, citing the 2025 PartsTech report on general repair shops.
+              </p>
+              <p>
+                <strong className="text-slate-900">Limits:</strong> these are estimates from wage data, not a survey of shops in your state.
+                Dealership rates usually run higher, rural shops often run lower, and specialty work (European, diesel,
+                EV) commands a premium. Data updates annually when BLS publishes new wage figures.
               </p>
             </div>
           </div>

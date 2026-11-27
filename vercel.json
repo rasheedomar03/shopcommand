@@ -3,6 +3,7 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "trailingSlash": false,
   "redirects": [
     {
       "source": "/(.*)",
@@ -13,7 +14,13 @@
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/:page(onboarding|demo|login|tech-board|dashboard|repair-orders|estimates|invoices|inspections|messages|appointments|dispatch|fleet|reports|settings|parts|shops|technicians|customers)", "destination": "/index.html" },
+    { "source": "/:page(shops|technicians|customers)/:id", "destination": "/index.html" },
+    { "source": "/:page(sign-in|sign-up)", "destination": "/index.html" },
+    { "source": "/:page(sign-in|sign-up)/:rest*", "destination": "/index.html" },
+    { "source": "/parts/scan/:sku", "destination": "/index.html" },
+    { "source": "/status/:roId", "destination": "/index.html" },
+    { "source": "/approve/:roId/:token", "destination": "/index.html" }
   ],
   "headers": [
     {

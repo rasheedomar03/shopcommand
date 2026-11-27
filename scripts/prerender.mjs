@@ -17,44 +17,11 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join, extname } from 'path'
 import { fileURLToPath } from 'url'
 import puppeteer from 'puppeteer-core'
+import { ROUTES, sitemapEntries, sitemapXml } from './sitemap.mjs'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const DIST = join(__dirname, '..', 'dist')
 const PORT = 4173
-
-// ── Routes to prerender ─────────────────────────────────────────────────────
-// Article slugs are read from the data file so new articles are picked up
-// automatically at build time.
-const articlesSource = readFileSync(join(__dirname, '..', 'src', 'data', 'articles.js'), 'utf8')
-const ARTICLE_SLUGS = [...articlesSource.matchAll(/slug:\s*'([^']+)'/g)].map(m => m[1])
-
-const ROUTES = [
-  '/',
-  '/founding-program',
-  '/tools/labor-rates-by-state',
-  '/tools/labor-rate-calculator',
-  '/tools/invoice-generator',
-  '/resources',
-  ...ARTICLE_SLUGS.map(s => `/resources/${s}`),
-  '/compare/tekmetric',
-  '/compare/shopmonkey',
-  '/compare/mitchell1',
-  '/compare/shop-ware',
-  '/compare/ro-writer',
-  '/compare/fullbay',
-  '/alternatives/tekmetric',
-  '/alternatives/shopmonkey',
-  '/alternatives/mitchell1',
-  '/alternatives/shop-ware',
-  '/alternatives/ro-writer',
-  '/alternatives/fullbay',
-  '/truck-repair-shop-software',
-  '/terms',
-  '/privacy',
-  '/dpa',
-  '/cookies',
-  '/accessibility',
-]
 
 // ── Find a browser to use ───────────────────────────────────────────────────
 async function getBrowserLaunchOptions() {
@@ -181,59 +148,10 @@ async function prerender() {
   await browser.close()
   server.close()
 
-  writeSitemap()
+  writeFileSync(join(DIST, 'sitemap.xml'), sitemapXml())
+  console.log(`  ✓ sitemap.xml (${sitemapEntries().length} URLs)`)
 
   console.log(`\n  Done — ${ROUTES.length} pages prerendered.\n`)
-}
-
-// ── Sitemap generation ──────────────────────────────────────────────────────
-// Written at build time so lastmod reflects real deploys instead of a
-// hand-maintained static file going stale.
-function writeSitemap() {
-  const ORIGIN = 'https://shopcommand.net'
-  const today = new Date().toISOString().slice(0, 10)
-
-  const meta = (route) => {
-    if (route === '/') return { changefreq: 'weekly', priority: '1.0' }
-    if (route === '/founding-program') return { changefreq: 'weekly', priority: '0.9' }
-    if (route === '/resources') return { changefreq: 'weekly', priority: '0.8' }
-    if (route.startsWith('/tools/')) return { changefreq: 'monthly', priority: '0.8' }
-    if (route.startsWith('/resources/')) return { changefreq: 'monthly', priority: '0.7' }
-    if (route.startsWith('/compare/')) return { changefreq: 'monthly', priority: '0.8' }
-    if (route.startsWith('/alternatives/')) return { changefreq: 'monthly', priority: '0.8' }
-    return { changefreq: 'yearly', priority: '0.3' } // legal pages
-  }
-
-  const extras = [
-    { loc: `${ORIGIN}/llms.txt`, changefreq: 'monthly', priority: '0.4' },
-    { loc: `${ORIGIN}/pricing.md`, changefreq: 'monthly', priority: '0.5' },
-  ]
-
-  const entries = [
-    ...ROUTES.map(route => {
-      const { changefreq, priority } = meta(route)
-      return { loc: `${ORIGIN}${route === '/' ? '/' : route}`, changefreq, priority }
-    }),
-    ...extras,
-  ]
-
-  const xml = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...entries.map(e => [
-      '  <url>',
-      `    <loc>${e.loc}</loc>`,
-      `    <lastmod>${today}</lastmod>`,
-      `    <changefreq>${e.changefreq}</changefreq>`,
-      `    <priority>${e.priority}</priority>`,
-      '  </url>',
-    ].join('\n')),
-    '</urlset>',
-    '',
-  ].join('\n')
-
-  writeFileSync(join(DIST, 'sitemap.xml'), xml)
-  console.log(`  ✓ sitemap.xml (${entries.length} URLs, lastmod ${today})`)
 }
 
 prerender().catch((err) => {

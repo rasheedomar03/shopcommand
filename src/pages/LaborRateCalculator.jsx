@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Mail, ArrowRight, Table2 } from 'lucide-react'
 import { PublicNav } from '@/components/PublicNav'
 import { usePageMeta } from '@/lib/seo'
-import { STATE_WAGES, MULTIPLIER_LOW, MULTIPLIER_HIGH } from '@/data/laborRates'
+import { STATE_WAGES, estimateRange } from '@/data/laborRates'
 
 const CONTACT_EMAIL = 'hello@shopcommand.net'
 const WEEKS_PER_MONTH = 4.33
@@ -104,8 +104,7 @@ export default function LaborRateCalculator() {
   const efficiencyPct = Math.round((nBillable / PAID_HOURS_PER_WEEK) * 100)
 
   const st = STATE_WAGES.find(s => s.code === stateCode)
-  const stLow = st ? Math.round((st.wage * MULTIPLIER_LOW) / 5) * 5 : 0
-  const stHigh = st ? Math.round((st.wage * MULTIPLIER_HIGH) / 5) * 5 : 0
+  const [stLow, stHigh] = st ? estimateRange(st.wage) : [0, 0]
   const vsState = st && recommended > 0
     ? recommended < stLow ? 'below' : recommended > stHigh ? 'above' : 'within'
     : null

@@ -7,8 +7,20 @@
 export const BLS_RELEASE = 'May 2025'
 // The static profile page was retired; the tables index is the stable citation target
 export const BLS_SOURCE_URL = 'https://www.bls.gov/oes/tables.htm'
-export const MULTIPLIER_LOW = 2.5
-export const MULTIPLIER_HIGH = 3.5
+// Shops charge roughly 4 to 5.5 times the mean tech wage. Checked Nov 2026 against
+// published state averages of what shops charge: 45 of 50 fall inside this range.
+// (The earlier 2.5 to 3.5 gave rates about half of what shops charge.)
+export const MULTIPLIER_LOW = 4
+export const MULTIPLIER_HIGH = 5.5
+
+const nearest5 = x => Math.round(x / 5) * 5
+
+/** Estimated posted shop rate for a mean tech wage, as [low, high] dollars per hour. */
+export const estimateRange = wage => [nearest5(wage * MULTIPLIER_LOW), nearest5(wage * MULTIPLIER_HIGH)]
+
+// An outside figure readers can check the estimates against
+export const SURVEY_SOURCE_URL = 'https://www.aaa.com/autorepair/articles/average-mechanic-labor-rate-repair-costs-in-your-state-2026'
+export const SURVEY_FINDING = 'almost half of shops price labor between $120 and $159 an hour'
 
 // National mean hourly wage, same release
 export const NATIONAL_MEAN_WAGE = 27.13
