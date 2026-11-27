@@ -30,6 +30,8 @@ Those fixes are 83df974b (deployment dpl_GUD6DSmjebBWf3v3D2W6f1TYEmWX, READY; ro
 
 Known, not fixed: in a narrow window the Invoices amounts wrap mid-number.
 
+Nov 27: Trinity has left J2M (told by the founder). Watch whether J2M cancels or the next front desk person takes over; Maher is the contact now. Older notes that wait on Trinity need a new contact. Next: the founder calls K.N.A Truck Repair to ask how they found ShopCommand.
+
 ## Current State
 
 Stripe (live mode, account acct_1TdfHdDyrARKmiET):
@@ -288,7 +290,7 @@ Build work still open (from the Nov 22-23 walkthroughs; start Monday with proper
 - The invoice generator file is about 700 lines (limit 500). Four `422` console errors seen after long test sessions could not be reproduced on Nov 23 (a full page tour plus 20 idle seconds gave zero failed requests and no console errors); likely Clerk, revisit only if they come back. Clerk's telemetry call is blocked by the CSP (harmless).
 - Not yet tested: the customer approval page, CSV export and printing (this round); Fleet hiding when the switch is off on a fresh account; the evening date fix live.
 - Demo only: undoing a payment does not return credit in the sample ledger; demo repair orders show no shop name.
-- Fleet database test (tests/live/fleet-live.test.js) is written but never run; needs a Neon branch connection string from the user.
+- DONE (Nov 26): the fleet database test (tests/live/fleet-live.test.js) passed 13 of 13, run by the user against a schema-only Neon branch. tests/live/invoices-live.test.js was not re-run.
 - Optional: a "Voided" invoice list. Voided invoices (including the new "-VOID" renamed ones) are not shown anywhere in the app. Build it only if Trinity wants to see them.
 - Not yet tested: the screen click path for reusing a number; the "Vehicle ID" label on a real car-shop account (the rule is unit-tested; the test account has a fleet customer, so it shows "Truck #"); the Fleet link hiding when the switch is off on a fresh account.
 - The one-time invoice import skips a number that already exists (it does not rename a voided holder). Customer spend, visits and avg ticket are server values, so they refresh on reload, not instantly after a payment.
@@ -331,7 +333,7 @@ Ranked by recommendation (refreshed Nov 25). Effort is for one focused session. 
 7. Fresh test signup to verify the founder alert emails, the "Finish setting up" card and the 14-day trial countdown, then clean up that test org and its Clerk user. Effort: 1 hour. Payoff: confirms the signup funnel on a real account. Blocked: the user signs up with a plus-address.
 8. Plan the Clerk production instance move (the dev instance sends "[Development]" emails that land in spam). Effort: 1 to 2 days plus DNS wait. Payoff: removes the biggest trust risk for new signups. Blocked: decide Google credentials versus removing the Google button, warn J2M first, and set up staging.
 9. Account checks: Vercel plan (Hobby commercial terms now that J2M pays), Neon, Clerk and Resend plans, Stripe portal settings, Add Location on a no-subscription test account. Effort: 1 hour. Payoff: avoids a surprise limit or terms problem. Blocked: needs the user's dashboards.
-10. Run the fleet database test on a Neon branch. Effort: 20 minutes. Payoff: real-database proof of the truck and fleet SQL. Blocked: the user creates the branch and sets the connection string in their own shell (never paste it into chat).
+10. DONE (Nov 26): fleet database test, 13 of 13 passed on a Neon branch.
 11. Small cleanups: split the 700-line invoice generator, a way to add a truck to a regular customer, an optional Voided invoice list. Effort: half a day to a day each. Payoff: tidier code and fewer gaps. Do when touching those files.
 12. Growth: Clutch and Adams cold emails and relaunching the research agents; Search Console round two and directory listings; pitch Shop Tech Score. Effort: a few hours each. Payoff: new customers. Blocked: the user approves and sends emails.
 13. Feature roadmap: send inspections to the customer with photos, then QuickBooks (an add-on route may be cheaper), then two-way texting as a paid add-on, then PartsTech. Effort: days to weeks each. Payoff: closes the gaps competitors list. Texting is blocked on Twilio registration and the add-on price.
