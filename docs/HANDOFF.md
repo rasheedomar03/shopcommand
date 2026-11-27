@@ -22,9 +22,11 @@ Tests: vitest (no jsdom, so React screens are checked in the browser, not in tes
 - Test account: Ray's Auto (the founder's own test shop, signed in as Ray Omar, owner) in the browser pane. The pane signs itself out now and then: Claude must NEVER type a password; ask the user to sign in, then continue. API calls from the pane use window.Clerk.session.getToken() (never print the token).
 - Trinity (J2M parts manager) reports bugs and has answered all open product questions (see "TRINITY ANSWERED ALL OF THESE"). Her latest request (Nov 25): reuse a voided invoice's number, done in aceb6c5c.
 
-Update, evening: ad789383 (deployment dpl_CMGEH24A79w9qozp1akzckADo2jH, READY; rollback aceb6c5c) added "Add truck" on the customer profile, "Show voided invoices" on Invoices, and demo fixes (credit returns on undo and void, shop names on repair orders). This supersedes the Open Items about those. 431 tests passing. Verified live on Ray's Auto: add truck from a profile (kept after reopening, repeated number refused), add truck on Fleet, voided list and its search. Not tried live: the tech and advisor views of these. Left on Ray's Auto: truck LIVE-1 on Lena Ortiz and truck LIVE-F1 on the fleet.
+Update, evening: ad789383 (deployment dpl_CMGEH24A79w9qozp1akzckADo2jH, READY; rollback aceb6c5c) added "Add truck" on the customer profile, "Show voided invoices" on Invoices, and demo fixes (credit returns on undo and void, shop names on repair orders). This supersedes the Open Items about those. 431 tests passing. Verified live on Ray's Auto: add truck from a profile (kept after reopening, repeated number refused), add truck on Fleet, voided list and its search. Not tried live: the tech and advisor views of these. The two test trucks (LIVE-1, LIVE-F1) were deleted afterwards.
 
 Fixed after that (434 tests passing, checked in the demo): the customer profile no longer folds a truck known by VIN into one known only by number (copies with nothing to tell them apart still fold together), and demo repair orders no longer show as updated in the future. A number-only record and a VIN-only record of the same model now show as two lines even if they are the same truck.
+
+Those fixes are 83df974b (deployment dpl_GUD6DSmjebBWf3v3D2W6f1TYEmWX, READY; rollback ad789383). Checked live: no future timestamps in the public demo; Lena Ortiz's profile unchanged. The truck merge case itself was checked by tests and in the local demo only.
 
 Known, not fixed: in a narrow window the Invoices amounts wrap mid-number.
 
