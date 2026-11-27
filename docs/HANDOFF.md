@@ -1,6 +1,6 @@
 # ShopCommand Handoff
 
-Last updated: 2026-11-17 (late evening)
+Last updated: 2026-11-25 (evening). Read "Where things stand (Nov 25)" first, then Open Items and Next Options. The older sections below are history and decisions; some of their "uncommitted" or "NOT built" notes are out of date and are superseded by the Nov 22 to Nov 25 sections.
 
 ## Project Summary
 
@@ -12,7 +12,15 @@ The first paying customer is J2M Truck Repair (owner Maher F. Mansour, Chicago R
 
 Roles in the app: owner, advisor, tech. There is no manager role. Owners get everything (billing, invites, all shops, Technicians, Reports, deleting ROs). Advisors are the front desk and are limited to their own shop on at least the Estimates page. Techs only get the tech board, can move a job only to In Progress or Complete, and cannot create ROs, manage parts, invoice, or send estimates for approval.
 
-Tests: vitest, files in /tests, run with `npx vitest run` (118 passing on Nov 17). Run them and `npm run build` before every push.
+Tests: vitest (no jsdom, so React screens are checked in the browser, not in tests), files in /tests, run with `npx vitest run` (420 passing, 31 live-database tests skipped, on Nov 25). Run them AND `npm run build` before every push (tests do not compile every file; a push on Nov 23 failed to deploy because only tests were run).
+
+## Where things stand (Nov 25)
+
+- Production is on master at aceb6c5c (deployment dpl_CJXYJppufJJF1x8S83Aa6foHcKFi, READY, tested live). Rollback target: 0467b82d (dpl_DgrRHwMEGLm86e8EwqEDdF7ze9v8). Vercel team id team_XxJSiLXb1WjD4HYvIxY1lRPS (use it with the Vercel tools; a placeholder id fails with 403). The working tree was clean at the last push.
+- Commits since Nov 21, newest first: aceb6c5c invoice number reuse; 0467b82d header search, truck blanking, Vehicle ID label; de57721a handoff; 9dfab51a customer spend, visits, last visit; ec0f7038 build fix; a44c4293 (failed to deploy, superseded) removed the stage picker; 915e5696 ownership check and saved trucks on the profile; 852746a0 the big walkthrough fix batch (mark-as-paid, $0 invoices, dates, appointments, Add customer); dc770a41 credit balance reload; 6dafa60e Fleet opt-in and credits; 7606b8e printing on one method.
+- Workstreams: server invoices (done, live), Fleet page and truck picker (done, live), customer credits (done, live-tested), printing (done; a real print preview is still unchecked), RO payments and totals (fixed Nov 23). NOT started: proper revenue, labor hours x rate, per-shop tax setting, Clerk production move, texting, QuickBooks.
+- Test account: Ray's Auto (the founder's own test shop, signed in as Ray Omar, owner) in the browser pane. The pane signs itself out now and then: Claude must NEVER type a password; ask the user to sign in, then continue. API calls from the pane use window.Clerk.session.getToken() (never print the token).
+- Trinity (J2M parts manager) reports bugs and has answered all open product questions (see "TRINITY ANSWERED ALL OF THESE"). Her latest request (Nov 25): reuse a voided invoice's number, done in aceb6c5c.
 
 ## Current State
 
@@ -103,6 +111,8 @@ Two full live walkthroughs (as a mechanic, as a fleet shop) on the Ray's Auto te
 - Tests: 409 passing (new: tests/dates-and-totals.test.js, an ownership test, a customers spend/visits test). Lesson: run `npm run build` before pushing; one push (a44c4293) failed to deploy because of a JSX comment placed inside a conditional, fixed in ec0f7038 (production kept serving the previous build).
 - Nov 23 evening small fixes (shipped after this section was written): header search opens the specific RO (`/repair-orders?ro=<id>`); a truck edit now clears a field that is saved blank (api/vehicles.js PUT: a field left out is kept, a field sent blank is cleared; the Fleet edit form sends every field, and clears trim because the description box already includes it); `unitLabelFor` in src/lib/trucks.js picks "Truck #" or "Vehicle ID" (used by the invoice generator, Invoices page and header search; the emailed invoice, CSV and Fleet pages still say "Truck #").
 - Invoice number reuse (Nov 25, Trinity's request): a voided invoice used to hold its number forever (unique index on org + lower(number), voids included), so after voiding 37 she could never make a new 37. Now when a new or renumbered invoice wants a number that only a VOIDED invoice holds, `releaseVoidedNumber` (api/_lib/manual-invoice-db.js) renames the voided one to "37-VOID" (or "37-VOID-2", ...) so both stay on record. A live invoice's number (draft, unpaid, partial, paid) is never renamed; that still gives "number already used". Used by manual create, manual edit and the plain number edit. Voided invoices are not shown in the app, so the screen never warned about the number; only the save was refused. Tests: tests/invoice-number-reuse.test.js. The invoice import still skips a number that exists (it does not rename).
+- Verified live Nov 23 (after 915e5696, ec0f7038, 9dfab51a): an RO created, priced, approved WITHOUT Save estimate, invoiced ($206.14) and paid by Card (invoice paid, RO Paid, payment stored, dashboard $206 today, customer spend right); the old $0 Dave Miller invoice voided and regenerated ($168.16); an appointment made from the header with a date; a customer created from the generator, an invoice, a $1,000 credit deposit and apply; own-fleet invoice label and outstanding exclusion; header search opens the exact RO; truck edit clears VIN and mileage; Haul Brothers shows 1 visit and $500.
+- Verified live Nov 25 (aceb6c5c, through the API on the test account): void then reuse of a number works (the old one becomes TEST-37-VOID, a second void gives TEST-37-VOID-2, case-insensitive); a live invoice's number is still refused (409 number_taken); renumbering onto a voided number works. The screen click path was not tried.
 - Test-account data left on Ray's Auto: customers Tom Baker, Pat Rivera, Lena Ortiz, Sara Lopez, Dave Miller, Mike Torres, Haul Brothers Trucking (holds a $500 credit), Ray's Auto Fleet ($100 credit); several test ROs and invoices (two duplicate Zain Freight LLC invoices, voided test invoices). Safe to delete.
 
 ## What Was Done
@@ -142,6 +152,12 @@ FIXED (Nov 17, pending deploy): organizations.plan used to default to 'founding'
 - Vercel Preview deployments are NOT a safe sandbox: DATABASE_URL, Clerk keys, and Stripe keys exist for Production and Preview (RESEND_API_KEY is Production only), so a preview would hit the live database and live Stripe.
 - Display rules: show RO numbers with roLabel(ro), never the raw id. Use formatMoney (cents) for exact amounts and formatCurrency (whole dollars) only for aggregates.
 - New logic gets tests in /tests. Do what was asked, nothing more; prefer editing existing files; do not create documentation files unless asked; read a file before editing it.
+- From the project CLAUDE.md (C:\Users\rashe\My Projects\CLAUDE.md): never create files unless necessary; never save working files or tests in the root (use /src, /tests, /docs, /config, /scripts); keep files under 500 lines (the invoice generator is over, about 700); validate input at system boundaries; never commit secrets or .env files. For any Kortana carousel or Instagram work, read Kortana Carousels/carousel_fix_prompt_v3.md first (plan: kortana_14day_plan_v2.md). The user's global CLAUDE.md suggests ruflo MCP tools for multi-file work; they were not needed here.
+- Approval pattern: the user says "Commit and push" explicitly each time. Do not commit or push without it, even after finishing a fix. After the push: check the deploy reaches READY (Vercel tool, team id above), then test it live in the browser pane, then report what passed and what did not. A failed deploy means reading the build log and pushing a fix.
+- Never enter passwords or credentials anywhere; ask the user to sign in on the browser pane. Do not send real emails or click anything that spends money during tests; ask first. Downloads (CSV export) need the user's OK.
+- Test only on the Ray's Auto test account (never J2M). Clean up after live tests (void test invoices, remove throwaway records you created) and list what was left in the handoff.
+- Answer style the user prefers: short, plain sentences; say what was done and what was NOT verified; correct earlier mistakes openly (several earlier claims were wrong and were corrected); end with one clear question when a decision is needed. Use they/them pronouns unless told otherwise.
+- Do not use long sleeps to wait for a deploy; check the Vercel state or use a watcher. A "Monitor expired" notice is not user input.
 
 ## J2M feedback from the Nov 18 call (Trinity, in progress; call was paused, a text was sent asking for a callback and a photo of their paper invoice)
 
@@ -265,6 +281,10 @@ Build work still open (from the Nov 22-23 walkthroughs; start Monday with proper
 - Not yet tested: the customer approval page, CSV export and printing (this round); Fleet hiding when the switch is off on a fresh account; the evening date fix live.
 - Demo only: undoing a payment does not return credit in the sample ledger; demo repair orders show no shop name.
 - Fleet database test (tests/live/fleet-live.test.js) is written but never run; needs a Neon branch connection string from the user.
+- Optional: a "Voided" invoice list. Voided invoices (including the new "-VOID" renamed ones) are not shown anywhere in the app. Build it only if Trinity wants to see them.
+- Not yet tested: the screen click path for reusing a number; the "Vehicle ID" label on a real car-shop account (the rule is unit-tested; the test account has a fleet customer, so it shows "Truck #"); the Fleet link hiding when the switch is off on a fresh account.
+- The one-time invoice import skips a number that already exists (it does not rename a voided holder). Customer spend, visits and avg ticket are server values, so they refresh on reload, not instantly after a payment.
+- The account and marketing items under "Waiting on the user", Prospects, Roadmap and Parked come from the Nov 17 to Nov 20 sessions and were not re-checked in the Nov 22 to Nov 25 work (older).
 
 Waiting on the user:
 - Trinity's move: her 46 invoices move automatically when she opens the app; she should press Export first and compare the banner's count and total with it, and tell us before she keeps working if anything is off. Send the J2M update message: mention Fleet (opt-in), the truck picker, the logo, the print fixes, credits, Add customer, and the repair-order payment fix. After her import, look up her $588.26 credit and the $0 or negative invoices by amount and send her the invoice numbers.
@@ -292,15 +312,19 @@ Parked:
 
 ## Next Options
 
-Ranked by recommendation (refreshed Nov 23):
+Ranked by recommendation (refreshed Nov 25). Effort is for one focused session. "Blocked" means the user must do something first.
 
-1. Proper revenue: Billed, Collected, Unbilled, counting when paid (see Open Items; Trinity said revenue was wrong on every screen).
-2. Labor as hours x rate on the RO estimate.
-3. Per-shop tax rate and card fee setting used on estimates, the approval page, packets and invoices (ask J2M how they charge tax: parts only or labor too, and the rate). These three are linked; do them in this order.
-4. Verify the trial plan fix with a fresh signup after deploy.
-5. Plan the Clerk production instance move and a proper staging environment (Neon branch, Clerk dev instance, Stripe test keys scoped to Preview only).
-6. Send the Clutch and Adams cold emails; relaunch the prospect research agents.
-7. Pitch Shop Tech Score (multi-location and heavy-duty angle) once the site is verified.
-8. Google Search Console round two; directory listings (G2, Capterra, SourceForge, Software Advice, Crunchbase, LinkedIn).
-9. Build the next gap feature (send inspections to the customer), then QuickBooks, then texting.
-10. Stripe Tax setup, deferred until about 5 to 10 customers.
+1. Proper revenue (Billed, Collected, Unbilled; counts when marked paid). Effort: 1 to 2 days. Payoff: the dashboard and Reports match what shops are actually paid; Trinity said revenue was wrong on every screen. Today they still count Complete and Invoiced repair orders. Do first, because 2 and 3 change the same numbers.
+2. Labor as hours x rate on the RO estimate. Effort: about 1 day. Payoff: mechanics price jobs the normal way and an RO invoice matches the generator. Touches the RO estimate, approval page, summaries and totals; keep the approval page's exact-total check working.
+3. Per-shop tax rate and card fee, plus one shared tax and line model. Effort: 1 to 2 days. Payoff: removes the 8.5 percent versus 8.25 percent mismatch. Blocked on the user for the rule: ask J2M how they charge tax (Trinity said none is charged; it is built into their prices, so default J2M to 0).
+4. Send the J2M update message; ask Trinity to press Export before her 46 invoices move; then look up the $588.26 credit and the $0 or negative invoices by amount. Effort: under an hour. Payoff: closes the loop with the one paying customer. Blocked: the user sends the message and Trinity must reply.
+5. Thank K.N.A Truck Repair (Summit, IL; the friend who referred Maher) and offer the referral (one free month if they become paying); also treat them as a prospect. Effort: 15 minutes. Payoff: referral goodwill and a possible customer. Blocked: the user writes or approves any email. No record of earlier outreach was found.
+6. Check the untested pieces live: customer approval page, CSV export, a real print preview (invoice and truck history), Fleet hiding with the switch off on a fresh account, the evening date fix. Effort: about half a day. Payoff: confidence on customer-facing paths. Partly blocked: a print preview and the CSV download need the user.
+7. Fresh test signup to verify the founder alert emails, the "Finish setting up" card and the 14-day trial countdown, then clean up that test org and its Clerk user. Effort: 1 hour. Payoff: confirms the signup funnel on a real account. Blocked: the user signs up with a plus-address.
+8. Plan the Clerk production instance move (the dev instance sends "[Development]" emails that land in spam). Effort: 1 to 2 days plus DNS wait. Payoff: removes the biggest trust risk for new signups. Blocked: decide Google credentials versus removing the Google button, warn J2M first, and set up staging.
+9. Account checks: Vercel plan (Hobby commercial terms now that J2M pays), Neon, Clerk and Resend plans, Stripe portal settings, Add Location on a no-subscription test account. Effort: 1 hour. Payoff: avoids a surprise limit or terms problem. Blocked: needs the user's dashboards.
+10. Run the fleet database test on a Neon branch. Effort: 20 minutes. Payoff: real-database proof of the truck and fleet SQL. Blocked: the user creates the branch and sets the connection string in their own shell (never paste it into chat).
+11. Small cleanups: split the 700-line invoice generator, a way to add a truck to a regular customer, an optional Voided invoice list. Effort: half a day to a day each. Payoff: tidier code and fewer gaps. Do when touching those files.
+12. Growth: Clutch and Adams cold emails and relaunching the research agents; Search Console round two and directory listings; pitch Shop Tech Score. Effort: a few hours each. Payoff: new customers. Blocked: the user approves and sends emails.
+13. Feature roadmap: send inspections to the customer with photos, then QuickBooks (an add-on route may be cheaper), then two-way texting as a paid add-on, then PartsTech. Effort: days to weeks each. Payoff: closes the gaps competitors list. Texting is blocked on Twilio registration and the add-on price.
+14. Stripe Tax and other parked items (virtual business address, trial length, onboarding hardening). Effort: varies. Payoff: low until about 5 to 10 customers. Parked.

@@ -82,6 +82,48 @@ export function planTruck({ trucks, customerId, unitNumber, vin, vehicleText }) 
   }
 }
 
+/** The truck among `trucks` with this truck number or VIN (blanks never match). */
+export function findSameTruck(trucks, { unitNumber, vin }) {
+  const v = String(vin ?? '').trim().toUpperCase()
+  return (trucks || []).find(t => sameUnit(t.unitNumber, unitNumber) || (v !== '' && String(t.vin || '').toUpperCase() === v))
+}
+
+/** The vehicles API body for the add-truck form: only what was filled in. */
+export function truckBodyFromForm(v) {
+  const { year, make, model } = parseVehicleText(v.vehicle)
+  return {
+    unit_number: v.unitNumber.trim(),
+    ...(year ? { year } : {}),
+    ...(make ? { make } : {}),
+    ...(model ? { model } : {}),
+    ...(v.vin.trim() ? { vin: v.vin.trim() } : {}),
+    ...(v.mileage ? { last_mileage: Number(v.mileage) } : {}),
+  }
+}
+
+/**
+ * A customer profile's vehicle list: the vehicles its repair orders showed, plus
+ * its saved trucks. A saved truck fills in a listed vehicle with the same VIN, or
+ * the same name when neither the number nor the VIN says it is a different one.
+ */
+export function mergeSavedTrucks(vehicles, trucks) {
+  const out = vehicles.map(v => ({ ...v }))
+  const differs = (a, b) => !!a && !!b && String(a).trim().toLowerCase() !== String(b).trim().toLowerCase()
+  ;(trucks || []).forEach(t => {
+    const name = truckName(t) || (t.unitNumber ? `Truck ${t.unitNumber}` : 'Vehicle')
+    const known = out.find(v => t.vin && v.vin === t.vin)
+      || out.find(v => v.name === name && !differs(v.vin, t.vin) && !differs(v.unitNumber, t.unitNumber))
+    if (known) {
+      known.unitNumber = known.unitNumber || t.unitNumber
+      known.vin = known.vin || t.vin
+      known.lastOdometer = known.lastOdometer || t.mileage
+    } else {
+      out.push({ name, vin: t.vin, unitNumber: t.unitNumber, lastOdometer: t.mileage, roCount: 0, totalSpent: 0, activeWarranties: [] })
+    }
+  })
+  return out
+}
+
 /** Invoices for one truck that count toward what was spent on it: not drafts. */
 export function billedForTruck(invoices, truckId) {
   return (invoices || []).filter(i => i && i.vehicleId === truckId && i.status !== 'draft' && i.status !== 'void')

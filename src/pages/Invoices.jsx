@@ -7,6 +7,7 @@ import { Table, Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table'
 import { Modal } from '@/components/ui/Modal'
 import { InvoiceGeneratorModal } from '@/components/modals/InvoiceGeneratorModal'
 import { BlankFormModal } from '@/components/modals/BlankFormModal'
+import { VoidedInvoices } from '@/components/VoidedInvoices'
 import { formatMoney, formatDate, formatRelativeTime, roLabel, matchesSearch, localYmd } from '@/lib/utils'
 import { useUnitLabel } from '@/lib/unitLabel'
 import { priceInvoiceEdit, invoiceBreakdown } from '@/lib/invoiceEdit'
@@ -879,6 +880,8 @@ export default function Invoices() {
           )
         )}
       </div>
+
+      <VoidedInvoices search={search} shopId={isAdvisor ? session.shopId : null} />
 
       <InvoiceDetail
         invoice={selected}

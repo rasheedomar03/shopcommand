@@ -13,6 +13,28 @@ const isUuid = v => typeof v === 'string' && UUID_RE.test(v)
 export const isRoInvoice = inv => !!inv?.roId || (typeof inv?.ro_id === 'string' && !!inv.ro_id)
 
 /**
+ * The voided invoices among the server's rows, in the shape the voided list shows.
+ * Voided invoices are left out everywhere else in the app.
+ */
+export function voidedInvoiceRows(rows, repairOrders = []) {
+  return (Array.isArray(rows) ? rows : []).filter(r => r?.status === 'void').map(row => {
+    const ro = repairOrders.find(r => r.id === row.ro_id)
+    const roNumber = row.ro_number ? `INV-${String(row.ro_number).replace(/^RO-?/i, '')}` : null
+    return {
+      id: row.number || roNumber || `INV-${String(row.id).slice(0, 8).toUpperCase()}`,
+      dbId: row.id,
+      shopId: row.shop_id ?? ro?.shopId ?? null,
+      customerName: row.customer_name || ro?.customerName || '',
+      vehicle: row.vehicle_text || ro?.vehicle || '',
+      unitNumber: row.unit_number || '',
+      vin: row.vin || '',
+      created: row.invoice_day ? `${row.invoice_day}T12:00:00` : row.created_at,
+      total: num(row.amount),
+    }
+  })
+}
+
+/**
  * A server invoice row with no repair order (from scratch or imported) in the
  * shape the screens use. Returns null for a voided invoice (never shown).
  */

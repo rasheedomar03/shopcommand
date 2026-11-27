@@ -6,7 +6,8 @@ import { setUploadTokenProvider } from '@/lib/uploads'
 import { invoiceRevenueTotals } from '@/lib/invoiceRevenue'
 import { DEMO_TRUCKS } from '@/lib/trucks'
 import { localYmd } from '@/lib/utils'
-import { invoiceFromServerRow, saveInvoiceToServer, planImport, moveLocalInvoices, remainingLocal, mergeSetAside, buildImportReport } from '@/lib/serverInvoices'
+import { invoiceFromServerRow, saveInvoiceToServer, planImport, moveLocalInvoices, remainingLocal, mergeSetAside, buildImportReport, voidedInvoiceRows } from '@/lib/serverInvoices'
+import { returnedCreditEntry, withShopNames } from '@/lib/demoData'
 import {
   parts as initialParts,
   cannedServices,
@@ -224,6 +225,8 @@ export function DataProvider({ children }) {
   const [importTick, setImportTick] = useState(0)
   // Demo only: the customer credit ledger (real accounts keep it on the server)
   const [demoLedger, setDemoLedger] = useState({})
+  // Demo only: invoices voided this visit (real accounts read them from the server)
+  const [demoVoided, setDemoVoided] = useState([])
   const importTried = useRef(new Set())
   const importing = useRef(false)
 
@@ -287,7 +290,7 @@ export function DataProvider({ children }) {
     })
     setShops(mockShops.map(s => ({ ...s, fleetEnabled: true }))) // the demo shows the Fleet page
     setTechnicians(mockTechnicians)
-    setRepairOrders(demoROs)
+    setRepairOrders(withShopNames(demoROs, mockShops))
     // Give the first demo invoices to the demo fleet trucks, so the Fleet page has history
     setInvoices(mockInvoices.map((inv, i) => (i < 6 ? { ...inv, vehicleId: DEMO_TRUCKS[i % DEMO_TRUCKS.length].id } : inv)))
     // Re-base stale lastVisit dates so demo customers look recently active
@@ -857,6 +860,23 @@ export function DataProvider({ children }) {
     } catch { /* ignore */ }
   }, [setCreditBalance])
 
+  // Demo only: give back the credit an invoice used, as the server does
+  const returnDemoCredit = useCallback((invoice) => {
+    const entry = returnedCreditEntry(invoice)
+    if (!entry) return
+    const cust = customers.find(c => String(c.id) === String(invoice.customerId)) || customers.find(c => c.name === invoice.customerName)
+    if (!cust) return
+    const balance = (demoLedger[cust.id] || []).reduce((s, e) => s + e.amount, entry.amount)
+    setDemoLedger(prev => ({ ...prev, [cust.id]: [entry, ...(prev[cust.id] || [])] }))
+    setCreditBalance(cust.id, Math.round(balance * 100) / 100)
+  }, [customers, demoLedger, setCreditBalance])
+
+  // Voided invoices are not part of the invoice list; this reads them on demand
+  const loadVoidedInvoices = useCallback(async () => {
+    if (session?.demo) return demoVoided
+    return voidedInvoiceRows(await api('/api/invoices'), repairOrders)
+  }, [session?.demo, demoVoided, repairOrders])
+
   const voidInvoice = useCallback(async (id) => {
     const target = invoices.find(i => i.id === id)
     if (!target) return { error: 'Invoice not found' }
@@ -869,6 +889,10 @@ export function DataProvider({ children }) {
         return { error: err.message || 'Failed to void invoice' }
       }
       if (Number(target.creditApplied) > 0) refreshCreditBalance(target.customerId)
+    }
+    if (session?.demo) {
+      returnDemoCredit(target)
+      setDemoVoided(prev => [target, ...prev])
     }
     setInvoices(prev => {
       const next = prev.filter(i => i.id !== id)
@@ -884,7 +908,7 @@ export function DataProvider({ children }) {
       ))
     }
     return { ok: true }
-  }, [session?.demo, invoices, refreshCreditBalance])
+  }, [session?.demo, invoices, refreshCreditBalance, returnDemoCredit])
 
   // Record a payment against an invoice; partial amounts leave a balance.
   // Returns { ok } or { error }.
@@ -1002,6 +1026,7 @@ export function DataProvider({ children }) {
     }
     // Paid → unpaid revert (mistaken payment); server also resets payments
     if (patch.status === 'unpaid') {
+      if (session?.demo) returnDemoCredit(target)
       if (!session?.demo && target?.dbId) {
         try {
           await api('/api/invoices', { method: 'PUT', params: { id: target.dbId }, body: { status: 'unpaid' } })
@@ -1067,7 +1092,7 @@ export function DataProvider({ children }) {
       return next
     })
     return { ok: true }
-  }, [session?.demo, invoices, repairOrders, updateRepairOrder, updateCustomer, refreshCreditBalance])
+  }, [session?.demo, invoices, repairOrders, updateRepairOrder, updateCustomer, refreshCreditBalance, returnDemoCredit])
 
   // ── clock in/out ─────────────────────────────────────────────────────────
 
@@ -1357,7 +1382,7 @@ export function DataProvider({ children }) {
       partsOrders, addPartsOrder, updatePartsOrder, deletePartsOrder,
       jobTimers, startJobTimer, stopJobTimer,
       clockedInTechs, clockIn, clockOut, timeEntries, payments,
-      invoices, addInvoice, updateInvoice, voidInvoice, recordInvoicePayment, emailInvoice,
+      invoices, loadVoidedInvoices, addInvoice, updateInvoice, voidInvoice, recordInvoicePayment, emailInvoice,
       invoiceImport, dismissInvoiceImport,
       notifications, addNotification, markNotificationsRead, clearNotifications,
       cannedServices,

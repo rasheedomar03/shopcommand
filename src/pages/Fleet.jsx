@@ -9,7 +9,7 @@ import { useData } from '@/contexts/DataContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
 import { formatMoney, formatDate, matchesSearch } from '@/lib/utils'
-import { truckFromRow, truckName, truckStats, fleetCustomers, parseVehicleText, DEMO_TRUCKS } from '@/lib/trucks'
+import { truckFromRow, truckName, truckStats, fleetCustomers, parseVehicleText, DEMO_TRUCKS, truckBodyFromForm } from '@/lib/trucks'
 
 /**
  * The shop's own trucks. They belong to one customer flagged as the fleet (set up
@@ -72,14 +72,7 @@ export default function Fleet() {
 
   const saveTruck = async (existing, v) => {
     const parsed = parseVehicleText(v.vehicle)
-    const body = {
-      unit_number: v.unitNumber.trim(),
-      ...(parsed.year ? { year: parsed.year } : {}),
-      ...(parsed.make ? { make: parsed.make } : {}),
-      ...(parsed.model ? { model: parsed.model } : {}),
-      ...(v.vin.trim() ? { vin: v.vin.trim() } : {}),
-      ...(v.mileage ? { last_mileage: Number(v.mileage) } : {}),
-    }
+    const body = truckBodyFromForm(v)
     if (demo) {
       const local = { unitNumber: body.unit_number, year: parsed.year ?? null, make: parsed.make || '', model: parsed.model || '', vin: v.vin.trim(), mileage: v.mileage ? Number(v.mileage) : null }
       setTrucks(prev => existing

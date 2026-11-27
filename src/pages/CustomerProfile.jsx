@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/Button'
 import { CustomerCredit } from '@/components/CustomerCredit'
 import { CustomerInvoices } from '@/components/CustomerInvoices'
 import { useCustomerTrucks } from '@/lib/useCustomerTrucks'
-import { truckName } from '@/lib/trucks'
+import { mergeSavedTrucks } from '@/lib/trucks'
+import { useUnitLabel } from '@/lib/unitLabel'
+import { TruckForm } from '@/components/TruckForm'
 import { RODetailModal } from '@/components/modals/RODetailModal'
 import { NewROModal } from '@/components/modals/NewROModal'
 import { formatCurrency, formatMoney, formatDate, formatRelativeTime, roLabel } from '@/lib/utils'
@@ -67,7 +69,9 @@ export default function CustomerProfile() {
   const customer = customers.find(c => String(c.id) === String(id))
   // The trucks and vehicles saved for this customer (from invoices and the Fleet page),
   // not only the ones that came through a repair order
-  const { trucks: savedTrucks } = useCustomerTrucks(customer?.id, { demo: !!session?.demo })
+  const { trucks: savedTrucks, addTruck } = useCustomerTrucks(customer?.id, { demo: !!session?.demo })
+  const [addingTruck, setAddingTruck] = useState(false)
+  const unitLabel = useUnitLabel()
   if (!customer) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -116,20 +120,8 @@ export default function CustomerProfile() {
       }
     })
   })
-  // Add the saved trucks: fill in the truck number on one a repair order already
-  // showed (matched by VIN or by name), otherwise list it as its own vehicle
-  savedTrucks.forEach(t => {
-    const name = truckName(t) || (t.unitNumber ? `Truck ${t.unitNumber}` : 'Vehicle')
-    const known = Object.values(vehicleMap).find(v => (t.vin && v.vin === t.vin) || v.name === name)
-    if (known) {
-      known.unitNumber = known.unitNumber || t.unitNumber
-      known.vin = known.vin || t.vin
-      known.lastOdometer = known.lastOdometer || t.mileage
-    } else {
-      vehicleMap[`truck:${t.id}`] = { name, vin: t.vin, unitNumber: t.unitNumber, lastOdometer: t.mileage, roCount: 0, totalSpent: 0, activeWarranties: [] }
-    }
-  })
-  const vehicles = Object.values(vehicleMap)
+  // Add the saved trucks (added here, on invoices or on the Fleet page)
+  const vehicles = mergeSavedTrucks(Object.values(vehicleMap), savedTrucks)
 
   const paidROs = customerROs.filter(ro => ro.stage === 'Paid')
   // Paid invoices made without a repair order count too (as in Lifetime Spend), so the
@@ -400,12 +392,29 @@ export default function CustomerProfile() {
         {/* Sidebar */}
         <div className="space-y-4">
 
+          <TruckForm
+            open={addingTruck}
+            subtitle={customer.name}
+            unitLabel={unitLabel}
+            onClose={() => setAddingTruck(false)}
+            onSave={async (values) => {
+              const r = await addTruck(values)
+              if (!r?.error) setAddingTruck(false)
+              return r
+            }}
+          />
+
           <CustomerCredit customer={customer} canEdit={session?.role !== 'tech'} shopName={shops?.[0]?.name} />
 
           {/* Vehicles */}
           <div className="bg-surface border border-border rounded-xl overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-border">
+            <div className="px-5 py-3.5 border-b border-border flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-text-primary">Vehicles</div>
+              {session?.role !== 'tech' && (
+                <button onClick={() => setAddingTruck(true)} className="flex items-center gap-1 text-xs font-medium text-orange hover:underline">
+                  <Plus size={12} />Add truck
+                </button>
+              )}
             </div>
             {vehicles.length === 0 ? (
               <div className="px-5 py-6 text-sm text-text-muted text-center">No vehicles on record</div>
@@ -420,7 +429,7 @@ export default function CustomerProfile() {
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-text-primary leading-snug">{v.name}</div>
                         {v.unitNumber && (
-                          <div className="text-2xs text-text-secondary mt-0.5">Truck # {v.unitNumber}</div>
+                          <div className="text-2xs text-text-secondary mt-0.5">{unitLabel} {v.unitNumber}</div>
                         )}
                         {v.vin && (
                           <div className="text-2xs font-mono text-text-muted mt-0.5 tracking-wide">{v.vin}</div>

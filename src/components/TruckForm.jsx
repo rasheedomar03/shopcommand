@@ -10,7 +10,7 @@ const label = 'text-2xs font-semibold text-text-muted uppercase tracking-wider'
  * Add a truck, or edit one. `onSave({ unitNumber, vehicle, vin, mileage })` returns
  * { error } to show a message and keep the window open, or nothing when it worked.
  */
-export function TruckForm({ open, truck, onClose, onSave }) {
+export function TruckForm({ open, truck, onClose, onSave, subtitle = 'One of your own trucks', unitLabel = 'Truck #' }) {
   const empty = { unitNumber: '', vehicle: '', vin: '', mileage: '' }
   const [v, setV] = useState(empty)
   const [saving, setSaving] = useState(false)
@@ -27,7 +27,7 @@ export function TruckForm({ open, truck, onClose, onSave }) {
 
   const submit = async () => {
     // The number is optional, but the truck needs something to identify it
-    if (!v.unitNumber.trim() && !v.vehicle.trim() && !v.vin.trim()) { setError('Add a truck number, a year/make/model, or a VIN, so you can find it later.'); return }
+    if (!v.unitNumber.trim() && !v.vehicle.trim() && !v.vin.trim()) { setError('Add a number, a year/make/model, or a VIN, so you can find it later.'); return }
     setSaving(true)
     setError(null)
     const r = await onSave(v)
@@ -36,10 +36,10 @@ export function TruckForm({ open, truck, onClose, onSave }) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={truck ? 'Edit truck' : 'Add a truck'} subtitle="One of your own trucks" size="sm">
+    <Modal open={open} onClose={onClose} title={truck ? 'Edit truck' : 'Add a truck'} subtitle={subtitle} size="sm">
       <div className="p-5 space-y-3">
         <div>
-          <label className={label}>Truck # (optional)</label>
+          <label className={label}>{unitLabel} (optional)</label>
           <input className={`${field} mt-1`} value={v.unitNumber} onChange={e => setV(s => ({ ...s, unitNumber: e.target.value }))} placeholder="e.g. 5500" autoFocus />
         </div>
         <div>
