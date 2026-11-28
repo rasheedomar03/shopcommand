@@ -4,52 +4,61 @@ import { useAuth } from '@/contexts/AuthContext'
 import { formatRelativeTime, sanitizeField, matchesSearch } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useData } from '@/contexts/DataContext'
+import { localDateTime } from '@/lib/demoData'
 import { Tooltip } from '@/components/ui/Tooltip'
+
+// A time of day, some days before today, for the sample conversations
+const ago = (days, hour, minute) => {
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  d.setHours(hour, minute, 0, 0)
+  return localDateTime(d)
+}
 
 const mockConversations = [
   {
     id: 1, shopId: 1, customerId: 1, customerName: 'Gerald Hutchins', customerPhone: '+1 (713) 881-4472',
-    vehicle: '2019 Ford F-150', roId: 'RO-8841', unread: 2, lastActivity: '2026-05-17T09:15:00',
+    vehicle: '2019 Ford F-150', roId: 'RO-8841', unread: 2, lastActivity: ago(1, 9, 15),
     messages: [
-      { id: 1, from: 'shop', text: 'Hi Gerald, your F-150 is in the bay now. We found a couple things during inspection â€” I\'ll send photos shortly.', time: '2026-05-17T08:30:00' },
-      { id: 2, from: 'shop', text: 'Engine air filter is pretty dirty. Recommend replacing â€” $38 parts + $10 labor. Want us to go ahead?', time: '2026-05-17T08:45:00' },
-      { id: 3, from: 'customer', text: 'Yeah go ahead and do it. How long total?', time: '2026-05-17T09:00:00' },
-      { id: 4, from: 'shop', text: 'Should be done by 2pm. I\'ll text you when it\'s ready for pickup.', time: '2026-05-17T09:05:00' },
-      { id: 5, from: 'customer', text: 'Perfect, thanks!', time: '2026-05-17T09:15:00' },
+      { id: 1, from: 'shop', text: 'Hi Gerald, your F-150 is in the bay now. We found a couple things during inspection. I\'ll send photos shortly.', time: ago(1, 8, 30) },
+      { id: 2, from: 'shop', text: 'Engine air filter is pretty dirty. Recommend replacing: $38 parts + $10 labor. Want us to go ahead?', time: ago(1, 8, 45) },
+      { id: 3, from: 'customer', text: 'Yeah go ahead and do it. How long total?', time: ago(1, 9, 0) },
+      { id: 4, from: 'shop', text: 'Should be done by 2pm. I\'ll text you when it\'s ready for pickup.', time: ago(1, 9, 5) },
+      { id: 5, from: 'customer', text: 'Perfect, thanks!', time: ago(1, 9, 15) },
     ],
   },
   {
     id: 2, shopId: 5, customerId: 7, customerName: 'Derek Williamson', customerPhone: '+1 (832) 798-5503',
-    vehicle: '2022 BMW X5', roId: 'RO-8845', unread: 0, lastActivity: '2026-05-16T17:30:00',
+    vehicle: '2022 BMW X5', roId: 'RO-8845', unread: 0, lastActivity: ago(2, 17, 30),
     messages: [
-      { id: 1, from: 'shop', text: 'Hi Derek, estimate for your X5 brake job is ready â€” $846.52 total. I\'ve sent the details to your email. Let me know if you\'d like to approve.', time: '2026-05-16T11:00:00' },
-      { id: 2, from: 'customer', text: 'Looks good. Go ahead and schedule it.', time: '2026-05-16T12:30:00' },
-      { id: 3, from: 'shop', text: 'Great! We have an opening Thursday at 9am. Does that work?', time: '2026-05-16T12:45:00' },
-      { id: 4, from: 'customer', text: 'Thursday works. See you then.', time: '2026-05-16T17:30:00' },
+      { id: 1, from: 'shop', text: 'Hi Derek, estimate for your X5 brake job is ready: $846.52 total. I\'ve sent the details to your email. Let me know if you\'d like to approve.', time: ago(2, 11, 0) },
+      { id: 2, from: 'customer', text: 'Looks good. Go ahead and schedule it.', time: ago(2, 12, 30) },
+      { id: 3, from: 'shop', text: 'Great! We have an opening Thursday at 9am. Does that work?', time: ago(2, 12, 45) },
+      { id: 4, from: 'customer', text: 'Thursday works. See you then.', time: ago(2, 17, 30) },
     ],
   },
   {
     id: 3, shopId: 2, customerId: 4, customerName: 'Tanya Reeves', customerPhone: '+1 (713) 556-3847',
-    vehicle: '2020 Honda Civic', roId: null, unread: 1, lastActivity: '2026-05-17T07:45:00',
+    vehicle: '2020 Honda Civic', roId: null, unread: 1, lastActivity: ago(1, 7, 45),
     messages: [
-      { id: 1, from: 'customer', text: 'Hi, my car has been making a clicking noise when I turn. Is that something you can look at?', time: '2026-05-17T07:45:00' },
+      { id: 1, from: 'customer', text: 'Hi, my car has been making a clicking noise when I turn. Is that something you can look at?', time: ago(1, 7, 45) },
     ],
   },
   {
     id: 4, shopId: 3, customerId: 2, customerName: 'Sandra Montoya', customerPhone: '+1 (281) 772-6931',
-    vehicle: '2018 Chevrolet Equinox', roId: 'RO-8843', unread: 0, lastActivity: '2026-05-15T14:20:00',
+    vehicle: '2018 Chevrolet Equinox', roId: 'RO-8843', unread: 0, lastActivity: ago(3, 14, 20),
     messages: [
-      { id: 1, from: 'shop', text: 'Hi Sandra, your Equinox is ready for pickup! Total came to $613.78.', time: '2026-05-15T14:00:00' },
-      { id: 2, from: 'customer', text: 'On my way! Can I pay with card when I get there?', time: '2026-05-15T14:15:00' },
-      { id: 3, from: 'shop', text: 'Absolutely. We accept all major cards. See you soon!', time: '2026-05-15T14:20:00' },
+      { id: 1, from: 'shop', text: 'Hi Sandra, your Equinox is ready for pickup! Total came to $613.78.', time: ago(3, 14, 0) },
+      { id: 2, from: 'customer', text: 'On my way! Can I pay with card when I get there?', time: ago(3, 14, 15) },
+      { id: 3, from: 'shop', text: 'Absolutely. We accept all major cards. See you soon!', time: ago(3, 14, 20) },
     ],
   },
   {
     id: 5, shopId: 1, customerId: 5, customerName: 'Louis Bergman', customerPhone: '+1 (281) 663-0921',
-    vehicle: '2021 Toyota Camry', roId: 'RO-8842', unread: 0, lastActivity: '2026-05-16T10:00:00',
+    vehicle: '2021 Toyota Camry', roId: 'RO-8842', unread: 0, lastActivity: ago(2, 10, 0),
     messages: [
-      { id: 1, from: 'shop', text: 'Hey Louis, quick update â€” the solenoid pack we ordered arrived. We\'ll have your Camry done by end of day.', time: '2026-05-16T09:30:00' },
-      { id: 2, from: 'customer', text: 'Great news. Thanks for keeping me updated.', time: '2026-05-16T10:00:00' },
+      { id: 1, from: 'shop', text: 'Hey Louis, quick update: the solenoid pack we ordered arrived. We\'ll have your Camry done by end of day.', time: ago(2, 9, 30) },
+      { id: 2, from: 'customer', text: 'Great news. Thanks for keeping me updated.', time: ago(2, 10, 0) },
     ],
   },
 ]
@@ -83,7 +92,7 @@ function ConversationList({ conversations, selected, onSelect, search, shops }) 
                 <span className="text-sm font-medium text-text-primary truncate">{conv.customerName}</span>
                 <span className="text-2xs text-text-muted flex-shrink-0">{formatRelativeTime(conv.lastActivity)}</span>
               </div>
-              <div className="text-2xs text-text-muted truncate mt-0.5">{conv.vehicle} Â· {shop?.name}</div>
+              <div className="text-2xs text-text-muted truncate mt-0.5">{conv.vehicle} · {shop?.name}</div>
               <div className="text-xs text-text-secondary truncate mt-1">
                 {lastMsg.from === 'shop' && <span className="text-text-muted">You: </span>}
                 {lastMsg.text}
@@ -115,7 +124,7 @@ function MessageThread({ conversation, onBack, shops }) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-3 opacity-20">ðŸ’¬</div>
+          <div className="text-4xl mb-3 opacity-20">💬</div>
           <p className="text-sm text-text-muted">Select a conversation</p>
         </div>
       </div>
@@ -137,7 +146,7 @@ function MessageThread({ conversation, onBack, shops }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-text-primary">{conversation.customerName}</div>
-          <div className="text-2xs text-text-muted">{conversation.vehicle} Â· {shop?.name}</div>
+          <div className="text-2xs text-text-muted">{conversation.vehicle} · {shop?.name}</div>
         </div>
         <div className="flex items-center gap-2">
           {conversation.roId && (
@@ -208,7 +217,7 @@ export default function Messages() {
     <div className="h-full flex flex-col animate-fade-in">
       <div className="px-4 py-2 bg-status-yellow/10 border-b border-status-yellow/20 text-xs text-status-yellow flex-shrink-0">
         {session?.demo
-          ? 'Two-way SMS messaging is coming soon â€” conversations shown here are sample data.'
+          ? 'Two-way SMS messaging is coming soon. The conversations shown here are sample data.'
           : 'Two-way SMS messaging is coming soon.'}
       </div>
       <div className="flex-1 flex min-h-0">

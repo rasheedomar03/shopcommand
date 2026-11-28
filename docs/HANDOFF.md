@@ -34,6 +34,8 @@ Invoice generator split (Nov 27, local until committed): no behavior change inte
 
 DEPLOYED: e9178a90 (dpl_GQK1NdTWNfYt8NsbiEPpM6ybsUeS) READY; rollback 83fcb404 (dpl_DS8WzSLj9hFa1ZioKGNeqbqhdb6S). Passed on Ray's Auto: saved truck fills vehicle, number and VIN; save to server; reopen after reload; edit and save; void (record TEST-SPLIT-1 stays in the voided list). NOT checked: a newly typed truck being added on save, the real print preview, emailing.
 
+Demo Messages page (Nov 27, local until committed): fixed garbled characters (wrong text encoding in 8 lines of Messages.jsx), removed the long dashes, and sample conversations are now dated 1 to 3 days before today. 440 tests pass; checked in the demo.
+
 Nov 27: Trinity has left J2M (told by the founder). Watch whether J2M cancels or the next front desk person takes over; Maher is the contact now. Older notes that wait on Trinity need a new contact. Next: the founder calls K.N.A Truck Repair to ask how they found ShopCommand.
 
 ## Current State
