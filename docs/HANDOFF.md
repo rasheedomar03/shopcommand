@@ -28,7 +28,9 @@ Fixed after that (434 tests passing, checked in the demo): the customer profile 
 
 Those fixes are 83df974b (deployment dpl_GUD6DSmjebBWf3v3D2W6f1TYEmWX, READY; rollback ad789383). Checked live: no future timestamps in the public demo; Lena Ortiz's profile unchanged. The truck merge case itself was checked by tests and in the local demo only.
 
-Fixed Nov 27 (local until committed): Invoices amounts wrapped mid-number in a medium window. The global break-word rule in index.css now skips figures (.tabular-nums) and status pills in tables; table headings do not wrap; Invoices header buttons wrap on a phone. Checked in the demo at 375, 700 and 1050 wide.
+Fixed Nov 27 (local until committed): Invoices amounts wrapped mid-number in a medium window. The global break-word rule in index.css now skips figures (.tabular-nums) and status pills in tables; table headings do not wrap; Invoices header buttons wrap on a phone. Checked in the demo at 375, 700 and 1050 wide. Pushed as 83fcb404.
+
+Invoice generator split (Nov 27, local until committed): no behavior change intended. InvoiceGeneratorModal.jsx (486 lines) keeps state and saving; components/invoice/{InvoicePaper,InvoiceDetailsFields,InvoiceChargesFields,InvoiceActions}.jsx hold the screen; lib/invoiceForm.js the defaults and helpers. A 21-step demo recording matched the old code exactly; 440 tests pass. The demo has no saved trucks or server, so truck picking and a real save must be checked on Ray's Auto after deploy.
 
 Nov 27: Trinity has left J2M (told by the founder). Watch whether J2M cancels or the next front desk person takes over; Maher is the contact now. Older notes that wait on Trinity need a new contact. Next: the founder calls K.N.A Truck Repair to ask how they found ShopCommand.
 
