@@ -30,7 +30,9 @@ Those fixes are 83df974b (deployment dpl_GUD6DSmjebBWf3v3D2W6f1TYEmWX, READY; ro
 
 Fixed Nov 27 (local until committed): Invoices amounts wrapped mid-number in a medium window. The global break-word rule in index.css now skips figures (.tabular-nums) and status pills in tables; table headings do not wrap; Invoices header buttons wrap on a phone. Checked in the demo at 375, 700 and 1050 wide. Pushed as 83fcb404.
 
-Invoice generator split (Nov 27, local until committed): no behavior change intended. InvoiceGeneratorModal.jsx (486 lines) keeps state and saving; components/invoice/{InvoicePaper,InvoiceDetailsFields,InvoiceChargesFields,InvoiceActions}.jsx hold the screen; lib/invoiceForm.js the defaults and helpers. A 21-step demo recording matched the old code exactly; 440 tests pass. The demo has no saved trucks or server, so truck picking and a real save must be checked on Ray's Auto after deploy.
+Invoice generator split (Nov 27, local until committed): no behavior change intended. InvoiceGeneratorModal.jsx (486 lines) keeps state and saving; components/invoice/{InvoicePaper,InvoiceDetailsFields,InvoiceChargesFields,InvoiceActions}.jsx hold the screen; lib/invoiceForm.js the defaults and helpers. A 21-step demo recording matched the old code exactly; 440 tests pass. The demo has no saved trucks or server, so truck picking and a real save were checked after deploy.
+
+DEPLOYED: e9178a90 (dpl_GQK1NdTWNfYt8NsbiEPpM6ybsUeS) READY; rollback 83fcb404 (dpl_DS8WzSLj9hFa1ZioKGNeqbqhdb6S). Passed on Ray's Auto: saved truck fills vehicle, number and VIN; save to server; reopen after reload; edit and save; void (record TEST-SPLIT-1 stays in the voided list). NOT checked: a newly typed truck being added on save, the real print preview, emailing.
 
 Nov 27: Trinity has left J2M (told by the founder). Watch whether J2M cancels or the next front desk person takes over; Maher is the contact now. Older notes that wait on Trinity need a new contact. Next: the founder calls K.N.A Truck Repair to ask how they found ShopCommand.
 
