@@ -30,7 +30,7 @@ const INVOICE_STATUS = {
 function StatusBadge({ status }) {
   const cfg = INVOICE_STATUS[status] || INVOICE_STATUS.draft
   return (
-    <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-semibold', cfg.bg, cfg.color)}>
+    <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-semibold whitespace-nowrap', cfg.bg, cfg.color)}>
       <span className={cn('w-1.5 h-1.5 rounded-full', cfg.color.replace('text-', 'bg-'))} />
       {cfg.label}
     </span>
@@ -737,7 +737,7 @@ export default function Invoices() {
             {scoped.filter(i => i.status === 'paid').length} paid · ${totalOutstanding.toFixed(0)} outstanding
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
         <Button onClick={() => { setGeneratorSource(null); setGeneratorOpen(true) }}>
           <Plus size={15} />
           New invoice

@@ -15,6 +15,14 @@
     word-break: break-word;
   }
 
+  /* Money and other figures never split in the middle (the rule above would let
+     a narrow table column break "$156.96" in two) */
+  .tabular-nums,
+  td .rounded-full {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

@@ -24,7 +24,7 @@ export function Th({ children, className, sortable, sortDir, onSort }) {
   if (!sortable) {
     return (
       <th className={cn(
-        'px-4 py-2.5 text-left text-xs font-medium text-text-muted uppercase tracking-wider',
+        'px-4 py-2.5 text-left text-xs font-medium text-text-muted uppercase tracking-wider whitespace-nowrap',
         'border-b border-border',
         className
       )}>
@@ -38,7 +38,7 @@ export function Th({ children, className, sortable, sortDir, onSort }) {
   return (
     <th
       className={cn(
-        'px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider',
+        'px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap',
         'border-b border-border',
         'cursor-pointer select-none',
         'transition-colors duration-150',

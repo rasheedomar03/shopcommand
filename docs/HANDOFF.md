@@ -28,7 +28,7 @@ Fixed after that (434 tests passing, checked in the demo): the customer profile 
 
 Those fixes are 83df974b (deployment dpl_GUD6DSmjebBWf3v3D2W6f1TYEmWX, READY; rollback ad789383). Checked live: no future timestamps in the public demo; Lena Ortiz's profile unchanged. The truck merge case itself was checked by tests and in the local demo only.
 
-Known, not fixed: in a narrow window the Invoices amounts wrap mid-number.
+Fixed Nov 27 (local until committed): Invoices amounts wrapped mid-number in a medium window. The global break-word rule in index.css now skips figures (.tabular-nums) and status pills in tables; table headings do not wrap; Invoices header buttons wrap on a phone. Checked in the demo at 375, 700 and 1050 wide.
 
 Nov 27: Trinity has left J2M (told by the founder). Watch whether J2M cancels or the next front desk person takes over; Maher is the contact now. Older notes that wait on Trinity need a new contact. Next: the founder calls K.N.A Truck Repair to ask how they found ShopCommand.
 
