@@ -90,6 +90,8 @@ Labor rate figures (Nov 27, local until committed): the live labor-rates page an
 
 Not-found pages and sitemap dates (Nov 27, local until committed): vercel.json now rewrites only the app's own routes to index.html (plus trailingSlash false); anything else gets public/404.html. A NEW APP ROUTE MUST BE ADDED TO vercel.json (tests/public-routes.test.js fails if it is not). Public pages and sitemap dates live in scripts/sitemap.mjs; change a page's date there when its content changes. 440 tests pass; rules checked with path-to-regexp 6.3.0; real 404 status can only be checked after deploy.
 
+DEPLOYED Nov 27: 3a402288 (dpl_HcGimSwJ5j5HVScoNQjQJU4qCxWY) READY; rollback e168dea2 (dpl_Ajd2Agf8MKMU2kYFHAy5CiXcZYnu). Live: 32 app addresses answer 200, made-up ones 404, all 33 sitemap URLs 200, demo and labor pages work, signed-out /settings goes to sign-in. Later checked signed in on Ray's Auto: 15 screens load by direct address, a customer profile survives refresh. NOT checked live: a real approval link, tech and advisor views.
+
 ## Money (invoices, tax, revenue)
 
 Fixed: de7b684. Database invoices store amount = repair order total, which INCLUDES tax, while editable lines are BEFORE tax. Any invoice edit used to re-save the amount as the line sum, dropping tax. Now src/lib/invoiceEdit.js: an edit never changes the amount unless the line items change; changed lines re-price at the invoice's own tax basis (fallback 8.5%); the invoice screen shows lines, real tax, and total; the edited total is also written back to the RO. Neon checks run Nov 17: no invoice amount differed from its RO total, and no RO with lines had total 0 (invoice count not confirmed, so the empty result may mean few invoices).
